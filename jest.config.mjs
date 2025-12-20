@@ -1,0 +1,17 @@
+import nextJest from "next/jest.js";
+
+const createJestConfig = nextJest({
+  dir: "./",
+});
+
+const customJestConfig = {
+  testEnvironment: "jest-environment-node",
+  testMatch: ["<rootDir>/tests/**/*.test.ts"],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+  // Si tu utilises des modules ESM, ça aide parfois
+  transformIgnorePatterns: ["/node_modules/"],
+};
+
+export default createJestConfig(customJestConfig);
