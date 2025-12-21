@@ -9,7 +9,7 @@ import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { systemContext } from "@/app/context/RequestContext";
 
 const InputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   displayName: z.string().min(1).max(120),
   password: z.string().min(12).max(200),
 });

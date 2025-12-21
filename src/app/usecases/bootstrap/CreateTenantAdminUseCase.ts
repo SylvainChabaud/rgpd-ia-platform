@@ -10,7 +10,7 @@ import { RequestContext } from "@/app/context/RequestContext";
 
 const InputSchema = z.object({
   tenantSlug: z.string().min(3).max(80),
-  email: z.string().email(),
+  email: z.email(),
   displayName: z.string().min(1).max(120),
   password: z.string().min(12).max(200),
 });
@@ -27,11 +27,12 @@ export class CreateTenantAdminUseCase {
     ctx: RequestContext,
     raw: unknown
   ): Promise<{ tenantAdminId: string; tenantId: string }> {
-    const allowed =
-      ctx.actorScope === "PLATFORM" || ctx.actorScope === "SYSTEM";
+    const isBootstrapSystem =
+      ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
+    const allowed = ctx.actorScope === "PLATFORM" || isBootstrapSystem;
     if (!allowed) {
       throw new Error(
-        "FORBIDDEN: only PLATFORM or SYSTEM can create tenant admins"
+        "FORBIDDEN: only PLATFORM or SYSTEM in bootstrap mode can create tenant admins"
       );
     }
 

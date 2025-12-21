@@ -12,15 +12,23 @@ export type RequestContext = Readonly<{
    */
   actorScope: ActorScope;
 
+  /**
+   * Allows SYSTEM context only for bootstrap-only flows.
+   */
+  bootstrapMode?: boolean;
+
   tenantId?: string; // UUID
   actorId?: string; // UUID
   roles: string[];
   requestId: string; // correlation id (P1)
 }>;
 
-export const systemContext = (): RequestContext => ({
+export const systemContext = (
+  options?: Readonly<{ bootstrapMode?: boolean }>
+): RequestContext => ({
   scope: "SYSTEM",
   actorScope: "SYSTEM",
+  bootstrapMode: options?.bootstrapMode === true,
   roles: ["SYSTEM"],
   requestId: "system",
 });

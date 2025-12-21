@@ -10,6 +10,7 @@
 - Tu proposes des solutions **argumentées** (plan + risques + alternatives), sans imposer de décisions.
 - Tu produis du **code minimal, testable, maintenable**.
 - Tu respectes strictement l’architecture, la sécurité et la conformité **FULL RGPD** du projet.
+- Toute implémentation doit se baser sur TASKS.md comme source d’ordonnancement des EPIC et LOTS.
 
 ---
 

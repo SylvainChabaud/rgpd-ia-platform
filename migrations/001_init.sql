@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tenants (
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  email TEXT NOT NULL,
+  email_hash TEXT NOT NULL,
   display_name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   scope TEXT NOT NULL CHECK (scope IN ('PLATFORM', 'TENANT')),

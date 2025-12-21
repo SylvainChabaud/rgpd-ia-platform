@@ -21,7 +21,7 @@ export class PgPlatformUserRepo implements PlatformUserRepo {
       `
       INSERT INTO users (
         id,
-        email,
+        email_hash,
         display_name,
         password_hash,
         scope,
@@ -31,7 +31,7 @@ export class PgPlatformUserRepo implements PlatformUserRepo {
       `,
       [
         input.id,
-        input.emailHash, // ⚠️ voir note ci-dessous
+        input.emailHash,
         input.displayName,
         input.passwordHash,
       ]

@@ -18,6 +18,7 @@ Exécuter l'initialisation **sécurisée** de la plateforme :
 ## 3 - Variables d’environnement (exemples)
 - `DATABASE_URL` : URL PostgreSQL (non committée)
 - `BOOTSTRAP_PLATFORM_SECRET` : secret serveur pour signer des opérations bootstrap (optionnel mais recommandé)
+- `BOOTSTRAP_MODE` : autorise SYSTEM pour le bootstrap (dev uniquement, interdit en prod)
 
 ⚠️ Ne jamais committer de secrets. Utiliser `.env` local et `.env.example` comme modèle.
 
@@ -37,11 +38,13 @@ Résultat : `platform_user_id` (opaque) affiché. Aucun email complet n'est logg
 ```bash
 pnpm bootstrap:tenant --name "Cabinet Dupont" --slug "cabinet-dupont"
 ```
+Si `BOOTSTRAP_MODE` est désactivé, ajouter `--platformActorId "<superadmin_id>"`.
 
 ### 4.4 Créer un tenant admin
 ```bash
 pnpm bootstrap:tenant-admin --tenantSlug "cabinet-dupont" --email "dupont.admin@cabinet.fr" --displayName "Admin Cabinet" --password "ChangeMeNow!"
 ```
+Si `BOOTSTRAP_MODE` est désactivé, ajouter `--platformActorId "<superadmin_id>"`.
 
 ## 5 - Politique logs / audit
 - Logs applicatifs : **événements techniques** uniquement (IDs opaques)

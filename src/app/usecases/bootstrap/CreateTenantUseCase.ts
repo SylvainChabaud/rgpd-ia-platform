@@ -25,8 +25,12 @@ export class CreateTenantUseCase {
     ctx: RequestContext,
     raw: unknown
   ): Promise<{ tenantId: string }> {
-    if (ctx.actorScope !== "PLATFORM") {
-      throw new Error("FORBIDDEN: only PLATFORM can create tenants");
+    const isBootstrapSystem =
+      ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
+    if (ctx.actorScope !== "PLATFORM" && !isBootstrapSystem) {
+      throw new Error(
+        "FORBIDDEN: only PLATFORM or SYSTEM in bootstrap mode can create tenants"
+      );
     }
 
     const parsed = InputSchema.safeParse(raw);
@@ -46,8 +50,8 @@ export class CreateTenantUseCase {
     await this.audit.write({
       id: newId(),
       eventName: "tenant.created",
-      actorScope: "PLATFORM",
-      actorId: ctx.actorId,
+      actorScope: ctx.actorScope,
+      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
       tenantId: id,
       targetId: id,
       metadata: { slugLength: slug.length },
@@ -55,8 +59,8 @@ export class CreateTenantUseCase {
 
     logInfo({
       event: "tenant.created",
-      actorScope: "PLATFORM",
-      actorId: ctx.actorId,
+      actorScope: ctx.actorScope,
+      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
       tenantId: id,
       targetId: id,
     });

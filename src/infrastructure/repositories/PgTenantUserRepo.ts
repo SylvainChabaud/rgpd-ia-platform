@@ -10,7 +10,7 @@ export class PgTenantUserRepo implements TenantUserRepo {
     passwordHash: string;
   }): Promise<void> {
     await pool.query(
-      "INSERT INTO tenant_users (id, tenant_id, email_hash, display_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'TENANT_ADMIN')",
+      "INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'TENANT','TENANT_ADMIN')",
       [
         input.id,
         input.tenantId,

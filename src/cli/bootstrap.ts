@@ -6,6 +6,7 @@ import { PgTenantRepo } from "@/infrastructure/repositories/PgTenantRepo";
 import { PgTenantUserRepo } from "@/infrastructure/repositories/PgTenantUserRepo";
 import { PgAuditEventWriter } from "@/infrastructure/audit/PgAuditEventWriter";
 import { Sha256PasswordHasher } from "@/infrastructure/security/Sha256PasswordHasher";
+import { env } from "@/infrastructure/config/env";
 import { CreatePlatformSuperAdminUseCase } from "@/app/usecases/bootstrap/CreatePlatformSuperAdminUseCase";
 import { CreateTenantUseCase } from "@/app/usecases/bootstrap/CreateTenantUseCase";
 import { CreateTenantAdminUseCase } from "@/app/usecases/bootstrap/CreateTenantAdminUseCase";
@@ -14,6 +15,18 @@ import { logInfo } from "@/shared/logger";
 import { platformContext, systemContext } from "@/app/context/RequestContext";
 
 const program = new Command();
+
+const resolveBootstrapContext = (platformActorId?: string) => {
+  if (env.BOOTSTRAP_MODE) {
+    return systemContext({ bootstrapMode: true });
+  }
+  if (!platformActorId) {
+    throw new Error(
+      "platformActorId is required when BOOTSTRAP_MODE is disabled"
+    );
+  }
+  return platformContext(platformActorId);
+};
 
 program.name("bootstrap").description("Platform bootstrap (CLI only)");
 
@@ -60,13 +73,15 @@ program
   .requiredOption("--name <name>")
   .requiredOption("--slug <slug>")
   .option("--platformActorId <id>")
-  .description("Create a tenant (requires PLATFORM context)")
+  .description(
+    "Create a tenant (requires PLATFORM context or SYSTEM in bootstrap mode)"
+  )
   .action(async (opts) => {
     await runMigrations();
     const tenants = new PgTenantRepo();
     const audit = new PgAuditEventWriter();
     const uc = new CreateTenantUseCase(tenants, audit);
-    const ctx = systemContext();
+    const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(res));
@@ -79,7 +94,9 @@ program
   .requiredOption("--displayName <name>")
   .requiredOption("--password <password>")
   .option("--platformActorId <id>")
-  .description("Create a tenant admin (requires PLATFORM context)")
+  .description(
+    "Create a tenant admin (requires PLATFORM context or SYSTEM in bootstrap mode)"
+  )
   .action(async (opts) => {
     await runMigrations();
     const tenants = new PgTenantRepo();
@@ -92,7 +109,7 @@ program
       hasher,
       audit
     );
-    const ctx = systemContext();
+    const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(res));
