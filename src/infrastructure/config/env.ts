@@ -12,6 +12,7 @@ if (nodeEnv === "production" && bootstrapMode) {
 export const env = {
   NODE_ENV: nodeEnv,
   DATABASE_URL: process.env.DATABASE_URL ?? "",
+  // TODO EPIC5: utiliser BOOTSTRAP_PLATFORM_SECRET pour signer tokens bootstrap
   BOOTSTRAP_PLATFORM_SECRET: process.env.BOOTSTRAP_PLATFORM_SECRET ?? "",
   BOOTSTRAP_MODE: bootstrapMode,
 };

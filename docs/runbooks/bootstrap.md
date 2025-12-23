@@ -59,6 +59,17 @@ Mot de passe : désactivé par défaut (`password_hash="__DISABLED__"`), à déf
 - Vérifier la connexion DB (`DATABASE_URL`).
 - Vérifier les migrations exécutées.
 
-## 7 - Preuves (EPIC 7)
+## 7 - Limitations & scope EPIC1
+### Flux d'activation password
+Le flux d'activation de mot de passe (invitation email + reset link + authN complète) sera livré dans **EPIC 5 (IAM complet)**.
+
+En EPIC1, les comptes sont créés avec `password_hash="__DISABLED__"` :
+- **SuperAdmin plateforme** : accès direct via session SSH admin + commandes CLI
+- **Tenant Admin** : activation manuelle hors plateforme (ex: accès direct DB admin pour set password hash, ou attendre EPIC5)
+
+Cette limitation est **conforme** au périmètre EPIC1 qui ne couvre que le bootstrap CLI, sans endpoints métier ni interface d'authentification.
+
+## 8 - Preuves (EPIC 7)
 - Rapports tests : `pnpm test`
 - Scripts de collecte : `pnpm audit:collect`
+- Scan secrets : `pnpm audit:secrets`

@@ -8,6 +8,7 @@ export type LlmMessage = {
 export type InvokeLLMInput = {
   purpose: string;
   tenantId: string;
+  actorId?: string;
   policy: string;
   messages?: LlmMessage[];
   text?: string;
