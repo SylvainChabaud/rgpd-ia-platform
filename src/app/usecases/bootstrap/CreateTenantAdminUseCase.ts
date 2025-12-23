@@ -12,6 +12,7 @@ import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
+import type { PolicyEngine } from "@/app/auth/policyEngine";
 
 const InputSchema = z.object({
   tenantSlug: z.string().min(3).max(80),
@@ -23,20 +24,18 @@ export class CreateTenantAdminUseCase {
   constructor(
     private readonly tenants: TenantRepo,
     private readonly tenantUsers: TenantUserRepo,
-    private readonly audit: AuditEventWriter
+    private readonly audit: AuditEventWriter,
+    private readonly policy: PolicyEngine
   ) {}
 
   async execute(
     ctx: RequestContext,
     raw: unknown
   ): Promise<{ tenantAdminId: string; tenantId: string }> {
-    const isBootstrapSystem =
-      ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
-    const allowed = ctx.actorScope === "PLATFORM" || isBootstrapSystem;
-    if (!allowed) {
-      throw new ForbiddenError(
-        "Only PLATFORM or SYSTEM in bootstrap mode can create tenant admins"
-      );
+    // Check permission via policy engine (LOT 1.2 compliance)
+    const decision = await this.policy.check(ctx, "tenant-admin:create");
+    if (!decision.allowed) {
+      throw new ForbiddenError(decision.reason ?? "Permission denied");
     }
 
     const parsed = InputSchema.safeParse(raw);

@@ -12,6 +12,7 @@ import { CreateTenantAdminUseCase } from "@/app/usecases/bootstrap/CreateTenantA
 import { GetBootstrapStatusUseCase } from "@/app/usecases/bootstrap/GetBootstrapStatusUseCase";
 import { logInfo } from "@/shared/logger";
 import { platformContext, systemContext } from "@/app/context/RequestContext";
+import { policyEngine } from "@/app/auth/policyEngine";
 
 const program = new Command();
 
@@ -77,7 +78,7 @@ program
     await runMigrations();
     const tenants = new PgTenantRepo();
     const audit = new PgAuditEventWriter();
-    const uc = new CreateTenantUseCase(tenants, audit);
+    const uc = new CreateTenantUseCase(tenants, audit, policyEngine);
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
     // eslint-disable-next-line no-console
@@ -101,7 +102,8 @@ program
     const uc = new CreateTenantAdminUseCase(
       tenants,
       tenantUsers,
-      audit
+      audit,
+      policyEngine
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);

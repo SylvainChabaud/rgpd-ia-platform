@@ -6,6 +6,7 @@ import type { TenantRepo } from "@/app/ports/TenantRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
+import type { PolicyEngine } from "@/app/auth/policyEngine";
 
 const InputSchema = z.object({
   name: z.string().min(1).max(160),
@@ -19,19 +20,18 @@ const InputSchema = z.object({
 export class CreateTenantUseCase {
   constructor(
     private readonly tenants: TenantRepo,
-    private readonly audit: AuditEventWriter
+    private readonly audit: AuditEventWriter,
+    private readonly policy: PolicyEngine
   ) {}
 
   async execute(
     ctx: RequestContext,
     raw: unknown
   ): Promise<{ tenantId: string }> {
-    const isBootstrapSystem =
-      ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
-    if (ctx.actorScope !== "PLATFORM" && !isBootstrapSystem) {
-      throw new ForbiddenError(
-        "Only PLATFORM or SYSTEM in bootstrap mode can create tenants"
-      );
+    // Check permission via policy engine (LOT 1.2 compliance)
+    const decision = await this.policy.check(ctx, "tenant:create");
+    if (!decision.allowed) {
+      throw new ForbiddenError(decision.reason ?? "Permission denied");
     }
 
     const parsed = InputSchema.safeParse(raw);

@@ -11,6 +11,7 @@ import {
   MemTenantRepo,
   MemTenantUserRepo,
 } from "./helpers/memoryRepos";
+import { policyEngine } from "@/app/auth/policyEngine";
 
 const forbiddenPatterns = [
   /@/i,
@@ -48,11 +49,12 @@ test("bootstrap flow logs are event-only and contain no sensitive data", async (
     platformUsers,
     audit
   );
-  const createTenant = new CreateTenantUseCase(tenants, audit);
+  const createTenant = new CreateTenantUseCase(tenants, audit, policyEngine);
   const createTenantAdmin = new CreateTenantAdminUseCase(
     tenants,
     tenantUsers,
-    audit
+    audit,
+    policyEngine
   );
 
   const { logs } = await withLogCapture(async () => {

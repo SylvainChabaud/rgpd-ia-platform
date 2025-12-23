@@ -15,6 +15,7 @@ import {
   MemTenantRepo,
   MemTenantUserRepo,
 } from "./helpers/memoryRepos";
+import { policyEngine } from "@/app/auth/policyEngine";
 
 test("bootstrap superadmin is non-replayable", async () => {
   const state = new MemBootstrapState();
@@ -42,7 +43,7 @@ test("bootstrap superadmin is non-replayable", async () => {
 test("tenant creation requires platform or bootstrap system", async () => {
   const tenants = new MemTenantRepo();
   const audit = new MemAuditWriter();
-  const uc = new CreateTenantUseCase(tenants, audit);
+  const uc = new CreateTenantUseCase(tenants, audit, policyEngine);
 
   await expect(
     uc.execute(systemContext(), { name: "Tenant A", slug: "tenant-a" })
@@ -59,7 +60,7 @@ test("tenant creation requires platform or bootstrap system", async () => {
 test("tenant slug duplicate is rejected", async () => {
   const tenants = new MemTenantRepo();
   const audit = new MemAuditWriter();
-  const uc = new CreateTenantUseCase(tenants, audit);
+  const uc = new CreateTenantUseCase(tenants, audit, policyEngine);
 
   await uc.execute(platformContext("platform-1"), {
     name: "Tenant A",
@@ -78,8 +79,8 @@ test("tenant admin requires existing tenant and correct scope", async () => {
   const tenants = new MemTenantRepo();
   const tenantUsers = new MemTenantUserRepo();
   const audit = new MemAuditWriter();
-  const uc = new CreateTenantAdminUseCase(tenants, tenantUsers, audit);
-  const tenantUc = new CreateTenantUseCase(tenants, audit);
+  const uc = new CreateTenantAdminUseCase(tenants, tenantUsers, audit, policyEngine);
+  const tenantUc = new CreateTenantUseCase(tenants, audit, policyEngine);
 
   await expect(
     uc.execute(systemContext({ bootstrapMode: true }), {

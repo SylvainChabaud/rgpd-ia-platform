@@ -18,17 +18,19 @@ import {
   MemTenantRepo,
   MemTenantUserRepo,
 } from "./helpers/memoryRepos";
+import { policyEngine } from "@/app/auth/policyEngine";
 
 test("RGPD BLOCKER: tenant A cannot access tenant B data (use-case level)", async () => {
   const tenants = new MemTenantRepo();
   const tenantUsers = new MemTenantUserRepo();
   const audit = new MemAuditWriter();
 
-  const createTenant = new CreateTenantUseCase(tenants, audit);
+  const createTenant = new CreateTenantUseCase(tenants, audit, policyEngine);
   const createTenantAdmin = new CreateTenantAdminUseCase(
     tenants,
     tenantUsers,
-    audit
+    audit,
+    policyEngine
   );
   const assertTenantScope = new AssertTenantScopeUseCase();
 
@@ -78,7 +80,7 @@ test("RGPD BLOCKER: tenant context can only access own tenant", async () => {
   const audit = new MemAuditWriter();
   const assertTenantScope = new AssertTenantScopeUseCase();
 
-  const createTenant = new CreateTenantUseCase(tenants, audit);
+  const createTenant = new CreateTenantUseCase(tenants, audit, policyEngine);
   const tenant = await createTenant.execute(platformContext("platform-1"), {
     name: "Tenant X",
     slug: "tenant-x",
