@@ -1,24 +1,27 @@
 import { z } from "zod";
 import { newId, hashEmail } from "@/shared/ids";
-import { ConflictError, ValidationError } from "@/shared/errors";
-import { logInfo } from "@/shared/logger";
+import {
+  BootstrapAlreadyCompletedError,
+  ConflictError,
+  ValidationError,
+} from "@/shared/errors";
+import { logEvent } from "@/shared/logger";
 import type { BootstrapStateRepo } from "@/app/ports/BootstrapStateRepo";
 import type { PlatformUserRepo } from "@/app/ports/PlatformUserRepo";
-import type { PasswordHasher } from "@/app/ports/PasswordHasher";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { systemContext } from "@/app/context/RequestContext";
+import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
+import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
 
 const InputSchema = z.object({
   email: z.email(),
   displayName: z.string().min(1).max(120),
-  password: z.string().min(12).max(200),
 });
 
 export class CreatePlatformSuperAdminUseCase {
   constructor(
     private readonly bootstrapState: BootstrapStateRepo,
     private readonly platformUsers: PlatformUserRepo,
-    private readonly passwordHasher: PasswordHasher,
     private readonly audit: AuditEventWriter
   ) {}
 
@@ -29,11 +32,11 @@ export class CreatePlatformSuperAdminUseCase {
         parsed.error.issues.map((i) => i.message).join(", ")
       );
     }
-    const { email, displayName, password } = parsed.data;
+    const { email, displayName } = parsed.data;
 
     // Non-replayable bootstrap
     if (await this.bootstrapState.isBootstrapped()) {
-      throw new ConflictError("Bootstrap already completed");
+      throw new BootstrapAlreadyCompletedError();
     }
     if (await this.platformUsers.existsSuperAdmin()) {
       throw new ConflictError("SuperAdmin already exists");
@@ -42,7 +45,7 @@ export class CreatePlatformSuperAdminUseCase {
     const id = newId();
     const emailHash = hashEmail(email);
     const ctx = systemContext();
-    const passwordHash = await this.passwordHasher.hash(password);
+    const passwordHash = DISABLED_PASSWORD_HASH;
 
     await this.platformUsers.createSuperAdmin({
       id,
@@ -52,7 +55,7 @@ export class CreatePlatformSuperAdminUseCase {
     });
     await this.bootstrapState.markBootstrapped();
 
-    await this.audit.write({
+    await emitAuditEvent(this.audit, {
       id: newId(),
       eventName: "platform.superadmin.created",
       actorScope: ctx.actorScope,
@@ -62,8 +65,7 @@ export class CreatePlatformSuperAdminUseCase {
       metadata: { displayNameLength: displayName.length },
     });
 
-    logInfo({
-      event: "bootstrap.superadmin.created",
+    logEvent("bootstrap.superadmin.created", undefined, {
       actorScope: "SYSTEM",
       targetId: id,
     });

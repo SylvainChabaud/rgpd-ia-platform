@@ -5,7 +5,6 @@ import { PgPlatformUserRepo } from "@/infrastructure/repositories/PgPlatformUser
 import { PgTenantRepo } from "@/infrastructure/repositories/PgTenantRepo";
 import { PgTenantUserRepo } from "@/infrastructure/repositories/PgTenantUserRepo";
 import { PgAuditEventWriter } from "@/infrastructure/audit/PgAuditEventWriter";
-import { Sha256PasswordHasher } from "@/infrastructure/security/Sha256PasswordHasher";
 import { env } from "@/infrastructure/config/env";
 import { CreatePlatformSuperAdminUseCase } from "@/app/usecases/bootstrap/CreatePlatformSuperAdminUseCase";
 import { CreateTenantUseCase } from "@/app/usecases/bootstrap/CreateTenantUseCase";
@@ -54,15 +53,13 @@ program
   .command("superadmin")
   .requiredOption("--email <email>")
   .requiredOption("--displayName <name>")
-  .requiredOption("--password <password>")
   .description("Create the platform superadmin (non-replayable)")
   .action(async (opts) => {
     await runMigrations();
     const state = new PgBootstrapStateRepo();
     const users = new PgPlatformUserRepo();
-    const hasher = new Sha256PasswordHasher();
     const audit = new PgAuditEventWriter();
-    const uc = new CreatePlatformSuperAdminUseCase(state, users, hasher, audit);
+    const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
     const res = await uc.execute(opts);
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(res));
@@ -92,7 +89,6 @@ program
   .requiredOption("--tenantSlug <slug>")
   .requiredOption("--email <email>")
   .requiredOption("--displayName <name>")
-  .requiredOption("--password <password>")
   .option("--platformActorId <id>")
   .description(
     "Create a tenant admin (requires PLATFORM context or SYSTEM in bootstrap mode)"
@@ -101,12 +97,10 @@ program
     await runMigrations();
     const tenants = new PgTenantRepo();
     const tenantUsers = new PgTenantUserRepo();
-    const hasher = new Sha256PasswordHasher();
     const audit = new PgAuditEventWriter();
     const uc = new CreateTenantAdminUseCase(
       tenants,
       tenantUsers,
-      hasher,
       audit
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);

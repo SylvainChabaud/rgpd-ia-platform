@@ -11,7 +11,8 @@
     "bootstrap:tenant": "tsx src/cli/bootstrap.ts tenant",
     "bootstrap:tenant-admin": "tsx src/cli/bootstrap.ts tenant-admin",
     "audit:collect": "tsx scripts/audit/collect-evidence.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:rgpd": "jest tests/rgpd.*.test.ts tests/http.*.test.ts"
   },
   "dependencies": {
     "commander": "^14.0.2",

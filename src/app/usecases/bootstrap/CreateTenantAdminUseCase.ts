@@ -1,25 +1,28 @@
 import { z } from "zod";
 import { newId, hashEmail } from "@/shared/ids";
-import { ValidationError } from "@/shared/errors";
-import { logInfo } from "@/shared/logger";
+import {
+  ForbiddenError,
+  InvalidTenantError,
+  ValidationError,
+} from "@/shared/errors";
+import { logEvent } from "@/shared/logger";
 import type { TenantRepo } from "@/app/ports/TenantRepo";
 import type { TenantUserRepo } from "@/app/ports/TenantUserRepo";
-import type { PasswordHasher } from "@/app/ports/PasswordHasher";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
-import { RequestContext } from "@/app/context/RequestContext";
+import type { RequestContext } from "@/app/context/RequestContext";
+import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
+import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
 
 const InputSchema = z.object({
   tenantSlug: z.string().min(3).max(80),
   email: z.email(),
   displayName: z.string().min(1).max(120),
-  password: z.string().min(12).max(200),
 });
 
 export class CreateTenantAdminUseCase {
   constructor(
     private readonly tenants: TenantRepo,
     private readonly tenantUsers: TenantUserRepo,
-    private readonly passwordHasher: PasswordHasher,
     private readonly audit: AuditEventWriter
   ) {}
 
@@ -31,8 +34,8 @@ export class CreateTenantAdminUseCase {
       ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
     const allowed = ctx.actorScope === "PLATFORM" || isBootstrapSystem;
     if (!allowed) {
-      throw new Error(
-        "FORBIDDEN: only PLATFORM or SYSTEM in bootstrap mode can create tenant admins"
+      throw new ForbiddenError(
+        "Only PLATFORM or SYSTEM in bootstrap mode can create tenant admins"
       );
     }
 
@@ -42,16 +45,16 @@ export class CreateTenantAdminUseCase {
         parsed.error.issues.map((i) => i.message).join(", ")
       );
     }
-    const { tenantSlug, email, displayName, password } = parsed.data;
+    const { tenantSlug, email, displayName } = parsed.data;
 
     const tenant = await this.tenants.findBySlug(tenantSlug);
     if (!tenant) {
-      throw new ValidationError("Unknown tenantSlug");
+      throw new InvalidTenantError("Unknown tenant");
     }
 
     const id = newId();
     const emailHash = hashEmail(email);
-    const passwordHash = await this.passwordHasher.hash(password);
+    const passwordHash = DISABLED_PASSWORD_HASH;
 
     await this.tenantUsers.createTenantAdmin({
       id,
@@ -61,7 +64,7 @@ export class CreateTenantAdminUseCase {
       passwordHash,
     });
 
-    await this.audit.write({
+    await emitAuditEvent(this.audit, {
       id: newId(),
       eventName: "tenant.admin.created",
       actorScope: ctx.actorScope,
@@ -71,8 +74,7 @@ export class CreateTenantAdminUseCase {
       metadata: { displayNameLength: displayName.length },
     });
 
-    logInfo({
-      event: "tenant.admin.created",
+    logEvent("tenant.admin.created", undefined, {
       actorScope: ctx.actorScope,
       actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
       tenantId: tenant.id,

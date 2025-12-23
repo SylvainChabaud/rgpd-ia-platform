@@ -1,42 +1,45 @@
-export type ActorScope = "SYSTEM" | "PLATFORM" | "TENANT";
+import type { ActorScope } from "@/shared/actorScope";
+import { InvalidTenantError } from "@/shared/errors";
 
 export type RequestContext = Readonly<{
-  /**
-   * Propriété canonique (nouveau nom)
-   */
-  scope: ActorScope;
-
-  /**
-   * Alias de compatibilité (ancien nom attendu par certains use-cases)
-   * Ne pas supprimer : évite des patches dispersés.
-   */
   actorScope: ActorScope;
-
-  /**
-   * Allows SYSTEM context only for bootstrap-only flows.
-   */
+  actorId?: string;
+  tenantId?: string;
   bootstrapMode?: boolean;
-
-  tenantId?: string; // UUID
-  actorId?: string; // UUID
-  roles: string[];
-  requestId: string; // correlation id (P1)
 }>;
+
+function freeze<T extends object>(value: T): Readonly<T> {
+  return Object.freeze(value);
+}
+
+export function assertTenantContext(
+  ctx: RequestContext
+): asserts ctx is RequestContext & { tenantId: string } {
+  if (ctx.actorScope === "TENANT" && !ctx.tenantId) {
+    throw new InvalidTenantError("Tenant context requires tenantId");
+  }
+}
 
 export const systemContext = (
   options?: Readonly<{ bootstrapMode?: boolean }>
-): RequestContext => ({
-  scope: "SYSTEM",
-  actorScope: "SYSTEM",
-  bootstrapMode: options?.bootstrapMode === true,
-  roles: ["SYSTEM"],
-  requestId: "system",
-});
+): RequestContext =>
+  freeze({
+    actorScope: "SYSTEM",
+    bootstrapMode: options?.bootstrapMode === true,
+  });
 
-export const platformContext = (actorId: string): RequestContext => ({
-  scope: "PLATFORM",
-  actorScope: "PLATFORM",
-  actorId,
-  roles: ["SUPERADMIN"], // ou ["PLATFORM_ADMIN"] selon ta convention
-  requestId: "cli",
-});
+export const platformContext = (actorId: string): RequestContext =>
+  freeze({
+    actorScope: "PLATFORM",
+    actorId,
+  });
+
+export const tenantContext = (
+  tenantId: string,
+  actorId?: string
+): RequestContext =>
+  freeze({
+    actorScope: "TENANT",
+    tenantId,
+    actorId,
+  });

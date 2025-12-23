@@ -1,92 +1,112 @@
-import { CreatePlatformSuperAdminUseCase } from "../src/app/usecases/bootstrap/CreatePlatformSuperAdminUseCase";
-
-import type { BootstrapStateRepo } from "../src/app/ports/BootstrapStateRepo";
-import type { PlatformUserRepo } from "../src/app/ports/PlatformUserRepo";
-import type { PasswordHasher } from "../src/app/ports/PasswordHasher";
-import type { AuditEventWriter, AuditEvent } from "../src/app/ports/AuditEventWriter";
-
-// --------------------------------------------------
-// Stubs mémoire STRICTEMENT typés
-// --------------------------------------------------
-
-class MemBootstrapState implements BootstrapStateRepo {
-  private boot = false;
-
-  async isBootstrapped(): Promise<boolean> {
-    return this.boot;
-  }
-
-  async markBootstrapped(): Promise<void> {
-    this.boot = true;
-  }
-}
-
-class MemPlatformUsers implements PlatformUserRepo {
-  private exists = false;
-
-  async existsSuperAdmin(): Promise<boolean> {
-    return this.exists;
-  }
-
-  async createSuperAdmin(_input: {
-    id: string;
-    emailHash: string;
-    displayName: string;
-    passwordHash: string;
-  }): Promise<void> {
-    this.exists = true;
-  }
-}
-
-class MemHasher implements PasswordHasher {
-  async hash(password: string): Promise<string> {
-    return `hash:${password.length}`;
-  }
-}
-
-class MemAuditWriter implements AuditEventWriter {
-  readonly events: AuditEvent[] = [];
-
-  async write(event: AuditEvent): Promise<void> {
-    this.events.push(event);
-  }
-}
-
-// --------------------------------------------------
-// TEST
-// --------------------------------------------------
+import { CreatePlatformSuperAdminUseCase } from "@/app/usecases/bootstrap/CreatePlatformSuperAdminUseCase";
+import { CreateTenantUseCase } from "@/app/usecases/bootstrap/CreateTenantUseCase";
+import { CreateTenantAdminUseCase } from "@/app/usecases/bootstrap/CreateTenantAdminUseCase";
+import {
+  BootstrapAlreadyCompletedError,
+  ConflictError,
+  ForbiddenError,
+  InvalidTenantError,
+} from "@/shared/errors";
+import { platformContext, systemContext } from "@/app/context/RequestContext";
+import {
+  MemAuditWriter,
+  MemBootstrapState,
+  MemPlatformUsers,
+  MemTenantRepo,
+  MemTenantUserRepo,
+} from "./helpers/memoryRepos";
 
 test("bootstrap superadmin is non-replayable", async () => {
   const state = new MemBootstrapState();
   const users = new MemPlatformUsers();
-  const hasher = new MemHasher();
   const audit = new MemAuditWriter();
 
-  const uc = new CreatePlatformSuperAdminUseCase(
-    state,
-    users,
-    hasher,
-    audit
-  );
+  const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
 
   const res1 = await uc.execute({
     email: "admin@example.com",
     displayName: "Admin",
-    password: "123456789012",
   });
 
   expect(res1.platformUserId).toBeTruthy();
   expect(audit.events).toHaveLength(1);
 
-  const evt = audit.events[0];
-  expect(evt.eventName).toBe("platform.superadmin.created");
-  expect(evt.actorScope).toBe("SYSTEM");
-
   await expect(
     uc.execute({
       email: "admin2@example.com",
       displayName: "Admin2",
-      password: "123456789012",
     })
-  ).rejects.toThrow();
+  ).rejects.toBeInstanceOf(BootstrapAlreadyCompletedError);
+});
+
+test("tenant creation requires platform or bootstrap system", async () => {
+  const tenants = new MemTenantRepo();
+  const audit = new MemAuditWriter();
+  const uc = new CreateTenantUseCase(tenants, audit);
+
+  await expect(
+    uc.execute(systemContext(), { name: "Tenant A", slug: "tenant-a" })
+  ).rejects.toBeInstanceOf(ForbiddenError);
+
+  const res = await uc.execute(systemContext({ bootstrapMode: true }), {
+    name: "Tenant A",
+    slug: "tenant-a",
+  });
+
+  expect(res.tenantId).toBeTruthy();
+});
+
+test("tenant slug duplicate is rejected", async () => {
+  const tenants = new MemTenantRepo();
+  const audit = new MemAuditWriter();
+  const uc = new CreateTenantUseCase(tenants, audit);
+
+  await uc.execute(platformContext("platform-1"), {
+    name: "Tenant A",
+    slug: "tenant-a",
+  });
+
+  await expect(
+    uc.execute(platformContext("platform-1"), {
+      name: "Tenant B",
+      slug: "tenant-a",
+    })
+  ).rejects.toBeInstanceOf(ConflictError);
+});
+
+test("tenant admin requires existing tenant and correct scope", async () => {
+  const tenants = new MemTenantRepo();
+  const tenantUsers = new MemTenantUserRepo();
+  const audit = new MemAuditWriter();
+  const uc = new CreateTenantAdminUseCase(tenants, tenantUsers, audit);
+  const tenantUc = new CreateTenantUseCase(tenants, audit);
+
+  await expect(
+    uc.execute(systemContext({ bootstrapMode: true }), {
+      tenantSlug: "missing-tenant",
+      email: "admin@tenant.test",
+      displayName: "Tenant Admin",
+    })
+  ).rejects.toBeInstanceOf(InvalidTenantError);
+
+  await tenantUc.execute(systemContext({ bootstrapMode: true }), {
+    name: "Tenant A",
+    slug: "tenant-a",
+  });
+
+  const res = await uc.execute(systemContext({ bootstrapMode: true }), {
+    tenantSlug: "tenant-a",
+    email: "seed@tenant.test",
+    displayName: "Seed Admin",
+  });
+
+  expect(res.tenantAdminId).toBeTruthy();
+
+  await expect(
+    uc.execute(systemContext(), {
+      tenantSlug: "tenant-a",
+      email: "admin@tenant.test",
+      displayName: "Tenant Admin",
+    })
+  ).rejects.toBeInstanceOf(ForbiddenError);
 });

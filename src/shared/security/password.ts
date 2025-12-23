@@ -1,0 +1,1 @@
+export const DISABLED_PASSWORD_HASH = "__DISABLED__";

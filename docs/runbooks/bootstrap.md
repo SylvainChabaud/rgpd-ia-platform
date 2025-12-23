@@ -30,9 +30,10 @@ pnpm bootstrap:status
 
 ### 4.2 Créer le Platform SuperAdmin (NON REJOUABLE)
 ```bash
-pnpm bootstrap:superadmin --email "admin@example.com" --displayName "Platform Admin" --password "ChangeMeNow!"
+pnpm bootstrap:superadmin --email "admin@example.com" --displayName "Platform Admin"
 ```
 Résultat : `platform_user_id` (opaque) affiché. Aucun email complet n'est loggé.
+Mot de passe : désactivé par défaut (`password_hash="__DISABLED__"`), à définir via un flux ultérieur.
 
 ### 4.3 Créer un tenant
 ```bash
@@ -42,14 +43,16 @@ Si `BOOTSTRAP_MODE` est désactivé, ajouter `--platformActorId "<superadmin_id>
 
 ### 4.4 Créer un tenant admin
 ```bash
-pnpm bootstrap:tenant-admin --tenantSlug "cabinet-dupont" --email "dupont.admin@cabinet.fr" --displayName "Admin Cabinet" --password "ChangeMeNow!"
+pnpm bootstrap:tenant-admin --tenantSlug "cabinet-dupont" --email "dupont.admin@cabinet.fr" --displayName "Admin Cabinet"
 ```
 Si `BOOTSTRAP_MODE` est désactivé, ajouter `--platformActorId "<superadmin_id>"`.
+Mot de passe : désactivé par défaut (`password_hash="__DISABLED__"`), à définir via un flux ultérieur.
 
 ## 5 - Politique logs / audit
 - Logs applicatifs : **événements techniques** uniquement (IDs opaques)
 - Audit events : `audit_events` (event_name, actor_id, tenant_id, target_id, timestamp)
 - Aucun contenu utilisateur (P2/P3) en logs
+- Aucun mot de passe en clair (champ désactivé)
 
 ## 6 - Dépannage
 - Si `bootstrap:superadmin` refuse : c'est normal, le superadmin est non rejouable.

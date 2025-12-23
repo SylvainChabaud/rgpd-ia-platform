@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { newId } from "@/shared/ids";
-import { ConflictError, ValidationError } from "@/shared/errors";
-import { logInfo } from "@/shared/logger";
+import { ConflictError, ForbiddenError, ValidationError } from "@/shared/errors";
+import { logEvent } from "@/shared/logger";
 import type { TenantRepo } from "@/app/ports/TenantRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
-import { RequestContext } from "@/app/context/RequestContext";
+import type { RequestContext } from "@/app/context/RequestContext";
+import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 
 const InputSchema = z.object({
   name: z.string().min(1).max(160),
@@ -28,8 +29,8 @@ export class CreateTenantUseCase {
     const isBootstrapSystem =
       ctx.actorScope === "SYSTEM" && ctx.bootstrapMode === true;
     if (ctx.actorScope !== "PLATFORM" && !isBootstrapSystem) {
-      throw new Error(
-        "FORBIDDEN: only PLATFORM or SYSTEM in bootstrap mode can create tenants"
+      throw new ForbiddenError(
+        "Only PLATFORM or SYSTEM in bootstrap mode can create tenants"
       );
     }
 
@@ -47,7 +48,7 @@ export class CreateTenantUseCase {
     const id = newId();
     await this.tenants.create({ id, slug, name });
 
-    await this.audit.write({
+    await emitAuditEvent(this.audit, {
       id: newId(),
       eventName: "tenant.created",
       actorScope: ctx.actorScope,
@@ -57,8 +58,7 @@ export class CreateTenantUseCase {
       metadata: { slugLength: slug.length },
     });
 
-    logInfo({
-      event: "tenant.created",
+    logEvent("tenant.created", undefined, {
       actorScope: ctx.actorScope,
       actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
       tenantId: id,
