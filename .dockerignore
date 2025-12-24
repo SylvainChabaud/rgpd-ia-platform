@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.github
+.env
+.env.local
+*.log
+dist
+build
+coverage
+*.md
+!README.md
+docs
+tests
+scripts/audit
+.vscode
+.idea

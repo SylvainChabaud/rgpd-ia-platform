@@ -1,9 +1,57 @@
+version: '3.9'
+
 services:
+  # PostgreSQL Database (NOT exposed publicly)
   db:
-    image: postgres:16
+    image: postgres:16-alpine
+    container_name: rgpd-platform-db-dev
+    restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: devpass
-      POSTGRES_USER: devuser
-      POSTGRES_DB: rgpd_platform
+      POSTGRES_USER: ${DB_USER:-devuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpass}
+      POSTGRES_DB: ${DB_NAME:-rgpd_platform}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    networks:
+      - rgpd_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-devuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # NO ports exposed (internal only)
+    # For dev debug, uncomment: ports: ["127.0.0.1:5432:5432"]
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: rgpd-platform-app-dev
+    restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${DB_USER:-devuser}:${DB_PASSWORD:-devpass}@db:5432/${DB_NAME:-rgpd_platform}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - rgpd_internal
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+
+networks:
+  rgpd_internal:
+    driver: bridge
+    internal: false  # Allow outbound internet (npm install, etc.)
+
+volumes:
+  postgres_data:
+    driver: local
