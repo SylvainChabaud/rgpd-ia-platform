@@ -23,6 +23,24 @@ services:
     # NO ports exposed (internal only)
     # For dev debug, uncomment: ports: ["127.0.0.1:5432:5432"]
 
+  # Ollama Local LLM (LOT 3.0 POC)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rgpd-platform-ollama-poc
+    restart: unless-stopped
+    networks:
+      - rgpd_internal
+    volumes:
+      - ollama_data:/root/.ollama
+    # NO ports exposed (internal only, access via app container)
+    # For dev debug, uncomment: ports: ["127.0.0.1:11434:11434"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   # Next.js Application
   app:
     build:
@@ -36,6 +54,9 @@ services:
       NODE_ENV: development
       DATABASE_URL: postgresql://${DB_USER:-devuser}:${DB_PASSWORD:-devpass}@db:5432/${DB_NAME:-rgpd_platform}
       LOG_LEVEL: ${LOG_LEVEL:-debug}
+      AI_PROVIDER: ${AI_PROVIDER:-stub}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-tinyllama}
     volumes:
       - .:/app
       - /app/node_modules
@@ -44,6 +65,8 @@ services:
       - rgpd_internal
     depends_on:
       db:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     command: npm run dev
 
@@ -54,4 +77,6 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  ollama_data:
     driver: local
