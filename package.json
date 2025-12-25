@@ -9,6 +9,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx scripts/migrate.ts",
+    "purge": "tsx scripts/purge.ts",
+    "purge:dry-run": "tsx scripts/purge.ts dry-run",
+    "purge:tenant": "tsx scripts/purge.ts tenant",
     "bootstrap:status": "tsx src/cli/bootstrap.ts status",
     "bootstrap:superadmin": "tsx src/cli/bootstrap.ts superadmin",
     "bootstrap:tenant": "tsx src/cli/bootstrap.ts tenant",
@@ -17,7 +20,7 @@
     "audit:secrets": "bash scripts/audit/scan-secrets.sh",
     "test": "jest",
     "test:rgpd": "jest tests/rgpd.*.test.ts tests/http.*.test.ts",
-    "test:lot4": "jest tests/db.lot4.*.test.ts"
+    "test:lot4": "jest tests/db.lot4.*.test.ts tests/purge.lot4.test.ts"
   },
   "dependencies": {
     "commander": "^14.0.2",
