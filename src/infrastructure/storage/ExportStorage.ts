@@ -117,6 +117,24 @@ export function getExportMetadataByToken(
 }
 
 /**
+ * Get all export metadata for a user (for purge)
+ */
+export function getExportMetadataByUserId(
+  tenantId: string,
+  userId: string
+): ExportMetadata[] {
+  const result: ExportMetadata[] = [];
+
+  for (const metadata of metadataStore.values()) {
+    if (metadata.tenantId === tenantId && metadata.userId === userId) {
+      result.push(metadata);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Delete export metadata
  */
 export function deleteExportMetadata(exportId: string): void {
