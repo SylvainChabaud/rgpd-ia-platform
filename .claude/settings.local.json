@@ -6,7 +6,8 @@
       "Bash(npm run lint)",
       "Bash(npm run typecheck:*)",
       "Bash(cat:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   }
 }
