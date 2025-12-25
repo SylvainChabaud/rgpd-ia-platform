@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "migrate": "tsx scripts/migrate.ts",
     "bootstrap:status": "tsx src/cli/bootstrap.ts status",
     "bootstrap:superadmin": "tsx src/cli/bootstrap.ts superadmin",
     "bootstrap:tenant": "tsx src/cli/bootstrap.ts tenant",
@@ -15,7 +16,8 @@
     "audit:collect": "tsx scripts/audit/collect-evidence.ts",
     "audit:secrets": "bash scripts/audit/scan-secrets.sh",
     "test": "jest",
-    "test:rgpd": "jest tests/rgpd.*.test.ts tests/http.*.test.ts"
+    "test:rgpd": "jest tests/rgpd.*.test.ts tests/http.*.test.ts",
+    "test:lot4": "jest tests/db.lot4.*.test.ts"
   },
   "dependencies": {
     "commander": "^14.0.2",
