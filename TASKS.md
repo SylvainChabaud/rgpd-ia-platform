@@ -19,7 +19,7 @@
 | **EPIC 3** | Validation technique IA locale (POC contrôlé) | ✅ 100% | LOT 3.0 |
 | **EPIC 4** | Stockage IA & données utilisateur RGPD | ✅ 100% | LOT 4.0-4.1 |
 | **EPIC 5** | Pipeline RGPD (Droits des personnes) | ✅ 100% | LOT 5.0-5.3 |
-| **EPIC 6** | Stack IA Docker RGPD-ready (industrialisation) | ❌ TODO | LOT 6.0-6.1 |
+| **EPIC 6** | Stack IA Docker RGPD-ready (industrialisation) | ✅ 100% | LOT 6.0-6.1 |
 | **EPIC 7** | Kit conformité & audit RGPD | ❌ TODO | LOT 7.0-7.1 |
 | **EPIC 8** | Back Office Super Admin (Interface PLATFORM) | ❌ TODO | LOT 8.0-8.3 |
 | **EPIC 9** | Back Office Tenant Admin (Interface TENANT) | ❌ TODO | LOT 9.0-9.3 |
