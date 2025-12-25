@@ -18,6 +18,9 @@
     "bootstrap:tenant-admin": "tsx src/cli/bootstrap.ts tenant-admin",
     "audit:collect": "tsx scripts/audit/collect-evidence.ts",
     "audit:secrets": "bash scripts/audit/scan-secrets.sh",
+    "audit:rgpd-tests": "bash scripts/audit/run-rgpd-tests.sh",
+    "audit:report": "tsx scripts/audit/generate-audit-report.ts",
+    "audit:full": "pnpm audit:collect && pnpm audit:report",
     "test": "jest",
     "test:rgpd": "jest tests/rgpd.*.test.ts tests/http.*.test.ts",
     "test:lot4": "jest tests/db.lot4.*.test.ts tests/purge.lot4.test.ts"

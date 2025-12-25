@@ -390,7 +390,7 @@ describe("LOT 6.0 PRODUCTION READINESS: Port Configuration", () => {
       ? proxyService.volumes
       : Object.keys(proxyService.volumes);
 
-    const hasSSLVolume = volumes.some((v) => String(v).includes("ssl"));
+    const hasSSLVolume = volumes.some((v: unknown) => String(v).includes("ssl"));
     expect(hasSSLVolume).toBe(true);
   });
 });

@@ -364,7 +364,7 @@ describe("LOT 6.0 SECURITY: Docker Compose Validation", () => {
 
     for (const volumeName of expectedVolumes) {
       expect(config.volumes).toHaveProperty(volumeName);
-      expect(config.volumes[volumeName].driver).toBe("local");
+      expect(config.volumes?.[volumeName]?.driver).toBe("local");
     }
   });
 });
