@@ -103,4 +103,31 @@ export class PgConsentRepo implements ConsentRepo {
 
     return res.rows.map(mapRowToConsent);
   }
+
+  async revoke(
+    tenantId: string,
+    userId: string,
+    purpose: string
+  ): Promise<void> {
+    // BLOCKER: validate tenantId is provided (RGPD isolation)
+    if (!tenantId) {
+      throw new Error(
+        "RGPD VIOLATION: tenantId required for consent revocation"
+      );
+    }
+
+    // Update latest consent record: set granted=false and revoked_at=NOW()
+    await pool.query(
+      `UPDATE consents
+       SET granted = false, revoked_at = NOW()
+       WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
+       AND id = (
+         SELECT id FROM consents
+         WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
+         ORDER BY created_at DESC
+         LIMIT 1
+       )`,
+      [tenantId, userId, purpose]
+    );
+  }
 }

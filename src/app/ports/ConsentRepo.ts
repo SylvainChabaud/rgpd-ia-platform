@@ -60,4 +60,14 @@ export interface ConsentRepo {
    * @param userId - user identifier
    */
   findByUser(tenantId: string, userId: string): Promise<Consent[]>;
+
+  /**
+   * Revoke consent for user and purpose
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier
+   * @param purpose - consent purpose
+   * @throws Error if tenantId is empty (RGPD blocker)
+   */
+  revoke(tenantId: string, userId: string, purpose: string): Promise<void>;
 }
