@@ -1,11 +1,12 @@
 # TASKS.md — Roadmap d'exécution (Plateforme RGPD-IA complète)
 
-> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 10** et en respectant les markdowns normatifs.
+> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 13** et en respectant les markdowns normatifs.
 >
 > **Périmètre** :
 > - **EPIC 1-7** : Backend Next.js (API + services + infra)
 > - **EPIC 8-9** : Back Office (Super Admin + Tenant Admin)
 > - **EPIC 10** : Front User (interface utilisateur final)
+> - **EPIC 11-13** : RGPD Compliance 100% (Anonymisation, Legal, Security)
 
 ---
 
@@ -23,6 +24,9 @@
 | **EPIC 8** | Back Office Super Admin (Interface PLATFORM) | ❌ TODO | LOT 8.0-8.3 |
 | **EPIC 9** | Back Office Tenant Admin (Interface TENANT) | ❌ TODO | LOT 9.0-9.3 |
 | **EPIC 10** | Front User (Interface utilisateur final) | ❌ TODO | LOT 10.0-10.4 |
+| **EPIC 11** | Anonymisation & Pseudonymisation (Backend) | ❌ TODO | LOT 11.0-11.2 |
+| **EPIC 12** | RGPD Legal & Compliance (Frontend + Docs) | ❌ TODO | LOT 12.0-12.6 |
+| **EPIC 13** | Incident Response & Security Hardening | ❌ TODO | LOT 13.0-13.2 |
 
 ---
 
@@ -48,8 +52,8 @@ Références de cadrage (utiles) :
 
 ## 0.2 - Stratégie d'implémentation
 
-### Phase 1 : Backend (EPIC 1-7) — 🔴 PRIORITAIRE
-**Objectif** : API backend complète, production-ready, RGPD-compliant
+### Phase 1 : Backend Finalization (EPIC 1-7) — 🔴 PRIORITAIRE
+**Objectif** : API backend complète, production-ready, RGPD-compliant (85%)
 
 **Ordre recommandé** :
 1. ✅ **EPIC 1-5** : Socle + IA + RGPD (TERMINÉ)
@@ -64,11 +68,37 @@ Références de cadrage (utiles) :
 1. ❌ **EPIC 8** : Back Office Super Admin (gestion tenants/users/audit)
 2. ❌ **EPIC 9** : Back Office Tenant Admin (gestion users tenant/consents/RGPD)
 
-### Phase 3 : Front User (EPIC 10) — 🟢 EN DERNIER
+### Phase 3 : Front User (EPIC 10) — 🟢 INTERFACES UTILISATEURS
 **Objectif** : Interface utilisateur final pour utiliser l'IA
 
 **Ordre recommandé** :
 1. ❌ **EPIC 10** : Front User (AI Tools + My Data + RGPD)
+
+### Phase 4 : RGPD 100% Compliance (EPIC 11-13) — 🟣 CRITIQUE PRODUCTION
+**Objectif** : Combler gaps RGPD identifiés, atteindre 100% conformité
+
+**Ordre recommandé** :
+1. ❌ **EPIC 11** : Anonymisation & Pseudonymisation (Art. 32)
+   - LOT 11.0 : PII Detection & Redaction (Gateway LLM)
+   - LOT 11.1 : Anonymisation IP (Logs & Audit)
+   - LOT 11.2 : Audit PII Logs (Scan automatique)
+2. ❌ **EPIC 12** : RGPD Legal & Compliance (Art. 13-14, 18-22, 30, 35)
+   - LOT 12.0 : Politique de Confidentialité
+   - LOT 12.1 : CGU / CGV
+   - LOT 12.2 : Page "Informations RGPD"
+   - LOT 12.3 : Cookie Consent Banner (ePrivacy)
+   - LOT 12.4 : Registre des Traitements (Art. 30)
+   - LOT 12.5 : DPIA Gateway LLM (Art. 35)
+   - LOT 12.6 : Droits complémentaires (Art. 18, 21, 22)
+3. ❌ **EPIC 13** : Incident Response & Security Hardening (Art. 33-34)
+   - LOT 13.0 : Runbook "Incident RGPD"
+   - LOT 13.1 : Pentest & Vulnerability Scanning
+   - LOT 13.2 : Chaos Engineering & Résilience
+
+**Timeline** :
+- **Phase 1-3** : 12 semaines (plateforme fonctionnelle 85% RGPD)
+- **Phase 4** : 7 semaines supplémentaires (100% RGPD production-ready)
+- **TOTAL** : 19 semaines pour conformité complète
 
 ---
 
@@ -1005,5 +1035,463 @@ Sans **aucun endpoint HTTP exposé**.
 - Export données E2E
 - Download export E2E
 - Supprimer compte E2E (soft delete vérifié)
+
+---
+# EPIC 11 — Anonymisation & Pseudonymisation (Backend)
+
+## LOT 11.0 — PII Detection & Redaction (Gateway LLM)
+
+**EPIC couverts** : EPIC 11, EPIC 3 (Gateway LLM)
+
+**Avant implémentation** : lire EPIC 11 + `docs/epics/EPIC_11_Anonymisation_Pseudonymisation.md`.
+
+**Objectif** : détecter et masquer PII dans prompts avant envoi LLM (Art. 32).
+
+**Artefacts attendus**
+- Module PII detector (`src/infrastructure/pii/detector.ts`)
+- Module PII masker (`src/infrastructure/pii/masker.ts`)
+- Patterns regex PII (`src/infrastructure/pii/patterns.ts`)
+- Middleware Gateway LLM (intégration redaction)
+- Tests détection (emails, noms, téléphones, adresses)
+- Tests masking (tokens `[PERSON_1]`, `[EMAIL_1]`)
+- Tests restauration PII (reverse mapping)
+- Audit PII détection (sans stocker valeurs)
+
+**Acceptance criteria (bloquants)**
+- Détection PERSON, EMAIL, PHONE, ADDRESS (regex + NER optionnel)
+- Masking avant envoi LLM (`Jean Dupont` → `[PERSON_1]`)
+- Mapping non persisté (mémoire uniquement)
+- Restauration PII optionnelle en sortie
+- Audit event `llm.pii_detected` (types PII, counts)
+- Tests RGPD passants (95% recall PII)
+
+**Tests obligatoires**
+- tests/rgpd.pii-redaction.test.ts (détection emails, noms, téléphones)
+- tests/rgpd.pii-masking.test.ts (masking tokens)
+- tests/rgpd.pii-restoration.test.ts (reverse mapping)
+- tests/rgpd.pii-audit.test.ts (audit sans valeurs PII)
+
+---
+
+## LOT 11.1 — Anonymisation IP (Logs & Audit)
+
+**EPIC couverts** : EPIC 11, EPIC 1 (Audit trail)
+
+**Avant implémentation** : lire EPIC 11 (LOT 11.1).
+
+**Objectif** : anonymiser IPs dans logs/audit après 7 jours (ePrivacy).
+
+**Artefacts attendus**
+- Job cron anonymisation IP (`src/infrastructure/jobs/anonymize-ips.job.ts`)
+- Fonction anonymisation IPv4/IPv6
+- Configuration cron (Kubernetes CronJob ou équivalent)
+- Tests job cron (logs > 7j anonymisés)
+- Tests job cron (logs < 7j intacts)
+- Monitoring job (alertes échec)
+
+**Acceptance criteria (bloquants)**
+- Job cron quotidien (3h du matin)
+- Anonymisation IPv4 dernier octet (`192.168.1.123` → `192.168.1.0`)
+- Anonymisation IPv6 dernier bloc (`2001:db8:85a3::` → `2001:db8:85a3::`)
+- Logs > 7 jours : IPs écrasées
+- Logs < 7 jours : IPs préservées (investigation incidents)
+- Audit job : trace nombre IPs anonymisées
+
+**Tests obligatoires**
+- tests/rgpd.ip-anonymization.test.ts (IPv4, IPv6)
+- tests/rgpd.ip-anonymization.test.ts (job cron > 7j, < 7j)
+
+---
+
+## LOT 11.2 — Audit PII Logs (Scan automatique)
+
+**EPIC couverts** : EPIC 11, EPIC 7 (Observability)
+
+**Avant implémentation** : lire EPIC 11 (LOT 11.2).
+
+**Objectif** : détecter PII accidentellement loguées (emails, noms en clair).
+
+**Artefacts attendus**
+- Job cron scan PII logs (`src/infrastructure/jobs/scan-pii-logs.job.ts`)
+- Regex PII (emails, téléphones, patterns noms)
+- Alertes email DevOps si détection PII
+- Configuration alertes (Sentry, Slack, email)
+- Tests scan (détection email, téléphone dans logs)
+- Tests exclusions (user.email colonne OK)
+
+**Acceptance criteria (bloquants)**
+- Job cron quotidien (4h du matin)
+- Scan colonnes `audit_events.metadata`, logs applicatifs
+- Détection emails, téléphones, patterns noms (capitalized)
+- Exclusions : colonnes légitimes (`user.email`)
+- Alertes envoyées si détection PII
+- Tests RGPD passants
+
+**Tests obligatoires**
+- tests/rgpd.pii-scan-logs.test.ts (détection email, phone)
+- tests/rgpd.pii-scan-logs.test.ts (exclusion usages légitimes)
+
+---
+
+# EPIC 12 — RGPD Legal & Compliance (Frontend + Docs)
+
+## LOT 12.0 — Politique de Confidentialité
+
+**EPIC couverts** : EPIC 12 (Art. 13-14)
+
+**Avant implémentation** : lire EPIC 12 + `docs/epics/EPIC_12_RGPD_Legal_Compliance.md`.
+
+**Objectif** : rédiger et publier politique de confidentialité RGPD-compliant.
+
+**Artefacts attendus**
+- Document `/docs/legal/POLITIQUE_CONFIDENTIALITE.md`
+- Page frontend `/legal/privacy-policy` (Next.js SSG)
+- Lien footer "Politique de confidentialité"
+- Versioning (date dernière modification)
+- Contenu complet (Art. 13-14) :
+  - Identité responsable traitement
+  - Contact DPO
+  - Finalités traitement
+  - Bases légales (consentement, contrat)
+  - Catégories données (P0-P3)
+  - Destinataires (fournisseurs LLM, hébergeur)
+  - Durée conservation (90j ai_jobs, 3 ans users)
+  - Droits utilisateurs (accès, effacement, portabilité, etc.)
+  - Droit réclamation CNIL
+  - Décisions automatisées (mention IA)
+
+**Acceptance criteria (bloquants)**
+- Document créé et complet (tous points Art. 13-14)
+- Page accessible publiquement
+- Lien footer fonctionnel
+- Responsive (mobile/desktop)
+- Format Markdown + HTML (SSG)
+
+**Tests obligatoires**
+- Tests E2E page accessible
+- Tests E2E lien footer actif
+
+---
+
+## LOT 12.1 — CGU / CGV
+
+**EPIC couverts** : EPIC 12 (Art. 6 - base légale contrat)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.1).
+
+**Objectif** : rédiger CGU + processus acceptation signup.
+
+**Artefacts attendus**
+- Document `/docs/legal/CGU.md`
+- Page frontend `/legal/terms-of-service`
+- Lien footer "CGU"
+- Checkbox signup "J'accepte les CGU" (obligatoire)
+- Table DB `cgu_versions` (versioning)
+- Table DB `user_cgu_acceptances` (traçabilité)
+- Migration `004_cgu_versions.sql`
+
+**Acceptance criteria (bloquants)**
+- Document CGU créé (objet, conditions accès, obligations, responsabilité, résiliation)
+- Page accessible publiquement
+- Checkbox signup obligatoire (validation frontend + backend)
+- Acceptation tracée DB (user_id, cgu_version_id, accepted_at)
+- Tests E2E acceptation CGU
+
+**Tests obligatoires**
+- tests/rgpd.cgu-acceptance.test.ts (checkbox obligatoire)
+- tests/rgpd.cgu-versions.test.ts (historique versions)
+
+---
+
+## LOT 12.2 — Page "Informations RGPD"
+
+**EPIC couverts** : EPIC 12 (Art. 13-14)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.2).
+
+**Objectif** : créer page centralisée informations RGPD (DPO, droits, réclamation).
+
+**Artefacts attendus**
+- Page frontend `/legal/rgpd-info`
+- Lien footer "Informations RGPD"
+- Contenu :
+  - Identité responsable traitement
+  - Contact DPO (email + formulaire)
+  - Finalités traitement (résumé)
+  - Bases légales (consentement, contrat)
+  - Droits utilisateurs (liste + liens actions)
+  - Droit réclamation CNIL (lien site CNIL)
+  - Liens utiles (politique confidentialité, CGU, export RGPD)
+- Formulaire contact DPO fonctionnel (email backend)
+
+**Acceptance criteria (bloquants)**
+- Page accessible publiquement
+- Lien footer fonctionnel
+- Formulaire contact DPO envoie email
+- Tous liens droits utilisateurs actifs
+- Responsive (mobile/desktop)
+
+**Tests obligatoires**
+- Tests E2E page accessible
+- Tests E2E formulaire contact DPO
+
+---
+
+## LOT 12.3 — Cookie Consent Banner
+
+**EPIC couverts** : EPIC 12 (ePrivacy Art. 5.3)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.3).
+
+**Objectif** : implémenter cookie consent banner ePrivacy-compliant.
+
+**Artefacts attendus**
+- Component `src/app/components/CookieConsentBanner.tsx`
+- Catégories cookies :
+  - Nécessaires (JWT, CSRF) : pré-cochées, non modifiables
+  - Analytics (optionnel) : checkbox opt-in
+  - Marketing (optionnel) : checkbox opt-in
+- Boutons : "Accepter tout", "Refuser tout", "Personnaliser"
+- Persistance choix localStorage (`cookie_consent`, 12 mois)
+- Blocage scripts analytics/marketing si refus
+- Page "Gérer cookies" (footer) : révocation possible
+
+**Acceptance criteria (bloquants)**
+- Banner affiché première visite (si pas de choix)
+- Choix persistés 12 mois
+- Scripts bloqués si refus (tests E2E)
+- Révocation possible (page "Gérer cookies")
+- Conformité CNIL (guidelines cookies françaises)
+
+**Tests obligatoires**
+- tests/rgpd.cookie-banner.test.ts (affichage première visite)
+- tests/rgpd.cookie-banner.test.ts (blocage scripts si refus)
+
+---
+
+## LOT 12.4 — Registre des Traitements (Art. 30)
+
+**EPIC couverts** : EPIC 12 (Art. 30)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.4).
+
+**Objectif** : créer registre des traitements RGPD-compliant.
+
+**Artefacts attendus**
+- Document `/docs/rgpd/REGISTRE_TRAITEMENTS.md`
+- 5 traitements documentés :
+  1. Authentification users
+  2. Invocation Gateway LLM
+  3. Gestion consentements IA
+  4. Export/effacement RGPD
+  5. Audit trail et logs système
+- Accessible Super Admin (interface Back Office, lecture seule)
+- Versioning (date dernière mise à jour)
+- Validation DPO (signature électronique)
+
+**Acceptance criteria (bloquants)**
+- Document complet (finalités, bases légales, catégories données, destinataires, durées, sécurité)
+- 5 traitements documentés
+- Accessible interface Back Office
+- Validation DPO
+
+**Tests obligatoires**
+- Tests E2E accès registre (Super Admin uniquement)
+
+---
+
+## LOT 12.5 — DPIA Gateway LLM (Art. 35)
+
+**EPIC couverts** : EPIC 12 (Art. 35)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.5).
+
+**Objectif** : réaliser analyse d'impact DPIA pour traitement IA (risque élevé).
+
+**Artefacts attendus**
+- Document `/docs/rgpd/DPIA_GATEWAY_LLM.md`
+- Contenu DPIA :
+  1. Description systématique traitement (Gateway LLM, modèles, purposes)
+  2. Nécessité et proportionnalité
+  3. Évaluation risques (hallucinations, fuite PII, biais, contournement, accès non autorisé)
+  4. Mesures atténuation (consentement, pseudonymisation EPIC 11, audit trail, chiffrement)
+  5. Validation DPO (signature)
+- Accessible Super Admin (interface Back Office, lecture seule)
+
+**Acceptance criteria (bloquants)**
+- Document DPIA complet (5 sections)
+- 5 risques évalués (impact, vraisemblance, risque résiduel)
+- Mesures atténuation documentées (EPICs 1-13)
+- Validation DPO (signature)
+- Accessible interface Back Office
+
+**Tests obligatoires**
+- Tests E2E accès DPIA (Super Admin/DPO uniquement)
+
+---
+
+## LOT 12.6 — Droits complémentaires (Art. 18, 21, 22)
+
+**EPIC couverts** : EPIC 12 (Art. 18, 21, 22)
+
+**Avant implémentation** : lire EPIC 12 (LOT 12.6).
+
+**Objectif** : implémenter droits RGPD manquants (limitation, opposition, révision humaine).
+
+**Artefacts attendus**
+- **Art. 18 - Limitation** :
+  - Bouton "Suspendre mes données" (My Data page)
+  - Flag DB `users.data_suspended`
+  - Effet : Bloc invocations LLM (HTTP 403)
+  - Email confirmation suspension
+  - Bouton "Réactiver mes données"
+- **Art. 21 - Opposition** :
+  - Page "Opposition traitement"
+  - Formulaire : traitement concerné, motif
+  - Workflow back-office : ticket support
+  - Email confirmation
+- **Art. 22 - Révision humaine** :
+  - Bouton "Contester ce résultat" (outputs IA)
+  - Formulaire : motif, upload preuve
+  - Table DB `user_disputes`
+  - Workflow back-office : admin révise, répond
+  - Email réponse
+
+**Acceptance criteria (bloquants)**
+- Suspension données fonctionnelle (LLM bloqué)
+- Réactivation fonctionnelle (LLM débloqué)
+- Formulaire opposition fonctionnel (ticket créé)
+- Workflow disputes fonctionnel (admin résout)
+- Emails notifications envoyés
+- Tests RGPD passants
+
+**Tests obligatoires**
+- tests/rgpd.data-suspension.test.ts (LLM bloqué si suspended)
+- tests/rgpd.dispute-submission.test.ts (ticket créé)
+- tests/rgpd.dispute-workflow.test.ts (admin résout, email envoyé)
+
+---
+
+# EPIC 13 — Incident Response & Security Hardening
+
+## LOT 13.0 — Runbook "Incident RGPD"
+
+**EPIC couverts** : EPIC 13 (Art. 33-34)
+
+**Avant implémentation** : lire EPIC 13 + `docs/epics/EPIC_13_Incident_Response_Security_Hardening.md`.
+
+**Objectif** : créer processus complet gestion violations données (Art. 33-34).
+
+**Artefacts attendus**
+- Runbook `/docs/runbooks/INCIDENT_RGPD.md`
+- Configuration alertes monitoring (`config/alerts.yaml`)
+- Détection automatique violations :
+  - Brute force (> 10 failed logins / 5 min)
+  - Cross-tenant access (ANY)
+  - Export massif (> 10k records/h)
+  - PII logs détectée (EPIC 11)
+  - Backup failures (2× consécutifs)
+- Workflow escalade (DPO, CNIL, users)
+- Grille évaluation risque (faible/élevé)
+- Table DB `data_breaches` (registre violations Art. 33.5)
+- Templates notification :
+  - `/docs/templates/NOTIFICATION_CNIL.md`
+  - `/docs/templates/NOTIFICATION_USERS.md`
+- Interface Back Office registre violations (CRUD, export CSV)
+
+**Acceptance criteria (bloquants)**
+- Runbook documenté (workflow, timeline 72h, checklist)
+- Alertes configurées (Prometheus/AlertManager)
+- Table `data_breaches` créée (migration `005_data_breaches.sql`)
+- Interface Back Office fonctionnelle (liste, ajout, export)
+- Templates notification créés et validés juridiquement
+- Tests E2E détection incidents
+
+**Tests obligatoires**
+- tests/rgpd.incident-detection.test.ts (brute force, cross-tenant)
+- tests/rgpd.data-breaches.test.ts (CRUD registre)
+
+---
+
+## LOT 13.1 — Pentest & Vulnerability Scanning
+
+**EPIC couverts** : EPIC 13 (Art. 32)
+
+**Avant implémentation** : lire EPIC 13 (LOT 13.1).
+
+**Objectif** : identifier et corriger vulnérabilités sécurité (OWASP Top 10).
+
+**Artefacts attendus**
+- Scan OWASP ZAP exécuté (rapport HTML)
+- Scan npm audit/Snyk exécuté (rapport)
+- Pentest manuel 20 scénarios minimum :
+  - Auth (brute force, JWT manipulation)
+  - RBAC/ABAC (élévation privilèges, cross-tenant)
+  - Gateway LLM (bypass consentement, injection prompts)
+  - Export RGPD (IDOR, DoS)
+  - API inputs (SQL injection, XSS, path traversal)
+- Rapport final `/docs/security/PENTEST_REPORT_[DATE].md`
+- Corrections vulnérabilités critiques/hautes (100%)
+- Plan remédiation vulnérabilités moyennes
+
+**Acceptance criteria (bloquants)**
+- Scans exécutés (rapports générés)
+- Vulnérabilités critiques : 0
+- Vulnérabilités hautes : corrigées ou plan remédiation
+- Rapport pentest complet (vulnérabilités, PoC, remédiation)
+- Tests régression validant corrections
+
+**Commandes**
+```bash
+pnpm audit --audit-level=high
+npx snyk test --severity-threshold=high
+docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.example.com
+```
+
+**Tests obligatoires**
+- Tests régression post-corrections (vulnérabilités corrigées)
+
+---
+
+## LOT 13.2 — Chaos Engineering & Résilience
+
+**EPIC couverts** : EPIC 13 (Art. 32)
+
+**Avant implémentation** : lire EPIC 13 (LOT 13.2).
+
+**Objectif** : tester résilience infrastructure (disponibilité, backup/restore).
+
+**Artefacts attendus**
+- Tests chaos (5 scénarios minimum) :
+  1. Kill random pod (auto-restart)
+  2. Kill DB replica (failover automatique)
+  3. Network latency +500ms (timeouts gérés)
+  4. CPU spike 100% (throttling gracieux)
+  5. Disk full (alertes + purge auto)
+- Tests backup/restore :
+  - Backup automatique quotidien (cron)
+  - Restore complet (< 4h RTO)
+  - Restore partiel (table spécifique)
+  - Point-in-time recovery (< 1h RPO)
+- Tests failover :
+  - DB primary failure (promotion replica < 30s)
+  - Load balancer failure (reroute traffic)
+- Runbook `/docs/runbooks/BACKUP_RESTORE.md`
+- Rapport `/docs/testing/CHAOS_REPORT_[DATE].md`
+
+**Acceptance criteria (bloquants)**
+- Tests chaos exécutés (5 scénarios)
+- Service reste disponible (uptime > 99%)
+- Alertes déclenchées correctement
+- Auto-recovery fonctionne (< 30s downtime)
+- Backup/restore testé (RTO < 4h, RPO < 1h)
+- Failover DB testé (< 30s)
+- Runbook backup/restore documenté
+
+**Tests obligatoires**
+- tests/infra.backup.test.ts (backup quotidien créé)
+- tests/infra.restore.test.ts (restore complet réussi)
+- tests/infra.failover.test.ts (promotion replica < 30s)
+- tests/infra.chaos.test.ts (service continue après kill pod)
 
 ---

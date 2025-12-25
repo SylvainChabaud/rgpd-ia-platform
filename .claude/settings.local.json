@@ -7,7 +7,9 @@
       "Bash(npm run typecheck:*)",
       "Bash(cat:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx tsc --noEmit --pretty)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

@@ -13,4 +13,17 @@ export class Sha256PasswordHasher implements PasswordHasher {
       .digest("hex");
     return `${salt}:${digest}`;
   }
+
+  async verify(password: string, hash: string): Promise<boolean> {
+    const [salt, expectedDigest] = hash.split(":");
+    if (!salt || !expectedDigest) {
+      return false;
+    }
+
+    const actualDigest = createHash("sha256")
+      .update(salt + ":" + password)
+      .digest("hex");
+
+    return actualDigest === expectedDigest;
+  }
 }
