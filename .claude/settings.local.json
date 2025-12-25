@@ -4,7 +4,9 @@
       "Bash(npm test:*)",
       "Bash(bash scripts/audit/scan-secrets.sh:*)",
       "Bash(npm run lint)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)"
     ]
   }
 }
