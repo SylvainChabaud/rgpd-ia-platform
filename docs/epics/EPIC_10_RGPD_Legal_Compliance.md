@@ -1,4 +1,4 @@
-# EPIC 12 — RGPD Legal & Compliance (Frontend + Docs)
+# EPIC 10 — RGPD Legal & Compliance (Frontend + Docs)
 
 **Date** : 25 décembre 2025  
 **Statut** : ❌ TODO  
@@ -53,10 +53,302 @@ Créer **tous les documents légaux et interfaces RGPD** manquants :
 
 | EPIC | Relation | Détails |
 |------|----------|---------|
-| **EPIC 10** | ✅ Modifie | Ajoute interfaces RGPD (cookies, droits) |
-| **EPIC 8-9** | ✅ Modifie | Ajoute accès registre/DPIA pour admins |
+| **EPIC 11-13** | ✅ Modifie | Ajoute interfaces RGPD (cookies, droits) dans frontends |
+| **EPIC 8-9** | ✅ Utilise | Accès registre/DPIA pour admins, scan PII |
 | **EPIC 5** | ✅ Complète | Ajoute droits Art. 18/21/22 |
 | **EPIC 1** | ✅ Utilise | Auth/audit pour nouvelles fonctionnalités |
+
+---
+
+## 1.4 Spécifications API Endpoints RGPD (Art. 18/21/22 + Cookies)
+
+> **⚠️ CRITIQUE** : Ces endpoints BACK sont requis avant développement des FRONTs (EPIC 11-13).
+
+### 1.4.1 Cookie Consent API (ePrivacy)
+
+#### `GET /api/consents/cookies`
+**Description** : Récupérer les préférences cookies de l'utilisateur courant.
+
+**Request** :
+```http
+GET /api/consents/cookies
+Authorization: Bearer <jwt> (optionnel si anonyme)
+Cookie: cookie_consent_id=<uuid> (si anonyme)
+```
+
+**Response (200)** :
+```json
+{
+  "necessary": true,
+  "analytics": false,
+  "marketing": false,
+  "savedAt": "2025-12-26T10:00:00Z"
+}
+```
+
+**Response (404)** : Aucune préférence enregistrée.
+
+---
+
+#### `POST /api/consents/cookies`
+**Description** : Enregistrer les préférences cookies.
+
+**Request** :
+```json
+{
+  "necessary": true,
+  "analytics": true,
+  "marketing": false
+}
+```
+
+**Response (201)** :
+```json
+{
+  "id": "uuid",
+  "necessary": true,
+  "analytics": true,
+  "marketing": false,
+  "savedAt": "2025-12-26T10:00:00Z"
+}
+```
+
+**Audit Event** : `cookies.consent.saved`
+
+---
+
+### 1.4.2 Data Suspension API (Art. 18)
+
+#### `POST /api/rgpd/suspend`
+**Description** : Suspendre le traitement des données utilisateur (Art. 18).
+
+**Request** :
+```json
+{
+  "reason": "Investigation en cours sur exactitude données"
+}
+```
+
+**Response (200)** :
+```json
+{
+  "userId": "uuid",
+  "dataSuspended": true,
+  "suspendedAt": "2025-12-26T10:00:00Z",
+  "message": "Données suspendues. Vous ne pouvez plus utiliser les outils IA."
+}
+```
+
+**Effect** : 
+- `users.data_suspended = true`
+- Toute invocation LLM renvoie HTTP 403
+
+**Audit Event** : `user.data_suspended`
+
+---
+
+#### `POST /api/rgpd/unsuspend`
+**Description** : Réactiver le traitement des données utilisateur.
+
+**Request** : (aucun body)
+
+**Response (200)** :
+```json
+{
+  "userId": "uuid",
+  "dataSuspended": false,
+  "reactivatedAt": "2025-12-26T11:00:00Z",
+  "message": "Données réactivées. Vous pouvez à nouveau utiliser les outils IA."
+}
+```
+
+**Audit Event** : `user.data_reactivated`
+
+---
+
+### 1.4.3 Opposition API (Art. 21)
+
+#### `POST /api/rgpd/oppose`
+**Description** : Soumettre une opposition au traitement (Art. 21).
+
+**Request** :
+```json
+{
+  "treatmentType": "analytics",
+  "reason": "Je ne souhaite plus que mes données soient utilisées pour statistiques"
+}
+```
+
+**Response (201)** :
+```json
+{
+  "id": "uuid",
+  "userId": "uuid",
+  "treatmentType": "analytics",
+  "status": "pending",
+  "createdAt": "2025-12-26T10:00:00Z",
+  "estimatedResponseDate": "2026-01-26T10:00:00Z"
+}
+```
+
+**Workflow** : Ticket créé → Admin traite → Email réponse sous 1 mois.
+
+**Audit Event** : `user.opposition_submitted`
+
+---
+
+#### `GET /api/rgpd/oppositions`
+**Description** : Liste des oppositions de l'utilisateur courant.
+
+**Response (200)** :
+```json
+{
+  "oppositions": [
+    {
+      "id": "uuid",
+      "treatmentType": "analytics",
+      "status": "resolved",
+      "createdAt": "2025-12-01T10:00:00Z",
+      "resolvedAt": "2025-12-15T10:00:00Z",
+      "response": "Opposition acceptée. Analytics désactivé pour votre compte."
+    }
+  ]
+}
+```
+
+---
+
+### 1.4.4 Contest AI API (Art. 22)
+
+#### `POST /api/rgpd/contest`
+**Description** : Contester un résultat IA et demander révision humaine (Art. 22).
+
+**Request** :
+```json
+{
+  "aiJobId": "uuid",
+  "reason": "Le résumé généré contient des informations factuellement incorrectes",
+  "attachmentUrl": "https://storage.example.com/proof.pdf"
+}
+```
+
+**Response (201)** :
+```json
+{
+  "id": "uuid",
+  "userId": "uuid",
+  "aiJobId": "uuid",
+  "status": "pending",
+  "createdAt": "2025-12-26T10:00:00Z",
+  "estimatedResponseDate": "2026-01-26T10:00:00Z",
+  "message": "Contestation enregistrée. Révision humaine sous 30 jours."
+}
+```
+
+**Audit Event** : `user.dispute_submitted`
+
+---
+
+#### `GET /api/rgpd/contests`
+**Description** : Liste des contestations de l'utilisateur courant.
+
+**Query Params** : `?status=pending|reviewed|resolved`
+
+**Response (200)** :
+```json
+{
+  "contests": [
+    {
+      "id": "uuid",
+      "aiJobId": "uuid",
+      "aiJobPurpose": "Résumé de documents",
+      "status": "resolved",
+      "createdAt": "2025-12-01T10:00:00Z",
+      "resolvedAt": "2025-12-20T10:00:00Z",
+      "adminResponse": "Après vérification, le résumé a été corrigé manuellement."
+    }
+  ]
+}
+```
+
+---
+
+#### `PATCH /api/rgpd/contests/:contestId` (Admin only)
+**Description** : Résoudre une contestation (Tenant Admin ou Super Admin).
+
+**Request** :
+```json
+{
+  "status": "resolved",
+  "adminResponse": "Après vérification, le résumé a été corrigé manuellement."
+}
+```
+
+**Response (200)** :
+```json
+{
+  "id": "uuid",
+  "status": "resolved",
+  "resolvedAt": "2025-12-26T10:00:00Z",
+  "adminResponse": "Après vérification, le résumé a été corrigé manuellement."
+}
+```
+
+**Effect** : Email envoyé à l'utilisateur avec la réponse.
+
+**Audit Event** : `admin.dispute_resolved`
+
+---
+
+### 1.4.5 Tenant Admin Endpoints (RGPD Monitoring)
+
+Ces endpoints permettent au Tenant Admin de suivre les droits RGPD exercés par ses users.
+
+#### `GET /api/tenants/:tenantId/rgpd/suspensions`
+**Description** : Liste des utilisateurs ayant suspendu leurs données.
+
+**Response (200)** :
+```json
+{
+  "suspensions": [
+    {
+      "userId": "uuid",
+      "userEmail": "j***@example.com",
+      "suspendedAt": "2025-12-26T10:00:00Z",
+      "reason": "Investigation en cours"
+    }
+  ]
+}
+```
+
+---
+
+#### `GET /api/tenants/:tenantId/rgpd/oppositions`
+**Description** : Liste des oppositions des utilisateurs du tenant.
+
+---
+
+#### `GET /api/tenants/:tenantId/rgpd/contests`
+**Description** : Liste des contestations IA des utilisateurs du tenant.
+
+---
+
+### 1.4.6 Corrélation Endpoints → FRONT
+
+| Endpoint | FRONT Consumer | EPIC | User Story |
+|----------|----------------|------|------------|
+| `POST /api/consents/cookies` | Cookie Banner (Layout) | EPIC 10/13 | US 10.4 |
+| `GET /api/consents/cookies` | Cookie Banner (Layout) | EPIC 10/13 | US 10.4 |
+| `POST /api/rgpd/suspend` | My Data page (EPIC 13) | EPIC 10/13 | US 10.7 |
+| `POST /api/rgpd/unsuspend` | My Data page (EPIC 13) | EPIC 10/13 | US 10.7 |
+| `POST /api/rgpd/oppose` | My Data page (EPIC 13) | EPIC 10/13 | US 10.8 |
+| `GET /api/rgpd/oppositions` | My Data page (EPIC 13) | EPIC 10/13 | US 10.8 |
+| `POST /api/rgpd/contest` | AI Result view (EPIC 13) | EPIC 10/13 | US 10.9 |
+| `GET /api/rgpd/contests` | My Data page (EPIC 13) | EPIC 10/13 | US 10.9 |
+| `GET /api/tenants/:id/rgpd/suspensions` | RGPD Dashboard (EPIC 12) | EPIC 10/12 | - |
+| `GET /api/tenants/:id/rgpd/oppositions` | RGPD Dashboard (EPIC 12) | EPIC 10/12 | - |
+| `GET /api/tenants/:id/rgpd/contests` | RGPD Dashboard (EPIC 12) | EPIC 10/12 | - |
+| `PATCH /api/rgpd/contests/:id` | Contest Detail (EPIC 12) | EPIC 10/12 | - |
 
 ---
 
@@ -194,13 +486,13 @@ Créer **tous les documents légaux et interfaces RGPD** manquants :
 
 ## 3. Périmètre fonctionnel
 
-### 3.1 LOT 12.0 — Politique de Confidentialité
+### 3.1 LOT 10.0 — Politique de Confidentialité
 
 **Objectif** : Rédiger et publier politique de confidentialité complète (Art. 13-14).
 
 **User Stories** :
 
-#### US 12.1 : Rédaction politique de confidentialité
+#### US 10.1 : Rédaction politique de confidentialité
 **En tant que** Équipe juridique  
 **Je veux** rédiger politique de confidentialité RGPD-compliant  
 **Afin de** informer utilisateurs sur usage données
@@ -304,13 +596,13 @@ Questions RGPD : dpo@example.com
 
 ---
 
-### 3.2 LOT 12.1 — CGU / CGV
+### 3.2 LOT 10.1 — CGU / CGV
 
 **Objectif** : Rédiger conditions générales d'utilisation (base légale contrat).
 
 **User Stories** :
 
-#### US 12.2 : Rédaction CGU
+#### US 10.2 : Rédaction CGU
 **En tant que** Équipe juridique  
 **Je veux** rédiger CGU RGPD-compliant  
 **Afin de** définir cadre contractuel utilisation plateforme
@@ -382,13 +674,13 @@ Questions : support@example.com
 
 ---
 
-### 3.3 LOT 12.2 — Page "Informations RGPD"
+### 3.3 LOT 10.2 — Page "Informations RGPD"
 
 **Objectif** : Créer page centralisée informations RGPD (DPO, droits, réclamation).
 
 **User Stories** :
 
-#### US 12.3 : Page "Informations RGPD"
+#### US 10.3 : Page "Informations RGPD"
 **En tant que** Utilisateur  
 **Je veux** accéder facilement à toutes informations RGPD  
 **Afin de** connaître mes droits et contacts
@@ -447,13 +739,13 @@ Questions : support@example.com
 
 ---
 
-### 3.4 LOT 12.3 — Cookie Consent Banner
+### 3.4 LOT 10.3 — Cookie Consent Banner
 
 **Objectif** : Implémenter cookie consent banner ePrivacy-compliant.
 
 **User Stories** :
 
-#### US 12.4 : Cookie banner première visite
+#### US 10.4 : Cookie banner première visite
 **En tant que** Utilisateur  
 **Je veux** être informé des cookies et donner mon consentement  
 **Afin de** respecter ma vie privée
@@ -560,13 +852,13 @@ export function CookieConsentBanner() {
 
 ---
 
-### 3.5 LOT 12.4 — Registre des Traitements (Art. 30)
+### 3.5 LOT 10.4 — Registre des Traitements (Art. 30)
 
 **Objectif** : Créer registre des traitements RGPD-compliant.
 
 **User Stories** :
 
-#### US 12.5 : Registre des traitements documenté
+#### US 10.5 : Registre des traitements documenté
 **En tant que** DPO  
 **Je veux** disposer d'un registre des traitements à jour  
 **Afin de** prouver conformité RGPD en cas d'audit CNIL
@@ -608,7 +900,7 @@ export function CookieConsentBanner() {
 | **Destinataires** | Fournisseurs LLM (OpenAI, Anthropic), hébergeur (logs temporaires) |
 | **Transferts hors UE** | Oui (OpenAI USA, Anthropic USA, CCT + Privacy Shield) |
 | **Durée conservation** | Métadonnées : 90 jours max (purge auto), prompts/outputs : 0 jour (non stockés) |
-| **Mesures sécurité** | Gateway LLM unique, consentement opt-in, pseudonymisation PII (EPIC 11), audit trail |
+| **Mesures sécurité** | Gateway LLM unique, consentement opt-in, pseudonymisation PII (EPIC 8), audit trail |
 
 ---
 
@@ -653,7 +945,7 @@ export function CookieConsentBanner() {
 | **Destinataires** | Équipe DevOps (accès restreint), DPO |
 | **Transferts hors UE** | Non |
 | **Durée conservation** | 5 ans (obligation légale), IP anonymisée après 7 jours |
-| **Mesures sécurité** | Append-only logs, anonymisation IP auto (EPIC 11), chiffrement at-rest, accès RBAC |
+| **Mesures sécurité** | Append-only logs, anonymisation IP auto (EPIC 8), chiffrement at-rest, accès RBAC |
 
 ---
 
@@ -670,13 +962,13 @@ export function CookieConsentBanner() {
 
 ---
 
-### 3.6 LOT 12.5 — DPIA Gateway LLM (Art. 35)
+### 3.6 LOT 10.5 — DPIA Gateway LLM (Art. 35)
 
 **Objectif** : Réaliser analyse d'impact DPIA pour traitement IA (risque élevé).
 
 **User Stories** :
 
-#### US 12.6 : DPIA Gateway LLM documentée
+#### US 10.6 : DPIA Gateway LLM documentée
 **En tant que** DPO  
 **Je veux** réaliser DPIA pour traitement IA  
 **Afin de** prouver évaluation risques conformité RGPD
@@ -755,7 +1047,7 @@ export function CookieConsentBanner() {
 **Vraisemblance** : 🟡 Moyenne (users peuvent inclure PII prompts)
 
 **Mesures atténuation** :
-- ✅ **EPIC 11** : Pseudonymisation automatique PII avant envoi LLM
+- ✅ **EPIC 8** : Pseudonymisation automatique PII avant envoi LLM
 - ✅ Consentement opt-in explicite (mention partage tiers)
 - ✅ Clauses contractuelles types (CCT) avec fournisseurs LLM
 - ✅ Outputs non persistés (P3 interdit)
@@ -813,7 +1105,7 @@ export function CookieConsentBanner() {
 - ✅ RBAC/ABAC (Super Admin seul accès cross-tenant)
 - ✅ Audit trail accès logs (traçabilité admins)
 - ✅ Tests E2E isolation tenant (`db.cross-tenant-isolation.test.ts`)
-- ✅ Anonymisation IP après 7 jours (EPIC 11)
+- ✅ Anonymisation IP après 7 jours (EPIC 8)
 
 **Risque résiduel** : 🟢 Très faible (isolation validée tests)
 
@@ -824,7 +1116,7 @@ export function CookieConsentBanner() {
 ### 4.1 Mesures techniques
 - ✅ **Gateway LLM unique** : Point central contrôle (EPIC 3)
 - ✅ **Consentement opt-in** : Popup explicite par purpose (EPIC 5)
-- ✅ **Pseudonymisation PII** : Masking automatique avant LLM (EPIC 11)
+- ✅ **Pseudonymisation PII** : Masking automatique avant LLM (EPIC 8)
 - ✅ **Non-stockage outputs** : P3 jamais persisté (EPIC 3)
 - ✅ **Rétention limitée** : 90 jours max métadonnées (EPIC 4)
 - ✅ **Chiffrement** : TLS 1.3, AES-256-GCM exports (EPIC 5)
@@ -839,10 +1131,10 @@ export function CookieConsentBanner() {
 - ✅ **Tests RGPD** : 72 tests E2E validant conformité
 
 ### 4.3 Mesures utilisateurs
-- ✅ **Transparence** : Politique confidentialité claire (EPIC 12)
-- ✅ **Droit révision humaine** : Art. 22 (US 12.8)
+- ✅ **Transparence** : Politique confidentialité claire (EPIC 10)
+- ✅ **Droit révision humaine** : Art. 22 (US 10.8)
 - ✅ **Export/effacement** : Droits RGPD facilités (EPIC 5)
-- ✅ **Révocation consentement** : Toggle on/off instantané (EPIC 10)
+- ✅ **Révocation consentement** : Toggle on/off instantané (EPIC 5)
 
 ---
 
@@ -898,13 +1190,13 @@ export function CookieConsentBanner() {
 
 ---
 
-### 3.7 LOT 12.6 — Droits complémentaires (Art. 18, 21, 22)
+### 3.7 LOT 10.6 — Droits complémentaires (Art. 18, 21, 22)
 
 **Objectif** : Implémenter droits RGPD manquants (limitation, opposition, révision humaine).
 
 **User Stories** :
 
-#### US 12.7 : Droit à la limitation (Art. 18)
+#### US 10.7 : Droit à la limitation (Art. 18)
 **En tant que** Utilisateur  
 **Je veux** suspendre temporairement traitement de mes données  
 **Afin de** exercer mon droit à la limitation
@@ -948,7 +1240,7 @@ if (user.data_suspended) {
 
 ---
 
-#### US 12.8 : Droit d'opposition (Art. 21)
+#### US 10.8 : Droit d'opposition (Art. 21)
 **En tant que** Utilisateur  
 **Je veux** m'opposer au traitement de mes données si base légale = intérêt légitime  
 **Afin de** exercer mon droit d'opposition
@@ -967,7 +1259,7 @@ if (user.data_suspended) {
 
 ---
 
-#### US 12.9 : Révision humaine décision IA (Art. 22)
+#### US 10.9 : Révision humaine décision IA (Art. 22)
 **En tant que** Utilisateur  
 **Je veux** contester une décision IA et demander révision humaine  
 **Afin de** exercer mon droit à ne pas être soumis à décision automatisée
@@ -1174,25 +1466,25 @@ ALTER TABLE users ADD COLUMN data_suspended_at TIMESTAMPTZ;
 
 ## 9. Checklist de livraison
 
-### Phase 1 : LOT 12.0-12.1 (Documents légaux)
+### Phase 1 : LOT 10.0-10.1 (Documents légaux)
 - [ ] Rédaction politique confidentialité
 - [ ] Rédaction CGU
 - [ ] Pages frontend accessibles
 - [ ] Liens footer actifs
 - [ ] Tests E2E acceptation CGU
 
-### Phase 2 : LOT 12.2-12.3 (Interfaces RGPD)
+### Phase 2 : LOT 10.2-10.3 (Interfaces RGPD)
 - [ ] Page Informations RGPD
 - [ ] Formulaire contact DPO
 - [ ] Cookie consent banner
 - [ ] Tests E2E cookie banner
 
-### Phase 3 : LOT 12.4-12.5 (Conformité interne)
+### Phase 3 : LOT 10.4-10.5 (Conformité interne)
 - [ ] Registre traitements documenté
 - [ ] DPIA réalisée et validée DPO
 - [ ] Interfaces Back Office (accès registre/DPIA)
 
-### Phase 4 : LOT 12.6 (Droits complémentaires)
+### Phase 4 : LOT 10.6 (Droits complémentaires)
 - [ ] Suspension données (Art. 18)
 - [ ] Formulaire opposition (Art. 21)
 - [ ] Workflow disputes (Art. 22)

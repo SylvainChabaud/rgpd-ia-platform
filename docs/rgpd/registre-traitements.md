@@ -121,7 +121,7 @@ Fournir des services d'analyse de documents par intelligence artificielle (résu
 
 ### Sécurité
 - Gateway LLM obligatoire (pas de bypass, tests automatisés)
-- Pseudonymisation PII (EPIC 11, LOT 11.0, prévu Phase 4)
+- Pseudonymisation PII (EPIC 8, disponible si modèle externe utilisé)
 - Pas de stockage prompts/outputs (sauf opt-in explicite utilisateur)
 - Chiffrement TLS 1.3 (transit)
 - Audit trail complet (événements LLM, pas de contenu)
@@ -132,7 +132,7 @@ Fournir des services d'analyse de documents par intelligence artificielle (résu
 - Effacement : `/api/rgpd/delete` (suppression métadonnées jobs)
 - Révocation consentement : `/api/consents/:id` (DELETE) → blocage immédiat LLM
 - Opposition : Formulaire contact DPO
-- Révision humaine (Art. 22) : Formulaire contestation résultat (EPIC 12, LOT 12.6)
+- Révision humaine (Art. 22) : Formulaire contestation résultat (EPIC 10)
 
 ### Mesures spécifiques IA
 - **DPIA Gateway LLM** : [docs/rgpd/dpia.md](./dpia.md)
@@ -175,7 +175,7 @@ Aucun
 ### Durée de conservation
 - **Consentements actifs** : durée du contrat + 3 ans (preuve légale)
 - **Historique révocations** : 3 ans (obligation de preuve Art. 7.1 RGPD)
-- **IP address** : 7 jours (anonymisation automatique, EPIC 11 LOT 11.1)
+- **IP address** : 7 jours (anonymisation automatique, EPIC 8)
 
 ### Sécurité
 - Chiffrement au repos (AES-256-GCM)
@@ -271,7 +271,7 @@ Assurer la traçabilité des actions (sécurité, conformité RGPD, investigatio
 
 ### Catégories de données
 - **P0** : `user_id`, `tenant_id`, `event_type`, `target_id`, `resource_type`
-- **P1** : `ip_address` (anonymisée après 7j, EPIC 11 LOT 11.1)
+- **P1** : `ip_address` (anonymisée après 7j, EPIC 8)
 - **Métadonnées** : `timestamp`, `status`, `error_code` (jamais de contenu métier)
 
 ### Origine des données
@@ -293,7 +293,7 @@ Aucun
 - **Logs RGPD-safe** : événements uniquement, jamais de payloads utilisateurs
 - Chiffrement au repos (AES-256-GCM)
 - Isolation stricte par tenant
-- Scan automatique PII dans logs (EPIC 11 LOT 11.2, prévu Phase 4)
+- Scan automatique PII dans logs (EPIC 8)
 - Tests sentinels "no sensitive logs" (automatisés)
 
 ### Droits des personnes

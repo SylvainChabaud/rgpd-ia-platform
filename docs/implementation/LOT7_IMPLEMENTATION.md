@@ -181,7 +181,7 @@ audit-artifacts/                      # Gitignored (généré CI/CD)
   3. **Biais et discrimination** : 🟡 Moyen (4/16) → 🟢 Faible (2/16) après révision humaine
   4. **Bypass consentement** : 🟡 Faible (2/16) → 🟢 Très faible (1/16) après enforcement
   5. **Accès cross-tenant** : 🟡 Faible (2/16) → 🟢 Très faible (1/16) après tests
-- **Mesures d'atténuation** : Gateway LLM, pseudonymisation (EPIC 11), consent, audit trail
+- **Mesures d'atténuation** : Gateway LLM, pseudonymisation (EPIC 8), consent, audit trail
 - **Risque résiduel global** : 🟡 **MOYEN (3/16)** → Acceptable avec mesures
 
 **Conformité** :
@@ -600,31 +600,37 @@ jobs:
 
 ## 11. Roadmap post-EPIC 7
 
-### EPIC 8-10 — Back Office + Front User
-
-- [ ] Interface Back Office registre violations (`/admin/data-breaches`)
-- [ ] Interface Back Office audit trail (`/admin/audit-events`)
-- [ ] Page "Mes données RGPD" (export + effacement)
-- [ ] Page "Informations RGPD" (DPO, droits, réclamation CNIL)
-
-### EPIC 11 — Anonymisation & Pseudonymisation
+### EPIC 8 — Anonymisation & Pseudonymisation (Backend)
 
 - [ ] PII Detection & Redaction (Gateway LLM, avant envoi modèle)
 - [ ] Anonymisation IP automatique (logs > 7 jours)
 - [ ] Scan PII logs automatique (détection fuites accidentelles)
 
-### EPIC 12 — RGPD Legal & Compliance
+### EPIC 9 — Incident Response & Security Hardening (Backend)
+
+- [ ] Runbook "Incident RGPD" + registre violations (Art. 33-34)
+- [ ] Tests pentests externes (OWASP Top 10)
+- [ ] Chaos engineering (résilience infrastructure)
+- [ ] Runbook backup/restore automatisé
+
+### EPIC 10 — RGPD Legal & Compliance (Frontend + Docs)
 
 - [ ] Politique de Confidentialité (Art. 13-14)
 - [ ] CGU (base légale contrat Art. 6.1.b)
 - [ ] Cookie Consent Banner (ePrivacy)
 - [ ] Droits complémentaires (Art. 18, 21, 22)
+- [ ] Registre des traitements (Art. 30)
+- [ ] DPIA Gateway LLM (Art. 35)
 
-### EPIC 13 — Incident Response & Security Hardening
+### EPIC 11-13 — Frontends (Back Office + Front User)
 
-- [ ] Tests pentests externes (OWASP Top 10)
-- [ ] Chaos engineering (résilience infrastructure)
-- [ ] Runbook backup/restore automatisé
+- [ ] **EPIC 11** : Back Office Super Admin (gestion tenants, users, audit)
+- [ ] **EPIC 12** : Back Office Tenant Admin (gestion users tenant, consentements, RGPD)
+- [ ] **EPIC 13** : Front User (AI Tools, consentements, export/effacement)
+- [ ] Interface Back Office registre violations (`/admin/data-breaches`)
+- [ ] Interface Back Office audit trail (`/admin/audit-events`)
+- [ ] Page "Mes données RGPD" (export + effacement)
+- [ ] Page "Informations RGPD" (DPO, droits, réclamation CNIL)
 
 ---
 

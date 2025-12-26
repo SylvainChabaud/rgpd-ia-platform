@@ -22,7 +22,7 @@
 - Gateway LLM obligatoire (point unique, bypass impossible)
 - Consentement explicite par purpose (Art. 6.1.a, 7 RGPD)
 - Pas de persistance prompts/outputs par défaut (stateless)
-- Pseudonymisation PII prévue (EPIC 11, LOT 11.0)
+- Pseudonymisation PII prévue (EPIC 8)
 - Audit trail complet RGPD-safe
 - Droit à révision humaine (Art. 22)
 
@@ -51,7 +51,7 @@
 [ Use-cases applicatifs ]
        ↓ Consent check (enforcement)
 [ Gateway LLM ] ← POINT UNIQUE OBLIGATOIRE
-       ↓ Redaction PII (EPIC 11, prévu)
+       ↓ Redaction PII (EPIC 8)
        ↓ Prompt sanitization
 [ Runtime IA ] (local ou externe, stateless)
        ↓ Inférence uniquement
@@ -63,8 +63,7 @@
 | Composant | Technologie | Localisation | Garanties |
 |-----------|-------------|--------------|-----------|
 | Gateway LLM | TypeScript (Next.js) | Serveur UE | Chiffrement TLS 1.3, audit trail |
-| Runtime IA (optionnel local) | llama.cpp, Ollama | Serveur UE | Stateless, pas de stockage |
-| Runtime IA (optionnel externe) | OpenAI API, Anthropic Claude API | UE/Suisse | Contrat DPA, pas de training |
+| Runtime IA (local) | Ollama | Serveur local (même serveur) | Stateless, pas de stockage, aucun flux sortant |
 | Base de données | PostgreSQL | Serveur UE | Chiffrement au repos (AES-256-GCM) |
 
 ### 1.4 Acteurs
@@ -75,7 +74,6 @@
 | Utilisateurs finaux (membres tenants) | Personnes concernées | Exercice des droits (Art. 15-22) |
 | Admins tenants | Responsables de traitement (délégation) | Gestion consentements, demandes RGPD tenant |
 | Hébergeur infrastructure | Sous-traitant | Art. 28 RGPD (contrat DPA) |
-| Fournisseur LLM externe (si utilisé) | Sous-traitant | Art. 28 RGPD (contrat DPA, pas de training sur données) |
 
 ---
 
@@ -182,11 +180,11 @@ Membres tenants + **tiers mentionnés dans documents** (clients, patients, salar
 
 #### Mesures d'atténuation
 1. **Contrat DPA strict** : Clause "pas de stockage, pas de training, suppression immédiate"
-2. **Pseudonymisation PII** (EPIC 11, LOT 11.0) : Détection + masking avant envoi LLM
+2. **Pseudonymisation PII** (EPIC 8) : Détection + masking disponible si nécessaire
    - Exemple : `Jean Dupont` → `[PERSON_1]` avant envoi, restauration après réponse
 3. **Préférence modèle local** : Déploiement on-premise (pas de transfert externe)
 4. **Audit trail PII** : Événement `llm.pii_detected` (types PII, counts, pas de valeurs)
-5. **Tests automatisés** : Scan PII dans logs/monitoring (EPIC 11, LOT 11.2)
+5. **Tests automatisés** : Scan PII dans logs/monitoring (EPIC 8)
 
 #### Risque résiduel
 🟡 **Moyen (3/16)** — Risque réduit mais non nul (fournisseur externe)

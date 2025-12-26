@@ -1,36 +1,235 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RGPD IA Platform
 
-## Getting Started
+> **Plateforme SaaS multi-tenant de conformité RGPD pour l'IA** — Gateway LLM sécurisé avec isolation stricte des données.
 
-First, run the development server:
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.x-black)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red)]()
+
+---
+
+## 🎯 Vision
+
+Cette plateforme permet aux entreprises d'utiliser des services LLM (OpenAI, Ollama, etc.) tout en garantissant la **conformité RGPD** :
+
+- **Isolation multi-tenant** : Chaque organisation a ses données strictement isolées
+- **Gateway LLM centralisé** : Aucun appel IA hors du gateway (traçabilité, contrôle)
+- **Droits RGPD complets** : Export, effacement, consentement, portabilité
+- **Audit-ready** : Preuves automatisées pour contrôle CNIL
+
+---
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+
+- Node.js 20+
+- pnpm 9+
+- Docker & Docker Compose
+- PostgreSQL 16 (via Docker)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Cloner le projet
+git clone <repo-url>
+cd rgpd-ia-platform
+
+# Installer les dépendances
+pnpm install
+
+# Démarrer l'infrastructure (PostgreSQL, etc.)
+docker-compose -f docker-compose.dev.yml up -d
+
+# Appliquer les migrations
+pnpm migrate
+
+# Lancer le serveur de développement
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Structure du projet
 
-## Learn More
+```
+├── app/                    # Next.js App Router (pages, API routes)
+├── src/
+│   ├── ai/                 # Gateway LLM (providers, orchestration)
+│   ├── domain/             # Logique métier (use cases, entities)
+│   ├── infrastructure/     # Repositories, services externes
+│   ├── lib/                # Utilitaires partagés
+│   └── middleware/         # Middlewares (auth, tenant, etc.)
+├── tests/                  # Tests (unitaires, intégration, RGPD)
+├── scripts/
+│   ├── audit/              # Scripts d'audit RGPD (voir ci-dessous)
+│   ├── migrate.ts          # Migrations DB
+│   └── purge.ts            # Purge données (retention)
+├── docs/                   # Documentation complète
+│   ├── architecture/       # Architecture & boundaries
+│   ├── rgpd/               # Registre, DPIA, politiques
+│   ├── runbooks/           # Procédures opérationnelles
+│   └── implementation/     # Spécifications par LOT
+└── migrations/             # Scripts SQL
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔧 Scripts disponibles
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Développement
 
-## Deploy on Vercel
+| Commande | Description |
+|----------|-------------|
+| `pnpm dev` | Serveur de développement (hot reload) |
+| `pnpm build` | Build production |
+| `pnpm start` | Démarrer en production |
+| `pnpm lint` | Linter ESLint |
+| `pnpm typecheck` | Vérification TypeScript |
+| `pnpm test` | Exécuter tous les tests |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Base de données
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Commande | Description |
+|----------|-------------|
+| `pnpm migrate` | Appliquer les migrations |
+| `pnpm purge` | Purger les données expirées (retention RGPD) |
+
+### 🔍 Audit RGPD
+
+| Commande | Description |
+|----------|-------------|
+| `pnpm audit:secrets` | Scan des secrets hardcodés |
+| `pnpm audit:rgpd-tests` | Tests RGPD spécifiques |
+| `pnpm audit:collect` | Collecter toutes les preuves d'audit |
+| `pnpm audit:report` | Générer le rapport d'audit consolidé |
+| **`pnpm audit:full`** | **🚀 Audit complet (collecte + rapport)** |
+
+> 📖 Documentation complète des scripts d'audit : [scripts/audit/README.md](scripts/audit/README.md)
+
+---
+
+## 📚 Documentation
+
+### Architecture & Technique
+
+| Document | Description |
+|----------|-------------|
+| [BOUNDARIES.md](docs/architecture/BOUNDARIES.md) | Règles d'architecture et frontières |
+| [DATA_CLASSIFICATION.md](docs/data/DATA_CLASSIFICATION.md) | Classification des données (P0-P3) |
+| [LLM_USAGE_POLICY.md](docs/ai/LLM_USAGE_POLICY.md) | Politique d'utilisation des LLM |
+
+### Conformité RGPD
+
+| Document | Description |
+|----------|-------------|
+| [registre-traitements.md](docs/rgpd/registre-traitements.md) | Registre des traitements (Art. 30) |
+| [dpia.md](docs/rgpd/dpia.md) | Analyse d'impact Gateway LLM (Art. 35) |
+| [evidence.md](docs/audit/evidence.md) | Cartographie des preuves d'audit |
+
+### Procédures opérationnelles
+
+| Document | Description |
+|----------|-------------|
+| [incident.md](docs/runbooks/incident.md) | Runbook incident RGPD (Art. 33-34) |
+| [bootstrap.md](docs/runbooks/bootstrap.md) | Bootstrap de la plateforme |
+| [backup-policy.md](docs/runbooks/backup-policy.md) | Politique de sauvegarde |
+
+### Spécifications fonctionnelles
+
+| Document | Description |
+|----------|-------------|
+| [PLATEFORME_VISION_MACRO.md](docs/epics/PLATEFORME_VISION_MACRO.md) | Vision macro de la plateforme |
+| [TASKS.md](TASKS.md) | Suivi des tâches par EPIC/LOT |
+| [docs/implementation/](docs/implementation/) | Spécifications détaillées par LOT |
+
+---
+
+## 🛡️ Sécurité & RGPD
+
+### Principes clés
+
+- **Privacy by Design** : RGPD intégré dès la conception
+- **Minimisation** : Aucune donnée sensible stockée par défaut
+- **Isolation** : Tenant ID obligatoire sur toutes les requêtes
+- **Traçabilité** : Audit trail RGPD-safe (pas de PII dans les logs)
+- **Chiffrement** : AES-256-GCM au repos, TLS 1.3 en transit
+
+### Workflow d'audit
+
+```bash
+# Générer un rapport d'audit complet
+pnpm audit:full
+
+# Artefacts générés dans audit-artifacts/
+# - audit-report-YYYY-MM-DD.md  ← Rapport principal
+# - compliance-checklist.md     ← Checklist DoD
+# - metadata.json               ← Métadonnées traçabilité
+# - coverage/                   ← Couverture tests
+```
+
+---
+
+## 🧪 Tests
+
+```bash
+# Tous les tests
+pnpm test
+
+# Tests avec couverture
+pnpm test -- --coverage
+
+# Tests RGPD uniquement
+pnpm audit:rgpd-tests
+
+# Tests en watch mode
+pnpm test -- --watch
+```
+
+### Catégories de tests
+
+- `tests/rgpd.*.test.ts` — Tests de conformité RGPD
+- `tests/db.*.test.ts` — Tests isolation base de données
+- `tests/http.*.test.ts` — Tests API (auth, authz, tenant)
+- `tests/docker.*.test.ts` — Tests infrastructure Docker
+
+---
+
+## 🐳 Docker
+
+### Développement
+
+```bash
+# Démarrer PostgreSQL et services
+docker-compose -f docker-compose.dev.yml up -d
+
+# Voir les logs
+docker-compose -f docker-compose.dev.yml logs -f
+```
+
+### Production
+
+```bash
+# Build et démarrer
+docker-compose up -d --build
+
+# Vérifier le statut
+docker-compose ps
+```
+
+---
+
+## 📄 Licence
+
+Propriétaire — Tous droits réservés.
+
+---
+
+## 🔗 Liens utiles
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [CNIL — RGPD](https://www.cnil.fr/fr/rgpd-de-quoi-parle-t-on)
+- [RGPD — Texte officiel](https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32016R0679)
+

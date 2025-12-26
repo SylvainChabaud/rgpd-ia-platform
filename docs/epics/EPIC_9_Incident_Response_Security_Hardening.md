@@ -1,4 +1,4 @@
-# EPIC 13 — Incident Response & Security Hardening
+# EPIC 9 — Incident Response & Security Hardening
 
 **Date** : 25 décembre 2025  
 **Statut** : ❌ TODO  
@@ -51,7 +51,7 @@ Créer **processus complet gestion incidents RGPD** + **hardening sécurité** :
 | **EPIC 1** | ✅ Améliore | Audit trail + détection violations |
 | **EPIC 6** | ✅ Dépend | Docker prod pour tests chaos |
 | **EPIC 7** | ✅ Dépend | Observabilité pour détection incidents |
-| **EPIC 11** | ✅ Complète | Scan PII logs + anonymisation IP |
+| **EPIC 8** | ✅ Complète | Scan PII logs + anonymisation IP |
 
 ---
 
@@ -112,7 +112,7 @@ Créer **processus complet gestion incidents RGPD** + **hardening sécurité** :
 2. **Fuite données** :
    - Export massif données (volume anormal)
    - API endpoint exposant données sensibles (faille détectée)
-   - Logs contenant PII en clair (scan EPIC 11)
+   - Logs contenant PII en clair (scan EPIC 8)
 3. **Perte données** :
    - Échec backup (RTO/RPO non respectés)
    - Corruption DB détectée
@@ -123,20 +123,20 @@ Créer **processus complet gestion incidents RGPD** + **hardening sécurité** :
 - **Failed logins** : > 10 tentatives / user / 5 min
 - **Cross-tenant access** : ANY (alerte critique immédiate)
 - **Export volume** : > 10 000 records / user / heure
-- **PII logs** : ANY (alerte quotidienne EPIC 11)
+- **PII logs** : ANY (alerte quotidienne EPIC 8)
 - **Backup failures** : 2 échecs consécutifs
 
 ---
 
 ## 3. Périmètre fonctionnel
 
-### 3.1 LOT 13.0 — Runbook "Incident RGPD"
+### 3.1 LOT 9.0 — Runbook "Incident RGPD"
 
 **Objectif** : Créer processus complet gestion violations données (Art. 33-34).
 
 **User Stories** :
 
-#### US 13.1 : Détection automatique violations
+#### US 9.1 : Détection automatique violations
 **En tant que** Système monitoring  
 **Je veux** détecter automatiquement violations de données  
 **Afin de** alerter équipe dans délai 72h
@@ -146,7 +146,7 @@ Créer **processus complet gestion incidents RGPD** + **hardening sécurité** :
   - Failed logins > 10 / 5 min → Alerte Slack/email DevOps
   - Cross-tenant access ANY → Alerte critique PagerDuty
   - Export volume > 10k records/h → Alerte DPO
-  - PII logs détectée → Alerte quotidienne (EPIC 11)
+  - PII logs détectée → Alerte quotidienne (EPIC 8)
   - Backup failures 2× → Alerte critique DevOps
 - [ ] Alertes contiennent :
   - Type violation présumée
@@ -212,7 +212,7 @@ describe('Incident Detection', () => {
 
 ---
 
-#### US 13.2 : Workflow escalade violation
+#### US 9.2 : Workflow escalade violation
 **En tant que** DPO  
 **Je veux** recevoir workflow clair en cas de violation  
 **Afin de** notifier CNIL dans 72h si nécessaire
@@ -302,7 +302,7 @@ describe('Incident Detection', () => {
 
 ---
 
-#### US 13.3 : Registre violations (Art. 33.5)
+#### US 9.3 : Registre violations (Art. 33.5)
 **En tant que** DPO  
 **Je veux** tenir registre de toutes violations (confirmées ou non)  
 **Afin de** prouver conformité RGPD en audit CNIL
@@ -357,7 +357,7 @@ CREATE INDEX idx_data_breaches_risk ON data_breaches(risk_level);
 
 ---
 
-#### US 13.4 : Templates notification CNIL/Users
+#### US 9.4 : Templates notification CNIL/Users
 **En tant que** DPO  
 **Je veux** disposer de templates pré-remplis notification  
 **Afin de** gagner temps dans délai 72h
@@ -499,13 +499,13 @@ Plus d'informations : [URL page incident publique]
 
 ---
 
-### 3.2 LOT 13.1 — Pentest & Vulnerability Scanning
+### 3.2 LOT 9.1 — Pentest & Vulnerability Scanning
 
 **Objectif** : Identifier et corriger vulnérabilités sécurité (Art. 32).
 
 **User Stories** :
 
-#### US 13.5 : Scan OWASP Top 10
+#### US 9.5 : Scan OWASP Top 10
 **En tant que** Équipe sécurité  
 **Je veux** scanner API/frontend pour OWASP Top 10  
 **Afin de** corriger vulnérabilités courantes
@@ -552,7 +552,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
 
 ---
 
-#### US 13.6 : Pentest API endpoints
+#### US 9.6 : Pentest API endpoints
 **En tant que** Pen tester  
 **Je veux** tester manuellement endpoints critiques  
 **Afin de** identifier failles logiques
@@ -586,13 +586,13 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
 
 ---
 
-### 3.3 LOT 13.2 — Chaos Engineering & Résilience
+### 3.3 LOT 9.2 — Chaos Engineering & Résilience
 
 **Objectif** : Tester résilience infrastructure (Art. 32 - disponibilité).
 
 **User Stories** :
 
-#### US 13.7 : Tests chaos (Kill pods, perte DB)
+#### US 9.7 : Tests chaos (Kill pods, perte DB)
 **En tant que** SRE  
 **Je veux** tester résilience infrastructure sous stress  
 **Afin de** garantir disponibilité service
@@ -637,7 +637,7 @@ EOF
 
 ---
 
-#### US 13.8 : Tests backup/restore (RTO/RPO)
+#### US 9.8 : Tests backup/restore (RTO/RPO)
 **En tant que** DBA  
 **Je veux** tester backup/restore complet DB  
 **Afin de** garantir récupération données en cas désastre
@@ -673,7 +673,7 @@ pg_restore -h localhost -U postgres -d mydatabase -v backup_20251225.dump
 
 ---
 
-#### US 13.9 : Tests failover (Haute disponibilité)
+#### US 9.9 : Tests failover (Haute disponibilité)
 **En tant que** SRE  
 **Je veux** tester failover automatique DB/services  
 **Afin de** garantir haute disponibilité
@@ -881,21 +881,21 @@ groups:
 
 ## 9. Checklist de livraison
 
-### Phase 1 : LOT 13.0 (Incident RGPD)
+### Phase 1 : LOT 9.0 (Incident RGPD)
 - [ ] Runbook incident RGPD documenté
 - [ ] Configuration alertes monitoring (Prometheus)
 - [ ] Table `data_breaches` + interface Back Office
 - [ ] Templates notification CNIL/users
 - [ ] Tests E2E détection incidents
 
-### Phase 2 : LOT 13.1 (Pentest)
+### Phase 2 : LOT 9.1 (Pentest)
 - [ ] Scan OWASP ZAP exécuté
 - [ ] Scan npm audit/Snyk exécuté
 - [ ] Pentest manuel 20 scénarios
 - [ ] Corrections vulnérabilités critiques/hautes
 - [ ] Rapport pentest final
 
-### Phase 3 : LOT 13.2 (Chaos & Résilience)
+### Phase 3 : LOT 9.2 (Chaos & Résilience)
 - [ ] Tests chaos engineering (5 scénarios)
 - [ ] Tests backup/restore (RTO/RPO)
 - [ ] Tests failover DB (< 30s)

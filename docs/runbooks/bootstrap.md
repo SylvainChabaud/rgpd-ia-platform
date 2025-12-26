@@ -73,3 +73,11 @@ Cette limitation est **conforme** au périmètre EPIC1 qui ne couvre que le boot
 - Rapports tests : `pnpm test`
 - Scripts de collecte : `pnpm audit:collect`
 - Scan secrets : `pnpm audit:secrets`
+
+**Documentation scripts** : [scripts/README.md](../../scripts/README.md)
+
+## 9 - Références
+- [TASKS.md](../../TASKS.md) — Roadmap par EPIC/LOT
+- [CLAUDE.md](../../CLAUDE.md) — Constitution du projet
+- [security-hardening.md](./security-hardening.md) — Checklist sécurité production
+- [scripts/audit/README.md](../../scripts/audit/README.md) — Scripts d'audit RGPD

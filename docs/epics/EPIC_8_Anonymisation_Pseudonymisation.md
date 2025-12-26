@@ -1,4 +1,4 @@
-# EPIC 11 — Anonymisation & Pseudonymisation (Backend)
+# EPIC 8 — Anonymisation & Pseudonymisation (Backend)
 
 **Date** : 25 décembre 2025  
 **Statut** : ❌ TODO  
@@ -113,13 +113,13 @@ Implémenter **3 couches de protection PII** :
 
 ## 3. Périmètre fonctionnel
 
-### 3.1 LOT 11.0 — PII Detection & Redaction (Gateway LLM)
+### 3.1 LOT 8.0 — PII Detection & Redaction (Gateway LLM)
 
 **Objectif** : Implémenter pseudonymisation PII dans Gateway LLM (avant envoi LLM).
 
 **User Stories** :
 
-#### US 11.1 : Détection automatique PII dans prompts
+#### US 8.1 : Détection automatique PII dans prompts
 **En tant que** Système Gateway LLM  
 **Je veux** détecter automatiquement PII dans prompts utilisateurs  
 **Afin de** protéger données personnelles avant envoi LLM
@@ -158,7 +158,7 @@ describe('PII Detection', () => {
 
 ---
 
-#### US 11.2 : Masking PII avant envoi LLM
+#### US 8.2 : Masking PII avant envoi LLM
 **En tant que** Gateway LLM  
 **Je veux** remplacer PII par tokens anonymes avant envoi LLM  
 **Afin de** garantir non-fuite données personnelles
@@ -202,7 +202,7 @@ describe('PII Masking', () => {
 
 ---
 
-#### US 11.3 : Restauration PII en sortie (optionnel)
+#### US 8.3 : Restauration PII en sortie (optionnel)
 **En tant que** Gateway LLM  
 **Je veux** restaurer PII en sortie si nécessaire  
 **Afin de** maintenir cohérence pour utilisateur
@@ -234,7 +234,7 @@ describe('PII Restoration', () => {
 
 ---
 
-#### US 11.4 : Audit PII détectées (sans stockage valeurs)
+#### US 8.4 : Audit PII détectées (sans stockage valeurs)
 **En tant que** Système audit  
 **Je veux** tracer détection PII sans stocker valeurs  
 **Afin de** prouver conformité RGPD
@@ -263,13 +263,13 @@ describe('PII Audit', () => {
 
 ---
 
-### 3.2 LOT 11.1 — Anonymisation IP (Logs & Audit)
+### 3.2 LOT 8.1 — Anonymisation IP (Logs & Audit)
 
 **Objectif** : Anonymiser IPs dans logs/audit après 7 jours (conformité ePrivacy).
 
 **User Stories** :
 
-#### US 11.5 : Job cron anonymisation IP
+#### US 8.5 : Job cron anonymisation IP
 **En tant que** Système de logs  
 **Je veux** anonymiser automatiquement IPs > 7 jours  
 **Afin de** respecter Directive ePrivacy
@@ -366,13 +366,13 @@ describe('IP Anonymization', () => {
 
 ---
 
-### 3.3 LOT 11.2 — Audit PII Logs (Scan automatique)
+### 3.3 LOT 8.2 — Audit PII Logs (Scan automatique)
 
 **Objectif** : Détecter PII accidentellement loguées (emails, noms en clair dans logs).
 
 **User Stories** :
 
-#### US 11.6 : Scan automatique logs
+#### US 8.6 : Scan automatique logs
 **En tant que** Système de compliance  
 **Je veux** scanner quotidiennement logs pour détecter PII  
 **Afin de** éviter fuites accidentelles
@@ -527,7 +527,7 @@ async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
 }
 ```
 
-**Après** (EPIC 11) :
+**Après** (EPIC 8) :
 ```typescript
 // src/ai/gateway/gateway.service.ts
 async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
@@ -600,7 +600,7 @@ async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
 - [ ] README `src/infrastructure/pii/README.md` (usage detector/masker)
 - [ ] Runbook `docs/runbooks/JOBS_CRON_PII.md` (monitoring jobs)
 - [ ] Mise à jour `LLM_USAGE_POLICY.md` (section pseudonymisation)
-- [ ] Mise à jour `ANALYSE_COUVERTURE_RGPD.md` (✅ EPIC 11 terminé)
+- [ ] Mise à jour `ANALYSE_COUVERTURE_RGPD.md` (✅ EPIC 8 terminé)
 
 ### 6.4 Déploiement
 - [ ] Jobs cron configurés (Kubernetes CronJob ou équivalent)
@@ -644,20 +644,20 @@ async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
 
 ## 9. Checklist de livraison
 
-### Phase 1 : LOT 11.0 (PII Detection & Redaction)
+### Phase 1 : LOT 8.0 (PII Detection & Redaction)
 - [ ] Implémentation detector (emails, noms, téléphones)
 - [ ] Implémentation masker (tokens)
 - [ ] Intégration Gateway LLM (middleware)
 - [ ] Tests RGPD passants (PII detection/masking/restoration)
 - [ ] Audit PII détection (sans valeurs)
 
-### Phase 2 : LOT 11.1 (Anonymisation IP)
+### Phase 2 : LOT 8.1 (Anonymisation IP)
 - [ ] Job cron anonymisation IP
 - [ ] Fonction anonymisation IPv4/IPv6
 - [ ] Tests RGPD passants (anonymisation > 7j)
 - [ ] Configuration cron (Kubernetes ou équivalent)
 
-### Phase 3 : LOT 11.2 (Scan PII Logs)
+### Phase 3 : LOT 8.2 (Scan PII Logs)
 - [ ] Job cron scan logs
 - [ ] Alertes email DevOps
 - [ ] Tests RGPD passants (détection PII logs)

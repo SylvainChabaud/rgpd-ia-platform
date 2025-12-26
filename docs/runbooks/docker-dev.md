@@ -93,6 +93,11 @@ docker compose -f docker-compose.dev.yml up --build -d
 docker compose -f docker-compose.dev.yml ps
 ```
 
+**Ou via script dédié** :
+```bash
+./scripts/docker/health-check.sh --dev
+```
+
 **Résultat attendu** :
 ```
 NAME                     STATUS         PORTS
@@ -463,6 +468,7 @@ npm run test:rgpd
 | **backup-policy.md** | Stratégie sauvegarde | [backup-policy.md](backup-policy.md) |
 | **BOUNDARIES.md** | Frontières architecture | [../architecture/BOUNDARIES.md](../architecture/BOUNDARIES.md) |
 | **DATA_CLASSIFICATION.md** | Classification P0-P3 | [../data/DATA_CLASSIFICATION.md](../data/DATA_CLASSIFICATION.md) |
+| **scripts/docker/README.md** | Scripts Docker (start, stop, health) | [../../scripts/docker/README.md](../../scripts/docker/README.md) |
 
 ---
 

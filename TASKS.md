@@ -3,10 +3,9 @@
 > **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 13** et en respectant les markdowns normatifs.
 >
 > **Périmètre** :
-> - **EPIC 1-7** : Backend Next.js (API + services + infra)
-> - **EPIC 8-9** : Back Office (Super Admin + Tenant Admin)
-> - **EPIC 10** : Front User (interface utilisateur final)
-> - **EPIC 11-13** : RGPD Compliance 100% (Anonymisation, Legal, Security)
+> - **EPIC 1-7** : Backend Core (API + services + infra) — 85% RGPD
+> - **EPIC 8-10** : Backend RGPD 100% (Anonymisation, Security, Legal) — Gaps critiques
+> - **EPIC 11-13** : Frontend (Back Office + Front User) — Interfaces
 
 ---
 
@@ -21,12 +20,12 @@
 | **EPIC 5** | Pipeline RGPD (Droits des personnes) | ✅ 100% | LOT 5.0-5.3 |
 | **EPIC 6** | Stack IA Docker RGPD-ready (industrialisation) | ✅ 100% | LOT 6.0-6.1 |
 | **EPIC 7** | Kit conformité & audit RGPD | ✅ 100% | LOT 7.0-7.1 |
-| **EPIC 8** | Back Office Super Admin (Interface PLATFORM) | ❌ TODO | LOT 8.0-8.3 |
-| **EPIC 9** | Back Office Tenant Admin (Interface TENANT) | ❌ TODO | LOT 9.0-9.3 |
-| **EPIC 10** | Front User (Interface utilisateur final) | ❌ TODO | LOT 10.0-10.4 |
-| **EPIC 11** | Anonymisation & Pseudonymisation (Backend) | ❌ TODO | LOT 11.0-11.2 |
-| **EPIC 12** | RGPD Legal & Compliance (Frontend + Docs) | ❌ TODO | LOT 12.0-12.6 |
-| **EPIC 13** | Incident Response & Security Hardening | ❌ TODO | LOT 13.0-13.2 |
+| **EPIC 8** | Anonymisation & Pseudonymisation (Backend) | ❌ TODO | LOT 8.0-8.2 |
+| **EPIC 9** | Incident Response & Security Hardening (Backend) | ❌ TODO | LOT 9.0-9.2 |
+| **EPIC 10** | RGPD Legal & Compliance (Backend + Frontend + Docs) | ❌ TODO | LOT 10.0-10.6 |
+| **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ❌ TODO | LOT 11.0-11.3 |
+| **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | ❌ TODO | LOT 12.0-12.3 |
+| **EPIC 13** | Front User (Frontend utilisateur final) | ❌ TODO | LOT 13.0-13.4 |
 
 ---
 
@@ -42,9 +41,28 @@ Claude Code **DOIT** appliquer, pour chaque lot, les documents suivants :
 
 Références de cadrage (utiles) :
 - `docs/epics/PLATEFORME_VISION_MACRO.md` (vue d'ensemble complète)
-- `docs/epics/EPIC-1.md` … `docs/epics/EPIC-10.md` (ou emplacement équivalent PDF)
-- `00 - Analyse de l'objectif` (pdf/doc)
-- `03 - Plan de déploiement` (doc)
+
+**EPICs 1-7 (PDF - Socle Backend ✅ terminé)** :
+- `docs/epics/Epic 1 — Socle Applicatif Sécurisé (rgpd By Design).pdf` (EPIC 1)
+- `docs/epics/Epic 2 — Durcissement Serveur & Réseau (ops _ Sec Rgpd).pdf` (EPIC 2)
+- `docs/epics/Epic 3 — Stack Ia Locale Rgpd (poc Contrôlé).pdf` (EPIC 3)
+- `docs/epics/Epic 4 — Stockage Ia & Données Utilisateur (rgpd).pdf` (EPIC 4)
+- `docs/epics/Epic 5 — Pipeline Rgpd (droits Des Personnes).pdf` (EPIC 5)
+- `docs/epics/Epic 6 — Stack Ia Docker Rgpd-ready (industrialisation).pdf` (EPIC 6)
+- `docs/epics/Epic 7 — Kit Conformité & Audit Rgpd (ia).pdf` (EPIC 7)
+
+**EPICs 8-13 (Markdown - Phase 2 en cours)** :
+- `docs/epics/EPIC_8_Anonymisation_Pseudonymisation.md` (EPIC 8)
+- `docs/epics/EPIC_9_Incident_Response_Security_Hardening.md` (EPIC 9)
+- `docs/epics/EPIC_10_RGPD_Legal_Compliance.md` (EPIC 10)
+- `docs/epics/EPIC_11_Back_Office_Super_Admin.md` (EPIC 11)
+- `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (EPIC 12)
+- `docs/epics/EPIC_13_Front_User.md` (EPIC 13)
+
+**Documents de cadrage** :
+- `docs/epics/00 — Analyse De L'objectif (version Alignée Epic 1→7).pdf`
+- `docs/epics/01 — Plan De Déploiement (version Alignée Epic 1→7).pdf`
+- `docs/epics/Spec Fonctionnelle — Plateforme Ia Rgpd Multi-tenant.pdf`
 
 > **Règle** : si un lot mentionne un EPIC, Claude **DOIT** relire cet EPIC avant d'implémenter.
 
@@ -52,53 +70,92 @@ Références de cadrage (utiles) :
 
 ## 0.2 - Stratégie d'implémentation
 
-### Phase 1 : Backend Finalization (EPIC 1-7) — 🔴 PRIORITAIRE
-**Objectif** : API backend complète, production-ready, RGPD-compliant (85%)
+### Phase 1 : Backend Core (EPIC 1-7) — ✅ TERMINÉ
+**Objectif** : API backend complète, RGPD-compliant (85%)
+
+**Réalisé** :
+1. ✅ **EPIC 1-5** : Socle + IA + RGPD
+2. ✅ **EPIC 6** : Docker prod + Observabilité
+3. ✅ **EPIC 7** : Audit CNIL + Scripts preuves
+
+**Résultat** : Backend fonctionnel à 85% RGPD, mais **gaps critiques identifiés** (Art. 32, 33-34, ePrivacy).
+
+---
+
+### Phase 2 : Backend RGPD 100% — 🔴 CRITIQUE
+**Objectif** : Combler gaps RGPD backend identifiés, atteindre 100% conformité production
+
+**Phase 2 est divisée en 3 sous-phases pour gérer les dépendances frontend** :
+
+---
+
+#### **Phase 2A : Backend RGPD Core (EPIC 8-9)** — **PAS de dépendances frontend**
+
+**Ordre OBLIGATOIRE** :
+1. ❌ **EPIC 8** : Anonymisation & Pseudonymisation (Backend) — **BLOQUANT Art. 32**
+   - LOT 8.0 : PII Detection & Redaction (Gateway LLM)
+   - LOT 8.1 : Anonymisation IP (Logs & Audit)
+   - LOT 8.2 : Audit PII Logs (Scan automatique)
+
+2. ❌ **EPIC 9** : Incident Response & Security Hardening (Backend) — **BLOQUANT Art. 33-34**
+   - LOT 9.0 : Runbook "Incident RGPD" + API backend registre violations (interface web dans Phase 2C)
+   - LOT 9.1 : Pentest & Vulnerability Scanning
+   - LOT 9.2 : Chaos Engineering & Résilience
+
+**Prérequis Phase 3** : ✅ Phase 2A terminée (backend RGPD core production-ready)
+
+---
+
+#### **Phase 2B : RGPD Legal Docs (LOT 10.0-10.2)** — **Pages statiques SSG**
+
+**Peut être fait en parallèle de Phase 2A ou Phase 3** (docs légaux, pas de complexité frontend)
+
+3. ❌ **EPIC 10 (partiel)** : Pages légales statiques
+   - LOT 10.0 : Politique de Confidentialité (page SSG `/legal/privacy-policy`)
+   - LOT 10.1 : CGU / CGV (page SSG `/legal/terms-of-service`)
+   - LOT 10.2 : Page "Informations RGPD" (page SSG `/legal/rgpd-info`)
+
+**Note** : Ces pages sont servies par le backend Next.js existant (EPIC 1-7), accessibles publiquement.
+Les liens footer seront ajoutés dans LOT 13.0 (Frontend User).
+
+---
+
+### Phase 3 : Frontend (EPIC 11-13) — 🟢 INTERFACES UTILISATEURS
+**Objectif** : Interfaces web pour administrer et utiliser la plateforme
+
+**Prérequis** : ✅ Phase 2A terminée (backend RGPD core production-ready)
 
 **Ordre recommandé** :
-1. ✅ **EPIC 1-5** : Socle + IA + RGPD (TERMINÉ)
-2. ❌ **LOT 5.3** : API Routes HTTP (BLOQUANT pour frontend)
-3. ❌ **EPIC 6** : Docker prod + Observabilité (BLOQUANT pour déploiement)
-4. ❌ **EPIC 7** : Audit CNIL + Scripts preuves (BLOQUANT pour conformité)
+1. ❌ **EPIC 11** : Back Office Super Admin (Frontend PLATFORM)
+   - LOT 11.0 : Infra Back Office (Next.js App Router + Auth)
+   - LOT 11.1 : Gestion Tenants (CRUD)
+   - LOT 11.2 : Gestion Users Plateforme (CRUD)
+   - LOT 11.3 : Audit & Monitoring Dashboard (intègre LOT 9.0, 10.4, 10.5)
 
-### Phase 2 : Back Office (EPIC 8-9) — 🟡 APRÈS BACKEND
-**Objectif** : Interfaces admin pour gérer la plateforme
+2. ❌ **EPIC 12** : Back Office Tenant Admin (Frontend TENANT)
+   - LOT 12.0 : Dashboard Tenant (Stats + Activity Feed)
+   - LOT 12.1 : Gestion Users Tenant (CRUD)
+   - LOT 12.2 : Gestion Consentements (Purposes + Tracking)
+   - LOT 12.3 : RGPD Management (Export/Delete Requests)
 
-**Ordre recommandé** :
-1. ❌ **EPIC 8** : Back Office Super Admin (gestion tenants/users/audit)
-2. ❌ **EPIC 9** : Back Office Tenant Admin (gestion users tenant/consents/RGPD)
+3. ❌ **EPIC 13** : Front User (Frontend utilisateur final)
+   - LOT 13.0 : Authentification & Layout User (intègre LOT 10.3 Cookie Banner + liens footer LOT 10.0-10.2)
+   - LOT 13.1 : AI Tools (Interface Gateway LLM)
+   - LOT 13.2 : Historique AI Jobs (Liste + Filtres)
+   - LOT 13.3 : Mes Consentements (Gestion + Historique)
+   - LOT 13.4 : Mes Données RGPD (Export + Effacement)
 
-### Phase 3 : Front User (EPIC 10) — 🟢 INTERFACES UTILISATEURS
-**Objectif** : Interface utilisateur final pour utiliser l'IA
+---
 
-**Ordre recommandé** :
-1. ❌ **EPIC 10** : Front User (AI Tools + My Data + RGPD)
+#### **Phase 2C : RGPD Legal Compliance finalisée (LOT 10.3-10.6)** — **Après Phase 3**
 
-### Phase 4 : RGPD 100% Compliance (EPIC 11-13) — 🟣 CRITIQUE PRODUCTION
-**Objectif** : Combler gaps RGPD identifiés, atteindre 100% conformité
+**Prérequis** : ✅ Phase 3 terminée (frontends créés)
 
-**Ordre recommandé** :
-1. ❌ **EPIC 11** : Anonymisation & Pseudonymisation (Art. 32)
-   - LOT 11.0 : PII Detection & Redaction (Gateway LLM)
-   - LOT 11.1 : Anonymisation IP (Logs & Audit)
-   - LOT 11.2 : Audit PII Logs (Scan automatique)
-2. ❌ **EPIC 12** : RGPD Legal & Compliance (Art. 13-14, 18-22, 30, 35)
-   - LOT 12.0 : Politique de Confidentialité
-   - LOT 12.1 : CGU / CGV
-   - LOT 12.2 : Page "Informations RGPD"
-   - LOT 12.3 : Cookie Consent Banner (ePrivacy)
-   - LOT 12.4 : Registre des Traitements (Art. 30)
-   - LOT 12.5 : DPIA Gateway LLM (Art. 35)
-   - LOT 12.6 : Droits complémentaires (Art. 18, 21, 22)
-3. ❌ **EPIC 13** : Incident Response & Security Hardening (Art. 33-34)
-   - LOT 13.0 : Runbook "Incident RGPD"
-   - LOT 13.1 : Pentest & Vulnerability Scanning
-   - LOT 13.2 : Chaos Engineering & Résilience
-
-**Timeline** :
-- **Phase 1-3** : 12 semaines (plateforme fonctionnelle 85% RGPD)
-- **Phase 4** : 7 semaines supplémentaires (100% RGPD production-ready)
-- **TOTAL** : 19 semaines pour conformité complète
+4. ❌ **EPIC 10 (compléments)** : Intégrations frontend RGPD
+   - LOT 10.3 : Cookie Consent Banner (intégré dans LOT 13.0)
+   - LOT 10.4 : Registre des Traitements (interface Back Office dans LOT 11.3)
+   - LOT 10.5 : DPIA Gateway LLM (interface Back Office dans LOT 11.3)
+   - LOT 10.6 : Droits complémentaires (intégré dans LOT 13.4)
 
 ---
 
@@ -124,14 +181,81 @@ Aucun lot n’est acceptable si :
 
 ---
 
-## 2 - Convention d’architecture cible (Next.js)
+## 2 - Convention d'architecture cible (Next.js)
 
-- Next.js sert d’hôte backend via **Route Handlers** (recommandé) ou API Routes.
+### 2.1 Architecture Backend
+
+- Next.js sert d'hôte backend via **Route Handlers** (recommandé) ou API Routes.
 - Séparation stricte (cf. `BOUNDARIES.md`) :
   - `src/domain/*` : règles métier pures
   - `src/app/*` : orchestration (use-cases), sécurité, endpoints
   - `src/infrastructure/*` : DB, crypto, providers, observabilité
   - `src/ai/*` : Gateway LLM (point unique)
+
+### 2.2 Architecture Frontend
+
+**Architecture DÉCIDÉE** : **Next.js monolithique (BACK + FRONT dans le même projet)**
+
+Utilisation de **Next.js App Router avec route groups** pour isoler les différents frontends dans un seul projet.
+
+**Structure cible** :
+```
+src/app/
+├── api/                    # ✅ Backend API (Route Handlers)
+│   ├── auth/
+│   ├── tenants/
+│   ├── users/
+│   ├── consents/
+│   ├── ai/
+│   ├── rgpd/
+│   └── audit/
+│
+├── (backoffice)/          # ✅ Frontend Back Office (route group)
+│   ├── layout.tsx         # Layout Back Office
+│   ├── page.tsx           # Dashboard Super Admin
+│   ├── tenants/           # Gestion Tenants (LOT 11.1)
+│   ├── users/             # Gestion Users Plateforme (LOT 11.2)
+│   ├── audit/             # Audit & Monitoring (LOT 11.3)
+│   └── (tenant)/          # Sous-groupe Tenant Admin (EPIC 12)
+│       ├── dashboard/     # Dashboard Tenant (LOT 12.0)
+│       ├── users/         # Users Tenant (LOT 12.1)
+│       ├── consents/      # Consentements (LOT 12.2)
+│       └── rgpd/          # RGPD Requests (LOT 12.3)
+│
+├── (frontend)/            # ✅ Frontend User (route group)
+│   ├── layout.tsx         # Layout User + Cookie Banner
+│   ├── page.tsx           # Home
+│   ├── ai-tools/          # AI Tools (LOT 13.1)
+│   ├── history/           # Historique AI Jobs (LOT 13.2)
+│   ├── consents/          # Mes Consentements (LOT 13.3)
+│   └── my-data/           # Mes Données RGPD (LOT 13.4)
+│
+├── (legal)/               # ✅ Pages légales publiques (route group SSG)
+│   ├── privacy-policy/    # Politique Confidentialité (LOT 10.0)
+│   ├── terms-of-service/  # CGU (LOT 10.1)
+│   └── rgpd-info/         # Informations RGPD (LOT 10.2)
+│
+└── middleware.ts          # ✅ Middleware global (tenant, auth, RGPD)
+```
+
+**Avantages RGPD de cette architecture** :
+- ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
+- ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
+- ✅ **Gateway LLM inaccessible** : Imports côté serveur uniquement, pas de bypass possible
+- ✅ **Secrets centralisés** : Un seul `.env`, gestion simplifiée
+- ✅ **Audit trail unifié** : Une seule DB, logs cohérents
+- ✅ **Isolation tenant stricte** : Middleware vérifie sur toutes routes
+
+**Frontières RGPD respectées** (cf. [BOUNDARIES.md](docs/architecture/BOUNDARIES.md)) :
+- Frontend (`(backoffice)`, `(frontend)`, `(legal)`) appelle **uniquement** `/api/*`
+- Backend (`api/*`) valide, applique RGPD, appelle Gateway LLM
+- Gateway LLM (`src/ai/gateway/*`) accessible **uniquement** côté serveur
+- Aucun bypass possible (imports directs interdits côté client)
+
+**Route Groups Next.js** :
+- `(nom)` : Dossier organisationnel, **pas d'impact sur l'URL**
+- Exemple : `src/app/(backoffice)/tenants/page.tsx` → URL `/tenants`
+- Permet layouts différents sans dupliquer le code
 
 ---
 
@@ -660,391 +784,13 @@ Sans **aucun endpoint HTTP exposé**.
 
 ---
 
-# EPIC 8 — Back Office Super Admin (Interface PLATFORM)
+# EPIC 8 — Anonymisation & Pseudonymisation (Backend)
 
-## LOT 8.0 — Infra Back Office (Next.js App Router + Auth)
+## LOT 8.0 — PII Detection & Redaction (Gateway LLM)
 
-**EPIC couverts** : EPIC 8 (principal), EPIC 1 (auth)
+**EPIC couverts** : EPIC 8, EPIC 3 (Gateway LLM)
 
-**Avant implémentation** : relire EPIC 8 + EPIC 1 (auth).
-
-**Objectif** : scaffolder l'application Back Office Super Admin avec authentification.
-
-**Artefacts attendus**
-- Next.js App Router (monorepo `/backoffice`)
-- Layout authentification (login/logout)
-- Navigation sidebar (tenants, users, audit, settings)
-- Theme UI (Tailwind + shadcn/ui ou MUI)
-- Intégration API backend (fetch/axios)
-- Auth flow (NextAuth.js ou équivalent)
-- Protected routes (middleware)
-
-**Acceptance criteria (bloquants)**
-- Super Admin (scope PLATFORM) peut se connecter
-- Redirection automatique si non authentifié
-- Logout fonctionnel
-- Navigation cohérente
-
-**Tests obligatoires**
-- Auth flow E2E (login → dashboard → logout)
-- Protected routes (accès sans auth rejeté)
-
----
-
-## LOT 8.1 — Gestion Tenants (CRUD)
-
-**EPIC couverts** : EPIC 8
-
-**Avant implémentation** : relire EPIC 8.
-
-**Objectif** : interface complète de gestion des tenants (clients).
-
-**Artefacts attendus**
-- Page liste tenants (table + filtres + pagination)
-- Page créer tenant (form : slug, name, sector, admin email)
-- Page éditer tenant (form : name, status active/suspended)
-- Page détails tenant (stats : users count, AI jobs count)
-- Validation côté client (Zod + React Hook Form)
-- Confirmation actions critiques (suspend, delete)
-
-**Acceptance criteria (bloquants)**
-- CRUD complet fonctionnel
-- Validation formulaires stricte
-- Feedback utilisateur (toasts/notifications)
-- Isolation scope PLATFORM (seul Super Admin accède)
-
-**Tests obligatoires**
-- Créer tenant E2E
-- Éditer tenant E2E
-- Liste tenants paginée
-
----
-
-## LOT 8.2 — Gestion Users Plateforme (CRUD)
-
-**EPIC couverts** : EPIC 8
-
-**Avant implémentation** : relire EPIC 8.
-
-**Objectif** : gérer les utilisateurs de la plateforme (admins tenants principalement).
-
-**Artefacts attendus**
-- Page liste users (filtrable par tenant, role, status)
-- Page créer admin tenant (form : email, tenant, role)
-- Page éditer user (form : name, role, status)
-- Recherche users (par email, nom)
-- Bulk actions (suspend multiple users)
-
-**Acceptance criteria (bloquants)**
-- Filtres fonctionnels (tenant, role, status)
-- Création user tenant-scoped
-- Validation email unique
-- Affichage tenant associé
-
-**Tests obligatoires**
-- Créer user E2E
-- Filtrer users par tenant
-- Bulk suspend users
-
----
-
-## LOT 8.3 — Audit & Monitoring Dashboard
-
-**EPIC couverts** : EPIC 8, EPIC 7
-
-**Avant implémentation** : relire EPIC 8 + EPIC 7 (audit).
-
-**Objectif** : visibilité complète sur l'activité plateforme et audit trail.
-
-**Artefacts attendus**
-- Dashboard stats globales (widgets : tenants actifs, users totaux, AI jobs ce mois)
-- Page audit events (table avec filtres : tenant, user, action, date range)
-- Graphiques activité (AI jobs par jour, exports RGPD, effacements)
-- Logs système (erreurs critiques, alertes)
-- Export audit trail (CSV)
-
-**Acceptance criteria (bloquants)**
-- Stats en temps réel
-- Filtres audit events fonctionnels
-- Graphiques lisibles (Chart.js ou Recharts)
-- Export audit CSV RGPD-safe (P1 uniquement)
-
-**Tests obligatoires**
-- Chargement dashboard stats
-- Filtrage audit events
-- Export CSV audit
-
----
-
-# EPIC 9 — Back Office Tenant Admin (Interface TENANT)
-
-## LOT 9.0 — Dashboard Tenant (Stats + Activity Feed)
-
-**EPIC couverts** : EPIC 9
-
-**Avant implémentation** : relire EPIC 9.
-
-**Objectif** : tableau de bord dédié aux admins tenant.
-
-**Artefacts attendus**
-- Next.js App Router (monorepo `/backoffice` même app, routes séparées)
-- Dashboard tenant-scoped (stats : users, AI jobs, consents)
-- Activity feed (dernières actions : jobs IA, exports, effacements)
-- Widgets KPIs (jobs réussis vs échoués, consentements actifs)
-- Isolation tenant stricte (middleware)
-
-**Acceptance criteria (bloquants)**
-- Tenant Admin (scope TENANT) voit uniquement son tenant
-- Stats exactes et en temps réel
-- Activity feed paginée (max 50 dernières actions)
-
-**Tests obligatoires**
-- Isolation tenant (admin tenant A ne voit pas tenant B)
-- Stats tenant correctes
-
----
-
-## LOT 9.1 — Gestion Users Tenant (CRUD)
-
-**EPIC couverts** : EPIC 9
-
-**Avant implémentation** : relire EPIC 9.
-
-**Objectif** : gérer les utilisateurs du tenant (membres et admins).
-
-**Artefacts attendus**
-- Page liste users tenant (filtrable par role : admin/member)
-- Page créer user (form : email, name, role)
-- Page éditer user (form : name, role, status)
-- Page détails user (historique AI jobs, consents, audit events)
-- Invitation par email (génération lien activation)
-
-**Acceptance criteria (bloquants)**
-- CRUD complet tenant-scoped
-- Historique user complet (jobs, consents, audit)
-- Invitation email fonctionnelle
-- Validation email unique par tenant
-
-**Tests obligatoires**
-- Créer user tenant E2E
-- Voir historique user complet
-- Isolation tenant (pas de cross-tenant)
-
----
-
-## LOT 9.2 — Gestion Consentements (Purposes + Tracking)
-
-**EPIC couverts** : EPIC 9, EPIC 5
-
-**Avant implémentation** : relire EPIC 9 + EPIC 5 (consents).
-
-**Objectif** : configurer et suivre les consentements IA par tenant.
-
-**Artefacts attendus**
-- Page liste purposes (configurable : résumé, classification, extraction)
-- Page créer purpose (form : label, description, required)
-- Matrice consentements (users × purposes : granted/revoked/pending)
-- Historique consentements par user (date accordé, date révoqué)
-- Export consentements (CSV)
-
-**Acceptance criteria (bloquants)**
-- Purposes configurables par tenant
-- Matrice consentements lisible
-- Historique traçable
-- Export CSV RGPD-safe
-
-**Tests obligatoires**
-- Créer purpose E2E
-- Voir matrice consentements
-- Export CSV consentements
-
----
-
-## LOT 9.3 — RGPD Management (Export/Delete Requests)
-
-**EPIC couverts** : EPIC 9, EPIC 5
-
-**Avant implémentation** : relire EPIC 9 + EPIC 5 (RGPD).
-
-**Objectif** : gérer les demandes RGPD des utilisateurs du tenant.
-
-**Artefacts attendus**
-- Page demandes export (liste : status, créé le, expiré le, downloads restants)
-- Page demandes effacement (liste : status, soft deleted le, purge prévu le)
-- Actions : approuver/rejeter demande (workflow optionnel)
-- Historique RGPD complet par user
-- Notifications admins (nouvelle demande RGPD)
-
-**Acceptance criteria (bloquants)**
-- Liste demandes RGPD tenant-scoped
-- Historique complet par user
-- Statuts clairs (pending, completed, expired)
-- Notifications temps réel (optionnel mais recommandé)
-
-**Tests obligatoires**
-- Voir demandes export E2E
-- Voir demandes effacement E2E
-- Isolation tenant (pas de cross-tenant)
-
----
-
-# EPIC 10 — Front User (Interface utilisateur final)
-
-## LOT 10.0 — Authentification & Layout User
-
-**EPIC couverts** : EPIC 10, EPIC 1 (auth)
-
-**Avant implémentation** : relire EPIC 10 + EPIC 1 (auth).
-
-**Objectif** : scaffolder l'application Front User avec authentification.
-
-**Artefacts attendus**
-- Next.js App Router ou React SPA (monorepo `/frontend`)
-- Layout user (login/logout)
-- Navigation (Home, AI Tools, My Data, Settings)
-- Theme UI moderne (Tailwind + shadcn/ui)
-- Auth flow (NextAuth.js ou JWT cookies)
-- Protected routes (middleware)
-- Profile page (éditer nom, email, password)
-
-**Acceptance criteria (bloquants)**
-- User (scope MEMBER) peut se connecter
-- Navigation intuitive
-- Profile éditable
-- Logout fonctionnel
-
-**Tests obligatoires**
-- Auth flow E2E (login → home → logout)
-- Profile edit E2E
-
----
-
-## LOT 10.1 — AI Tools (Interface Gateway LLM)
-
-**EPIC couverts** : EPIC 10, EPIC 3 (Gateway LLM)
-
-**Avant implémentation** : relire EPIC 10 + EPIC 3 (Gateway).
-
-**Objectif** : interface utilisateur pour invoquer la Gateway LLM.
-
-**Artefacts attendus**
-- Page AI Tools (upload document + choose purpose)
-- Drag & drop file picker (PDF, TXT, DOCX)
-- Dropdown purpose (résumé, classification, extraction)
-- Consent popup (si 1ère utilisation du purpose)
-- Invoke LLM (progress bar, streaming optionnel)
-- Display result (affichage résultat, non persisté par défaut)
-- Option "Sauvegarder résultat" (si besoin)
-
-**Acceptance criteria (bloquants)**
-- Upload document fonctionnel
-- Purpose sélectionnable
-- Consent popup obligatoire (1ère fois)
-- Résultat affiché en temps réel
-- Streaming optionnel (améliore UX)
-
-**Tests obligatoires**
-- Upload document + invoke LLM E2E
-- Consent popup (1ère utilisation)
-- Résultat affiché correctement
-
----
-
-## LOT 10.2 — Historique AI Jobs (Liste + Filtres)
-
-**EPIC couverts** : EPIC 10, EPIC 4 (stockage)
-
-**Avant implémentation** : relire EPIC 10 + EPIC 4 (ai_jobs).
-
-**Objectif** : visualiser l'historique des jobs IA de l'utilisateur.
-
-**Artefacts attendus**
-- Page historique AI jobs (table : date, purpose, model, status, latence)
-- Filtres (par purpose, date range, status)
-- Pagination (max 90 jours, purge automatique)
-- Détails job (clic sur ligne → modal/page détail)
-- Export historique (CSV optionnel)
-
-**Acceptance criteria (bloquants)**
-- Historique user-scoped uniquement
-- Filtres fonctionnels
-- Pagination performante
-- Max 90 jours (respect retention policy)
-
-**Tests obligatoires**
-- Voir historique jobs E2E
-- Filtrer par purpose
-- Isolation user (pas de cross-user)
-
----
-
-## LOT 10.3 — Mes Consentements (Gestion + Historique)
-
-**EPIC couverts** : EPIC 10, EPIC 5 (consents)
-
-**Avant implémentation** : relire EPIC 10 + EPIC 5 (consents).
-
-**Objectif** : gérer ses consentements IA.
-
-**Artefacts attendus**
-- Page mes consentements (liste purposes : accordés/révoqués)
-- Toggle consent (switch on/off par purpose)
-- Confirmation révocation (popup)
-- Historique consentements (date accordé, date révoqué)
-- Impact révocation (warning : "jobs IA bloqués si révoqué")
-
-**Acceptance criteria (bloquants)**
-- Liste purposes complète
-- Toggle fonctionnel (accordé ↔ révoqué)
-- Confirmation avant révocation
-- Historique traçable
-
-**Tests obligatoires**
-- Accorder consentement E2E
-- Révoquer consentement E2E
-- Vérifier impact (LLM bloqué après revoke)
-
----
-
-## LOT 10.4 — Mes Données RGPD (Export + Effacement)
-
-**EPIC couverts** : EPIC 10, EPIC 5 (RGPD)
-
-**Avant implémentation** : relire EPIC 10 + EPIC 5 (export/effacement).
-
-**Objectif** : exercer ses droits RGPD (Art. 15, 17, 20).
-
-**Artefacts attendus**
-- Page mes données RGPD
-- Section Export données (bouton "Exporter mes données")
-- Liste exports disponibles (TTL 7j, downloads restants)
-- Download bundle chiffré (avec password)
-- Section Supprimer compte (bouton "Supprimer mon compte")
-- Confirmation double (popup + email)
-- Information soft delete (30 jours rétention)
-
-**Acceptance criteria (bloquants)**
-- Export fonctionnel (bundle chiffré reçu)
-- Download avec password
-- TTL respecté (7 jours)
-- Effacement fonctionnel (soft delete immédiat)
-- Confirmation obligatoire (éviter erreurs)
-- Information claire (rétention 30j)
-
-**Tests obligatoires**
-- Export données E2E
-- Download export E2E
-- Supprimer compte E2E (soft delete vérifié)
-
----
-
-# EPIC 11 — Anonymisation & Pseudonymisation (Backend)
-
-## LOT 11.0 — PII Detection & Redaction (Gateway LLM)
-
-**EPIC couverts** : EPIC 11, EPIC 3 (Gateway LLM)
-
-**Avant implémentation** : lire EPIC 11 + `docs/epics/EPIC_11_Anonymisation_Pseudonymisation.md`.
+**Avant implémentation** : lire EPIC 8 + `docs/epics/EPIC_8_Anonymisation_Pseudonymisation.md`.
 
 **Objectif** : détecter et masquer PII dans prompts avant envoi LLM (Art. 32).
 
@@ -1053,13 +799,17 @@ Sans **aucun endpoint HTTP exposé**.
 - Module PII masker (`src/infrastructure/pii/masker.ts`)
 - Patterns regex PII (`src/infrastructure/pii/patterns.ts`)
 - Middleware Gateway LLM (intégration redaction)
-- Tests détection (emails, noms, téléphones, adresses)
-- Tests masking (tokens `[PERSON_1]`, `[EMAIL_1]`)
+- Tests détection (emails, noms, téléphones, adresses, SSN, IBAN)
+- Tests masking (tokens `[PERSON_1]`, `[EMAIL_1]`, `[SSN_1]`, `[IBAN_1]`)
 - Tests restauration PII (reverse mapping)
 - Audit PII détection (sans stocker valeurs)
 
+**SLAs de performance (Art. 25 Privacy by Design)**
+- Redaction PII : < 50ms par requête
+- Scan PII logs (LOT 8.2) : < 5s pour 100k logs
+
 **Acceptance criteria (bloquants)**
-- Détection PERSON, EMAIL, PHONE, ADDRESS (regex + NER optionnel)
+- Détection PERSON, EMAIL, PHONE, ADDRESS, SSN (numéro sécurité sociale), IBAN (regex + NER optionnel)
 - Masking avant envoi LLM (`Jean Dupont` → `[PERSON_1]`)
 - Mapping non persisté (mémoire uniquement)
 - Restauration PII optionnelle en sortie
@@ -1074,11 +824,11 @@ Sans **aucun endpoint HTTP exposé**.
 
 ---
 
-## LOT 11.1 — Anonymisation IP (Logs & Audit)
+## LOT 8.1 — Anonymisation IP (Logs & Audit)
 
-**EPIC couverts** : EPIC 11, EPIC 1 (Audit trail)
+**EPIC couverts** : EPIC 8, EPIC 1 (Audit trail)
 
-**Avant implémentation** : lire EPIC 11 (LOT 11.1).
+**Avant implémentation** : lire EPIC 8 (LOT 8.1).
 
 **Objectif** : anonymiser IPs dans logs/audit après 7 jours (ePrivacy).
 
@@ -1104,11 +854,11 @@ Sans **aucun endpoint HTTP exposé**.
 
 ---
 
-## LOT 11.2 — Audit PII Logs (Scan automatique)
+## LOT 8.2 — Audit PII Logs (Scan automatique)
 
-**EPIC couverts** : EPIC 11, EPIC 7 (Observability)
+**EPIC couverts** : EPIC 8, EPIC 7 (Observability)
 
-**Avant implémentation** : lire EPIC 11 (LOT 11.2).
+**Avant implémentation** : lire EPIC 8 (LOT 8.2).
 
 **Objectif** : détecter PII accidentellement loguées (emails, noms en clair).
 
@@ -1134,252 +884,14 @@ Sans **aucun endpoint HTTP exposé**.
 
 ---
 
-# EPIC 12 — RGPD Legal & Compliance (Frontend + Docs)
 
-## LOT 12.0 — Politique de Confidentialité
+# EPIC 9 — Incident Response & Security Hardening (Backend)
 
-**EPIC couverts** : EPIC 12 (Art. 13-14)
+## LOT 9.0 — Runbook "Incident RGPD"
 
-**Avant implémentation** : lire EPIC 12 + `docs/epics/EPIC_12_RGPD_Legal_Compliance.md`.
+**EPIC couverts** : EPIC 9 (Art. 33-34)
 
-**Objectif** : rédiger et publier politique de confidentialité RGPD-compliant.
-
-**Artefacts attendus**
-- Document `/docs/legal/POLITIQUE_CONFIDENTIALITE.md`
-- Page frontend `/legal/privacy-policy` (Next.js SSG)
-- Lien footer "Politique de confidentialité"
-- Versioning (date dernière modification)
-- Contenu complet (Art. 13-14) :
-  - Identité responsable traitement
-  - Contact DPO
-  - Finalités traitement
-  - Bases légales (consentement, contrat)
-  - Catégories données (P0-P3)
-  - Destinataires (fournisseurs LLM, hébergeur)
-  - Durée conservation (90j ai_jobs, 3 ans users)
-  - Droits utilisateurs (accès, effacement, portabilité, etc.)
-  - Droit réclamation CNIL
-  - Décisions automatisées (mention IA)
-
-**Acceptance criteria (bloquants)**
-- Document créé et complet (tous points Art. 13-14)
-- Page accessible publiquement
-- Lien footer fonctionnel
-- Responsive (mobile/desktop)
-- Format Markdown + HTML (SSG)
-
-**Tests obligatoires**
-- Tests E2E page accessible
-- Tests E2E lien footer actif
-
----
-
-## LOT 12.1 — CGU / CGV
-
-**EPIC couverts** : EPIC 12 (Art. 6 - base légale contrat)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.1).
-
-**Objectif** : rédiger CGU + processus acceptation signup.
-
-**Artefacts attendus**
-- Document `/docs/legal/CGU.md`
-- Page frontend `/legal/terms-of-service`
-- Lien footer "CGU"
-- Checkbox signup "J'accepte les CGU" (obligatoire)
-- Table DB `cgu_versions` (versioning)
-- Table DB `user_cgu_acceptances` (traçabilité)
-- Migration `004_cgu_versions.sql`
-
-**Acceptance criteria (bloquants)**
-- Document CGU créé (objet, conditions accès, obligations, responsabilité, résiliation)
-- Page accessible publiquement
-- Checkbox signup obligatoire (validation frontend + backend)
-- Acceptation tracée DB (user_id, cgu_version_id, accepted_at)
-- Tests E2E acceptation CGU
-
-**Tests obligatoires**
-- tests/rgpd.cgu-acceptance.test.ts (checkbox obligatoire)
-- tests/rgpd.cgu-versions.test.ts (historique versions)
-
----
-
-## LOT 12.2 — Page "Informations RGPD"
-
-**EPIC couverts** : EPIC 12 (Art. 13-14)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.2).
-
-**Objectif** : créer page centralisée informations RGPD (DPO, droits, réclamation).
-
-**Artefacts attendus**
-- Page frontend `/legal/rgpd-info`
-- Lien footer "Informations RGPD"
-- Contenu :
-  - Identité responsable traitement
-  - Contact DPO (email + formulaire)
-  - Finalités traitement (résumé)
-  - Bases légales (consentement, contrat)
-  - Droits utilisateurs (liste + liens actions)
-  - Droit réclamation CNIL (lien site CNIL)
-  - Liens utiles (politique confidentialité, CGU, export RGPD)
-- Formulaire contact DPO fonctionnel (email backend)
-
-**Acceptance criteria (bloquants)**
-- Page accessible publiquement
-- Lien footer fonctionnel
-- Formulaire contact DPO envoie email
-- Tous liens droits utilisateurs actifs
-- Responsive (mobile/desktop)
-
-**Tests obligatoires**
-- Tests E2E page accessible
-- Tests E2E formulaire contact DPO
-
----
-
-## LOT 12.3 — Cookie Consent Banner
-
-**EPIC couverts** : EPIC 12 (ePrivacy Art. 5.3)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.3).
-
-**Objectif** : implémenter cookie consent banner ePrivacy-compliant.
-
-**Artefacts attendus**
-- Component `src/app/components/CookieConsentBanner.tsx`
-- Catégories cookies :
-  - Nécessaires (JWT, CSRF) : pré-cochées, non modifiables
-  - Analytics (optionnel) : checkbox opt-in
-  - Marketing (optionnel) : checkbox opt-in
-- Boutons : "Accepter tout", "Refuser tout", "Personnaliser"
-- Persistance choix localStorage (`cookie_consent`, 12 mois)
-- Blocage scripts analytics/marketing si refus
-- Page "Gérer cookies" (footer) : révocation possible
-
-**Acceptance criteria (bloquants)**
-- Banner affiché première visite (si pas de choix)
-- Choix persistés 12 mois
-- Scripts bloqués si refus (tests E2E)
-- Révocation possible (page "Gérer cookies")
-- Conformité CNIL (guidelines cookies françaises)
-
-**Tests obligatoires**
-- tests/rgpd.cookie-banner.test.ts (affichage première visite)
-- tests/rgpd.cookie-banner.test.ts (blocage scripts si refus)
-
----
-
-## LOT 12.4 — Registre des Traitements (Art. 30)
-
-**EPIC couverts** : EPIC 12 (Art. 30)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.4).
-
-**Objectif** : créer registre des traitements RGPD-compliant.
-
-**Artefacts attendus**
-- Document `/docs/rgpd/REGISTRE_TRAITEMENTS.md`
-- 5 traitements documentés :
-  1. Authentification users
-  2. Invocation Gateway LLM
-  3. Gestion consentements IA
-  4. Export/effacement RGPD
-  5. Audit trail et logs système
-- Accessible Super Admin (interface Back Office, lecture seule)
-- Versioning (date dernière mise à jour)
-- Validation DPO (signature électronique)
-
-**Acceptance criteria (bloquants)**
-- Document complet (finalités, bases légales, catégories données, destinataires, durées, sécurité)
-- 5 traitements documentés
-- Accessible interface Back Office
-- Validation DPO
-
-**Tests obligatoires**
-- Tests E2E accès registre (Super Admin uniquement)
-
----
-
-## LOT 12.5 — DPIA Gateway LLM (Art. 35)
-
-**EPIC couverts** : EPIC 12 (Art. 35)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.5).
-
-**Objectif** : réaliser analyse d'impact DPIA pour traitement IA (risque élevé).
-
-**Artefacts attendus**
-- Document `/docs/rgpd/DPIA_GATEWAY_LLM.md`
-- Contenu DPIA :
-  1. Description systématique traitement (Gateway LLM, modèles, purposes)
-  2. Nécessité et proportionnalité
-  3. Évaluation risques (hallucinations, fuite PII, biais, contournement, accès non autorisé)
-  4. Mesures atténuation (consentement, pseudonymisation EPIC 11, audit trail, chiffrement)
-  5. Validation DPO (signature)
-- Accessible Super Admin (interface Back Office, lecture seule)
-
-**Acceptance criteria (bloquants)**
-- Document DPIA complet (5 sections)
-- 5 risques évalués (impact, vraisemblance, risque résiduel)
-- Mesures atténuation documentées (EPICs 1-13)
-- Validation DPO (signature)
-- Accessible interface Back Office
-
-**Tests obligatoires**
-- Tests E2E accès DPIA (Super Admin/DPO uniquement)
-
----
-
-## LOT 12.6 — Droits complémentaires (Art. 18, 21, 22)
-
-**EPIC couverts** : EPIC 12 (Art. 18, 21, 22)
-
-**Avant implémentation** : lire EPIC 12 (LOT 12.6).
-
-**Objectif** : implémenter droits RGPD manquants (limitation, opposition, révision humaine).
-
-**Artefacts attendus**
-- **Art. 18 - Limitation** :
-  - Bouton "Suspendre mes données" (My Data page)
-  - Flag DB `users.data_suspended`
-  - Effet : Bloc invocations LLM (HTTP 403)
-  - Email confirmation suspension
-  - Bouton "Réactiver mes données"
-- **Art. 21 - Opposition** :
-  - Page "Opposition traitement"
-  - Formulaire : traitement concerné, motif
-  - Workflow back-office : ticket support
-  - Email confirmation
-- **Art. 22 - Révision humaine** :
-  - Bouton "Contester ce résultat" (outputs IA)
-  - Formulaire : motif, upload preuve
-  - Table DB `user_disputes`
-  - Workflow back-office : admin révise, répond
-  - Email réponse
-
-**Acceptance criteria (bloquants)**
-- Suspension données fonctionnelle (LLM bloqué)
-- Réactivation fonctionnelle (LLM débloqué)
-- Formulaire opposition fonctionnel (ticket créé)
-- Workflow disputes fonctionnel (admin résout)
-- Emails notifications envoyés
-- Tests RGPD passants
-
-**Tests obligatoires**
-- tests/rgpd.data-suspension.test.ts (LLM bloqué si suspended)
-- tests/rgpd.dispute-submission.test.ts (ticket créé)
-- tests/rgpd.dispute-workflow.test.ts (admin résout, email envoyé)
-
----
-
-# EPIC 13 — Incident Response & Security Hardening
-
-## LOT 13.0 — Runbook "Incident RGPD"
-
-**EPIC couverts** : EPIC 13 (Art. 33-34)
-
-**Avant implémentation** : lire EPIC 13 + `docs/epics/EPIC_13_Incident_Response_Security_Hardening.md`.
+**Avant implémentation** : lire EPIC 9 + `docs/epics/EPIC_9_Incident_Response_Security_Hardening.md`.
 
 **Objectif** : créer processus complet gestion violations données (Art. 33-34).
 
@@ -1390,7 +902,7 @@ Sans **aucun endpoint HTTP exposé**.
   - Brute force (> 10 failed logins / 5 min)
   - Cross-tenant access (ANY)
   - Export massif (> 10k records/h)
-  - PII logs détectée (EPIC 11)
+  - PII logs détectée (LOT 8.2)
   - Backup failures (2× consécutifs)
 - Workflow escalade (DPO, CNIL, users)
 - Grille évaluation risque (faible/élevé)
@@ -1398,13 +910,17 @@ Sans **aucun endpoint HTTP exposé**.
 - Templates notification :
   - `/docs/templates/NOTIFICATION_CNIL.md`
   - `/docs/templates/NOTIFICATION_USERS.md`
-- Interface Back Office registre violations (CRUD, export CSV)
+- API backend registre violations (`POST /api/admin/data-breaches`, `GET /api/admin/data-breaches`)
+- CLI temporaire pour enregistrer violations (`pnpm register:breach --type=... --severity=...`)
+
+**Note** : Interface web Back Office sera ajoutée dans LOT 11.3 (Audit Dashboard).
 
 **Acceptance criteria (bloquants)**
 - Runbook documenté (workflow, timeline 72h, checklist)
 - Alertes configurées (Prometheus/AlertManager)
-- Table `data_breaches` créée (migration `005_data_breaches.sql`)
-- Interface Back Office fonctionnelle (liste, ajout, export)
+- Table `data_breaches` créée (migration, numérotation automatique)
+- API backend fonctionnelle (CRUD registre violations)
+- CLI temporaire fonctionnel (enregistrement violations)
 - Templates notification créés et validés juridiquement
 - Tests E2E détection incidents
 
@@ -1414,11 +930,11 @@ Sans **aucun endpoint HTTP exposé**.
 
 ---
 
-## LOT 13.1 — Pentest & Vulnerability Scanning
+## LOT 9.1 — Pentest & Vulnerability Scanning
 
-**EPIC couverts** : EPIC 13 (Art. 32)
+**EPIC couverts** : EPIC 9 (Art. 32)
 
-**Avant implémentation** : lire EPIC 13 (LOT 13.1).
+**Avant implémentation** : lire EPIC 9 (LOT 9.1).
 
 **Objectif** : identifier et corriger vulnérabilités sécurité (OWASP Top 10).
 
@@ -1454,11 +970,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 ---
 
-## LOT 13.2 — Chaos Engineering & Résilience
+## LOT 9.2 — Chaos Engineering & Résilience
 
-**EPIC couverts** : EPIC 13 (Art. 32)
+**EPIC couverts** : EPIC 9 (Art. 32)
 
-**Avant implémentation** : lire EPIC 13 (LOT 13.2).
+**Avant implémentation** : lire EPIC 9 (LOT 9.2).
 
 **Objectif** : tester résilience infrastructure (disponibilité, backup/restore).
 
@@ -1496,3 +1012,718 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - tests/infra.chaos.test.ts (service continue après kill pod)
 
 ---
+
+# EPIC 10 — RGPD Legal & Compliance (Backend + Frontend + Docs)
+
+## LOT 10.0 — Politique de Confidentialité
+
+**EPIC couverts** : EPIC 10 (Art. 13-14)
+
+**Avant implémentation** : lire EPIC 10 + `docs/epics/EPIC_10_RGPD_Legal_Compliance.md`.
+
+**Objectif** : rédiger et publier politique de confidentialité RGPD-compliant.
+
+**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement sans authentification. Lien footer ajouté dans LOT 13.0.
+
+**Artefacts attendus**
+- Document `/docs/legal/POLITIQUE_CONFIDENTIALITE.md`
+- Page frontend `/legal/privacy-policy` (Next.js SSG)
+- Lien footer "Politique de confidentialité" (template, activation dans LOT 13.0)
+- Versioning (date dernière modification)
+- Contenu complet (Art. 13-14) :
+  - Identité responsable traitement
+  - Contact DPO
+  - Finalités traitement
+  - Bases légales (consentement, contrat)
+  - Catégories données (P0-P3)
+  - Destinataires (fournisseurs LLM, hébergeur)
+  - Durée conservation (90j ai_jobs, 3 ans users)
+  - Droits utilisateurs (accès, effacement, portabilité, etc.)
+  - Droit réclamation CNIL
+  - Décisions automatisées (mention IA)
+
+**Acceptance criteria (bloquants)**
+- Document créé et complet (tous points Art. 13-14)
+- Page accessible publiquement
+- Lien footer fonctionnel
+- Responsive (mobile/desktop)
+- Format Markdown + HTML (SSG)
+
+**Tests obligatoires**
+- Tests E2E page accessible
+- Tests E2E lien footer actif
+
+---
+
+## LOT 10.1 — CGU / CGV
+
+**EPIC couverts** : EPIC 10 (Art. 6 - base légale contrat)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.1).
+
+**Objectif** : rédiger CGU + processus acceptation signup.
+
+**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement. Lien footer ajouté dans LOT 13.0.
+
+**Artefacts attendus**
+- Document `/docs/legal/CGU.md`
+- Page frontend `/legal/terms-of-service`
+- Lien footer "CGU" (template, activation dans LOT 13.0)
+- Checkbox signup "J'accepte les CGU" (obligatoire)
+- Table DB `cgu_versions` (versioning)
+- Table DB `user_cgu_acceptances` (traçabilité)
+- Migration cgu_versions (numérotation automatique selon ordre d'exécution)
+
+**Acceptance criteria (bloquants)**
+- Document CGU créé (objet, conditions accès, obligations, responsabilité, résiliation)
+- Page accessible publiquement
+- Checkbox signup obligatoire (validation frontend + backend)
+- Acceptation tracée DB (user_id, cgu_version_id, accepted_at)
+- Tests E2E acceptation CGU
+
+**Tests obligatoires**
+- tests/rgpd.cgu-acceptance.test.ts (checkbox obligatoire)
+- tests/rgpd.cgu-versions.test.ts (historique versions)
+
+---
+
+## LOT 10.2 — Page "Informations RGPD"
+
+**EPIC couverts** : EPIC 10 (Art. 13-14)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.2).
+
+**Objectif** : créer page centralisée informations RGPD (DPO, droits, réclamation).
+
+**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement. Lien footer ajouté dans LOT 13.0.
+
+**Artefacts attendus**
+- Page frontend `/legal/rgpd-info`
+- Lien footer "Informations RGPD" (template, activation dans LOT 13.0)
+- Contenu :
+  - Identité responsable traitement
+  - Contact DPO (email + formulaire)
+  - Finalités traitement (résumé)
+  - Bases légales (consentement, contrat)
+  - Droits utilisateurs (liste + liens actions)
+  - Droit réclamation CNIL (lien site CNIL)
+  - Liens utiles (politique confidentialité, CGU, export RGPD)
+- Formulaire contact DPO fonctionnel (email backend)
+
+**Acceptance criteria (bloquants)**
+- Page accessible publiquement
+- Lien footer fonctionnel
+- Formulaire contact DPO envoie email
+- Tous liens droits utilisateurs actifs
+- Responsive (mobile/desktop)
+
+**Tests obligatoires**
+- Tests E2E page accessible
+- Tests E2E formulaire contact DPO
+
+---
+
+## LOT 10.3 — Cookie Consent Banner
+
+**EPIC couverts** : EPIC 10 (ePrivacy Art. 5.3)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.3).
+
+**Objectif** : implémenter cookie consent banner ePrivacy-compliant.
+
+**Artefacts attendus**
+- Component `src/app/components/CookieConsentBanner.tsx`
+- Catégories cookies :
+  - Nécessaires (JWT, CSRF) : pré-cochées, non modifiables
+  - Analytics (optionnel) : checkbox opt-in
+  - Marketing (optionnel) : checkbox opt-in
+- Boutons : "Accepter tout", "Refuser tout", "Personnaliser"
+- Persistance choix localStorage (`cookie_consent`, 12 mois)
+- Blocage scripts analytics/marketing si refus
+- Page "Gérer cookies" (footer) : révocation possible
+
+**Acceptance criteria (bloquants)**
+- Banner affiché première visite (si pas de choix)
+- Choix persistés 12 mois
+- Scripts bloqués si refus (tests E2E)
+- Révocation possible (page "Gérer cookies")
+- Conformité CNIL (guidelines cookies françaises)
+
+**Tests obligatoires**
+- tests/rgpd.cookie-banner.test.ts (affichage première visite)
+- tests/rgpd.cookie-banner.test.ts (blocage scripts si refus)
+
+---
+
+## LOT 10.4 — Registre des Traitements (Art. 30)
+
+**EPIC couverts** : EPIC 10 (Art. 30)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.4).
+
+**Objectif** : créer registre des traitements RGPD-compliant.
+
+**Artefacts attendus**
+- Document `/docs/rgpd/REGISTRE_TRAITEMENTS.md`
+- 5 traitements documentés :
+  1. Authentification users
+  2. Invocation Gateway LLM
+  3. Gestion consentements IA
+  4. Export/effacement RGPD
+  5. Audit trail et logs système
+- Versioning (date dernière mise à jour)
+- Validation DPO (signature électronique)
+
+**Note** : Accessible via interface Back Office (lecture seule) dans LOT 11.3.
+
+**Acceptance criteria (bloquants)**
+- Document complet (finalités, bases légales, catégories données, destinataires, durées, sécurité)
+- 5 traitements documentés
+- Format markdown exploitable
+- Validation DPO
+
+**Tests obligatoires**
+- Tests E2E accès registre (Super Admin uniquement, implémenté dans LOT 11.3)
+
+---
+
+## LOT 10.5 — DPIA Gateway LLM (Art. 35)
+
+**EPIC couverts** : EPIC 10 (Art. 35)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.5).
+
+**Objectif** : réaliser analyse d'impact DPIA pour traitement IA (risque élevé).
+
+**Artefacts attendus**
+- Document `/docs/rgpd/DPIA_GATEWAY_LLM.md`
+- Contenu DPIA :
+  1. Description systématique traitement (Gateway LLM, modèles, purposes)
+  2. Nécessité et proportionnalité
+  3. Évaluation risques (hallucinations, fuite PII, biais, contournement, accès non autorisé)
+  4. Mesures atténuation (consentement, pseudonymisation EPIC 8, audit trail, chiffrement)
+  5. Validation DPO (signature)
+
+**Note** : Accessible via interface Back Office (lecture seule) dans LOT 11.3.
+
+**Acceptance criteria (bloquants)**
+- Document DPIA complet (5 sections)
+- 5 risques évalués (impact, vraisemblance, risque résiduel)
+- Mesures atténuation documentées (EPICs 1-13)
+- Validation DPO (signature)
+- Format markdown exploitable
+
+**Tests obligatoires**
+- Tests E2E accès DPIA (Super Admin/DPO uniquement, implémenté dans LOT 11.3)
+
+---
+
+## LOT 10.6 — Droits complémentaires (Art. 18, 21, 22)
+
+**EPIC couverts** : EPIC 10 (Art. 18, 21, 22)
+
+**Avant implémentation** : lire EPIC 10 (LOT 10.6).
+
+**Objectif** : implémenter droits RGPD manquants (limitation, opposition, révision humaine).
+
+**Artefacts attendus**
+- **Art. 18 - Limitation** :
+  - Bouton "Suspendre mes données" (My Data page)
+  - Flag DB `users.data_suspended`
+  - Effet : Bloc invocations LLM (HTTP 403)
+  - Email confirmation suspension
+  - Bouton "Réactiver mes données"
+- **Art. 21 - Opposition** :
+  - Page "Opposition traitement"
+  - Formulaire : traitement concerné, motif
+  - Workflow back-office : ticket support
+  - Email confirmation
+- **Art. 22 - Révision humaine** :
+  - Bouton "Contester ce résultat" (outputs IA)
+  - Formulaire : motif, upload preuve
+  - Table DB `user_disputes`
+  - Workflow back-office : admin révise, répond
+  - Email réponse
+
+**Acceptance criteria (bloquants)**
+- Suspension données fonctionnelle (LLM bloqué)
+- Réactivation fonctionnelle (LLM débloqué)
+- Formulaire opposition fonctionnel (ticket créé)
+- Workflow disputes fonctionnel (admin résout)
+- Emails notifications envoyés
+- Tests RGPD passants
+
+**Tests obligatoires**
+- tests/rgpd.data-suspension.test.ts (LLM bloqué si suspended)
+- tests/rgpd.dispute-submission.test.ts (ticket créé)
+- tests/rgpd.dispute-workflow.test.ts (admin résout, email envoyé)
+
+---
+
+
+# EPIC 11 — Back Office Super Admin (Frontend PLATFORM)
+
+## LOT 11.0 — Infra Back Office (Next.js App Router + Auth)
+
+**EPIC couverts** : EPIC 11 (principal), EPIC 1 (auth)
+**Durée estimée** : 5 jours
+
+**Avant implémentation** : lire EPIC 11 (`docs/epics/EPIC_11_Back_Office_Super_Admin.md`) + EPIC 1 (auth) + section 2.2 TASKS.md (architecture).
+
+**Objectif** : scaffolder l'application Back Office Super Admin avec authentification.
+
+**Architecture** : Next.js monolithique avec route group `src/app/(backoffice)/*` (cf. section 2.2)
+
+**Artefacts attendus**
+- `src/app/(backoffice)/layout.tsx` : Layout Back Office (sidebar, header)
+- `src/app/(backoffice)/page.tsx` : Dashboard Super Admin (landing page)
+- `src/app/(backoffice)/login/page.tsx` : Page login Back Office
+- Navigation sidebar (tenants, users, audit, settings)
+- Theme UI (Tailwind + shadcn/ui)
+- Intégration API backend (`fetch('/api/...')`, même origin)
+- Auth flow (NextAuth.js ou équivalent)
+- Protected routes (middleware `src/app/middleware.ts`)
+- Redirection automatique `/backoffice` → `/` (pas d'URL `/backoffice`)
+
+**Acceptance criteria (bloquants)**
+- Super Admin (scope PLATFORM) peut se connecter
+- Redirection automatique si non authentifié
+- Logout fonctionnel
+- Navigation cohérente
+
+**Tests obligatoires**
+- Auth flow E2E (login → dashboard → logout)
+- Protected routes (accès sans auth rejeté)
+
+---
+
+## LOT 11.1 — Gestion Tenants (CRUD)
+
+**EPIC couverts** : EPIC 11
+**Durée estimée** : 5 jours
+
+**Avant implémentation** : lire EPIC 11 (`docs/epics/EPIC_11_Back_Office_Super_Admin.md`).
+
+**Objectif** : interface complète de gestion des tenants (clients).
+
+**Artefacts attendus**
+- Page liste tenants (table + filtres + pagination)
+- Page créer tenant (form : slug, name, sector, admin email)
+- Page éditer tenant (form : name, status active/suspended)
+- Page détails tenant (stats : users count, AI jobs count)
+- Validation côté client (Zod + React Hook Form)
+- Confirmation actions critiques (suspend, delete)
+
+**Acceptance criteria (bloquants)**
+- CRUD complet fonctionnel
+- Validation formulaires stricte
+- Feedback utilisateur (toasts/notifications)
+- Isolation scope PLATFORM (seul Super Admin accède)
+- Suspension tenant bloque :
+  - Authentifications users du tenant (login rejeté)
+  - Invocations Gateway LLM (HTTP 403)
+  - Exports RGPD (en attente)
+- Suspension préserve données (soft state, réversible)
+- Réactivation : status → active (tout redevient fonctionnel)
+
+**Tests obligatoires**
+- Créer tenant E2E
+- Éditer tenant E2E
+- Liste tenants paginée
+
+---
+
+## LOT 11.2 — Gestion Users Plateforme (CRUD)
+
+**EPIC couverts** : EPIC 11
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 11 (`docs/epics/EPIC_11_Back_Office_Super_Admin.md`).
+
+**Objectif** : gérer les utilisateurs de la plateforme (admins tenants principalement).
+
+**Artefacts attendus**
+- Page liste users (filtrable par tenant, role, status)
+- Page créer admin tenant (form : email, tenant, role)
+- Page éditer user (form : name, role, status)
+- Recherche users (par email, nom)
+- Bulk actions (suspend multiple users)
+
+**Acceptance criteria (bloquants)**
+- Filtres fonctionnels (tenant, role, status)
+- Création user tenant-scoped
+- Validation email unique
+- Affichage tenant associé
+
+**Tests obligatoires**
+- Créer user E2E
+- Filtrer users par tenant
+- Bulk suspend users
+
+---
+
+## LOT 11.3 — Audit & Monitoring Dashboard
+
+**EPIC couverts** : EPIC 11, EPIC 7, EPIC 9 (registre violations), EPIC 10 (registre traitements, DPIA)
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 11 (`docs/epics/EPIC_11_Back_Office_Super_Admin.md`) + EPIC 7 (audit) + EPIC 9 (`docs/epics/EPIC_9_Incident_Response_Security_Hardening.md`, LOT 9.0) + EPIC 10 (`docs/epics/EPIC_10_RGPD_Legal_Compliance.md`, LOT 10.4, 10.5).
+
+**Objectif** : visibilité complète sur l'activité plateforme et audit trail.
+
+**Intégrations LOTs précédents** :
+- Affichage Registre des Traitements (LOT 10.4, lecture seule)
+- Affichage DPIA Gateway LLM (LOT 10.5, lecture seule)
+- Gestion registre violations données (LOT 9.0, CRUD + export CSV)
+
+**Artefacts attendus**
+- Dashboard stats globales (widgets : tenants actifs, users totaux, AI jobs ce mois)
+- Page audit events (table avec filtres : tenant, user, action, date range)
+- Page registre violations données (liste, ajout, export CSV) — intégration LOT 9.0
+- Page registre traitements (lecture seule, affichage markdown) — intégration LOT 10.4
+- Page DPIA Gateway LLM (lecture seule, affichage markdown) — intégration LOT 10.5
+- Graphiques activité (AI jobs par jour, exports RGPD, effacements)
+- Logs système (erreurs critiques, alertes)
+  - Environnement dev : lecture directe fichiers logs (via API backend)
+  - Environnement prod : intégration Loki/Elasticsearch (requêtes via API)
+  - Filtres : level (error, warn), tenant, date range
+  - Pagination : max 100 lignes
+- Export audit trail (CSV)
+
+**Prérequis** : Intégration avec système observabilité (LOT 6.1)
+
+**Acceptance criteria (bloquants)**
+- Stats en temps réel
+- Filtres audit events fonctionnels
+- Graphiques lisibles (Chart.js ou Recharts)
+- Export audit CSV RGPD-safe (P1 uniquement)
+- Registre violations CRUD fonctionnel
+- Registre traitements affiché correctement (markdown → HTML)
+- DPIA affiché correctement (markdown → HTML)
+- Logs système consultables (dev + prod)
+
+**Tests obligatoires**
+- Chargement dashboard stats
+- Filtrage audit events
+- Export CSV audit
+- CRUD registre violations (LOT 9.0)
+- Affichage registre traitements (LOT 10.4)
+- Affichage DPIA (LOT 10.5)
+
+---
+
+
+# EPIC 12 — Back Office Tenant Admin (Frontend TENANT)
+
+## LOT 12.0 — Dashboard Tenant (Stats + Activity Feed)
+
+**EPIC couverts** : EPIC 12
+**Durée estimée** : 3 jours
+
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) + section 2.2 TASKS.md (architecture).
+
+**Objectif** : tableau de bord dédié aux admins tenant.
+
+**Architecture** : Next.js monolithique avec route group `src/app/(backoffice)/(tenant)/*` (cf. section 2.2)
+
+**Artefacts attendus**
+- `src/app/(backoffice)/(tenant)/dashboard/page.tsx` : Dashboard Tenant
+- Dashboard tenant-scoped (stats : users, AI jobs, consents)
+- Activity feed (dernières actions : jobs IA, exports, effacements)
+- Widgets KPIs (jobs réussis vs échoués, consentements actifs)
+- Isolation tenant stricte (middleware + RequestContext)
+- Routes accessibles : `/dashboard` (URL finale, pas `/backoffice/tenant/dashboard`)
+
+**Acceptance criteria (bloquants)**
+- Tenant Admin (scope TENANT) voit uniquement son tenant
+- Stats exactes et en temps réel
+- Activity feed paginée (max 50 dernières actions)
+
+**Tests obligatoires**
+- Isolation tenant (admin tenant A ne voit pas tenant B)
+- Stats tenant correctes
+
+---
+
+## LOT 12.1 — Gestion Users Tenant (CRUD)
+
+**EPIC couverts** : EPIC 12
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`).
+
+**Objectif** : gérer les utilisateurs du tenant (membres et admins).
+
+**Artefacts attendus**
+- Page liste users tenant (filtrable par role : admin/member)
+- Page créer user (form : email, name, role)
+- Page éditer user (form : name, role, status)
+- Page détails user (historique AI jobs, consents, audit events)
+- Invitation par email (génération lien activation)
+- Actions en masse (bulk actions) : suspension/réactivation multiple (Art. 5 Accountability)
+
+**Acceptance criteria (bloquants)**
+- CRUD complet tenant-scoped
+- Historique user complet (jobs, consents, audit)
+- Invitation email fonctionnelle
+- Validation email unique par tenant
+- Bulk actions fonctionnelles (suspension/réactivation de plusieurs users simultanément)
+
+**Tests obligatoires**
+- Créer user tenant E2E
+- Voir historique user complet
+- Isolation tenant (pas de cross-tenant)
+- Bulk suspend/réactivate users E2E
+
+---
+
+## LOT 12.2 — Gestion Consentements (Purposes + Tracking)
+
+**EPIC couverts** : EPIC 12, EPIC 5
+**Durée estimée** : 5 jours
+
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) + EPIC 5 (consents).
+
+**Objectif** : configurer et suivre les consentements IA par tenant.
+
+**Artefacts attendus**
+- Page liste purposes (configurable : résumé, classification, extraction)
+- Page créer purpose (form : label, description, required)
+- Matrice consentements (users × purposes : granted/revoked/pending)
+- Historique consentements par user (date accordé, date révoqué)
+- Export consentements (CSV)
+
+**Acceptance criteria (bloquants)**
+- Purposes configurables par tenant
+- Matrice consentements lisible
+- Historique traçable
+- Export CSV RGPD-safe
+
+**Tests obligatoires**
+- Créer purpose E2E
+- Voir matrice consentements
+- Export CSV consentements
+
+---
+
+## LOT 12.3 — RGPD Management (Export/Delete Requests)
+
+**EPIC couverts** : EPIC 12, EPIC 5
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) + EPIC 5 (RGPD).
+
+**Objectif** : gérer les demandes RGPD des utilisateurs du tenant.
+
+**Artefacts attendus**
+- Page demandes export (liste : status, créé le, expiré le, downloads restants)
+- Page demandes effacement (liste : status, soft deleted le, purge prévu le)
+- Actions : approuver/rejeter demande (workflow optionnel)
+- Historique RGPD complet par user
+- Notifications admins (nouvelle demande RGPD)
+
+**Acceptance criteria (bloquants)**
+- Liste demandes RGPD tenant-scoped
+- Historique complet par user
+- Statuts clairs (pending, completed, expired)
+- Notifications temps réel (optionnel mais recommandé)
+
+**Tests obligatoires**
+- Voir demandes export E2E
+- Voir demandes effacement E2E
+- Isolation tenant (pas de cross-tenant)
+
+---
+
+
+# EPIC 13 — Front User (Frontend utilisateur final)
+
+## LOT 13.0 — Authentification & Layout User
+
+**EPIC couverts** : EPIC 13, EPIC 1 (auth), EPIC 10 (Cookie Banner + pages légales)
+**Durée estimée** : 3 jours
+
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 1 (auth) + EPIC 10 (`docs/epics/EPIC_10_RGPD_Legal_Compliance.md`, LOT 10.0-10.3) + section 2.2 TASKS.md (architecture).
+
+**Objectif** : scaffolder l'application Front User avec authentification.
+
+**Architecture** : Next.js monolithique avec route group `src/app/(frontend)/*` (cf. section 2.2)
+
+**Prérequis** : LOT 10.0-10.2 terminés (pages légales créées)
+
+**Intégrations LOTs précédents** :
+- Cookie Consent Banner (LOT 10.3) intégré au layout
+- Liens footer vers pages légales (LOT 10.0-10.2)
+
+**Artefacts attendus**
+- `src/app/(frontend)/layout.tsx` : Layout User (header, footer, Cookie Banner)
+- `src/app/(frontend)/page.tsx` : Home page
+- `src/app/(frontend)/login/page.tsx` : Page login User
+- `src/app/(frontend)/profile/page.tsx` : Page profile
+- Navigation (Home, AI Tools, My Data, Settings)
+- Footer avec liens :
+  - Politique de confidentialité (`/legal/privacy-policy`)
+  - CGU (`/legal/terms-of-service`)
+  - Informations RGPD (`/legal/rgpd-info`)
+  - Gérer cookies (modal Cookie Consent)
+- Cookie Consent Banner (intégration LOT 10.3)
+- Theme UI moderne (Tailwind + shadcn/ui)
+- Auth flow (NextAuth.js ou JWT cookies)
+- Protected routes (middleware `src/app/middleware.ts`)
+- Routes accessibles : `/`, `/ai-tools`, `/my-data`, etc. (pas d'URL `/frontend`)
+- Intégration API backend (`fetch('/api/...')`, même origin)
+
+**Acceptance criteria (bloquants)**
+- User (scope MEMBER) peut se connecter
+- Navigation intuitive
+- Profile éditable (prénom, nom, mot de passe) — Art. 16 Droit de rectification
+- Logout fonctionnel
+- Cookie Banner affiché première visite
+- Footer liens fonctionnels (pages légales accessibles)
+
+**Tests obligatoires**
+- Auth flow E2E (login → home → logout)
+- Profile edit E2E (prénom, nom, mot de passe)
+- Cookie Banner affichage première visite (LOT 10.3)
+- Footer liens pages légales (LOT 10.0-10.2)
+
+---
+
+## LOT 13.1 — AI Tools (Interface Gateway LLM)
+
+**EPIC couverts** : EPIC 13, EPIC 3 (Gateway LLM)
+**Durée estimée** : 5 jours
+
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 3 (Gateway).
+
+**Objectif** : interface utilisateur pour invoquer la Gateway LLM.
+
+**Artefacts attendus**
+- Page AI Tools (upload document + choose purpose)
+- Drag & drop file picker (PDF, TXT, DOCX)
+- Dropdown purpose (résumé, classification, extraction)
+- Consent popup (si 1ère utilisation du purpose)
+- Invoke LLM (progress bar, streaming optionnel)
+- Display result (affichage résultat, non persisté par défaut)
+- Option "Sauvegarder résultat" (si besoin)
+- **Storage temporaire documents uploadés** :
+  - Stockage : local disk `/tmp/uploads` (dev) ou S3 bucket (prod)
+  - Chiffrement : AES-256-GCM (clé par tenant)
+  - TTL : 1 heure après traitement
+  - Purge automatique : job cron (toutes les heures)
+  - Validation : whitelist types (PDF, TXT, DOCX), max 10 MB
+  - Isolation tenant : `/{tenantId}/{userId}/{jobId}/document.pdf`
+
+**Acceptance criteria (bloquants)**
+- Upload document fonctionnel
+- Purpose sélectionnable
+- Consent popup obligatoire (1ère fois)
+- Résultat affiché en temps réel
+- Streaming optionnel (améliore UX)
+- Documents stockés temporairement et chiffrés
+- Purge automatique après TTL
+- Validation types/taille stricte
+
+**Tests obligatoires**
+- Upload document + invoke LLM E2E
+- Consent popup (1ère utilisation)
+- Résultat affiché correctement
+- Validation upload (type/taille rejetés)
+- Purge automatique documents (TTL respecté)
+
+---
+
+## LOT 13.2 — Historique AI Jobs (Liste + Filtres)
+
+**EPIC couverts** : EPIC 13, EPIC 4 (stockage)
+**Durée estimée** : 3 jours
+
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 4 (ai_jobs).
+
+**Objectif** : visualiser l'historique des jobs IA de l'utilisateur.
+
+**Artefacts attendus**
+- Page historique AI jobs (table : date, purpose, model, status, latence)
+- Filtres (par purpose, date range, status)
+- Pagination (max 90 jours, purge automatique)
+- Détails job (clic sur ligne → modal/page détail)
+- Export historique (CSV optionnel)
+
+**Acceptance criteria (bloquants)**
+- Historique user-scoped uniquement
+- Filtres fonctionnels
+- Pagination performante
+- Max 90 jours (respect retention policy)
+
+**Tests obligatoires**
+- Voir historique jobs E2E
+- Filtrer par purpose
+- Isolation user (pas de cross-user)
+
+---
+
+## LOT 13.3 — Mes Consentements (Gestion + Historique)
+
+**EPIC couverts** : EPIC 13, EPIC 5 (consents)
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 5 (consents).
+
+**Objectif** : gérer ses consentements IA.
+
+**Artefacts attendus**
+- Page mes consentements (liste purposes : accordés/révoqués)
+- Toggle consent (switch on/off par purpose)
+- Confirmation révocation (popup)
+- Historique consentements (date accordé, date révoqué)
+- Impact révocation (warning : "jobs IA bloqués si révoqué")
+- Notification automatique révocation (Art. 7.3) : email confirmation envoyé à l'utilisateur après révocation
+
+**Acceptance criteria (bloquants)**
+- Liste purposes complète
+- Toggle fonctionnel (accordé ↔ révoqué)
+- Confirmation avant révocation
+- Historique traçable
+- Email notification envoyé lors de révocation (Art. 7.3 RGPD)
+
+**Tests obligatoires**
+- Accorder consentement E2E
+- Révoquer consentement E2E
+- Vérifier impact (LLM bloqué après revoke)
+- Vérifier email notification révocation envoyé
+
+---
+
+## LOT 13.4 — Mes Données RGPD (Export + Effacement)
+
+**EPIC couverts** : EPIC 13, EPIC 5 (RGPD)
+**Durée estimée** : 4 jours
+
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 5 (export/effacement).
+
+**Objectif** : exercer ses droits RGPD (Art. 15, 17, 20).
+
+**Artefacts attendus**
+- Page mes données RGPD
+- Section Export données (bouton "Exporter mes données")
+- Liste exports disponibles (TTL 7j, downloads restants)
+- Download bundle chiffré (avec password)
+- Section Supprimer compte (bouton "Supprimer mon compte")
+- Confirmation double (popup + email)
+- Information soft delete (30 jours rétention)
+
+**Acceptance criteria (bloquants)**
+- Export fonctionnel (bundle chiffré reçu)
+- Download avec password
+- TTL respecté (7 jours)
+- Effacement fonctionnel (soft delete immédiat)
+- Confirmation obligatoire (éviter erreurs)
+- Information claire (rétention 30j)
+
+**Tests obligatoires**
+- Export données E2E
+- Download export E2E
+- Supprimer compte E2E (soft delete vérifié)
+
+---
+

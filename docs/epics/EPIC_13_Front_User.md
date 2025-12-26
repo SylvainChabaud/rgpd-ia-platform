@@ -1,10 +1,55 @@
-# EPIC 10 — Front User (Interface Utilisateur Final)
+# EPIC 13 — Front User (Interface Utilisateur Final)
 
-**Date** : 25 décembre 2025  
-**Statut** : ❌ TODO  
-**Périmètre** : Frontend (Interface Web)  
-**Scope** : MEMBER (Utilisateur final)  
+**Date** : 25 décembre 2025
+**Statut** : ❌ TODO
+**Périmètre** : Frontend (Interface Web)
+**Scope** : MEMBER (Utilisateur final)
 **RGPD Coverage** : Art. 5 (Minimisation), Art. 6 (Consentement), Art. 15-17-20 (Droits utilisateurs), Art. 25 (Privacy by Design), Art. 32 (Sécurité)
+
+---
+
+## 0. Architecture technique (DÉCISION VALIDÉE)
+
+### 0.1 Next.js monolithique (BACK + FRONT)
+
+**Architecture retenue** : **Next.js monolithique avec route groups**
+
+L'interface Front User sera développée dans le **même projet Next.js** que le backend API, en utilisant les **route groups** Next.js App Router.
+
+**Structure** :
+```
+src/app/
+├── api/                    # Backend API (déjà existant)
+├── (backoffice)/          # Frontend Back Office (LOT 11-12)
+├── (frontend)/            # 🎯 Frontend User (LOT 13.0-13.4)
+│   ├── layout.tsx         # Layout User (header, footer, Cookie Banner)
+│   ├── page.tsx           # Home page
+│   ├── login/             # Login User
+│   ├── ai-tools/          # Outils IA (résumé, classification, extraction)
+│   ├── history/           # Historique d'utilisation
+│   └── my-data/           # Gestion consentements + droits RGPD
+├── (legal)/               # Pages légales publiques (LOT 10.0-10.2)
+│   ├── privacy/page.tsx
+│   ├── terms/page.tsx
+│   └── cookies/page.tsx
+└── middleware.ts          # Middleware global (tenant, auth, RGPD)
+```
+
+**Fonctionnement route groups** :
+- `(frontend)/` est un route group → **pas d'URL `/frontend`**
+- URL finale : `/`, `/ai-tools`, `/history`, `/my-data`
+- Séparation logique code (Frontend User vs Back Office)
+
+**Avantages RGPD** :
+- ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
+- ✅ **Gateway LLM inaccessible** : Imports Gateway LLM côté serveur uniquement (pas de bypass client)
+- ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
+- ✅ **Consentement strict** : Middleware bloque appels IA si consentement non accordé
+- ✅ **Secrets centralisés** : Un seul `.env` (pas de duplication clés API)
+
+### 0.2 Référence
+
+Pour les détails d'implémentation, voir **TASKS.md section 2.2** (Architecture Frontend).
 
 ---
 
@@ -49,8 +94,70 @@ Construire une interface web **Front User** sécurisée et RGPD-compliant permet
 | **EPIC 3** | ✅ Dépend | Appelle Gateway LLM (invokeLLM endpoint) |
 | **EPIC 4** | ✅ Dépend | Lit historique ai_jobs user-scoped (max 90j) |
 | **EPIC 5** | ✅ Dépend | Utilise API Routes consents, export, effacement |
-| **EPIC 8** | ➡️ Indépendant | Application séparée (Super Admin) |
-| **EPIC 9** | ➡️ Indépendant | Application séparée (Tenant Admin) |
+| **EPIC 10** | ✅ Intègre | Intègre Cookie Banner (LOT 10.3) + liens footer pages légales (LOT 10.0-10.2) |
+| **EPIC 11** | ➡️ Même codebase | Même projet Next.js (route group séparé `(backoffice)/`) |
+| **EPIC 12** | ➡️ Même codebase | Même projet Next.js (route group séparé `(backoffice)/(tenant)/`) |
+
+---
+
+## 1.4 Corrélation FRONT ↔ BACK : Matrice des Endpoints Requis
+
+> **⚠️ CRITIQUE** : Chaque fonctionnalité FRONT dépend d'un ou plusieurs endpoints BACK. Cette matrice garantit la cohérence et évite les oublis.
+
+### 1.4.1 Endpoints Backend Requis par User Story
+
+| User Story | Fonctionnalité FRONT | Endpoint BACK | Méthode | EPIC Source | Status |
+|------------|---------------------|---------------|---------|-------------|--------|
+| **US 13.1** | Login User | `POST /api/auth/login` | POST | EPIC 1/LOT 1.2 | ✅ Implémenté |
+| **US 13.1** | Logout User | `POST /api/auth/logout` | POST | EPIC 1/LOT 1.2 | ✅ Implémenté |
+| **US 13.1** | Session Check | `GET /api/auth/session` | GET | EPIC 1/LOT 1.2 | ✅ Implémenté |
+| **US 13.2** | Stats Dashboard | `GET /api/users/:userId/stats` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 13.2** | Activity Feed | `GET /api/users/:userId/activity` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 13.3** | Invoke LLM | `POST /api/ai/invoke` | POST | EPIC 3/LOT 3.0 | ✅ Implémenté |
+| **US 13.3** | List Purposes | `GET /api/purposes` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.4** | Check Consent | `GET /api/consents/:userId/:purposeId` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.4** | Grant Consent | `POST /api/consents` | POST | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.5** | Save Result (opt) | `POST /api/ai/jobs/:jobId/save` | POST | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 13.6** | List Jobs | `GET /api/users/:userId/jobs` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 13.6** | Job Details | `GET /api/ai/jobs/:jobId` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 13.7** | List Consents | `GET /api/consents?userId=` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.7** | Revoke Consent | `POST /api/consents/revoke` | POST | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.8** | Consent History | `GET /api/consents/:userId/history` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 13.9** | Get Profile | `GET /api/users/:userId` | GET | EPIC 5/LOT 5.3 | ✅ Implémenté |
+| **US 13.9** | Update Profile | `PATCH /api/users/:userId` | PATCH | EPIC 5/LOT 5.3 | ✅ Implémenté |
+| **US 13.10** | Request Export | `POST /api/rgpd/export` | POST | EPIC 5/LOT 5.1 | ✅ Implémenté |
+| **US 13.10** | List Exports | `GET /api/rgpd/exports?userId=` | GET | EPIC 5/LOT 5.1 | ✅ Implémenté |
+| **US 13.10** | Download Export | `GET /api/rgpd/exports/:exportId/download` | GET | EPIC 5/LOT 5.1 | ✅ Implémenté |
+| **US 13.11** | Request Deletion | `POST /api/rgpd/delete` | POST | EPIC 5/LOT 5.2 | ✅ Implémenté |
+| **US 13.11** | Confirm Deletion | `POST /api/rgpd/delete/confirm/:token` | POST | EPIC 5/LOT 5.2 | ✅ Implémenté |
+| **Layout** | Cookie Banner | `POST /api/consents/cookies` | POST | EPIC 10/LOT 10.3 | ❌ **À implémenter** |
+| **Layout** | Cookie Preferences | `GET /api/consents/cookies` | GET | EPIC 10/LOT 10.3 | ❌ **À implémenter** |
+
+### 1.4.2 Endpoints RGPD Complémentaires (Art. 18/21/22)
+
+> **Gaps identifiés** : Ces endpoints sont requis pour conformité RGPD complète mais non encore implémentés.
+
+| Droit RGPD | Fonctionnalité | Endpoint BACK proposé | EPIC Source | Status |
+|------------|----------------|----------------------|-------------|--------|
+| **Art. 18** | Suspendre mes données | `POST /api/rgpd/suspend` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| **Art. 18** | Réactiver mes données | `POST /api/rgpd/unsuspend` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| **Art. 21** | Opposition traitement | `POST /api/rgpd/oppose` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| **Art. 22** | Demander révision humaine | `POST /api/rgpd/contest` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| **Art. 22** | List mes contestations | `GET /api/rgpd/contests?userId=` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+
+### 1.4.3 Prérequis BACK avant développement FRONT
+
+| Prérequis | EPIC | Status | Bloquant FRONT |
+|-----------|------|--------|----------------|
+| Auth RBAC/ABAC scope MEMBER | EPIC 1 | ✅ OK | US 13.1 |
+| Gateway LLM invokeLLM | EPIC 3 | ✅ OK | US 13.3 |
+| Table ai_jobs + purge 90j | EPIC 4 | ✅ OK | US 13.6 |
+| API Consents CRUD | EPIC 5/LOT 5.0 | ✅ OK | US 13.4, 13.7, 13.8 |
+| API Export RGPD | EPIC 5/LOT 5.1 | ✅ OK | US 13.10 |
+| API Deletion RGPD | EPIC 5/LOT 5.2 | ✅ OK | US 13.11 |
+| **API Cookies consent** | EPIC 10/LOT 10.3 | ❌ TODO | Cookie Banner Layout |
+| **API Art. 18/21/22** | EPIC 10/LOT 10.6 | ❌ TODO | Page My Data (droits complémentaires) |
+| **PII Pseudonymization** | EPIC 8/LOT 8.0 | ❌ TODO | Sécurité invocation LLM (Art. 32) |
 
 ---
 
@@ -113,7 +220,7 @@ Références aux EPICs backend existants :
 
 ### 3.1 User Stories
 
-#### US 10.1 : Authentification User
+#### US 13.1 : Authentification User
 **En tant que** User (scope MEMBER)  
 **Je veux** me connecter à la plateforme  
 **Afin de** utiliser les outils IA
@@ -129,7 +236,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.2 : Page Home (Dashboard User)
+#### US 13.2 : Page Home (Dashboard User)
 **En tant que** User  
 **Je veux** voir un dashboard de mon activité  
 **Afin de** avoir une vue d'ensemble
@@ -142,9 +249,9 @@ Références aux EPICs backend existants :
   - Dernière utilisation (date + purpose)
 - [ ] Graphique : Jobs IA par jour (30 derniers jours)
 - [ ] Section "Quick Actions" :
-  - Bouton "Utiliser AI Tools" (→ US 10.3)
-  - Bouton "Gérer mes consentements" (→ US 10.7)
-  - Bouton "Exporter mes données" (→ US 10.10)
+  - Bouton "Utiliser AI Tools" (→ US 13.3)
+  - Bouton "Gérer mes consentements" (→ US 13.7)
+  - Bouton "Exporter mes données" (→ US 13.10)
 - [ ] Activity feed (10 dernières actions) :
   - Job IA lancé (date, purpose, status)
   - Consentement accordé/révoqué (date, purpose)
@@ -152,7 +259,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.3 : Utiliser AI Tools (Upload + Purpose + Invoke)
+#### US 13.3 : Utiliser AI Tools (Upload + Purpose + Invoke)
 **En tant que** User  
 **Je veux** utiliser les outils IA sur un document  
 **Afin de** obtenir un résumé/classification/extraction
@@ -196,7 +303,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.4 : Consentement popup (1ère utilisation purpose)
+#### US 13.4 : Consentement popup (1ère utilisation purpose)
 **En tant que** User  
 **Je veux** être informé avant la 1ère utilisation d'un purpose  
 **Afin de** donner mon consentement explicite (Art. 6 RGPD)
@@ -220,7 +327,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.5 : Voir le résultat LLM (temporaire, non persisté)
+#### US 13.5 : Voir le résultat LLM (temporaire, non persisté)
 **En tant que** User  
 **Je veux** voir le résultat de mon traitement IA  
 **Afin de** exploiter l'information
@@ -242,7 +349,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.6 : Voir mon historique AI Jobs
+#### US 13.6 : Voir mon historique AI Jobs
 **En tant que** User  
 **Je veux** consulter mon historique d'utilisation IA  
 **Afin de** suivre mes traitements
@@ -268,7 +375,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.7 : Gérer mes consentements (Liste + Toggle)
+#### US 13.7 : Gérer mes consentements (Liste + Toggle)
 **En tant que** User  
 **Je veux** gérer mes consentements IA  
 **Afin de** contrôler les usages autorisés
@@ -297,7 +404,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.8 : Voir l'historique de mes consentements
+#### US 13.8 : Voir l'historique de mes consentements
 **En tant que** User  
 **Je veux** voir l'historique de mes consentements  
 **Afin de** tracer mes changements (transparence RGPD)
@@ -315,7 +422,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.9 : Éditer mon profil
+#### US 13.9 : Éditer mon profil
 **En tant que** User  
 **Je veux** éditer mes informations personnelles  
 **Afin de** mettre à jour mon compte
@@ -336,7 +443,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.10 : Exporter mes données RGPD (Art. 15/20)
+#### US 13.10 : Exporter mes données RGPD (Art. 15/20)
 **En tant que** User  
 **Je veux** exporter toutes mes données  
 **Afin de** exercer mon droit RGPD (Art. 15/20)
@@ -367,7 +474,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.11 : Supprimer mon compte RGPD (Art. 17)
+#### US 13.11 : Supprimer mon compte RGPD (Art. 17)
 **En tant que** User  
 **Je veux** supprimer mon compte et mes données  
 **Afin de** exercer mon droit à l'effacement (Art. 17 RGPD)
@@ -400,31 +507,31 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 10.12 : Notification consentement révoqué (impact LLM)
+#### US 13.12 : Notification consentement révoqué (impact LLM)
 **En tant que** User  
 **Je veux** être informé de l'impact d'une révocation de consentement  
 **Afin de** comprendre les conséquences
 
 **Acceptance Criteria** :
-- [ ] Popup révocation consentement (US 10.7) affiche :
+- [ ] Popup révocation consentement (US 13.7) affiche :
   - "⚠️ Attention : Si vous révoquez [Purpose], vous ne pourrez plus utiliser cet outil IA."
   - "Vos jobs IA en cours pour [Purpose] seront annulés."
 - [ ] Tentative invocation LLM avec consentement révoqué :
   - Backend rejette (403 Forbidden)
   - Frontend affiche message : "Vous devez accorder votre consentement pour [Purpose] avant utilisation."
-  - Bouton "Gérer mes consentements" (→ US 10.7)
+  - Bouton "Gérer mes consentements" (→ US 13.7)
 - [ ] Toast notification (révocation effectuée) :
   - "Consentement révoqué pour [Purpose]. Vous ne pouvez plus utiliser cet outil."
 
 ---
 
-### 3.2 Hors périmètre (EPIC 10)
+### 3.2 Hors périmètre (EPIC 13)
 
 ❌ **Pas dans cet EPIC** :
-- Gestion users tenant (CRUD users) → EPIC 9 (Tenant Admin)
-- Gestion tenants (CRUD tenants) → EPIC 8 (Super Admin)
-- Configuration purposes IA → EPIC 9 (Tenant Admin)
-- Logs système → EPIC 8 (Super Admin)
+- Gestion users tenant (CRUD users) → EPIC 12 (Tenant Admin)
+- Gestion tenants (CRUD tenants) → EPIC 11 (Super Admin)
+- Configuration purposes IA → EPIC 12 (Tenant Admin)
+- Logs système → EPIC 11 (Super Admin)
 - Billing/facturation → EPIC futur
 - Collaboration temps réel → EPIC futur
 
@@ -447,54 +554,82 @@ Références aux EPICs backend existants :
 | **Charts** | Recharts | Graphiques stats |
 | **Tables** | TanStack Table | Filtres, tri, pagination |
 
-### 4.2 Structure du projet (Monorepo séparé)
+### 4.2 Structure du projet (Next.js Monolithique partagé avec EPIC 11-12)
+
+**Architecture DÉCIDÉE** : Next.js monolithique (BACK + FRONT dans le même projet) — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
 ```
-rgpd-ia-platform/
-├─ backend/                    # Backend Next.js (API)
-├─ backoffice/                 # EPIC 8 + 9 (Back Office)
-├─ frontend/                   # EPIC 10 (Front User) ← NOUVEAU
-│  ├─ app/
-│  │  ├─ (auth)/
-│  │  │  ├─ login/page.tsx     # Login user
-│  │  │  └─ layout.tsx
-│  │  ├─ (user)/               # Routes user (protected)
-│  │  │  ├─ home/page.tsx      # Dashboard user
-│  │  │  ├─ ai-tools/page.tsx  # AI Tools (upload + invoke)
-│  │  │  ├─ history/page.tsx   # Historique AI jobs
-│  │  │  ├─ consents/
-│  │  │  │  ├─ page.tsx        # Mes consentements
-│  │  │  │  └─ history/page.tsx # Historique consentements
-│  │  │  ├─ data/
-│  │  │  │  ├─ export/page.tsx # Export RGPD
-│  │  │  │  └─ delete/page.tsx # Supprimer compte
-│  │  │  ├─ profile/page.tsx   # Mon profil
-│  │  │  └─ layout.tsx         # Layout user
-│  ├─ components/
-│  │  ├─ ui/                   # shadcn components
-│  │  ├─ ai-tools/
-│  │  │  ├─ FileUploader.tsx   # Drag & drop
-│  │  │  ├─ PurposeSelector.tsx # Dropdown purposes
-│  │  │  ├─ ConsentPopup.tsx   # Popup consentement
-│  │  │  └─ ResultViewer.tsx   # Affichage résultat LLM
-│  │  ├─ consents/
-│  │  │  ├─ ConsentToggle.tsx  # Toggle switch
-│  │  │  └─ ConsentHistory.tsx # Table historique
-│  │  └─ shared/               # Components partagés
-│  ├─ lib/
-│  │  ├─ api.ts                # API client (fetch wrapper)
-│  │  ├─ auth.ts               # NextAuth config
-│  │  └─ utils.ts
-│  ├─ middleware.ts            # Auth validation (scope MEMBER)
-│  └─ package.json
-└─ shared/                     # Types partagés
-   └─ types/
+src/app/
+├── api/                       # Backend API (Route Handlers) - EPIC 1-7
+│   ├── auth/
+│   ├── tenants/
+│   ├── users/
+│   ├── consents/
+│   ├── ai/
+│   ├── rgpd/
+│   └── audit/
+│
+├── (backoffice)/              # Frontend Back Office (EPIC 11-12)
+│   └── ...                    # Voir EPIC 11-12
+│
+├── (frontend)/                # 🎯 Frontend User (route group) - EPIC 13
+│   ├── layout.tsx             # Layout User (header, footer, Cookie Banner)
+│   ├── page.tsx               # Home page
+│   ├── login/page.tsx         # Login User
+│   ├── ai-tools/page.tsx      # AI Tools (LOT 13.1)
+│   ├── history/page.tsx       # Historique AI Jobs (LOT 13.2)
+│   ├── consents/              # Mes Consentements (LOT 13.3)
+│   │   ├── page.tsx           # Liste consentements
+│   │   └── history/page.tsx   # Historique consentements
+│   ├── my-data/               # Mes Données RGPD (LOT 13.4)
+│   │   ├── export/page.tsx    # Export RGPD
+│   │   └── delete/page.tsx    # Supprimer compte
+│   └── profile/page.tsx       # Mon profil
+│
+├── (legal)/                   # Pages légales publiques (EPIC 10)
+│   ├── privacy-policy/page.tsx
+│   ├── terms-of-service/page.tsx
+│   └── rgpd-info/page.tsx
+│
+└── middleware.ts              # Middleware global (tenant, auth, RGPD)
+
+src/
+├── components/
+│   ├── ui/                    # shadcn components (partagés)
+│   ├── backoffice/            # Components Back Office (EPIC 11-12)
+│   ├── frontend/              # Components Front User (EPIC 13)
+│   │   ├── ai-tools/
+│   │   │   ├── FileUploader.tsx   # Drag & drop
+│   │   │   ├── PurposeSelector.tsx # Dropdown purposes
+│   │   │   ├── ConsentPopup.tsx   # Popup consentement
+│   │   │   └── ResultViewer.tsx   # Affichage résultat LLM
+│   │   └── consents/
+│   │       ├── ConsentToggle.tsx  # Toggle switch
+│   │       └── ConsentHistory.tsx # Table historique
+│   └── shared/                # Components partagés
+├── lib/
+│   ├── api.ts                 # API client (fetch wrapper)
+│   ├── auth.ts                # NextAuth config
+│   └── utils.ts
+└── middleware.ts              # Auth + scope validation
 ```
+
+**Fonctionnement route groups** :
+- `(frontend)/` est un route group → **pas d'URL `/frontend`**
+- URL finale : `/`, `/ai-tools`, `/history`, `/my-data`, `/consents`
+- Séparation logique code (Frontend User vs Back Office)
+
+**Avantages RGPD** (cf. TASKS.md section 2.2) :
+- ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
+- ✅ **Gateway LLM inaccessible** : Imports Gateway LLM côté serveur uniquement (pas de bypass client)
+- ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
+- ✅ **Consentement strict** : Middleware bloque appels IA si consentement non accordé
+- ✅ **Secrets centralisés** : Un seul `.env` (pas de duplication clés API)
 
 ### 4.3 Middleware Auth (scope MEMBER)
 
 ```typescript
-// frontend/middleware.ts
+// src/middleware.ts (middleware global partagé)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
@@ -502,8 +637,9 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
 
-  // Routes publiques (login)
-  if (request.nextUrl.pathname.startsWith('/login')) {
+  // Routes publiques (login, pages légales)
+  const publicPaths = ['/login', '/legal'];
+  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
@@ -512,8 +648,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Route User (scope MEMBER)
-  if (request.nextUrl.pathname.startsWith('/user')) {
+  // Routes Frontend User (scope MEMBER) - route group (frontend)/
+  const frontendPaths = ['/', '/ai-tools', '/history', '/consents', '/my-data', '/profile'];
+  if (frontendPaths.some(path => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/'))) {
     // BLOCKER: User doit avoir scope MEMBER
     if (token.scope !== 'MEMBER') {
       return NextResponse.json(
@@ -553,7 +690,7 @@ export const config = {
 ### 4.4 API Client User-scoped
 
 ```typescript
-// frontend/lib/api.ts
+// src/lib/api.ts (API client partagé)
 export async function apiClientUser<T>(
   endpoint: string,
   options?: RequestInit
@@ -881,13 +1018,13 @@ Référence **TASKS.md** :
 
 | LOT | Description | Durée estimée | Dépendances |
 |-----|-------------|---------------|-------------|
-| **LOT 10.0** | Authentification + Layout User | 3 jours | LOT 5.3 (API Routes) |
-| **LOT 10.1** | AI Tools (Upload + Invoke + Consent Popup) | 5 jours | LOT 3.0 (Gateway LLM), LOT 5.0 (Consents backend), LOT 10.0 |
-| **LOT 10.2** | Historique AI Jobs (Liste + Filtres) | 3 jours | LOT 4.0 (ai_jobs backend), LOT 10.0 |
-| **LOT 10.3** | Mes Consentements (Liste + Toggle + Historique) | 4 jours | LOT 5.0 (Consents backend), LOT 10.0 |
-| **LOT 10.4** | Mes Données RGPD (Export + Effacement) | 4 jours | LOT 5.1-5.2 (Export/Effacement backend), LOT 10.0 |
+| **LOT 13.0** | Authentification + Layout User | 3 jours | LOT 5.3 (API Routes) |
+| **LOT 13.1** | AI Tools (Upload + Invoke + Consent Popup) | 5 jours | LOT 3.0 (Gateway LLM), LOT 5.0 (Consents backend), LOT 13.0 |
+| **LOT 13.2** | Historique AI Jobs (Liste + Filtres) | 3 jours | LOT 4.0 (ai_jobs backend), LOT 13.0 |
+| **LOT 13.3** | Mes Consentements (Liste + Toggle + Historique) | 4 jours | LOT 5.0 (Consents backend), LOT 13.0 |
+| **LOT 13.4** | Mes Données RGPD (Export + Effacement) | 4 jours | LOT 5.1-5.2 (Export/Effacement backend), LOT 13.0 |
 
-**Total EPIC 10** : ~19 jours (3,8 semaines)
+**Total EPIC 13** : ~19 jours (3,8 semaines)
 
 ---
 
@@ -926,10 +1063,10 @@ Référence **TASKS.md** :
 
 ---
 
-## 9. Checklist de livraison (DoD EPIC 10)
+## 9. Checklist de livraison (DoD EPIC 13)
 
 ### Code
-- [ ] Tous les LOTs 10.0-10.4 implémentés
+- [ ] Tous les LOTs 13.0-13.4 implémentés
 - [ ] Tests E2E passants (100%)
 - [ ] Tests RGPD passants (100%)
 - [ ] TypeScript strict (0 erreurs)
@@ -959,10 +1096,9 @@ Référence **TASKS.md** :
 
 ## 10. Prochaines étapes
 
-Après complétion EPIC 10 :
-1. **EPIC 6** : Docker Production (déploiement)
-2. **EPIC 7** : Audit & Observability (logs, metrics)
-3. **EPICs 11-12** (futurs) : Collaboration, Billing
+Après complétion EPIC 13 :
+1. Toutes les interfaces utilisateurs (Front + Back Office) sont complétées
+2. Prochains EPICs : Fonctionnalités avancées (Collaboration, Billing, Analytics)
 
 ---
 

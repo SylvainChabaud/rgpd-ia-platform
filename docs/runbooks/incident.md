@@ -467,4 +467,4 @@ Contenu : Email type + bannière in-app
 - **Registre des traitements** : [registre-traitements.md](../rgpd/registre-traitements.md)
 - **DPIA Gateway LLM** : [dpia.md](../rgpd/dpia.md)
 - **Backup policy** : [backup-policy.md](./backup-policy.md)
-- **EPIC 13 — Incident Response** : [TASKS.md](../../../TASKS.md#epic-13)
+- **EPIC 9 — Incident Response** : [TASKS.md](../../TASKS.md#epic-9)

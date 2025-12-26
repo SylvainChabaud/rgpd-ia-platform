@@ -1,4 +1,4 @@
--- 002_rgpd_deletion.sql
+-- 003_rgpd_deletion.sql
 -- Migration LOT 5.2 : Right to erasure (Art. 17)
 -- Adds soft delete capability (deleted_at) to enable RGPD deletion workflow
 
@@ -57,5 +57,14 @@ ALTER TABLE rgpd_requests
 CREATE INDEX IF NOT EXISTS idx_rgpd_requests_pending
   ON rgpd_requests(scheduled_purge_at)
   WHERE status = 'PENDING' AND scheduled_purge_at IS NOT NULL;
+
+-- =========================
+-- MARK MIGRATION AS APPLIED
+-- =========================
+INSERT INTO schema_migrations (version, applied_at)
+VALUES (3, now())
+ON CONFLICT (version) DO NOTHING;
+
+COMMIT;
 
 COMMIT;

@@ -1,10 +1,41 @@
-# EPIC 8 — Back Office Super Admin (Interface PLATFORM)
+# EPIC 11 — Back Office Super Admin (Interface PLATFORM)
 
-**Date** : 25 décembre 2025  
-**Statut** : ❌ TODO  
-**Périmètre** : Frontend (Interface Web)  
-**Scope** : PLATFORM (Super Admin uniquement)  
+**Date** : 25 décembre 2025
+**Statut** : ❌ TODO
+**Périmètre** : Frontend (Interface Web)
+**Scope** : PLATFORM (Super Admin uniquement)
 **RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 32 (Sécurité)
+
+---
+
+## 0. Architecture technique (DÉCISION VALIDÉE)
+
+### 0.1 Next.js monolithique (BACK + FRONT)
+
+**Architecture retenue** : **Next.js monolithique avec route groups**
+
+L'interface Back Office Super Admin sera développée dans le **même projet Next.js** que le backend API, en utilisant les **route groups** Next.js App Router.
+
+**Structure** :
+```
+src/app/
+├── api/                    # Backend API (déjà existant)
+├── (backoffice)/          # Frontend Back Office (LOT 11.0-11.3)
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── tenants/
+│   ├── users/
+│   └── audit/
+└── middleware.ts          # Middleware global (tenant, auth, RGPD)
+```
+
+**Avantages RGPD** :
+- ✅ Pas de CORS (même origin, sécurité maximale)
+- ✅ Gateway LLM inaccessible depuis le frontend
+- ✅ Middleware centralisé (auth, tenant, audit)
+- ✅ Secrets centralisés (un seul `.env`)
+
+**Référence** : Voir [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
 ---
 
@@ -44,7 +75,75 @@ Construire une interface web **Back Office** sécurisée permettant au Super Adm
 | **EPIC 5** | ✅ Dépend | Utilise API Routes (LOT 5.3) pour consommer backend |
 | **EPIC 6** | ✅ Dépend | Accès aux logs/metrics (observabilité) |
 | **EPIC 7** | ✅ Dépend | Accès aux artefacts d'audit (preuves RGPD) |
-| **EPIC 9** | ➡️ Influence | Partage infrastructure Next.js (monorepo) |
+| **EPIC 12** | ➡️ Influence | Partage infrastructure Next.js (même app) |
+
+---
+
+## 1.4 Corrélation FRONT ↔ BACK : Matrice des Endpoints Requis
+
+> **⚠️ CRITIQUE** : Chaque fonctionnalité FRONT Super Admin dépend d'endpoints BACK. Cette matrice garantit la cohérence.
+
+### 1.4.1 Endpoints Backend Requis par User Story
+
+| User Story | Fonctionnalité FRONT | Endpoint BACK | Méthode | EPIC Source | Status |
+|------------|---------------------|---------------|---------|-------------|--------|
+| **US 11.1** | Login Super Admin | `POST /api/auth/login` | POST | EPIC 1/LOT 1.2 | ✅ Implémenté |
+| **US 11.1** | Session Check | `GET /api/auth/session` | GET | EPIC 1/LOT 1.2 | ✅ Implémenté |
+| **US 11.2** | Create Tenant | `POST /api/tenants` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.3** | List Tenants | `GET /api/tenants` | GET | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.4** | Suspend Tenant | `POST /api/tenants/:tenantId/suspend` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.4** | Reactivate Tenant | `POST /api/tenants/:tenantId/reactivate` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.5** | Tenant Details | `GET /api/tenants/:tenantId` | GET | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.5** | Tenant Stats | `GET /api/tenants/:tenantId/stats` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 11.5** | Tenant Activity | `GET /api/tenants/:tenantId/activity` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 11.6** | Create Tenant Admin | `POST /api/tenants/:tenantId/users` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.7** | List All Users | `GET /api/users` | GET | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.7** | User Details | `GET /api/users/:userId` | GET | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.7** | Suspend User | `POST /api/users/:userId/suspend` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
+| **US 11.8** | Global Stats | `GET /api/stats/global` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 11.8** | Stats AI Jobs | `GET /api/stats/ai-jobs` | GET | EPIC 4/LOT 4.0 | ✅ Implémenté |
+| **US 11.8** | Stats RGPD | `GET /api/stats/rgpd` | GET | EPIC 5/LOT 5.3 | ✅ Implémenté |
+| **US 11.9** | Audit Trail | `GET /api/audit` | GET | EPIC 1/LOT 1.3 | ✅ Implémenté |
+| **US 11.9** | Export Audit CSV | `GET /api/audit/export` | GET | EPIC 1/LOT 1.3 | ✅ Implémenté |
+| **US 11.10** | System Logs | `GET /api/logs` | GET | EPIC 6/LOT 6.1 | ✅ Implémenté |
+
+### 1.4.2 Endpoints RGPD Cross-Tenant (Super Admin Only)
+
+> Ces endpoints permettent au Super Admin de surveiller la conformité RGPD globale.
+
+| Fonctionnalité | Endpoint BACK | Description | EPIC Source | Status |
+|----------------|---------------|-------------|-------------|--------|
+| RGPD Exports cross-tenant | `GET /api/rgpd/exports` | Tous les exports en cours | EPIC 5/LOT 5.1 | ✅ Implémenté |
+| RGPD Deletions cross-tenant | `GET /api/rgpd/deletions` | Toutes les suppressions en cours | EPIC 5/LOT 5.2 | ✅ Implémenté |
+| RGPD Violations Registry | `GET /api/rgpd/violations` | Registre incidents (Art. 33) | EPIC 9/LOT 9.0 | ❌ **À implémenter** |
+| DPIA Document Access | `GET /api/docs/dpia` | Accès DPIA Gateway LLM | EPIC 10/LOT 10.5 | ❌ **À implémenter** |
+| Registre Traitements | `GET /api/docs/registre` | Accès registre Art. 30 | EPIC 10/LOT 10.4 | ❌ **À implémenter** |
+
+### 1.4.3 Corrélation avec EPIC 12 (Tenant Admin)
+
+> Le Super Admin a une vue cross-tenant, le Tenant Admin une vue mono-tenant.
+
+| Vue Super Admin (EPIC 11) | Vue Tenant Admin (EPIC 12) | Scope Différence |
+|---------------------------|---------------------------|------------------|
+| Tous tenants | Mon tenant uniquement | Cross-tenant vs Mono-tenant |
+| Tous users (cross-tenant) | Users de mon tenant | WHERE tenant_id = $1 |
+| Audit trail global | Audit trail tenant | WHERE tenant_id = $1 |
+| Stats globales | Stats tenant | WHERE tenant_id = $1 |
+| Violations registry | Non accessible | Super Admin only |
+| DPIA/Registre | Non accessible | Super Admin only |
+
+### 1.4.4 Prérequis BACK avant développement FRONT
+
+| Prérequis | EPIC | Status | Bloquant FRONT |
+|-----------|------|--------|----------------|
+| Auth RBAC/ABAC scope PLATFORM | EPIC 1 | ✅ OK | US 11.1 |
+| CRUD Tenants | EPIC 1 | ✅ OK | US 11.2-11.5 |
+| CRUD Users cross-tenant | EPIC 1 | ✅ OK | US 11.6-11.7 |
+| Stats globales | EPIC 4 | ✅ OK | US 11.8 |
+| Audit trail cross-tenant | EPIC 1 | ✅ OK | US 11.9 |
+| Logs système (Grafana) | EPIC 6 | ✅ OK | US 11.10 |
+| **Violations Registry API** | EPIC 9/LOT 9.0 | ❌ TODO | Dashboard alertes |
+| **DPIA/Registre Access API** | EPIC 10/LOT 10.4-10.5 | ❌ TODO | Documents conformité |
 
 ---
 
@@ -112,7 +211,7 @@ Références aux EPICs backend existants :
 
 ### 3.1 User Stories
 
-#### US 8.1 : Authentification Super Admin
+#### US 11.1 : Authentification Super Admin
 **En tant que** Super Admin  
 **Je veux** me connecter au Back Office de manière sécurisée  
 **Afin de** gérer la plateforme
@@ -125,7 +224,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.2 : Créer un nouveau tenant (client)
+#### US 11.2 : Créer un nouveau tenant (client)
 **En tant que** Super Admin  
 **Je veux** créer un nouveau tenant avec son admin  
 **Afin de** onboarder un nouveau client
@@ -139,7 +238,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.3 : Voir la liste des tenants
+#### US 11.3 : Voir la liste des tenants
 **En tant que** Super Admin  
 **Je veux** voir tous les tenants de la plateforme  
 **Afin de** avoir une vue d'ensemble
@@ -153,7 +252,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.4 : Suspendre un tenant
+#### US 11.4 : Suspendre un tenant
 **En tant que** Super Admin  
 **Je veux** suspendre un tenant (non conforme, impayé, etc.)  
 **Afin de** bloquer l'accès à la plateforme
@@ -167,7 +266,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.5 : Voir les détails d'un tenant
+#### US 11.5 : Voir les détails d'un tenant
 **En tant que** Super Admin  
 **Je veux** voir les détails d'un tenant  
 **Afin de** comprendre son usage et troubleshooter
@@ -181,7 +280,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.6 : Créer un admin tenant
+#### US 11.6 : Créer un admin tenant
 **En tant que** Super Admin  
 **Je veux** créer un nouvel admin pour un tenant existant  
 **Afin de** ajouter un gestionnaire
@@ -195,7 +294,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.7 : Voir tous les users plateforme
+#### US 11.7 : Voir tous les users plateforme
 **En tant que** Super Admin  
 **Je veux** voir tous les users de tous les tenants  
 **Afin de** gérer les comptes et troubleshooter
@@ -209,7 +308,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.8 : Dashboard stats globales
+#### US 11.8 : Dashboard stats globales
 **En tant que** Super Admin  
 **Je veux** voir des stats globales de la plateforme  
 **Afin de** monitorer la santé et l'usage
@@ -232,7 +331,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.9 : Audit trail complet
+#### US 11.9 : Audit trail complet
 **En tant que** Super Admin  
 **Je veux** voir l'audit trail complet de la plateforme  
 **Afin de** enquêter sur incidents ou prouver conformité RGPD
@@ -252,7 +351,7 @@ Références aux EPICs backend existants :
 
 ---
 
-#### US 8.10 : Logs système
+#### US 11.10 : Logs système
 **En tant que** Super Admin  
 **Je veux** accéder aux logs système (erreurs, warnings)  
 **Afin de** debugger et résoudre incidents
@@ -265,12 +364,12 @@ Références aux EPICs backend existants :
 
 ---
 
-### 3.2 Hors périmètre (EPIC 8)
+### 3.2 Hors périmètre (EPIC 11)
 
 ❌ **Pas dans cet EPIC** :
-- Gestion users membres (non-admin) → EPIC 9 (Tenant Admin)
-- Configuration consentements IA → EPIC 9 (Tenant Admin)
-- Utilisation IA Tools → EPIC 10 (Front User)
+- Gestion users membres (non-admin) → EPIC 12 (Tenant Admin)
+- Configuration consentements IA → EPIC 12 (Tenant Admin)
+- Utilisation IA Tools → EPIC 13 (Front User)
 - Billing/facturation → EPIC futur
 - Support tickets → EPIC futur
 
@@ -292,47 +391,73 @@ Références aux EPICs backend existants :
 | **Charts** | Recharts ou Chart.js | Graphiques stats |
 | **Tables** | TanStack Table | Filtres, tri, pagination performante |
 
-### 4.2 Structure du projet (Monorepo)
+### 4.2 Structure du projet (Next.js Monolithique)
+
+**Architecture DÉCIDÉE** : Next.js monolithique (BACK + FRONT dans le même projet) — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
 ```
-rgpd-ia-platform/
-├─ backend/                    # Backend Next.js (API)
-├─ backoffice/                 # EPIC 8 + EPIC 9 (même app)
-│  ├─ app/
-│  │  ├─ (auth)/
-│  │  │  ├─ login/page.tsx
-│  │  │  └─ layout.tsx         # Layout public
-│  │  ├─ (platform)/           # Routes Super Admin (scope PLATFORM)
-│  │  │  ├─ dashboard/page.tsx
-│  │  │  ├─ tenants/
-│  │  │  │  ├─ page.tsx        # Liste tenants
-│  │  │  │  ├─ new/page.tsx    # Créer tenant
-│  │  │  │  └─ [id]/page.tsx   # Détails tenant
-│  │  │  ├─ users/
-│  │  │  │  ├─ page.tsx        # Liste users
-│  │  │  │  └─ [id]/page.tsx
-│  │  │  ├─ audit/page.tsx
-│  │  │  ├─ logs/page.tsx
-│  │  │  └─ layout.tsx         # Layout PLATFORM (navbar, sidebar)
-│  │  └─ (tenant)/             # Routes Tenant Admin (EPIC 9)
-│  ├─ components/
-│  │  ├─ ui/                   # shadcn components
-│  │  ├─ forms/                # Form components
-│  │  ├─ tables/               # Table components
-│  │  └─ charts/               # Chart components
-│  ├─ lib/
-│  │  ├─ api.ts                # API client (fetch wrapper)
-│  │  ├─ auth.ts               # NextAuth config
-│  │  └─ utils.ts
-│  ├─ middleware.ts            # Auth + scope validation
-│  └─ package.json
-├─ frontend/                   # EPIC 10 (Front User)
-└─ shared/                     # Types partagés
-   └─ types/
-      ├─ tenant.ts
-      ├─ user.ts
-      └─ api.ts
+src/app/
+├── api/                       # Backend API (Route Handlers) - EPIC 1-7
+│   ├── auth/
+│   ├── tenants/
+│   ├── users/
+│   ├── consents/
+│   ├── ai/
+│   ├── rgpd/
+│   └── audit/
+│
+├── (backoffice)/              # Frontend Back Office (route group)
+│   ├── layout.tsx             # Layout Back Office (sidebar, header)
+│   ├── page.tsx               # Dashboard Super Admin (LOT 11.0)
+│   ├── tenants/               # Gestion Tenants (LOT 11.1)
+│   │   ├── page.tsx           # Liste tenants
+│   │   ├── new/page.tsx       # Créer tenant
+│   │   └── [id]/page.tsx      # Détails tenant
+│   ├── users/                 # Gestion Users Plateforme (LOT 11.2)
+│   │   ├── page.tsx           # Liste users
+│   │   └── [id]/page.tsx      # Détails user
+│   ├── audit/                 # Audit & Monitoring (LOT 11.3)
+│   │   ├── page.tsx           # Audit events
+│   │   ├── violations/page.tsx # Registre violations (LOT 9.0)
+│   │   ├── registry/page.tsx  # Registre traitements (LOT 10.4)
+│   │   └── dpia/page.tsx      # DPIA Gateway LLM (LOT 10.5)
+│   ├── logs/page.tsx          # Logs système
+│   └── (tenant)/              # Sous-groupe Tenant Admin (EPIC 12)
+│       ├── dashboard/page.tsx # Dashboard Tenant (LOT 12.0)
+│       ├── users/             # Users Tenant (LOT 12.1)
+│       ├── consents/          # Consentements (LOT 12.2)
+│       └── rgpd/              # RGPD Requests (LOT 12.3)
+│
+├── (frontend)/                # Frontend User (route group) - EPIC 13
+│   └── ...                    # Voir EPIC 13
+│
+├── (legal)/                   # Pages légales publiques (route group SSG)
+│   ├── privacy-policy/page.tsx
+│   ├── terms-of-service/page.tsx
+│   └── rgpd-info/page.tsx
+│
+└── middleware.ts              # Middleware global (tenant, auth, RGPD)
+
+src/
+├── components/
+│   ├── ui/                    # shadcn components (partagés)
+│   ├── backoffice/            # Components Back Office (EPIC 11-12)
+│   │   ├── forms/
+│   │   ├── tables/
+│   │   └── charts/
+│   └── frontend/              # Components Front User (EPIC 13)
+├── lib/
+│   ├── api.ts                 # API client (fetch wrapper)
+│   ├── auth.ts                # NextAuth config
+│   └── utils.ts
+└── domain/                    # Types/logique métier partagés
 ```
+
+**Avantages RGPD de cette architecture** (cf. TASKS.md section 2.2) :
+- ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
+- ✅ **Gateway LLM inaccessible** : Imports côté serveur uniquement
+- ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
+- ✅ **Secrets centralisés** : Un seul `.env`, gestion simplifiée
 
 ### 4.3 Composants principaux
 
@@ -367,7 +492,7 @@ const PLATFORM_ROUTES = [
 
 #### API Client (RGPD-safe)
 ```typescript
-// lib/api.ts
+// src/lib/api.ts (API client partagé)
 export async function apiClient<T>(
   endpoint: string,
   options?: RequestInit
@@ -584,12 +709,12 @@ Référence **TASKS.md** :
 
 | LOT | Description | Durée estimée | Dépendances |
 |-----|-------------|---------------|-------------|
-| **LOT 8.0** | Infra Back Office + Auth | 5 jours | LOT 5.3 (API Routes) |
-| **LOT 8.1** | Gestion Tenants (CRUD) | 5 jours | LOT 8.0 |
-| **LOT 8.2** | Gestion Users Plateforme | 4 jours | LOT 8.0 |
-| **LOT 8.3** | Audit & Monitoring Dashboard | 4 jours | LOT 6.1 (Observabilité) |
+| **LOT 11.0** | Infra Back Office + Auth | 5 jours | LOT 5.3 (API Routes) |
+| **LOT 11.1** | Gestion Tenants (CRUD) | 5 jours | LOT 11.0 |
+| **LOT 11.2** | Gestion Users Plateforme | 4 jours | LOT 11.0 |
+| **LOT 11.3** | Audit & Monitoring Dashboard | 4 jours | LOT 6.1 (Observabilité) |
 
-**Total EPIC 8** : ~18 jours (3,6 semaines)
+**Total EPIC 11** : ~18 jours (3,6 semaines)
 
 ---
 
@@ -622,10 +747,10 @@ Référence **TASKS.md** :
 
 ---
 
-## 9. Checklist de livraison (DoD EPIC 8)
+## 9. Checklist de livraison (DoD EPIC 11)
 
 ### Code
-- [ ] Tous les LOTs 8.0-8.3 implémentés
+- [ ] Tous les LOTs 11.0-11.3 implémentés
 - [ ] Tests E2E passants (100%)
 - [ ] Tests RGPD passants (100%)
 - [ ] TypeScript strict (0 erreurs)
@@ -654,9 +779,9 @@ Référence **TASKS.md** :
 
 ## 10. Prochaines étapes
 
-Après complétion EPIC 8 :
-1. **EPIC 9** : Back Office Tenant Admin (interface tenant-scoped)
-2. **EPIC 10** : Front User (interface utilisateur final)
+Après complétion EPIC 11 :
+1. **EPIC 12** : Back Office Tenant Admin (interface tenant-scoped)
+2. **EPIC 13** : Front User (interface utilisateur final)
 
 ---
 

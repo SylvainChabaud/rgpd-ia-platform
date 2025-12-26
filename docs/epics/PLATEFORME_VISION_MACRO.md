@@ -508,16 +508,20 @@ npm run test:lot4     # Tests LOT 4 uniquement
 ## 🎯 Roadmap simplifiée
 
 ```
-✅ LOT 1 : Fondations (isolation + sécurité)
-✅ LOT 2 : Infrastructure (Docker + sécurisation)
-✅ LOT 3 : IA locale (Ollama POC)
-✅ LOT 4 : Stockage RGPD (consents + purge)
+✅ EPIC 1 : Socle applicatif sécurisé (IAM, multi-tenant, Gateway LLM)
+✅ EPIC 2 : Durcissement serveur & réseau (Ops/Sec RGPD)
+✅ EPIC 3 : Validation technique IA locale (POC contrôlé)
+✅ EPIC 4 : Stockage IA & données utilisateur RGPD
+✅ EPIC 5 : Pipeline RGPD (Droits des personnes)
+✅ EPIC 6 : Stack IA Docker RGPD-ready (industrialisation)
+✅ EPIC 7 : Kit conformité & audit RGPD
 
-🚧 LOT 5 : Pipeline RGPD complet (export/effacement use-cases)
-🚧 LOT 6 : Chiffrement au repos
-🚧 LOT 7 : Interface BACK OFFICE (Super Admin + Tenant Admin)
-🚧 LOT 8 : Interface FRONT USER (App Web)
-🚧 LOT 9 : Production (déploiement + monitoring)
+🚧 EPIC 8 : Anonymisation & Pseudonymisation (Backend)
+🚧 EPIC 9 : Incident Response & Security Hardening (Backend)
+🚧 EPIC 10 : RGPD Legal & Compliance (Frontend + Docs)
+🚧 EPIC 11 : Back Office Super Admin (Frontend PLATFORM)
+🚧 EPIC 12 : Back Office Tenant Admin (Frontend TENANT)
+🚧 EPIC 13 : Front User (Frontend utilisateur final)
 ```
 
 ---
@@ -537,9 +541,9 @@ npm run test:lot4     # Tests LOT 4 uniquement
 - Tests : Validation RGPD automatique
 
 **Prochaines étapes** :
-- Construire les interfaces web (front admin + front user)
-- Implémenter export/effacement RGPD complet
-- Déployer en production
+- EPIC 8-9 : Backend RGPD 100% (Anonymisation, Incident Response)
+- EPIC 10 : Documents légaux RGPD (Politique confidentialité, CGU, DPIA)
+- EPIC 11-13 : Interfaces web (Back Office + Front User)
 
 ---
 
