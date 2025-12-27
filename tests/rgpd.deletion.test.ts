@@ -35,6 +35,7 @@ const USER_B_ID = newId();
  * Setup: create test tenants and users
  */
 async function setupTenants() {
+  // Insert tenants (should not conflict after cleanup)
   await pool.query(
     "INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)",
     [TENANT_A_ID, "deletion-test-a", "Deletion Test A"]
@@ -106,6 +107,10 @@ async function cleanup() {
 }
 
 beforeAll(async () => {
+  // Clean up first to ensure fresh state (delete in reverse FK order)
+  await pool.query("DELETE FROM users WHERE email_hash IN ('user_a_hash', 'user_b_hash')");
+  await pool.query("DELETE FROM tenants WHERE slug IN ('deletion-test-a', 'deletion-test-b')");
+
   await setupTenants();
 });
 

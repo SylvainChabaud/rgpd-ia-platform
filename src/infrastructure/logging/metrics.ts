@@ -89,6 +89,34 @@ class Histogram {
     };
   }
 
+  /**
+   * Get aggregated stats across ALL labels (for export)
+   * RGPD-safe: aggregates all values regardless of labels
+   */
+  getAllStats() {
+    // Aggregate all values from all buckets
+    const allValues: number[] = [];
+    let totalSum = 0;
+    let totalCount = 0;
+
+    for (const [key, values] of this.buckets.entries()) {
+      allValues.push(...values);
+      totalSum += this.sums.get(key) || 0;
+      totalCount += this.counts.get(key) || 0;
+    }
+
+    return {
+      count: totalCount,
+      sum: totalSum,
+      avg: totalCount > 0 ? totalSum / totalCount : 0,
+      min: allValues.length > 0 ? Math.min(...allValues) : 0,
+      max: allValues.length > 0 ? Math.max(...allValues) : 0,
+      p50: this.percentile(allValues, 0.5),
+      p95: this.percentile(allValues, 0.95),
+      p99: this.percentile(allValues, 0.99),
+    };
+  }
+
   reset() {
     this.sums.clear();
     this.counts.clear();
@@ -143,8 +171,8 @@ class MetricsRegistry {
 
     const histograms: Record<string, any> = {};
     for (const [name, histogram] of this.histograms.entries()) {
-      // Export overall stats (no labels for simplicity)
-      histograms[name] = histogram.getStats();
+      // Export aggregated stats across all labels (RGPD-safe)
+      histograms[name] = histogram.getAllStats();
     }
 
     return {
@@ -246,10 +274,18 @@ export function recordHttpMetrics(
 /**
  * Sanitize path to remove UUIDs/IDs (prevent cardinality explosion)
  * Example: /api/users/123-456-789 → /api/users/:id
+ * Captures:
+ * - Standard UUIDs: 550e8400-e29b-41d4-a716-446655440000
+ * - UUID-like IDs: abcd1234-5678-90ef-ghij-klmnopqrstuv
+ * - Numeric IDs: 12345
  */
 function sanitizePath(path: string): string {
   return path
+    // UUID-like patterns (alphanumeric segments with dashes)
+    .replace(/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+/gi, '/:id')
+    // Standard UUIDs (8-4-4-4-12 hex format)
     .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:id')
+    // Numeric IDs
     .replace(/\/\d+/g, '/:id');
 }
 

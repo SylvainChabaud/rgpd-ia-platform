@@ -56,9 +56,11 @@ describe("LOT 6.0 BLOCKER: Docker Secrets - No Secrets in Repo", () => {
     expect(gitignore).toMatch(/secrets/);
 
     // Must ignore .env files (except .env.example)
-    // Accept variations: .env, .env.local, /.env, etc.
-    const hasEnvIgnore = gitignore.includes(".env") && !gitignore.match(/\.env\.example/);
+    // Accept variations: .env, .env*, .env.local, /.env, etc.
+    const hasEnvIgnore = gitignore.includes(".env*") || gitignore.includes(".env");
+    const preservesExample = gitignore.includes("!.env.example");
     expect(hasEnvIgnore).toBe(true);
+    expect(preservesExample).toBe(true);
   });
 
   test("BLOCKER: secrets directory does NOT exist in repo (gitignored)", () => {
@@ -355,9 +357,9 @@ describe("LOT 6.0 COMPLIANCE: RGPD & Security Standards", () => {
     }
 
     // No real email addresses (only example domains)
-    if (composeContent.includes("@")) {
-      expect(composeContent).not.toMatch(/@(?!example\.com|localhost)/);
-    }
+    // Exclude PostgreSQL connection strings (postgresql://user@host)
+    const emailPattern = /[a-zA-Z0-9._%+-]+@(?!example\.com|localhost)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    expect(composeContent).not.toMatch(emailPattern);
   });
 
   test("COMPLIANCE: no telemetry or tracking secrets", () => {

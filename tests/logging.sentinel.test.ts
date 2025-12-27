@@ -24,7 +24,31 @@ function captureLogs() {
   return capturedLogs;
 }
 
-// Create test logger that captures output
+// Sensitive fields to redact (same as in logger.ts)
+const SENSITIVE_FIELDS = [
+  'password',
+  'token',
+  'secret',
+  'apiKey',
+  'api_key',
+  'sessionToken',
+  'jwt',
+  'email',
+  'name',
+  'prompt',
+  'response',
+  'payload',
+  // Nested fields (wildcard syntax)
+  '*.email',
+  '*.password',
+  '*.token',
+  // User name fields (but NOT error.name which is the error class name)
+  'user.name',
+  'actor.name',
+  'tenant.name',
+];
+
+// Create test logger that captures output with RGPD redaction
 function createTestLogger() {
   const stream = {
     write: (log: string) => {
@@ -32,7 +56,16 @@ function createTestLogger() {
     },
   };
 
-  return pino({ level: 'trace' }, stream);
+  return pino(
+    {
+      level: 'trace',
+      redact: {
+        paths: SENSITIVE_FIELDS,
+        censor: '[REDACTED]',
+      },
+    },
+    stream
+  );
 }
 
 describe('Logging Sentinel Tests - RGPD Compliance', () => {

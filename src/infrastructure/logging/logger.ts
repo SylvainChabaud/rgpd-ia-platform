@@ -38,6 +38,16 @@ const SENSITIVE_FIELDS = [
   'prompt', // P2/P3 - NEVER log prompts
   'response', // P2/P3 - NEVER log AI responses
   'payload', // P2/P3 - generic sensitive data
+  // Nested fields (wildcard syntax for Pino redact)
+  '*.email',
+  '*.password',
+  '*.token',
+  '*.prompt',
+  '*.response',
+  // User name fields (but NOT error.name which is the error class name - P0)
+  'user.name',
+  'actor.name',
+  'tenant.name',
 ];
 
 /**
@@ -76,6 +86,12 @@ function redactSensitiveData(obj: any): any {
 export const logger = pino({
   level: LOG_LEVEL,
 
+  // CRITICAL: Redact sensitive fields in ALL environments (RGPD compliance)
+  redact: {
+    paths: SENSITIVE_FIELDS,
+    censor: '[REDACTED]',
+  },
+
   // Production: JSON structured logs
   // Development: pretty-printed logs
   ...(NODE_ENV === 'production'
@@ -87,11 +103,6 @@ export const logger = pino({
           },
         },
         timestamp: pino.stdTimeFunctions.isoTime,
-        // Redact sensitive fields
-        redact: {
-          paths: SENSITIVE_FIELDS,
-          censor: '[REDACTED]',
-        },
       }
     : {
         // Development configuration

@@ -270,7 +270,7 @@ describe("LOT 6.1 COMPLIANCE: Metrics Aggregation & Anonymization", () => {
     expect(histogram.count).toBe(9);
     expect(histogram.p50).toBeGreaterThan(0);
     expect(histogram.p95).toBeGreaterThan(histogram.p50);
-    expect(histogram.p99).toBeGreaterThan(histogram.p95);
+    expect(histogram.p99).toBeGreaterThanOrEqual(histogram.p95); // p99 >= p95 (can be equal for small samples)
 
     // Individual durations should NOT be exposed
     const histogramJson = JSON.stringify(histogram);
