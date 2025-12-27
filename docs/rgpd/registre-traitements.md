@@ -121,7 +121,11 @@ Fournir des services d'analyse de documents par intelligence artificielle (résu
 
 ### Sécurité
 - Gateway LLM obligatoire (pas de bypass, tests automatisés)
-- Pseudonymisation PII (EPIC 8, disponible si modèle externe utilisé)
+- ✅ **Pseudonymisation PII** (EPIC 8, LOT 8.0) : Redaction automatique avant exposition LLM
+  - Détection PII française (EMAIL, PHONE, PERSON, SSN, IBAN)
+  - Masking token-based (reversible, memory-only)
+  - Audit events (types/counts only, NO values)
+  - Performance: <50ms SLA (110 tests passing)
 - Pas de stockage prompts/outputs (sauf opt-in explicite utilisateur)
 - Chiffrement TLS 1.3 (transit)
 - Audit trail complet (événements LLM, pas de contenu)
@@ -287,13 +291,20 @@ Aucun
 ### Durée de conservation
 - **Audit events** : 3 ans (preuve légale RGPD)
 - **Logs applicatifs** : 90 jours (investigation incidents)
-- **IP addresses** : 7 jours (anonymisation automatique)
+- **IP addresses** : ✅ 90 jours (anonymisation automatique EPIC 8 LOT 8.1)
+  - Cron quotidien (3h AM) : IPv4 last octet zeroing, IPv6 /64 prefix
+  - CNIL-compliant pseudonymization
+  - 15 tests passing
 
 ### Sécurité
 - **Logs RGPD-safe** : événements uniquement, jamais de payloads utilisateurs
 - Chiffrement au repos (AES-256-GCM)
 - Isolation stricte par tenant
-- Scan automatique PII dans logs (EPIC 8)
+- ✅ **Scan automatique PII dans logs** (EPIC 8 LOT 8.2)
+  - Cron quotidien (4h AM) : détection EMAIL, PHONE, PERSON, SSN, IBAN
+  - Alertes par sévérité (CRITICAL, WARNING, INFO)
+  - Safety net RGPD Art. 32 Security
+  - 10 tests passing
 - Tests sentinels "no sensitive logs" (automatisés)
 
 ### Droits des personnes

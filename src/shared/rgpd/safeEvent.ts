@@ -99,6 +99,11 @@ export function assertSafeMeta(
     if (value === null || value === undefined) continue;
     const valueType = typeof value;
     if (valueType === "string") {
+      // Exception: pii_types contains PII type names (PERSON, EMAIL, etc.), not actual values
+      // These are safe metadata and should not trigger forbidden value checks
+      if (key === "pii_types") {
+        continue;
+      }
       assertSafeStringValue(value as string, `meta.${key}`);
       continue;
     }

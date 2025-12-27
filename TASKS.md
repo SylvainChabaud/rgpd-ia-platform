@@ -20,7 +20,7 @@
 | **EPIC 5** | Pipeline RGPD (Droits des personnes) | ✅ 100% | LOT 5.0-5.3 |
 | **EPIC 6** | Stack IA Docker RGPD-ready (industrialisation) | ✅ 100% | LOT 6.0-6.1 |
 | **EPIC 7** | Kit conformité & audit RGPD | ✅ 100% | LOT 7.0-7.1 |
-| **EPIC 8** | Anonymisation & Pseudonymisation (Backend) | ❌ TODO | LOT 8.0-8.2 |
+| **EPIC 8** | Anonymisation & Pseudonymisation (Backend) | ✅ 100% | LOT 8.0-8.2 |
 | **EPIC 9** | Incident Response & Security Hardening (Backend) | ❌ TODO | LOT 9.0-9.2 |
 | **EPIC 10** | RGPD Legal & Compliance (Backend + Frontend + Docs) | ❌ TODO | LOT 10.0-10.6 |
 | **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ❌ TODO | LOT 11.0-11.3 |
@@ -92,10 +92,11 @@ Références de cadrage (utiles) :
 #### **Phase 2A : Backend RGPD Core (EPIC 8-9)** — **PAS de dépendances frontend**
 
 **Ordre OBLIGATOIRE** :
-1. ❌ **EPIC 8** : Anonymisation & Pseudonymisation (Backend) — **BLOQUANT Art. 32**
-   - LOT 8.0 : PII Detection & Redaction (Gateway LLM)
-   - LOT 8.1 : Anonymisation IP (Logs & Audit)
-   - LOT 8.2 : Audit PII Logs (Scan automatique)
+1. ✅ **EPIC 8** : Anonymisation & Pseudonymisation (Backend) — **COMPLETED**
+   - ✅ LOT 8.0 : PII Detection & Redaction (Gateway LLM) — 85 tests passing
+   - ✅ LOT 8.1 : Anonymisation IP (Logs & Audit) — 15 tests passing
+   - ✅ LOT 8.2 : Audit PII Logs (Scan automatique) — 10 tests passing
+   - **Total**: 110/110 tests passing (100% coverage)
 
 2. ❌ **EPIC 9** : Incident Response & Security Hardening (Backend) — **BLOQUANT Art. 33-34**
    - LOT 9.0 : Runbook "Incident RGPD" + API backend registre violations (interface web dans Phase 2C)

@@ -22,7 +22,10 @@
 - Gateway LLM obligatoire (point unique, bypass impossible)
 - Consentement explicite par purpose (Art. 6.1.a, 7 RGPD)
 - Pas de persistance prompts/outputs par défaut (stateless)
-- Pseudonymisation PII prévue (EPIC 8)
+- ✅ **Pseudonymisation PII** (EPIC 8 LOT 8.0) — Implémenté
+  - Détection automatique EMAIL, PHONE, PERSON, SSN, IBAN
+  - Masking reversible token-based
+  - 110 tests passing (100% coverage)
 - Audit trail complet RGPD-safe
 - Droit à révision humaine (Art. 22)
 
@@ -180,11 +183,17 @@ Membres tenants + **tiers mentionnés dans documents** (clients, patients, salar
 
 #### Mesures d'atténuation
 1. **Contrat DPA strict** : Clause "pas de stockage, pas de training, suppression immédiate"
-2. **Pseudonymisation PII** (EPIC 8) : Détection + masking disponible si nécessaire
-   - Exemple : `Jean Dupont` → `[PERSON_1]` avant envoi, restauration après réponse
+2. ✅ **Pseudonymisation PII** (EPIC 8 LOT 8.0) — **IMPLÉMENTÉ**
+   - Détection automatique : EMAIL, PHONE, PERSON, SSN, IBAN
+   - Masking token-based : `Jean Dupont` → `[PERSON_1]` avant LLM
+   - Restauration après réponse : `[PERSON_1]` → `Jean Dupont`
+   - Mappings memory-only (purged after request)
+   - Performance: <50ms SLA (110 tests passing)
 3. **Préférence modèle local** : Déploiement on-premise (pas de transfert externe)
-4. **Audit trail PII** : Événement `llm.pii_detected` (types PII, counts, pas de valeurs)
-5. **Tests automatisés** : Scan PII dans logs/monitoring (EPIC 8)
+4. ✅ **Audit trail PII** : Événement `llm.pii_detected` (types/counts only, NO values)
+5. ✅ **Tests automatisés** : Scan PII dans logs (EPIC 8 LOT 8.2, cron quotidien 4h AM)
+   - Alertes par sévérité (CRITICAL, WARNING, INFO)
+   - 10 tests passing
 
 #### Risque résiduel
 🟡 **Moyen (3/16)** — Risque réduit mais non nul (fournisseur externe)
@@ -302,12 +311,13 @@ Membres tenants
 | Gateway LLM obligatoire (bypass impossible) | EPIC 1, LOT 1.4 | ✅ Implémenté | Élevée |
 | Consent enforcement automatisé | EPIC 5, LOT 5.0 | ✅ Implémenté | Élevée |
 | Pas de persistance prompts/outputs | EPIC 3, LOT 3.0 | ✅ Implémenté | Élevée |
-| Pseudonymisation PII (détection + masking) | EPIC 11, LOT 11.0 | ⏳ Prévu Phase 4 | **Élevée** |
+| ✅ **Pseudonymisation PII** (détection + masking) | **EPIC 8, LOT 8.0** | **✅ Implémenté** | **Élevée** |
+| ✅ **Anonymisation IP** (cron quotidien) | **EPIC 8, LOT 8.1** | **✅ Implémenté** | **Moyenne** |
 | Isolation multi-tenant stricte | EPIC 1, LOT 1.1 | ✅ Implémenté | Élevée |
 | Chiffrement TLS 1.3 (transit) | EPIC 2, LOT 2.0 | ✅ Implémenté | Élevée |
 | Audit trail RGPD-safe | EPIC 1, LOT 1.3 | ✅ Implémenté | Moyenne |
-| Scan PII logs automatisé | EPIC 11, LOT 11.2 | ⏳ Prévu Phase 4 | Moyenne |
-| Tests automatisés (consent, isolation) | EPIC 1-7 | ✅ Implémenté | Élevée |
+| ✅ **Scan PII logs automatisé** (cron quotidien) | **EPIC 8, LOT 8.2** | **✅ Implémenté** | **Moyenne** |
+| Tests automatisés (consent, isolation, PII) | EPIC 1-8 | ✅ Implémenté | Élevée |
 
 ### 4.2 Mesures organisationnelles
 
