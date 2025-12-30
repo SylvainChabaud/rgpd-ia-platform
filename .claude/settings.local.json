@@ -16,7 +16,17 @@
       "Bash(git push:*)",
       "Bash(pnpm test:*)",
       "Bash(node -e:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(psql:*)",
+      "Bash(npm run migrate:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsx:*)",
+      "Bash(cd:*)"
     ]
   }
 }

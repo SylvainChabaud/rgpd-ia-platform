@@ -61,11 +61,11 @@ export function withRateLimit(config?: Partial<RateLimitConfig>) {
     keyGenerator = defaultKeyGenerator,
   } = config || {};
 
-  return function <T extends (...args: any[]) => Promise<NextResponse>>(
+  type NextHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>;
+  return function <T extends NextHandler>(
     handler: T
   ): T {
-    return (async (...args: any[]) => {
-      const req = args[0] as NextRequest;
+    return (async (req: NextRequest, ...args: unknown[]) => {
 
       const key = keyGenerator(req);
       const now = Date.now();
@@ -99,7 +99,7 @@ export function withRateLimit(config?: Partial<RateLimitConfig>) {
       }
 
       // Add rate limit headers to response
-      const response = await handler(...args);
+      const response = await handler(req, ...args);
       response.headers.set('X-RateLimit-Limit', maxRequests.toString());
       response.headers.set('X-RateLimit-Remaining', (maxRequests - entry.count).toString());
       response.headers.set('X-RateLimit-Reset', entry.resetAt.toString());

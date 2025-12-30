@@ -3,6 +3,7 @@ import type { RgpdRequestRepo } from "@/app/ports/RgpdRequestRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { calculatePurgeDate } from "@/domain/rgpd/DeletionRequest";
 
 /**
@@ -69,34 +70,37 @@ export async function deleteUserData(
   const now = new Date();
   const scheduledPurgeAt = calculatePurgeDate(now);
 
-  // Step 1: Soft delete user (tenant-scoped)
-  const userRes = await pool.query(
-    `UPDATE users
-     SET deleted_at = $1
-     WHERE tenant_id = $2 AND id = $3 AND deleted_at IS NULL
-     RETURNING id`,
-    [now, tenantId, userId]
-  );
+  // Execute soft delete operations with tenant context for RLS
+  await withTenantContext(pool, tenantId, async (client) => {
+    // Step 1: Soft delete user (tenant-scoped)
+    const userRes = await client.query(
+      `UPDATE users
+       SET deleted_at = $1
+       WHERE tenant_id = $2 AND id = $3 AND deleted_at IS NULL
+       RETURNING id`,
+      [now, tenantId, userId]
+    );
 
-  if (userRes.rowCount === 0) {
-    throw new Error("User not found or already deleted");
-  }
+    if (userRes.rowCount === 0) {
+      throw new Error("User not found or already deleted");
+    }
 
-  // Step 2: Soft delete cascade - consents
-  await pool.query(
-    `UPDATE consents
-     SET deleted_at = $1
-     WHERE tenant_id = $2 AND user_id = $3 AND deleted_at IS NULL`,
-    [now, tenantId, userId]
-  );
+    // Step 2: Soft delete cascade - consents
+    await client.query(
+      `UPDATE consents
+       SET deleted_at = $1
+       WHERE tenant_id = $2 AND user_id = $3 AND deleted_at IS NULL`,
+      [now, tenantId, userId]
+    );
 
-  // Step 3: Soft delete cascade - ai_jobs
-  await pool.query(
-    `UPDATE ai_jobs
-     SET deleted_at = $1
-     WHERE tenant_id = $2 AND user_id = $3 AND deleted_at IS NULL`,
-    [now, tenantId, userId]
-  );
+    // Step 3: Soft delete cascade - ai_jobs
+    await client.query(
+      `UPDATE ai_jobs
+       SET deleted_at = $1
+       WHERE tenant_id = $2 AND user_id = $3 AND deleted_at IS NULL`,
+      [now, tenantId, userId]
+    );
+  });
 
   // Step 4: Create RGPD deletion request
   const request = await rgpdRequestRepo.create(tenantId, {

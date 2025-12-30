@@ -89,10 +89,19 @@ tests/                           ← Implémentation des tests
 | `rgpd.deletion.test.ts` | §3 EPIC 5, §4.C | ✅ |
 | `rgpd.export.test.ts` | §3 EPIC 5 | ✅ |
 | `rgpd.consent-enforcement.test.ts` | §3 EPIC 5 | ✅ |
+| `rgpd.consent-granularity.test.ts` | §3 EPIC 5, Art. 7 | ✅ |
 | `rgpd.audit-events-no-payload.test.ts` | §3 EPIC 1 | ✅ |
 | `rgpd.bootstrap.usecase.test.ts` | §3 EPIC 1 | ✅ |
 | `rgpd.policy-engine.test.ts` | §3 EPIC 1 | ✅ |
+| `rgpd.llm-runtime-bypass.test.ts` | §4.A (runtime) | ✅ |
 | `db.cross-tenant-isolation.test.ts` | §3 EPIC 4 | ✅ |
+| `db.rls-policies.test.ts` | §3 EPIC 4 (RLS) | ✅ |
+| `http.https-enforcement.test.ts` | §3 EPIC 2 | ✅ |
+| `llm.policy-enforcement.test.ts` | §4 LLM_USAGE_POLICY | ✅ |
+| `retention.automated-cleanup.test.ts` | §3 EPIC 4, Art. 5(1)(e) | ✅ |
+| `storage.classification-enforcement.test.ts` | Art. 9 RGPD | ✅ |
+| `runtime.network-egress.test.ts` | §3 EPIC 3 | ✅ |
+| `api.e2e.critical-routes.test.ts` | §3 E2E | ✅ |
 
 ---
 

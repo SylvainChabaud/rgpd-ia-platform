@@ -29,8 +29,9 @@ export type EncryptedData = {
 /**
  * Derive encryption key from password using PBKDF2
  */
+import crypto from "crypto";
+
 function deriveKey(password: string, salt: Buffer): Buffer {
-  const crypto = require("crypto");
   return crypto.pbkdf2Sync(password, salt, 100000, 32, "sha256");
 }
 

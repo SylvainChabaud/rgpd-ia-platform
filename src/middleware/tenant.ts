@@ -38,13 +38,13 @@ import { forbiddenError } from '@/lib/errorResponse';
  * @param handler - Route handler
  * @param options - { paramName: 'tenantId' } - param name for tenant ID (default: 'tenantId')
  */
-export function withTenantScope<T extends (req: NextRequest, context: any) => Promise<NextResponse>>(
+export function withTenantScope<T extends (req: NextRequest, context: { params?: Record<string, string> }) => Promise<NextResponse>>(
   handler: T,
   options: { paramName?: string } = {}
 ): T {
   const paramName = options.paramName || 'tenantId';
 
-  return (async (req: NextRequest, context: any) => {
+  return (async (req: NextRequest, context: { params?: Record<string, string> }) => {
     const userContext = extractContext(req);
 
     if (!userContext) {
@@ -93,12 +93,14 @@ export function withTenantScope<T extends (req: NextRequest, context: any) => Pr
  * Verifies user is accessing their own resources
  * Used for user-scoped endpoints (e.g., /api/consents, /api/rgpd/export)
  */
-export function withCurrentUser<T extends (...args: any[]) => Promise<NextResponse>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NextHandler = (req: NextRequest, context?: any) => Promise<NextResponse>;
+
+export function withCurrentUser<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
-    const context = args[1];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
 
     const userContext = extractContext(req);
 
@@ -115,7 +117,7 @@ export function withCurrentUser<T extends (...args: any[]) => Promise<NextRespon
     if (routeUserId) {
       // PLATFORM scope users can access any user
       if (isPlatformAdmin(userContext)) {
-        return handler(...args);
+        return handler(req, context);
       }
 
       // TENANT scope users can only access themselves
@@ -127,6 +129,6 @@ export function withCurrentUser<T extends (...args: any[]) => Promise<NextRespon
       }
     }
 
-    return handler(...args);
+    return handler(req, context);
   }) as T;
 }

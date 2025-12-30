@@ -4,6 +4,7 @@ import type {
   CreateConsentInput,
 } from "@/app/ports/ConsentRepo";
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import type { QueryResult } from "pg";
 
 /**
@@ -52,16 +53,18 @@ export class PgConsentRepo implements ConsentRepo {
       );
     }
 
-    const res: QueryResult<ConsentRow> = await pool.query(
-      `SELECT id, tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at
-       FROM consents
-       WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [tenantId, userId, purpose]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res: QueryResult<ConsentRow> = await client.query(
+        `SELECT id, tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at
+         FROM consents
+         WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [tenantId, userId, purpose]
+      );
 
-    return res.rowCount ? mapRowToConsent(res.rows[0]) : null;
+      return res.rowCount ? mapRowToConsent(res.rows[0]) : null;
+    });
   }
 
   async create(tenantId: string, input: CreateConsentInput): Promise<void> {
@@ -72,17 +75,19 @@ export class PgConsentRepo implements ConsentRepo {
       );
     }
 
-    await pool.query(
-      `INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [
-        tenantId,
-        input.userId,
-        input.purpose,
-        input.granted,
-        input.grantedAt || null,
-      ]
-    );
+    await withTenantContext(pool, tenantId, async (client) => {
+      await client.query(
+        `INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          tenantId,
+          input.userId,
+          input.purpose,
+          input.granted,
+          input.grantedAt || null,
+        ]
+      );
+    });
   }
 
   async findByUser(tenantId: string, userId: string): Promise<Consent[]> {
@@ -93,15 +98,17 @@ export class PgConsentRepo implements ConsentRepo {
       );
     }
 
-    const res: QueryResult<ConsentRow> = await pool.query(
-      `SELECT id, tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at
-       FROM consents
-       WHERE tenant_id = $1 AND user_id = $2
-       ORDER BY created_at DESC`,
-      [tenantId, userId]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res: QueryResult<ConsentRow> = await client.query(
+        `SELECT id, tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at
+         FROM consents
+         WHERE tenant_id = $1 AND user_id = $2
+         ORDER BY created_at DESC`,
+        [tenantId, userId]
+      );
 
-    return res.rows.map(mapRowToConsent);
+      return res.rows.map(mapRowToConsent);
+    });
   }
 
   async revoke(
@@ -116,18 +123,20 @@ export class PgConsentRepo implements ConsentRepo {
       );
     }
 
-    // Update latest consent record: set granted=false and revoked_at=NOW()
-    await pool.query(
-      `UPDATE consents
-       SET granted = false, revoked_at = NOW()
-       WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
-       AND id = (
-         SELECT id FROM consents
+    await withTenantContext(pool, tenantId, async (client) => {
+      // Update latest consent record: set granted=false and revoked_at=NOW()
+      await client.query(
+        `UPDATE consents
+         SET granted = false, revoked_at = NOW()
          WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
-         ORDER BY created_at DESC
-         LIMIT 1
-       )`,
-      [tenantId, userId, purpose]
-    );
+         AND id = (
+           SELECT id FROM consents
+           WHERE tenant_id = $1 AND user_id = $2 AND purpose = $3
+           ORDER BY created_at DESC
+           LIMIT 1
+         )`,
+        [tenantId, userId, purpose]
+      );
+    });
   }
 }

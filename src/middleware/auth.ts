@@ -20,12 +20,14 @@ import { unauthorizedError } from '@/lib/errorResponse';
  * Authentication middleware wrapper
  * Verifies JWT and attaches user to request context
  */
-export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NextHandler = (req: NextRequest, context?: any) => Promise<NextResponse>;
+
+export function withAuth<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
     // Extract Authorization header
     const authHeader = req.headers.get('Authorization');
 
@@ -52,7 +54,7 @@ export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
       const payload = verifyJwt(token);
 
       // Attach user context to request
-      (req as any).user = {
+      (req as NextRequest & { user?: unknown }).user = {
         userId: payload.userId,
         tenantId: payload.tenantId,
         scope: payload.scope,
@@ -60,7 +62,7 @@ export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
       };
 
       // Call handler with authenticated request
-      return handler(...args);
+      return handler(req, context);
     } catch (error) {
       // JWT verification failed
       const message = error instanceof Error ? error.message : 'Invalid token';
@@ -77,11 +79,11 @@ export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
  * Attaches user context if token present, but doesn't require it
  * Use for public endpoints that have optional auth features
  */
-export function withOptionalAuth<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withOptionalAuth<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
 
     const authHeader = req.headers.get('Authorization');
 
@@ -90,7 +92,7 @@ export function withOptionalAuth<T extends (...args: any[]) => Promise<NextRespo
       if (match) {
         try {
           const payload = verifyJwt(match[1]);
-          (req as any).user = {
+          (req as NextRequest & { user?: unknown }).user = {
             userId: payload.userId,
             tenantId: payload.tenantId,
             scope: payload.scope,
@@ -102,6 +104,6 @@ export function withOptionalAuth<T extends (...args: any[]) => Promise<NextRespo
       }
     }
 
-    return handler(...args);
+    return handler(req, context);
   }) as T;
 }

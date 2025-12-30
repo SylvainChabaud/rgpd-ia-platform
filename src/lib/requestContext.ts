@@ -28,7 +28,7 @@ export interface RequestContext {
  */
 export function extractContext(req: NextRequest): RequestContext | null {
   // Access user context attached by auth middleware
-  const user = (req as any).user;
+  const user = (req as NextRequest & { user?: RequestContext }).user;
 
   if (!user) {
     return null;

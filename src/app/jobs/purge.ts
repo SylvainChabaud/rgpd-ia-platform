@@ -17,6 +17,7 @@
  */
 
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import type {
   RetentionPolicy} from "@/domain/retention/RetentionPolicy";
 import {
@@ -60,24 +61,28 @@ export async function purgeAiJobs(
 
   if (dryRun) {
     // Dry run: count only (no deletion)
-    const countResult = await pool.query<{ count: string }>(
-      `SELECT COUNT(*) as count
-       FROM ai_jobs
-       WHERE tenant_id = $1
-         AND created_at < $2`,
-      [tenantId, cutoffDate]
-    );
+    const countResult = await withTenantContext(pool, tenantId, async (client) => {
+      return await client.query<{ count: string }>(
+        `SELECT COUNT(*) as count
+         FROM ai_jobs
+         WHERE tenant_id = $1
+           AND created_at < $2`,
+        [tenantId, cutoffDate]
+      );
+    });
 
     return parseInt(countResult.rows[0]?.count || "0", 10);
   }
 
   // Actual purge: DELETE with tenant isolation
-  const deleteResult = await pool.query(
-    `DELETE FROM ai_jobs
-     WHERE tenant_id = $1
-       AND created_at < $2`,
-    [tenantId, cutoffDate]
-  );
+  const deleteResult = await withTenantContext(pool, tenantId, async (client) => {
+    return await client.query(
+      `DELETE FROM ai_jobs
+       WHERE tenant_id = $1
+         AND created_at < $2`,
+      [tenantId, cutoffDate]
+    );
+  });
 
   return deleteResult.rowCount || 0;
 }

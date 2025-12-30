@@ -16,8 +16,30 @@
 import { logger, createLogger, logEvent, logError, LogEvent } from '@/infrastructure/logging/logger';
 import pino from 'pino';
 
+// Type for captured log entries
+interface CapturedLog {
+  [key: string]: unknown;
+  password?: string;
+  token?: string;
+  email?: string;
+  name?: string;
+  prompt?: string;
+  response?: string;
+  userId?: string;
+  event?: string;
+  method?: string;
+  path?: string;
+  status?: number;
+  duration?: number;
+  exportId?: string;
+  aiJobId?: string;
+  provider?: string;
+  user?: { email?: string; name?: string };
+  error?: { message?: string; name?: string };
+}
+
 // Mock Pino to capture logs
-let capturedLogs: any[] = [];
+let capturedLogs: CapturedLog[] = [];
 
 function captureLogs() {
   capturedLogs = [];
@@ -163,8 +185,8 @@ describe('Logging Sentinel Tests - RGPD Compliance', () => {
       }, 'Nested test');
 
       const log = capturedLogs[0];
-      expect(log.user.email).toBe('[REDACTED]');
-      expect(log.user.name).toBe('[REDACTED]');
+      expect(log.user!.email).toBe('[REDACTED]');
+      expect(log.user!.name).toBe('[REDACTED]');
       expect(JSON.stringify(log)).not.toContain('nested@example.com');
       expect(JSON.stringify(log)).not.toContain('Jane Doe');
     });
@@ -216,8 +238,8 @@ describe('Logging Sentinel Tests - RGPD Compliance', () => {
       }, 'Database error');
 
       const log = capturedLogs[0];
-      expect(log.error.message).toBe('Connection timeout');
-      expect(log.error.name).toBe('Error');
+      expect(log.error!.message).toBe('Connection timeout');
+      expect(log.error!.name).toBe('Error');
     });
   });
 
@@ -311,7 +333,7 @@ describe('Logging Sentinel Tests - RGPD Compliance', () => {
       }, 'Error occurred');
 
       const log = capturedLogs[0];
-      expect(log.error.message).toBe('Database connection failed');
+      expect(log.error!.message).toBe('Database connection failed');
       expect(log).not.toHaveProperty('userId');
       expect(log).not.toHaveProperty('tenantId');
     });

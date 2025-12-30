@@ -25,7 +25,7 @@ export class PgAuditEventReader implements AuditEventReader {
     } = filters;
 
     const whereClauses: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     // Filter by tenant (TENANT admin scope)

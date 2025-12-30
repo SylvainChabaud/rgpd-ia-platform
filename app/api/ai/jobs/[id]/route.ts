@@ -25,10 +25,10 @@ import { internalError, notFoundError, forbiddenError } from '@/lib/errorRespons
 export const GET = withLogging(
   withAuth(
     withCurrentUser(
-      async (req: NextRequest, { params }: { params: { id: string } }) => {
+      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
         try {
           const context = requireContext(req);
-          const jobId = params.id;
+          const { id: jobId } = await params;
 
           if (!jobId) {
             return NextResponse.json(notFoundError('Job'), { status: 404 });

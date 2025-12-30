@@ -15,15 +15,32 @@
  * EPIC 2 + EPIC 6 compliance
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 
 const DOCKER_COMPOSE_PATH = join(process.cwd(), "docker-compose.yml");
 const DOCKERFILE_PATH = join(process.cwd(), "Dockerfile");
 
+interface ServiceConfig {
+  ports?: string[];
+  expose?: string[];
+  networks?: string[] | Record<string, unknown>;
+  environment?: Record<string, string>;
+  build?: { context?: string; dockerfile?: string } | string;
+  image?: string;
+  healthcheck?: {
+    test?: string[];
+    interval?: string;
+    timeout?: string;
+    retries?: number;
+  };
+  depends_on?: Record<string, { condition?: string }>;
+  volumes?: string[] | Record<string, unknown>;
+}
+
 interface DockerComposeConfig {
-  services: Record<string, any>;
+  services: Record<string, ServiceConfig>;
 }
 
 function loadDockerCompose(): DockerComposeConfig {
@@ -218,8 +235,8 @@ describe("LOT 6.0 BLOCKER: Docker Ports Exposure", () => {
     const proxyService = config.services["reverse-proxy"];
 
     expect(proxyService.depends_on).toBeDefined();
-    expect(proxyService.depends_on.app).toBeDefined();
-    expect(proxyService.depends_on.app.condition).toBe("service_healthy");
+    expect(proxyService.depends_on?.app).toBeDefined();
+    expect(proxyService.depends_on?.app?.condition).toBe("service_healthy");
 
     // Proxy should NOT start before app is healthy
   });
@@ -309,9 +326,9 @@ describe("LOT 6.0 SECURITY: Port Binding & Network Access", () => {
     const appService = config.services.app;
 
     expect(appService.healthcheck).toBeDefined();
-    expect(appService.healthcheck.test).toBeDefined();
+    expect(appService.healthcheck?.test).toBeDefined();
 
-    const healthcheckCmd = appService.healthcheck.test.join(" ");
+    const healthcheckCmd = appService.healthcheck?.test?.join(" ") ?? "";
 
     // Should use localhost (internal), not external IP
     expect(healthcheckCmd).toContain("localhost:3000");
@@ -319,7 +336,7 @@ describe("LOT 6.0 SECURITY: Port Binding & Network Access", () => {
 
     // Proxy healthcheck should use internal localhost
     const proxyService = config.services["reverse-proxy"];
-    const proxyHealthcheck = proxyService.healthcheck.test.join(" ");
+    const proxyHealthcheck = proxyService.healthcheck?.test?.join(" ") ?? "";
 
     expect(proxyHealthcheck).toContain("localhost");
   });
@@ -388,7 +405,7 @@ describe("LOT 6.0 PRODUCTION READINESS: Port Configuration", () => {
 
     const volumes = Array.isArray(proxyService.volumes)
       ? proxyService.volumes
-      : Object.keys(proxyService.volumes);
+      : Object.keys(proxyService.volumes ?? {});
 
     const hasSSLVolume = volumes.some((v: unknown) => String(v).includes("ssl"));
     expect(hasSSLVolume).toBe(true);

@@ -26,9 +26,19 @@ const ENV_EXAMPLE_PATH = join(process.cwd(), ".env.example");
 const GITIGNORE_PATH = join(process.cwd(), ".gitignore");
 const SECRETS_DIR = join(process.cwd(), "secrets");
 
+interface SecretConfig {
+  file?: string;
+  external?: boolean;
+}
+
+interface ServiceConfig {
+  secrets?: string[];
+  environment?: Record<string, string>;
+}
+
 interface DockerComposeConfig {
-  services: Record<string, any>;
-  secrets?: Record<string, any>;
+  services: Record<string, ServiceConfig>;
+  secrets?: Record<string, SecretConfig>;
 }
 
 function loadDockerCompose(): DockerComposeConfig {

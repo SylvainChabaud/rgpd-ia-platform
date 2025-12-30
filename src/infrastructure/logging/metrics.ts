@@ -14,6 +14,20 @@
  */
 
 /**
+ * Histogram stats type
+ */
+export interface HistogramStats {
+  count: number;
+  sum: number;
+  avg: number;
+  min: number;
+  max: number;
+  p50: number;
+  p95: number;
+  p99: number;
+}
+
+/**
  * Counter metric
  * Tracks occurrences of events
  */
@@ -169,7 +183,7 @@ class MetricsRegistry {
       counters[name] = Object.fromEntries(counter.getAll());
     }
 
-    const histograms: Record<string, any> = {};
+    const histograms: Record<string, HistogramStats> = {};
     for (const [name, histogram] of this.histograms.entries()) {
       // Export aggregated stats across all labels (RGPD-safe)
       histograms[name] = histogram.getAllStats();
@@ -195,7 +209,7 @@ class MetricsRegistry {
 export interface MetricsSnapshot {
   timestamp: string;
   counters: Record<string, Record<string, number>>;
-  histograms: Record<string, any>;
+  histograms: Record<string, HistogramStats>;
 }
 
 /**

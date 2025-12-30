@@ -3,6 +3,7 @@ import type { RgpdRequestRepo } from "@/app/ports/RgpdRequestRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import {
   getExportMetadataByUserId,
   deleteExportBundle,
@@ -72,58 +73,68 @@ export async function purgeUserData(
   const { tenantId, userId } = request;
   const now = new Date();
 
-  // Step 2: Verify user is soft-deleted
-  const userRes = await pool.query(
-    `SELECT deleted_at FROM users
-     WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NOT NULL`,
-    [tenantId, userId]
-  );
+  // Step 2-6: Execute hard deletes with RLS context
+  const deletedRecords = await withTenantContext(pool, tenantId, async (client) => {
+    // Step 2: Verify user is soft-deleted
+    const userRes = await client.query(
+      `SELECT deleted_at FROM users
+       WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NOT NULL`,
+      [tenantId, userId]
+    );
 
-  if (userRes.rowCount === 0) {
-    throw new Error("User not found or not soft-deleted");
-  }
-
-  // Retention validation is already done by findPendingPurges()
-  // (which checks scheduledPurgeAt <= NOW())
-
-  // Step 3: Hard delete consents (tenant-scoped)
-  const consentsRes = await pool.query(
-    `DELETE FROM consents
-     WHERE tenant_id = $1 AND user_id = $2`,
-    [tenantId, userId]
-  );
-
-  // Step 4: Hard delete ai_jobs (tenant-scoped)
-  const jobsRes = await pool.query(
-    `DELETE FROM ai_jobs
-     WHERE tenant_id = $1 AND user_id = $2`,
-    [tenantId, userId]
-  );
-
-  // Step 5: Crypto-shredding - delete export bundles
-  // Find all exports for this user
-  const exportMetadataList = getExportMetadataByUserId(tenantId, userId);
-  let deletedExports = 0;
-
-  for (const metadata of exportMetadataList) {
-    try {
-      // Delete encrypted file (crypto-shredding: key becomes inaccessible)
-      await deleteExportBundle(metadata.exportId);
-      // Delete metadata
-      deleteExportMetadata(metadata.exportId);
-      deletedExports++;
-    } catch (error) {
-      // Log error but continue purge (best effort)
-      console.error(`Failed to delete export ${metadata.exportId}:`, error);
+    if (userRes.rowCount === 0) {
+      throw new Error("User not found or not soft-deleted");
     }
-  }
 
-  // Step 6: Hard delete user (tenant-scoped)
-  const userDeleteRes = await pool.query(
-    `DELETE FROM users
-     WHERE tenant_id = $1 AND id = $2`,
-    [tenantId, userId]
-  );
+    // Retention validation is already done by findPendingPurges()
+    // (which checks scheduledPurgeAt <= NOW())
+
+    // Step 3: Hard delete consents (tenant-scoped)
+    const consentsRes = await client.query(
+      `DELETE FROM consents
+       WHERE tenant_id = $1 AND user_id = $2`,
+      [tenantId, userId]
+    );
+
+    // Step 4: Hard delete ai_jobs (tenant-scoped)
+    const jobsRes = await client.query(
+      `DELETE FROM ai_jobs
+       WHERE tenant_id = $1 AND user_id = $2`,
+      [tenantId, userId]
+    );
+
+    // Step 5: Crypto-shredding - delete export bundles
+    // Find all exports for this user
+    const exportMetadataList = getExportMetadataByUserId(tenantId, userId);
+    let deletedExports = 0;
+
+    for (const metadata of exportMetadataList) {
+      try {
+        // Delete encrypted file (crypto-shredding: key becomes inaccessible)
+        await deleteExportBundle(metadata.exportId);
+        // Delete metadata
+        deleteExportMetadata(metadata.exportId);
+        deletedExports++;
+      } catch (error) {
+        // Log error but continue purge (best effort)
+        console.error(`Failed to delete export ${metadata.exportId}:`, error);
+      }
+    }
+
+    // Step 6: Hard delete user (tenant-scoped)
+    const userDeleteRes = await client.query(
+      `DELETE FROM users
+       WHERE tenant_id = $1 AND id = $2`,
+      [tenantId, userId]
+    );
+
+    return {
+      consents: consentsRes.rowCount || 0,
+      aiJobs: jobsRes.rowCount || 0,
+      exports: deletedExports,
+      users: userDeleteRes.rowCount || 0,
+    };
+  });
 
   // Step 7: Update RGPD request status
   await rgpdRequestRepo.updateStatus(requestId, "COMPLETED", now);
@@ -139,21 +150,16 @@ export async function purgeUserData(
     metadata: {
       requestId,
       userId,
-      deletedConsents: consentsRes.rowCount || 0,
-      deletedAiJobs: jobsRes.rowCount || 0,
-      deletedExports: deletedExports,
-      deletedUsers: userDeleteRes.rowCount || 0,
+      deletedConsents: deletedRecords.consents,
+      deletedAiJobs: deletedRecords.aiJobs,
+      deletedExports: deletedRecords.exports,
+      deletedUsers: deletedRecords.users,
     },
   });
 
   return {
     requestId,
     purgedAt: now,
-    deletedRecords: {
-      consents: consentsRes.rowCount || 0,
-      aiJobs: jobsRes.rowCount || 0,
-      exports: deletedExports,
-      users: userDeleteRes.rowCount || 0,
-    },
+    deletedRecords,
   };
 }

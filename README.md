@@ -57,22 +57,31 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 ```
 ├── app/                    # Next.js App Router (pages, API routes)
 ├── src/
-│   ├── ai/                 # Gateway LLM (providers, orchestration)
+│   ├── ai/                 # Gateway LLM (providers, enforcement, PII)
+│   │   └── gateway/        # Gateway centralisé + useCasePolicy
 │   ├── domain/             # Logique métier (use cases, entities)
+│   │   ├── data-classification/  # Classification P0-P3 (Art. 9 RGPD)
+│   │   ├── retention/      # Politiques de rétention
+│   │   └── rgpd/           # Entités RGPD
 │   ├── infrastructure/     # Repositories, services externes
+│   │   ├── db/             # PostgreSQL + tenantContext (RLS)
+│   │   └── pii/            # Détection/masquage PII
 │   ├── lib/                # Utilitaires partagés
 │   └── middleware/         # Middlewares (auth, tenant, etc.)
 ├── tests/                  # Tests (unitaires, intégration, RGPD)
 ├── scripts/
-│   ├── audit/              # Scripts d'audit RGPD (voir ci-dessous)
+│   ├── audit/              # Scripts d'audit RGPD
+│   ├── docker/             # Scripts Docker
 │   ├── migrate.ts          # Migrations DB
-│   └── purge.ts            # Purge données (retention)
+│   ├── purge.ts            # Purge données (retention)
+│   ├── check-rls.ts        # Diagnostic RLS
+│   └── check-user-role.ts  # Vérification rôle DB
 ├── docs/                   # Documentation complète
 │   ├── architecture/       # Architecture & boundaries
 │   ├── rgpd/               # Registre, DPIA, politiques
 │   ├── runbooks/           # Procédures opérationnelles
 │   └── implementation/     # Spécifications par LOT
-└── migrations/             # Scripts SQL
+└── migrations/             # Scripts SQL (001-013+)
 ```
 
 ---
@@ -154,8 +163,20 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 - **Privacy by Design** : RGPD intégré dès la conception
 - **Minimisation** : Aucune donnée sensible stockée par défaut
 - **Isolation** : Tenant ID obligatoire sur toutes les requêtes
+- **Row-Level Security** : Isolation PostgreSQL au niveau DB (défense en profondeur)
 - **Traçabilité** : Audit trail RGPD-safe (pas de PII dans les logs)
 - **Chiffrement** : AES-256-GCM au repos, TLS 1.3 en transit
+- **Classification** : Données P0-P3 avec rejet automatique des données P3 (Art. 9)
+
+### Défense en profondeur (RLS)
+
+```bash
+# Vérifier la configuration RLS
+tsx scripts/check-rls.ts
+
+# Vérifier les privilèges de l'utilisateur DB
+tsx scripts/check-user-role.ts
+```
 
 ### Workflow d'audit
 
@@ -190,9 +211,14 @@ pnpm test -- --watch
 
 ### Catégories de tests
 
-- `tests/rgpd.*.test.ts` — Tests de conformité RGPD
-- `tests/db.*.test.ts` — Tests isolation base de données
-- `tests/http.*.test.ts` — Tests API (auth, authz, tenant)
+- `tests/rgpd.*.test.ts` — Tests de conformité RGPD (consent, deletion, export, PII)
+- `tests/db.*.test.ts` — Tests isolation base de données (RLS, cross-tenant)
+- `tests/http.*.test.ts` — Tests API (auth, authz, tenant, HTTPS)
+- `tests/llm.*.test.ts` — Tests LLM policy enforcement
+- `tests/storage.*.test.ts` — Tests classification des données (P0-P3)
+- `tests/retention.*.test.ts` — Tests rétention automatique (Art. 5)
+- `tests/runtime.*.test.ts` — Tests isolation réseau AI runtime
+- `tests/api.e2e.*.test.ts` — Tests E2E routes critiques
 - `tests/docker.*.test.ts` — Tests infrastructure Docker
 
 ---

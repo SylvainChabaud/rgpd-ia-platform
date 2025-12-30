@@ -66,11 +66,14 @@ function extractRequestMetadata(req: NextRequest) {
  *   return NextResponse.json({ data: 'example' });
  * });
  */
-export function withLogging<T extends (...args: any[]) => Promise<NextResponse>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NextHandler = (req: NextRequest, context?: any) => Promise<NextResponse>;
+
+export function withLogging<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
     const requestId = randomUUID();
     const startTime = Date.now();
 
@@ -88,7 +91,7 @@ export function withLogging<T extends (...args: any[]) => Promise<NextResponse>>
 
     try {
       // Execute handler
-      const response = await handler(...args);
+      const response = await handler(req, context);
 
       // Log response
       const duration = Date.now() - startTime;

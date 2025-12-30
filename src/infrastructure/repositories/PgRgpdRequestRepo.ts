@@ -10,6 +10,7 @@
  */
 
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { randomUUID } from "crypto";
 import type {
   RgpdRequestRepo,
@@ -31,20 +32,22 @@ export class PgRgpdRequestRepo implements RgpdRequestRepo {
     const id = randomUUID();
     const now = new Date();
 
-    await pool.query(
-      `INSERT INTO rgpd_requests
-       (id, tenant_id, user_id, type, status, created_at, scheduled_purge_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        id,
-        tenantId,
-        input.userId,
-        input.type,
-        input.status,
-        now,
-        input.scheduledPurgeAt || null,
-      ]
-    );
+    await withTenantContext(pool, tenantId, async (client) => {
+      await client.query(
+        `INSERT INTO rgpd_requests
+         (id, tenant_id, user_id, type, status, created_at, scheduled_purge_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          id,
+          tenantId,
+          input.userId,
+          input.type,
+          input.status,
+          now,
+          input.scheduledPurgeAt || null,
+        ]
+      );
+    });
 
     return {
       id,
@@ -67,29 +70,31 @@ export class PgRgpdRequestRepo implements RgpdRequestRepo {
       );
     }
 
-    const res = await pool.query(
-      `SELECT id, tenant_id, user_id, type, status, created_at,
-              scheduled_purge_at, completed_at
-       FROM rgpd_requests
-       WHERE tenant_id = $1 AND id = $2`,
-      [tenantId, requestId]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res = await client.query(
+        `SELECT id, tenant_id, user_id, type, status, created_at,
+                scheduled_purge_at, completed_at
+         FROM rgpd_requests
+         WHERE tenant_id = $1 AND id = $2`,
+        [tenantId, requestId]
+      );
 
-    if (res.rows.length === 0) return null;
+      if (res.rows.length === 0) return null;
 
-    const row = res.rows[0];
-    return {
-      id: row.id,
-      tenantId: row.tenant_id,
-      userId: row.user_id,
-      type: row.type,
-      status: row.status,
-      createdAt: new Date(row.created_at),
-      scheduledPurgeAt: row.scheduled_purge_at
-        ? new Date(row.scheduled_purge_at)
-        : undefined,
-      completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
-    };
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        tenantId: row.tenant_id,
+        userId: row.user_id,
+        type: row.type,
+        status: row.status,
+        createdAt: new Date(row.created_at),
+        scheduledPurgeAt: row.scheduled_purge_at
+          ? new Date(row.scheduled_purge_at)
+          : undefined,
+        completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+      };
+    });
   }
 
   async findPendingPurges(): Promise<RgpdRequest[]> {
@@ -141,33 +146,35 @@ export class PgRgpdRequestRepo implements RgpdRequestRepo {
       );
     }
 
-    const res = await pool.query(
-      `SELECT id, tenant_id, user_id, type, status, created_at,
-              scheduled_purge_at, completed_at
-       FROM rgpd_requests
-       WHERE tenant_id = $1
-         AND user_id = $2
-         AND type = 'DELETE'
-         AND status IN ('PENDING', 'COMPLETED')
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [tenantId, userId]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res = await client.query(
+        `SELECT id, tenant_id, user_id, type, status, created_at,
+                scheduled_purge_at, completed_at
+         FROM rgpd_requests
+         WHERE tenant_id = $1
+           AND user_id = $2
+           AND type = 'DELETE'
+           AND status IN ('PENDING', 'COMPLETED')
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [tenantId, userId]
+      );
 
-    if (res.rows.length === 0) return null;
+      if (res.rows.length === 0) return null;
 
-    const row = res.rows[0];
-    return {
-      id: row.id,
-      tenantId: row.tenant_id,
-      userId: row.user_id,
-      type: row.type,
-      status: row.status,
-      createdAt: new Date(row.created_at),
-      scheduledPurgeAt: row.scheduled_purge_at
-        ? new Date(row.scheduled_purge_at)
-        : undefined,
-      completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
-    };
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        tenantId: row.tenant_id,
+        userId: row.user_id,
+        type: row.type,
+        status: row.status,
+        createdAt: new Date(row.created_at),
+        scheduledPurgeAt: row.scheduled_purge_at
+          ? new Date(row.scheduled_purge_at)
+          : undefined,
+        completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+      };
+    });
   }
 }

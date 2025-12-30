@@ -33,10 +33,10 @@ import { ZodError } from 'zod';
 export const GET = withLogging(
   withAuth(
     withPlatformAdmin(
-      async (req: NextRequest, { params }: { params: { id: string } }) => {
+      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
         try {
           const context = requireContext(req);
-          const tenantId = params.id;
+          const { id: tenantId } = await params;
 
           if (!tenantId) {
             return NextResponse.json(notFoundError('Tenant'), { status: 404 });
@@ -84,10 +84,10 @@ export const GET = withLogging(
 export const PUT = withLogging(
   withAuth(
     withPlatformAdmin(
-      async (req: NextRequest, { params }: { params: { id: string } }) => {
+      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
         try {
           const context = requireContext(req);
-          const tenantId = params.id;
+          const { id: tenantId } = await params;
 
           if (!tenantId) {
             return NextResponse.json(notFoundError('Tenant'), { status: 404 });
@@ -147,10 +147,10 @@ export const PUT = withLogging(
 export const DELETE = withLogging(
   withAuth(
     withPlatformAdmin(
-      async (req: NextRequest, { params }: { params: { id: string } }) => {
+      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
         try {
           const context = requireContext(req);
-          const tenantId = params.id;
+          const { id: tenantId } = await params;
 
           if (!tenantId) {
             return NextResponse.json(notFoundError('Tenant'), { status: 404 });

@@ -13,7 +13,7 @@
 export interface ErrorResponse {
   error: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 /**
@@ -22,7 +22,7 @@ export interface ErrorResponse {
 export function errorResponse(
   error: string,
   message: string,
-  details?: any
+  details?: unknown
 ): ErrorResponse {
   const response: ErrorResponse = { error, message };
   if (details !== undefined) {
@@ -35,7 +35,7 @@ export function errorResponse(
  * Validation error (400)
  * Used for Zod validation failures
  */
-export function validationError(details: any): ErrorResponse {
+export function validationError(details: unknown): ErrorResponse {
   return errorResponse('Validation error', 'Invalid request data', details);
 }
 

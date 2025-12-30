@@ -20,11 +20,45 @@ import { parse as parseYaml } from "yaml";
 
 const DOCKER_COMPOSE_PATH = join(process.cwd(), "docker-compose.yml");
 
+interface NetworkConfig {
+  internal?: boolean;
+  driver?: string;
+  ipam?: {
+    config?: Array<{ subnet?: string }>;
+  };
+}
+
+interface ServiceConfig {
+  networks?: string[] | Record<string, unknown>;
+  ports?: string[];
+  restart?: string;
+  healthcheck?: {
+    test?: string | string[];
+    interval?: string;
+    timeout?: string;
+    retries?: number;
+  };
+  secrets?: string[];
+  environment?: Record<string, string>;
+  deploy?: {
+    resources?: {
+      limits?: {
+        cpus?: string;
+        memory?: string;
+      };
+    };
+  };
+}
+
+interface VolumeConfig {
+  driver?: string;
+}
+
 interface DockerComposeConfig {
-  services: Record<string, any>;
-  networks: Record<string, any>;
-  volumes?: Record<string, any>;
-  secrets?: Record<string, any>;
+  services: Record<string, ServiceConfig>;
+  networks: Record<string, NetworkConfig>;
+  volumes?: Record<string, VolumeConfig>;
+  secrets?: Record<string, { file?: string; external?: boolean }>;
 }
 
 function loadDockerCompose(): DockerComposeConfig {
@@ -81,7 +115,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
     // DB must be ONLY on data network
     const dbNetworks = Array.isArray(dbService.networks)
       ? dbService.networks
-      : Object.keys(dbService.networks);
+      : Object.keys(dbService.networks ?? {});
 
     expect(dbNetworks).toContain("rgpd_data");
     expect(dbNetworks).not.toContain("rgpd_frontend");
@@ -100,7 +134,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
     // Ollama must be ONLY on backend network
     const ollamaNetworks = Array.isArray(ollamaService.networks)
       ? ollamaService.networks
-      : Object.keys(ollamaService.networks);
+      : Object.keys(ollamaService.networks ?? {});
 
     expect(ollamaNetworks).toContain("rgpd_backend");
     expect(ollamaNetworks).not.toContain("rgpd_frontend");
@@ -119,7 +153,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
     // App must be on all 3 networks (bridge role)
     const appNetworks = Array.isArray(appService.networks)
       ? appService.networks
-      : Object.keys(appService.networks);
+      : Object.keys(appService.networks ?? {});
 
     expect(appNetworks).toContain("rgpd_frontend");
     expect(appNetworks).toContain("rgpd_backend");
@@ -138,7 +172,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
     // Proxy must be ONLY on frontend network
     const proxyNetworks = Array.isArray(proxyService.networks)
       ? proxyService.networks
-      : Object.keys(proxyService.networks);
+      : Object.keys(proxyService.networks ?? {});
 
     expect(proxyNetworks).toContain("rgpd_frontend");
     expect(proxyNetworks).not.toContain("rgpd_backend");
@@ -151,9 +185,9 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
   });
 
   test("BLOCKER: network subnets are distinct (no overlap)", () => {
-    const frontendSubnet = config.networks.rgpd_frontend.ipam.config[0].subnet;
-    const backendSubnet = config.networks.rgpd_backend.ipam.config[0].subnet;
-    const dataSubnet = config.networks.rgpd_data.ipam.config[0].subnet;
+    const frontendSubnet = config.networks.rgpd_frontend?.ipam?.config?.[0]?.subnet;
+    const backendSubnet = config.networks.rgpd_backend?.ipam?.config?.[0]?.subnet;
+    const dataSubnet = config.networks.rgpd_data?.ipam?.config?.[0]?.subnet;
 
     // Subnets must be different
     expect(frontendSubnet).not.toBe(backendSubnet);
@@ -216,13 +250,13 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
   test("BLOCKER: all services have healthchecks (monitoring)", () => {
     for (const [serviceName, service] of Object.entries(config.services)) {
       expect(service.healthcheck).toBeDefined();
-      expect(service.healthcheck.test).toBeDefined();
-      expect(service.healthcheck.interval).toBeDefined();
-      expect(service.healthcheck.timeout).toBeDefined();
-      expect(service.healthcheck.retries).toBeDefined();
+      expect(service.healthcheck?.test).toBeDefined();
+      expect(service.healthcheck?.interval).toBeDefined();
+      expect(service.healthcheck?.timeout).toBeDefined();
+      expect(service.healthcheck?.retries).toBeDefined();
 
       // Healthcheck must be reasonable
-      expect(service.healthcheck.retries).toBeGreaterThanOrEqual(3);
+      expect(service.healthcheck?.retries).toBeGreaterThanOrEqual(3);
     }
   });
 
@@ -234,14 +268,14 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
       const service = config.services[serviceName];
 
       expect(service.deploy).toBeDefined();
-      expect(service.deploy.resources).toBeDefined();
-      expect(service.deploy.resources.limits).toBeDefined();
-      expect(service.deploy.resources.limits.cpus).toBeDefined();
-      expect(service.deploy.resources.limits.memory).toBeDefined();
+      expect(service.deploy?.resources).toBeDefined();
+      expect(service.deploy?.resources?.limits).toBeDefined();
+      expect(service.deploy?.resources?.limits?.cpus).toBeDefined();
+      expect(service.deploy?.resources?.limits?.memory).toBeDefined();
 
       // Limits must be defined (no unlimited resources)
-      expect(service.deploy.resources.limits.cpus).not.toBe("0");
-      expect(service.deploy.resources.limits.memory).not.toBe("0");
+      expect(service.deploy?.resources?.limits?.cpus).not.toBe("0");
+      expect(service.deploy?.resources?.limits?.memory).not.toBe("0");
     }
   });
 
@@ -340,12 +374,12 @@ describe("LOT 6.0 SECURITY: Docker Compose Validation", () => {
   test("SECURITY: all secrets use external files (not inline)", () => {
     expect(config.secrets).toBeDefined();
 
-    for (const [secretName, secretConfig] of Object.entries(config.secrets!)) {
-      expect(secretConfig.file).toBeDefined();
+    for (const [secretName, secretConfig] of Object.entries(config.secrets ?? {})) {
+      expect(secretConfig?.file).toBeDefined();
 
       // Secret files must be in ./secrets/ directory
-      expect(secretConfig.file).toContain("./secrets/");
-      expect(secretConfig.file).toContain(".txt");
+      expect(secretConfig?.file).toContain("./secrets/");
+      expect(secretConfig?.file).toContain(".txt");
 
       // NO inline secrets (external: false)
       expect(secretConfig).not.toHaveProperty("external");
@@ -364,7 +398,8 @@ describe("LOT 6.0 SECURITY: Docker Compose Validation", () => {
 
     for (const volumeName of expectedVolumes) {
       expect(config.volumes).toHaveProperty(volumeName);
-      expect(config.volumes?.[volumeName]?.driver).toBe("local");
+      const volume = config.volumes?.[volumeName];
+      expect(volume?.driver).toBe("local");
     }
   });
 });

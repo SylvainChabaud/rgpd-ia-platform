@@ -28,10 +28,10 @@ import { internalError, notFoundError, forbiddenError, validationError } from '@
 export const DELETE = withLogging(
   withAuth(
     withCurrentUser(
-      async (req: NextRequest, { params }: { params: { id: string } }) => {
+      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
         try {
           const context = requireContext(req);
-          const consentId = params.id;
+          const { id: consentId } = await params;
 
           if (!consentId) {
             return NextResponse.json(validationError({ consentId: 'Consent ID is required' }), { status: 400 });

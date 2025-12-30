@@ -12,6 +12,8 @@ scripts/
 ├── migrate.ts              # Migrations base de données
 ├── purge.ts                # Purge RGPD (retention)
 ├── bench-llm.ts            # Benchmark performance LLM
+├── check-rls.ts            # Diagnostic RLS configuration
+├── check-user-role.ts      # Vérification rôle DB user
 ├── audit/                  # Scripts d'audit RGPD (voir audit/README.md)
 │   ├── collect-evidence.ts
 │   ├── generate-audit-report.ts
@@ -54,6 +56,51 @@ pnpm migrate
 
 **Conformité RGPD** :
 - Logs P1 uniquement (versions migrations, pas de données sensibles)
+
+---
+
+### `check-rls.ts` — Diagnostic RLS
+
+**Description** : Vérifie la configuration Row-Level Security (RLS) sur PostgreSQL.
+
+**Commande** :
+```bash
+tsx scripts/check-rls.ts
+```
+
+**Quand l'utiliser** :
+| Situation | Action |
+|-----------|--------|
+| Après application des migrations RLS | ✅ Recommandé |
+| Débogage isolation tenant | ✅ Manuel |
+| Validation avant mise en prod | ✅ Manuel |
+
+**Vérifications effectuées** :
+- RLS activé sur chaque table (`relrowsecurity`)
+- FORCE RLS activé (`relforcerowsecurity`)
+- Policies définies par table
+- Test de la fonction `current_tenant_id()`
+
+---
+
+### `check-user-role.ts` — Vérification rôle DB
+
+**Description** : Vérifie si l'utilisateur DB courant contourne RLS (superuser/BYPASSRLS).
+
+**Commande** :
+```bash
+tsx scripts/check-user-role.ts
+```
+
+**Quand l'utiliser** :
+| Situation | Action |
+|-----------|--------|
+| Avant exécution tests RLS | ✅ Recommandé |
+| Vérification config PostgreSQL | ✅ Manuel |
+
+**⚠️ Important** :
+- Si `usebypassrls = true` → Les politiques RLS sont ignorées !
+- Utilisez `testuser` (non-superuser) pour les vrais tests RLS.
 
 ---
 

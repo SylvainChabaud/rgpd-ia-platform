@@ -30,15 +30,16 @@ export function withRBAC(
   allowedRoles: string[],
   requirePlatformScope: boolean = false
 ) {
-  return function <T extends (...args: any[]) => Promise<NextResponse>>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type NextHandler = (req: NextRequest, context?: any) => Promise<NextResponse>;
+  return function <T extends NextHandler>(
     handler: T
   ): T {
-    return (async (...args: any[]) => {
-      const req = args[0] as NextRequest;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (async (req: NextRequest, context?: any) => {
+      const ctx = extractContext(req);
 
-      const context = extractContext(req);
-
-      if (!context) {
+      if (!ctx) {
         return NextResponse.json(
           forbiddenError('Authentication required'),
           { status: 403 }
@@ -46,7 +47,7 @@ export function withRBAC(
       }
 
       // Check PLATFORM scope requirement
-      if (requirePlatformScope && !isPlatformAdmin(context)) {
+      if (requirePlatformScope && !isPlatformAdmin(ctx)) {
         return NextResponse.json(
           forbiddenError('Platform admin access required'),
           { status: 403 }
@@ -54,7 +55,7 @@ export function withRBAC(
       }
 
       // Check role permission
-      if (!allowedRoles.includes(context.role)) {
+      if (!allowedRoles.includes(ctx.role)) {
         return NextResponse.json(
           forbiddenError('Insufficient permissions'),
           { status: 403 }
@@ -62,7 +63,7 @@ export function withRBAC(
       }
 
       // Permission granted
-      return handler(...args);
+      return handler(req, context);
     }) as T;
   };
 }
@@ -71,29 +72,31 @@ export function withRBAC(
  * Platform admin only middleware
  * Shorthand for withRBAC([], true) - only allows PLATFORM scope
  */
-export function withPlatformAdmin<T extends (...args: any[]) => Promise<NextResponse>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NextHandler = (req: NextRequest, context?: any) => Promise<NextResponse>;
+
+export function withPlatformAdmin<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
+    const ctx = extractContext(req);
 
-    const context = extractContext(req);
-
-    if (!context) {
+    if (!ctx) {
       return NextResponse.json(
         forbiddenError('Authentication required'),
         { status: 403 }
       );
     }
 
-    if (!isPlatformAdmin(context)) {
+    if (!isPlatformAdmin(ctx)) {
       return NextResponse.json(
         forbiddenError('Platform admin access required'),
         { status: 403 }
       );
     }
 
-    return handler(...args);
+    return handler(req, context);
   }) as T;
 }
 
@@ -101,22 +104,21 @@ export function withPlatformAdmin<T extends (...args: any[]) => Promise<NextResp
  * Tenant admin only middleware
  * Requires TENANT scope and ADMIN-like role
  */
-export function withTenantAdmin<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withTenantAdmin<T extends NextHandler>(
   handler: T
 ): T {
-  return (async (...args: any[]) => {
-    const req = args[0] as NextRequest;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
+    const ctx = extractContext(req);
 
-    const context = extractContext(req);
-
-    if (!context) {
+    if (!ctx) {
       return NextResponse.json(
         forbiddenError('Authentication required'),
         { status: 403 }
       );
     }
 
-    if (context.scope !== 'TENANT') {
+    if (ctx.scope !== 'TENANT') {
       return NextResponse.json(
         forbiddenError('Tenant scope required'),
         { status: 403 }
@@ -124,13 +126,13 @@ export function withTenantAdmin<T extends (...args: any[]) => Promise<NextRespon
     }
 
     // Check if role contains 'ADMIN' (flexible matching)
-    if (!context.role.includes('ADMIN')) {
+    if (!ctx.role.includes('ADMIN')) {
       return NextResponse.json(
         forbiddenError('Tenant admin access required'),
         { status: 403 }
       );
     }
 
-    return handler(...args);
+    return handler(req, context);
   }) as T;
 }

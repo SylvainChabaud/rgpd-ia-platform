@@ -67,7 +67,7 @@ export class PgUserRepo implements UserRepo {
 
   async updateUser(userId: string, updates: { displayName?: string; role?: string }): Promise<void> {
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (updates.displayName !== undefined) {
@@ -103,17 +103,17 @@ export class PgUserRepo implements UserRepo {
     );
   }
 
-  private mapRow(row: any): User {
+  private mapRow(row: Record<string, unknown>): User {
     return {
-      id: row.id,
-      tenantId: row.tenant_id,
-      emailHash: row.email_hash,
-      displayName: row.display_name,
-      passwordHash: row.password_hash,
-      scope: row.scope,
-      role: row.role,
-      createdAt: new Date(row.created_at),
-      deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
+      id: row.id as string,
+      tenantId: row.tenant_id as string | null,
+      emailHash: row.email_hash as string,
+      displayName: row.display_name as string,
+      passwordHash: row.password_hash as string,
+      scope: row.scope as 'PLATFORM' | 'TENANT',
+      role: row.role as string,
+      createdAt: new Date(row.created_at as string | number | Date),
+      deletedAt: row.deleted_at ? new Date(row.deleted_at as string | number | Date) : null,
     };
   }
 }

@@ -11,6 +11,16 @@
 | **001** | `001_init.sql` | LOT 1.0 | Socle initial (tenants, users, audit) |
 | **002** | `002_lot4_consents_ai_jobs.sql` | LOT 4.0 | Consentements + Jobs IA + versioning |
 | **003** | `003_rgpd_deletion.sql` | LOT 5.2 | Soft delete (droit à l'effacement) |
+| **004** | `004_rls_tenant_isolation.sql` | LOT 4.0 | Row-Level Security (RLS) policies |
+| **005** | `005_force_rls.sql` | LOT 4.0 | Force RLS même pour superusers (tests) |
+| **006** | `006_fix_rls_policies.sql` | LOT 4.0 | Fix RLS policies (strict validation) |
+| **007** | `007_fix_strict_rls.sql` | LOT 4.0 | Fix CRITICAL RLS bugs (users table) |
+| **008** | `008_create_testuser_role.sql` | LOT 4.0 | Création rôle testuser (NOBYPASSRLS) |
+| **009** | `009_fix_current_tenant_id_function.sql` | LOT 4.0 | Fix current_tenant_id() (empty string) |
+| **010** | `010_create_cleanup_function.sql` | LOT 4.0 | Fonction cleanup_test_data() (SECURITY DEFINER) |
+| **011** | `011_fix_users_platform_policies.sql` | LOT 4.0 | Fix users policies (empty string) |
+| **012** | `012_fix_audit_events_policy.sql` | LOT 4.0 | Fix audit_events SELECT policy |
+| **013** | `013_fix_rgpd_requests_platform_policies.sql` | LOT 5.2 | Fix rgpd_requests pour opérations platform |
 
 ---
 
@@ -124,6 +134,115 @@ CREATE TABLE schema_migrations (
 
 ---
 
+### `004_rls_tenant_isolation.sql` — Row-Level Security
+
+**LOT 4.0** — Politiques RLS pour isolation stricte des tenants.
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| `ENABLE ROW LEVEL SECURITY` | Active RLS sur toutes les tables tenant-scoped |
+| Policies CRUD | SELECT/INSERT/UPDATE/DELETE isolés par tenant_id |
+| `current_tenant_id()` | Fonction pour récupérer le tenant courant |
+
+**⚠️ CRITIQUE RGPD** :
+- Défense en profondeur au niveau DB
+- Même avec accès SQL direct, isolation garantie
+
+---
+
+### `005_force_rls.sql` — Force RLS pour superusers
+
+**LOT 4.0** — Force RLS même pour les propriétaires de tables.
+
+```sql
+ALTER TABLE consents FORCE ROW LEVEL SECURITY;
+```
+
+**Raison** : En environnement de test, le devuser est superuser et contournerait RLS sans cette option.
+
+---
+
+### `006_fix_rls_policies.sql` — Validation stricte tenant
+
+**LOT 4.0** — Correction des policies pour rejeter les opérations sans contexte tenant.
+
+| Problème | Solution |
+|----------|----------|
+| `current_setting()` retourne NULL | COALESCE vers UUID sentinel (00000000-...) |
+| Opérations sans tenant passent | Rejet explicite via UUID sentinel |
+
+---
+
+### `007_fix_strict_rls.sql` — Fix CRITICAL users table
+
+**LOT 4.0** — Corrections de sécurité critique sur la table users.
+
+| Bug fixé | Impact |
+|----------|--------|
+| Tenants peuvent voir platform users | OK (nécessaire pour auth) |
+| Tenants peuvent **modifier** platform users | **BLOQUÉ** |
+| Tenants peuvent **créer** platform users | **BLOQUÉ** |
+
+---
+
+### `008_create_testuser_role.sql` — Rôle non-superuser
+
+**LOT 4.0** — Création d'un rôle de test sans BYPASSRLS.
+
+```sql
+CREATE ROLE testuser WITH NOBYPASSRLS;
+```
+
+**Utilisation** : Tests RLS authentiques (devuser = superuser contourne RLS).
+
+---
+
+### `009_fix_current_tenant_id_function.sql` — Fix empty string
+
+**LOT 4.0** — `current_setting()` retourne '' au lieu de NULL.
+
+**Avant** : `COALESCE(NULL, sentinel)` → OK
+**Après** : `COALESCE('', sentinel)` → Retourne '' (bug !)
+**Fix** : Vérifier NULL ET '' dans la fonction.
+
+---
+
+### `010_create_cleanup_function.sql` — SECURITY DEFINER cleanup
+
+**LOT 4.0** — Fonction de nettoyage pour les tests.
+
+```sql
+CREATE FUNCTION cleanup_test_data(tenant_ids UUID[])
+RETURNS void
+SECURITY DEFINER  -- Exécute avec privilèges du créateur
+```
+
+**Raison** : testuser ne peut pas supprimer les données de test (RLS bloque). Cette fonction contourne RLS pour le cleanup.
+
+---
+
+### `011_fix_users_platform_policies.sql` — Fix INSERT/UPDATE users
+
+**LOT 4.0** — Gère les cas où `current_setting()` retourne '' pour les opérations platform.
+
+---
+
+### `012_fix_audit_events_policy.sql` — Fix SELECT audit_events
+
+**LOT 4.0** — Permet au contexte platform de voir tous les audit events.
+
+---
+
+### `013_fix_rgpd_requests_platform_policies.sql` — Platform ops
+
+**LOT 5.2** — Permet les opérations platform sur rgpd_requests.
+
+**Nécessaire pour** :
+- `findPendingPurges()` : Lire TOUTES les demandes pendantes
+- `updateStatus()` : Mettre à jour le statut sans contexte tenant
+
+---
+
 ## 🎯 Conformité avec les EPICs futures
 
 ### État actuel vs besoins futurs
@@ -131,16 +250,17 @@ CREATE TABLE schema_migrations (
 | EPIC | Besoins DB | Couvert ? | Migration requise |
 |------|------------|-----------|-------------------|
 | **EPIC 1-7** | Socle, users, audit, consents, ai_jobs, RGPD | ✅ Oui | — |
-| **EPIC 8** | Anonymisation (PII tokens) | ⚠️ Partiel | `004_anonymisation.sql` |
-| **EPIC 9** | Registre violations (incidents) | ❌ Non | `005_incidents.sql` |
-| **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `006_legal_compliance.sql` |
+| **LOT 4.0** | RLS (Row-Level Security) + tenant isolation | ✅ Oui | 004-013 ✅ |
+| **EPIC 8** | Anonymisation (PII tokens) | ⚠️ Partiel | `014_anonymisation.sql` |
+| **EPIC 9** | Registre violations (incidents) | ❌ Non | `015_incidents.sql` |
+| **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `016_legal_compliance.sql` |
 | **EPIC 11** | Back Office Super Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 12** | Back Office Tenant Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
 
 ### Migrations futures prévues
 
-#### `004_anonymisation.sql` (EPIC 8)
+#### `014_anonymisation.sql` (EPIC 8)
 ```sql
 -- Prévu pour LOT 8.0-8.2
 -- Table pour stocker les tokens de pseudonymisation
@@ -153,7 +273,7 @@ CREATE TABLE pii_tokens (
 );
 ```
 
-#### `005_incidents.sql` (EPIC 9)
+#### `015_incidents.sql` (EPIC 9)
 ```sql
 -- Prévu pour LOT 9.0
 -- Registre des violations de données (Art. 33-34)
@@ -170,7 +290,7 @@ CREATE TABLE security_incidents (
 );
 ```
 
-#### `006_legal_compliance.sql` (EPIC 10)
+#### `016_legal_compliance.sql` (EPIC 10)
 ```sql
 -- Prévu pour LOT 10.3-10.5
 -- Tracking des cookies et DPIAs

@@ -53,7 +53,7 @@ const SENSITIVE_FIELDS = [
 /**
  * Redact sensitive fields recursively
  */
-function redactSensitiveData(obj: any): any {
+function redactSensitiveData(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -66,8 +66,8 @@ function redactSensitiveData(obj: any): any {
     return obj.map(redactSensitiveData);
   }
 
-  const redacted: any = {};
-  for (const [key, value] of Object.entries(obj)) {
+  const redacted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
     if (SENSITIVE_FIELDS.includes(key)) {
       redacted[key] = '[REDACTED]';
     } else if (typeof value === 'object') {
@@ -134,10 +134,10 @@ export const logger = pino({
  * const requestLogger = createLogger({ requestId: 'uuid', userId: 'uuid' });
  * requestLogger.info({ event: 'api_call' }, 'API called');
  */
-export function createLogger(context: Record<string, any>) {
+export function createLogger(context: Record<string, unknown>) {
   // Redact any sensitive data from context
   const safeContext = redactSensitiveData(context);
-  return logger.child(safeContext);
+  return logger.child(safeContext as Record<string, unknown>);
 }
 
 /**
@@ -210,7 +210,7 @@ export type LogEvent = (typeof LogEvent)[keyof typeof LogEvent];
  */
 export function logEvent(
   event: LogEvent,
-  data: Record<string, any> = {},
+  data: Record<string, unknown> = {},
   message?: string
 ) {
   const safeData = redactSensitiveData({ event, ...data });
@@ -224,7 +224,7 @@ export function logEvent(
 export function logError(
   event: LogEvent,
   error: Error,
-  context: Record<string, any> = {}
+  context: Record<string, unknown> = {}
 ) {
   const safeContext = redactSensitiveData(context);
   logger.error(
@@ -235,7 +235,7 @@ export function logError(
         name: error.name,
         stack: NODE_ENV === 'development' ? error.stack : undefined,
       },
-      ...safeContext,
+      ...safeContext as Record<string, unknown>,
     },
     `Error: ${error.message}`
   );

@@ -37,9 +37,32 @@ const USER_A_ID = newId();
 const USER_B_ID = newId();
 
 /**
+ * Cleanup: delete all test data using SECURITY DEFINER function
+ */
+async function cleanup() {
+  // First: cleanup by slug pattern (handles old test data with different IDs)
+  const existingTenants = await pool.query(
+    "SELECT id FROM tenants WHERE slug IN ('export-test-a', 'export-test-b')"
+  );
+  if (existingTenants.rows.length > 0) {
+    const tenantIds = existingTenants.rows.map((row) => row.id);
+    await pool.query("SELECT cleanup_test_data($1::UUID[])", [tenantIds]);
+  }
+  
+  // Second: cleanup by current test IDs
+  await pool.query("SELECT cleanup_test_data($1::UUID[])", [[TENANT_A_ID, TENANT_B_ID]]);
+
+  // Cleanup export files
+  await cleanupExpiredExports();
+}
+
+/**
  * Setup: create test tenants
  */
 async function setupTenants() {
+  // Clean first to avoid duplicate slug errors
+  await cleanup();
+  
   await pool.query(
     "INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)",
     [TENANT_A_ID, "export-test-a", "Export Test A"]
@@ -49,31 +72,6 @@ async function setupTenants() {
     "INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)",
     [TENANT_B_ID, "export-test-b", "Export Test B"]
   );
-}
-
-/**
- * Cleanup: delete all test data
- */
-async function cleanup() {
-  await pool.query("DELETE FROM ai_jobs WHERE tenant_id IN ($1, $2)", [
-    TENANT_A_ID,
-    TENANT_B_ID,
-  ]);
-  await pool.query("DELETE FROM consents WHERE tenant_id IN ($1, $2)", [
-    TENANT_A_ID,
-    TENANT_B_ID,
-  ]);
-  await pool.query("DELETE FROM audit_events WHERE tenant_id IN ($1, $2)", [
-    TENANT_A_ID,
-    TENANT_B_ID,
-  ]);
-  await pool.query("DELETE FROM tenants WHERE id IN ($1, $2)", [
-    TENANT_A_ID,
-    TENANT_B_ID,
-  ]);
-
-  // Cleanup export files
-  await cleanupExpiredExports();
 }
 
 beforeAll(async () => {

@@ -63,7 +63,7 @@ export class PgTenantRepo implements TenantRepo {
 
   async update(tenantId: string, updates: { name?: string }): Promise<void> {
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (updates.name !== undefined) {
@@ -103,13 +103,13 @@ export class PgTenantRepo implements TenantRepo {
     );
   }
 
-  private mapRow(row: any): Tenant {
+  private mapRow(row: Record<string, unknown>): Tenant {
     return {
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      createdAt: new Date(row.created_at),
-      deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
+      id: row.id as string,
+      slug: row.slug as string,
+      name: row.name as string,
+      createdAt: new Date(row.created_at as string | number | Date),
+      deletedAt: row.deleted_at ? new Date(row.deleted_at as string | number | Date) : null,
     };
   }
 }

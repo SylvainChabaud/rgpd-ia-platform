@@ -6,6 +6,7 @@ import type {
   UpdateAiJobStatusInput,
 } from "@/app/ports/AiJobRepo";
 import { pool } from "@/infrastructure/db/pg";
+import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import type { QueryResult } from "pg";
 import { newId } from "@/shared/ids";
 
@@ -61,17 +62,19 @@ export class PgAiJobRepo implements AiJobRepo {
 
     const id = newId();
 
-    await pool.query(
-      `INSERT INTO ai_jobs (id, tenant_id, user_id, purpose, model_ref, status)
-       VALUES ($1, $2, $3, $4, $5, 'PENDING')`,
-      [
-        id,
-        tenantId,
-        input.userId || null,
-        input.purpose,
-        input.modelRef || null,
-      ]
-    );
+    await withTenantContext(pool, tenantId, async (client) => {
+      await client.query(
+        `INSERT INTO ai_jobs (id, tenant_id, user_id, purpose, model_ref, status)
+         VALUES ($1, $2, $3, $4, $5, 'PENDING')`,
+        [
+          id,
+          tenantId,
+          input.userId || null,
+          input.purpose,
+          input.modelRef || null,
+        ]
+      );
+    });
 
     return id;
   }
@@ -88,25 +91,27 @@ export class PgAiJobRepo implements AiJobRepo {
       );
     }
 
-    // Update status only if job belongs to tenant (isolation enforcement)
-    const res = await pool.query(
-      `UPDATE ai_jobs
-       SET status = $1,
-           started_at = COALESCE($2, started_at),
-           completed_at = COALESCE($3, completed_at)
-       WHERE id = $4 AND tenant_id = $5`,
-      [
-        input.status,
-        input.startedAt || null,
-        input.completedAt || null,
-        jobId,
-        tenantId,
-      ]
-    );
+    await withTenantContext(pool, tenantId, async (client) => {
+      // Update status only if job belongs to tenant (isolation enforcement)
+      const res = await client.query(
+        `UPDATE ai_jobs
+         SET status = $1,
+             started_at = COALESCE($2, started_at),
+             completed_at = COALESCE($3, completed_at)
+         WHERE id = $4 AND tenant_id = $5`,
+        [
+          input.status,
+          input.startedAt || null,
+          input.completedAt || null,
+          jobId,
+          tenantId,
+        ]
+      );
 
-    if (res.rowCount === 0) {
-      throw new Error(`AI job ${jobId} not found or access denied`);
-    }
+      if (res.rowCount === 0) {
+        throw new Error(`AI job ${jobId} not found or access denied`);
+      }
+    });
   }
 
   async findById(tenantId: string, jobId: string): Promise<AiJob | null> {
@@ -117,16 +122,18 @@ export class PgAiJobRepo implements AiJobRepo {
       );
     }
 
-    const res: QueryResult<AiJobRow> = await pool.query(
-      `SELECT id, tenant_id, user_id, purpose, model_ref, status,
-              created_at, started_at, completed_at
-       FROM ai_jobs
-       WHERE id = $1 AND tenant_id = $2
-       LIMIT 1`,
-      [jobId, tenantId]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res: QueryResult<AiJobRow> = await client.query(
+        `SELECT id, tenant_id, user_id, purpose, model_ref, status,
+                created_at, started_at, completed_at
+         FROM ai_jobs
+         WHERE id = $1 AND tenant_id = $2
+         LIMIT 1`,
+        [jobId, tenantId]
+      );
 
-    return res.rowCount ? mapRowToAiJob(res.rows[0]) : null;
+      return res.rowCount ? mapRowToAiJob(res.rows[0]) : null;
+    });
   }
 
   async findByUser(
@@ -141,16 +148,18 @@ export class PgAiJobRepo implements AiJobRepo {
       );
     }
 
-    const res: QueryResult<AiJobRow> = await pool.query(
-      `SELECT id, tenant_id, user_id, purpose, model_ref, status,
-              created_at, started_at, completed_at
-       FROM ai_jobs
-       WHERE tenant_id = $1 AND user_id = $2
-       ORDER BY created_at DESC
-       LIMIT $3`,
-      [tenantId, userId, limit]
-    );
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const res: QueryResult<AiJobRow> = await client.query(
+        `SELECT id, tenant_id, user_id, purpose, model_ref, status,
+                created_at, started_at, completed_at
+         FROM ai_jobs
+         WHERE tenant_id = $1 AND user_id = $2
+         ORDER BY created_at DESC
+         LIMIT $3`,
+        [tenantId, userId, limit]
+      );
 
-    return res.rows.map(mapRowToAiJob);
+      return res.rows.map(mapRowToAiJob);
+    });
   }
 }
