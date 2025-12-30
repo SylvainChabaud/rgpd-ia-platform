@@ -1,10 +1,11 @@
 import { AssertTenantScopeUseCase } from "@/app/usecases/tenant/AssertTenantScopeUseCase";
 import { platformContext, systemContext, tenantContext } from "@/app/context/RequestContext";
 import { ForbiddenError, InvalidTenantError } from "@/shared/errors";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 test("tenant-scoped use case rejects missing tenant id", async () => {
   const uc = new AssertTenantScopeUseCase();
-  const ctx = { actorScope: "TENANT" } as const;
+  const ctx = { actorScope: ACTOR_SCOPE.TENANT } as const;
 
   await expect(uc.execute(ctx, "tenant-1")).rejects.toBeInstanceOf(
     InvalidTenantError

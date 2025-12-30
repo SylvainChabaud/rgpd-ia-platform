@@ -12,6 +12,7 @@
 
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
+import { PgTenantRepo } from "@/infrastructure/repositories/PgTenantRepo";
 import {
   executePurgeJob,
   executeTenantPurgeJob,
@@ -280,7 +281,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     await setupTestData();
 
     // Execute full purge (all tenants)
-    const result = await executePurgeJob();
+    const result = await executePurgeJob(new PgTenantRepo());
 
     // Should purge old jobs from both tenants (2 total)
     // Note: platform context query needed to see cross-tenant data
@@ -299,7 +300,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     });
 
     // Execute purge
-    await executePurgeJob();
+    await executePurgeJob(new PgTenantRepo());
 
     // Verify consent still exists (no auto-purge) - with tenant context
     const consentCount = await withTenantContext(pool, TENANT_A_ID, async (client) => {

@@ -18,6 +18,7 @@
 import { pool } from "@/infrastructure/db/pg";
 import { PgConsentRepo } from "@/infrastructure/repositories/PgConsentRepo";
 import { PgAiJobRepo } from "@/infrastructure/repositories/PgAiJobRepo";
+import { PgAuditEventReader } from "@/infrastructure/audit/PgAuditEventReader";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
 import { exportUserData } from "@/app/usecases/rgpd/exportUserData";
 import { downloadExport } from "@/app/usecases/rgpd/downloadExport";
@@ -115,6 +116,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -157,6 +159,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -192,6 +195,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -220,6 +224,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -255,6 +260,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -281,6 +287,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       freshAuditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -320,6 +327,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      new PgAuditEventReader(),
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,

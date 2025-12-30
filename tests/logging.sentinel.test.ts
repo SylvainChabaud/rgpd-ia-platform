@@ -13,7 +13,7 @@
  * CRITICAL: These tests MUST pass before production deployment
  */
 
-import { logger, createLogger, logEvent, logError, LogEvent } from '@/infrastructure/logging/logger';
+import { LogEvent } from '@/infrastructure/logging/logger';
 import pino from 'pino';
 
 // Type for captured log entries

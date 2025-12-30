@@ -12,7 +12,8 @@
  * CRITICAL: This job MUST run regularly to ensure RGPD compliance
  */
 
-import { anonymizeIP, isAnonymized } from "@/infrastructure/pii/anonymizer";
+// TODO LOT 8.1: Import and use these utilities when implementing database anonymization
+// import { anonymizeIP, isAnonymized } from "@/infrastructure/pii/anonymizer";
 import { logEvent, logError } from "@/shared/logger";
 
 /**

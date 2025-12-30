@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 // ============================================
 // Primitive types
@@ -36,7 +37,7 @@ export const SlugSchema = z
 // Enums
 // ============================================
 
-export const ScopeSchema = z.enum(['PLATFORM', 'TENANT']);
+export const ScopeSchema = z.enum([ACTOR_SCOPE.PLATFORM, ACTOR_SCOPE.TENANT]);
 
 export const RoleSchema = z.string().min(1, 'Role is required');
 

@@ -33,4 +33,14 @@ export interface AuditEventReader {
    * - TENANT admin: can only see events for their tenant (tenantId filter enforced)
    */
   list(filters: ListAuditEventsFilters): Promise<AuditEventRecord[]>;
+
+  /**
+   * Find audit events by user (RGPD export)
+   * LOT 5.1 - Art. 15 RGPD
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier (actor_id)
+   * @param limit - maximum number of events to return (default: 1000)
+   */
+  findByUser(tenantId: string, userId: string, limit?: number): Promise<AuditEventRecord[]>;
 }

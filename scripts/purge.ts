@@ -17,11 +17,14 @@
 import { executePurgeJob, executeTenantPurgeJob } from "@/app/jobs/purge";
 import { getDefaultRetentionPolicy } from "@/domain/retention/RetentionPolicy";
 import { pool } from "@/infrastructure/db/pg";
+import { PgTenantRepo } from "@/infrastructure/repositories/PgTenantRepo";
 
 async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
   const tenantId = args[1];
+
+  const tenantRepo = new PgTenantRepo();
 
   try {
     console.log("Starting purge job...");
@@ -36,12 +39,12 @@ async function main() {
       console.log("DRY RUN MODE: preview purge (no deletion)");
       const policy = getDefaultRetentionPolicy();
       policy.dryRun = true;
-      const result = await executePurgeJob(policy);
+      const result = await executePurgeJob(tenantRepo, policy);
       console.log("✅ Dry run completed:", result);
     } else {
       // Full purge (all tenants)
       console.log("Purging all tenants...");
-      const result = await executePurgeJob();
+      const result = await executePurgeJob(tenantRepo);
       console.log("✅ Full purge completed:", result);
     }
   } catch (error) {

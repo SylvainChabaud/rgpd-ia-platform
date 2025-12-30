@@ -200,12 +200,12 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 
 ## 13. Checklist de validation (à chaque PR)
 
-- [ ] Aucun appel IA hors Gateway LLM
-- [ ] Aucune donnée sensible en clair dans les logs
-- [ ] Isolation tenant respectée
-- [ ] Responsabilités de couche respectées
-- [ ] CLI conforme aux frontières définies
-- [ ] Tests associés présents
+- [x] Aucun appel IA hors Gateway LLM ✅
+- [x] Aucune donnée sensible en clair dans les logs ✅
+- [x] Isolation tenant respectée ✅
+- [x] Responsabilités de couche respectées ✅ **FIXED 2025-12-30** (use-cases → repositories uniquement)
+- [x] CLI conforme aux frontières définies ✅
+- [x] Tests associés présents ✅
 
 ---
 

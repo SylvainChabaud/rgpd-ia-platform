@@ -12,6 +12,7 @@ import { CreateTenantAdminUseCase } from "@/app/usecases/bootstrap/CreateTenantA
 import { GetBootstrapStatusUseCase } from "@/app/usecases/bootstrap/GetBootstrapStatusUseCase";
 import { logInfo } from "@/shared/logger";
 import { platformContext, systemContext } from "@/app/context/RequestContext";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { policyEngine } from "@/app/auth/policyEngine";
 
 const program = new Command();
@@ -35,7 +36,7 @@ program
   .description("Run SQL migrations")
   .action(async () => {
     await runMigrations();
-    logInfo({ event: "db.migrations.completed", actorScope: "SYSTEM" });
+    logInfo({ event: "db.migrations.completed", actorScope: ACTOR_SCOPE.SYSTEM });
   });
 
 program
@@ -46,7 +47,7 @@ program
     const state = new PgBootstrapStateRepo();
     const uc = new GetBootstrapStatusUseCase(state);
     const res = await uc.execute();
-    // eslint-disable-next-line no-console
+     
     console.log(JSON.stringify(res));
   });
 
@@ -62,7 +63,7 @@ program
     const audit = new PgAuditEventWriter();
     const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
     const res = await uc.execute(opts);
-    // eslint-disable-next-line no-console
+     
     console.log(JSON.stringify(res));
   });
 
@@ -81,7 +82,7 @@ program
     const uc = new CreateTenantUseCase(tenants, audit, policyEngine);
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
-    // eslint-disable-next-line no-console
+     
     console.log(JSON.stringify(res));
   });
 
@@ -107,7 +108,7 @@ program
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
-    // eslint-disable-next-line no-console
+     
     console.log(JSON.stringify(res));
   });
 

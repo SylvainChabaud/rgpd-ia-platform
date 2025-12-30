@@ -11,6 +11,7 @@
 import type { TenantRepo } from '@/app/ports/TenantRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { newId } from '@/shared/ids';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 export interface DeleteTenantInput {
   tenantId: string;
@@ -51,7 +52,7 @@ export async function deleteTenant(
   await auditEventWriter.write({
     id: newId(),
     eventName: 'tenant.deleted',
-    actorScope: 'PLATFORM',
+    actorScope: ACTOR_SCOPE.PLATFORM,
     actorId,
     tenantId: undefined, // PLATFORM-scoped event
     targetId: tenantId,

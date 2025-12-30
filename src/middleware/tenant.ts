@@ -25,6 +25,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { extractContext, isPlatformAdmin, isTenantMember } from '@/lib/requestContext';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { forbiddenError } from '@/lib/errorResponse';
 
 /**
@@ -60,7 +61,7 @@ export function withTenantScope<T extends (req: NextRequest, context: { params?:
     if (!routeTenantId) {
       // No tenant ID in route - check if user is TENANT scope
       // If so, they can only access their own tenant's resources
-      if (userContext.scope === 'TENANT' && !userContext.tenantId) {
+      if (userContext.scope === ACTOR_SCOPE.TENANT && !userContext.tenantId) {
         return NextResponse.json(
           forbiddenError('Invalid tenant context'),
           { status: 403 }

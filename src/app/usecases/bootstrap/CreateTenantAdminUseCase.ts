@@ -13,6 +13,7 @@ import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
 import type { PolicyEngine } from "@/app/auth/policyEngine";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 const InputSchema = z.object({
   tenantSlug: z.string().min(3).max(80),
@@ -67,7 +68,7 @@ export class CreateTenantAdminUseCase {
       id: newId(),
       eventName: "tenant.admin.created",
       actorScope: ctx.actorScope,
-      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
+      actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: tenant.id,
       targetId: id,
       metadata: { displayNameLength: displayName.length },
@@ -75,7 +76,7 @@ export class CreateTenantAdminUseCase {
 
     logEvent("tenant.admin.created", undefined, {
       actorScope: ctx.actorScope,
-      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
+      actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: tenant.id,
       targetId: id,
     });

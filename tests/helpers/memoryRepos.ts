@@ -24,7 +24,7 @@ export class MemPlatformUsers implements PlatformUserRepo {
     return this.exists;
   }
 
-  async createSuperAdmin(_input: {
+  async createSuperAdmin(_: {
     id: string;
     emailHash: string;
     displayName: string;

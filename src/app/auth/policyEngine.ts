@@ -1,4 +1,5 @@
 import type { RequestContext } from "@/app/context/RequestContext";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Permission definition
@@ -46,7 +47,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
     resource?: { tenantId?: string }
   ): Promise<PolicyDecision> {
     // SYSTEM scope (bootstrap mode only)
-    if (ctx.actorScope === "SYSTEM") {
+    if (ctx.actorScope === ACTOR_SCOPE.SYSTEM) {
       if (ctx.bootstrapMode) {
         if (
           permission === "tenant:create" ||
@@ -59,7 +60,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
     }
 
     // PLATFORM scope
-    if (ctx.actorScope === "PLATFORM") {
+    if (ctx.actorScope === ACTOR_SCOPE.PLATFORM) {
       if (permission === "platform:manage") {
         return { allowed: true, reason: "PLATFORM scope" };
       }
@@ -73,7 +74,7 @@ export class DefaultPolicyEngine implements PolicyEngine {
     }
 
     // TENANT scope
-    if (ctx.actorScope === "TENANT") {
+    if (ctx.actorScope === ACTOR_SCOPE.TENANT) {
       // Tenant isolation check (ABAC)
       if (resource?.tenantId && resource.tenantId !== ctx.tenantId) {
         return {

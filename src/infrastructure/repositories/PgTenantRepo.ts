@@ -10,11 +10,41 @@ import { pool } from "@/infrastructure/db/pg";
  * - All queries exclude soft-deleted tenants by default
  */
 export class PgTenantRepo implements TenantRepo {
+  private _hasDeletedAt: boolean | null = null;
+
+  /**
+   * Check if deleted_at column exists in tenants table
+   * Cached after first check for performance
+   */
+  private async hasDeletedAtColumn(): Promise<boolean> {
+    if (this._hasDeletedAt !== null) {
+      return this._hasDeletedAt;
+    }
+
+    const res = await pool.query(
+      `SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'tenants' AND column_name = 'deleted_at'
+      ) as exists`
+    );
+
+    const exists = res.rows[0].exists as boolean;
+    this._hasDeletedAt = exists;
+    return exists;
+  }
+
   async findBySlug(
     slug: string
   ): Promise<{ id: string; slug: string; name: string } | null> {
+    // Check if deleted_at column exists
+    const hasDeletedAt = await this.hasDeletedAtColumn();
+    const whereClause = hasDeletedAt
+      ? "WHERE slug=$1 AND deleted_at IS NULL"
+      : "WHERE slug=$1";
+
     const res = await pool.query(
-      "SELECT id, slug, name FROM tenants WHERE slug=$1 AND deleted_at IS NULL LIMIT 1",
+      `SELECT id, slug, name FROM tenants ${whereClause} LIMIT 1`,
       [slug]
     );
     return res.rowCount ? res.rows[0] : null;
@@ -33,10 +63,18 @@ export class PgTenantRepo implements TenantRepo {
   }
 
   async findById(tenantId: string): Promise<Tenant | null> {
+    const hasDeletedAt = await this.hasDeletedAtColumn();
+    const selectClause = hasDeletedAt
+      ? "SELECT id, slug, name, created_at, deleted_at"
+      : "SELECT id, slug, name, created_at, NULL as deleted_at";
+    const whereClause = hasDeletedAt
+      ? "WHERE id = $1 AND deleted_at IS NULL"
+      : "WHERE id = $1";
+
     const res = await pool.query(
-      `SELECT id, slug, name, created_at, deleted_at
+      `${selectClause}
        FROM tenants
-       WHERE id = $1 AND deleted_at IS NULL
+       ${whereClause}
        LIMIT 1`,
       [tenantId]
     );
@@ -49,19 +87,26 @@ export class PgTenantRepo implements TenantRepo {
   }
 
   async listAll(limit: number = 20, offset: number = 0): Promise<Tenant[]> {
+    const hasDeletedAt = await this.hasDeletedAtColumn();
+    const selectClause = hasDeletedAt
+      ? "SELECT id, slug, name, created_at, deleted_at"
+      : "SELECT id, slug, name, created_at, NULL as deleted_at";
+    const whereClause = hasDeletedAt ? "WHERE deleted_at IS NULL" : "";
+
     const res = await pool.query(
-      `SELECT id, slug, name, created_at, deleted_at
+      `${selectClause}
        FROM tenants
-       WHERE deleted_at IS NULL
+       ${whereClause}
        ORDER BY created_at DESC
        LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
 
-    return res.rows.map(this.mapRow);
+    return res.rows.map((row) => this.mapRow(row));
   }
 
   async update(tenantId: string, updates: { name?: string }): Promise<void> {
+    const hasDeletedAt = await this.hasDeletedAtColumn();
     const setClauses: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
@@ -76,16 +121,24 @@ export class PgTenantRepo implements TenantRepo {
     }
 
     values.push(tenantId);
+    const whereClause = hasDeletedAt
+      ? `WHERE id = $${paramIndex} AND deleted_at IS NULL`
+      : `WHERE id = $${paramIndex}`;
 
     await pool.query(
       `UPDATE tenants
        SET ${setClauses.join(', ')}
-       WHERE id = $${paramIndex} AND deleted_at IS NULL`,
+       ${whereClause}`,
       values
     );
   }
 
   async softDelete(tenantId: string): Promise<void> {
+    const hasDeletedAt = await this.hasDeletedAtColumn();
+    if (!hasDeletedAt) {
+      throw new Error("Soft delete not supported: deleted_at column does not exist");
+    }
+
     // Soft delete tenant
     await pool.query(
       `UPDATE tenants

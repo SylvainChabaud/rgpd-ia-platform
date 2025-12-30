@@ -18,6 +18,7 @@
 
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
+import type { TenantRepo } from "@/app/ports/TenantRepo";
 import type {
   RetentionPolicy} from "@/domain/retention/RetentionPolicy";
 import {
@@ -25,6 +26,7 @@ import {
   getDefaultRetentionPolicy,
   validateRetentionPolicy,
 } from "@/domain/retention/RetentionPolicy";
+import { logger } from "@/infrastructure/logging/logger";
 
 /**
  * Purge result (aggregated stats, RGPD-safe)
@@ -92,9 +94,11 @@ export async function purgeAiJobs(
  *
  * BLOCKER: idempotent, respects retention policy
  *
+ * @param tenantRepo - Tenant repository for listing all tenants
  * @param policy - Optional custom retention policy (defaults to platform policy)
  */
 export async function executePurgeJob(
+  tenantRepo: TenantRepo,
   policy?: RetentionPolicy
 ): Promise<PurgeResult> {
   // Use default policy if not provided
@@ -105,15 +109,13 @@ export async function executePurgeJob(
 
   const dryRun = retentionPolicy.dryRun;
 
-  // Get all tenants (purge per tenant for isolation)
-  const tenantsResult = await pool.query<{ id: string }>(
-    "SELECT id FROM tenants"
-  );
+  // Get all tenants (purge per tenant for isolation) via repository
+  const tenants = await tenantRepo.listAll(1000, 0);
 
   let totalAiJobsPurged = 0;
 
   // Purge AI jobs for each tenant
-  for (const tenant of tenantsResult.rows) {
+  for (const tenant of tenants) {
     const purged = await purgeAiJobs(tenant.id, retentionPolicy, dryRun);
     totalAiJobsPurged += purged;
   }
@@ -126,11 +128,12 @@ export async function executePurgeJob(
   };
 
   // RGPD-safe log (P1: counts only)
-  console.log("Purge job completed", {
+  logger.info({
+    event: 'purge_job_completed',
     aiJobsPurged: result.aiJobsPurged,
     dryRun: result.dryRun,
     timestamp: result.executedAt.toISOString(),
-  });
+  }, 'Purge job completed');
 
   return result;
 }
@@ -170,12 +173,13 @@ export async function executeTenantPurgeJob(
     executedAt: new Date(),
   };
 
-  console.log("Tenant purge completed", {
+  logger.info({
+    event: 'tenant_purge_completed',
     tenantId, // P1: UUID opaque
     aiJobsPurged: result.aiJobsPurged,
     dryRun: result.dryRun,
     timestamp: result.executedAt.toISOString(),
-  });
+  }, 'Tenant purge completed');
 
   return result;
 }

@@ -83,4 +83,25 @@ export interface AiJobRepo {
     userId: string,
     limit?: number
   ): Promise<AiJob[]>;
+
+  /**
+   * Soft delete all AI jobs for user (cascade RGPD deletion)
+   * LOT 5.2 - Art. 17 RGPD
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier
+   * @returns Number of rows affected
+   */
+  softDeleteByUser(tenantId: string, userId: string): Promise<number>;
+
+  /**
+   * Hard delete all AI jobs for user (purge after retention period)
+   * LOT 5.2 - Art. 17 RGPD
+   * CRITICAL: Only call after soft delete + retention period
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier
+   * @returns Number of rows affected
+   */
+  hardDeleteByUser(tenantId: string, userId: string): Promise<number>;
 }

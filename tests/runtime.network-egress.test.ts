@@ -191,8 +191,8 @@ describe("BLOCKER: AI Runtime Network Egress Control", () => {
 
   describe("Data Exfiltration Prevention", () => {
     test("BLOCKER: Cannot send user data to external endpoints", async () => {
-      // GIVEN: Simulated AI runtime with user data
-      const userData = { userId: "user123", email: "user@example.com" };
+      // GIVEN: Simulated AI runtime with user data (P2)
+      // Example: { userId: "user123", email: "user@example.com" }
 
       // WHEN: Attempting to send data externally
       const attemptExfiltration = async () => {

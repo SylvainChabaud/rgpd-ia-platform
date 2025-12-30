@@ -11,13 +11,17 @@
  */
 
 import { NextRequest } from 'next/server';
+import { ACTOR_SCOPE, type UserScope } from "@/shared/actorScope";
 
 export interface RequestContext {
   userId: string;
   tenantId: string | null; // null for PLATFORM scope users
-  scope: 'PLATFORM' | 'TENANT';
+  scope: UserScope;
   role: string;
 }
+
+// Export alias for compatibility
+export type UserContext = RequestContext;
 
 /**
  * Extract request context from authenticated request
@@ -58,7 +62,7 @@ export function requireContext(req: NextRequest): RequestContext {
  * Check if user has PLATFORM scope
  */
 export function isPlatformAdmin(context: RequestContext): boolean {
-  return context.scope === 'PLATFORM';
+  return context.scope === ACTOR_SCOPE.PLATFORM;
 }
 
 /**
@@ -74,7 +78,7 @@ export function hasRole(context: RequestContext, role: string | string[]): boole
  * Returns false for PLATFORM scope users
  */
 export function isTenantMember(context: RequestContext, tenantId: string): boolean {
-  return context.scope === 'TENANT' && context.tenantId === tenantId;
+  return context.scope === ACTOR_SCOPE.TENANT && context.tenantId === tenantId;
 }
 
 /**
@@ -82,5 +86,5 @@ export function isTenantMember(context: RequestContext, tenantId: string): boole
  * Returns false for PLATFORM scope users
  */
 export function isTenantAdmin(context: RequestContext): boolean {
-  return context.scope === 'TENANT' && (context.role === 'admin' || context.role === 'TENANT_ADMIN');
+  return context.scope === ACTOR_SCOPE.TENANT && (context.role === 'admin' || context.role === 'TENANT_ADMIN');
 }

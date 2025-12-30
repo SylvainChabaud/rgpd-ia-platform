@@ -2,6 +2,7 @@ import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
 import { newId } from "@/shared/ids";
 import { withLogCapture } from "@/testing/logCapture";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 test("audit event rejects forbidden metadata keys", async () => {
   const writer = new InMemoryAuditEventWriter();
@@ -10,7 +11,7 @@ test("audit event rejects forbidden metadata keys", async () => {
     emitAuditEvent(writer, {
       id: newId(),
       eventName: "audit.test",
-      actorScope: "SYSTEM",
+      actorScope: ACTOR_SCOPE.SYSTEM,
       metadata: { payload: "nope" },
     })
   ).rejects.toThrow();
@@ -23,7 +24,7 @@ test("audit event rejects email-like metadata values", async () => {
     emitAuditEvent(writer, {
       id: newId(),
       eventName: "audit.test",
-      actorScope: "SYSTEM",
+      actorScope: ACTOR_SCOPE.SYSTEM,
       metadata: { note: "user@example.com" },
     })
   ).rejects.toThrow();
@@ -36,7 +37,7 @@ test("audit logs are event-only", async () => {
     await emitAuditEvent(writer, {
       id: newId(),
       eventName: "audit.safe",
-      actorScope: "SYSTEM",
+      actorScope: ACTOR_SCOPE.SYSTEM,
       metadata: { reason: "seed" },
     });
   });

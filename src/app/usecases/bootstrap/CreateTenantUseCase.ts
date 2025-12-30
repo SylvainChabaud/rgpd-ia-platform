@@ -7,6 +7,7 @@ import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import type { PolicyEngine } from "@/app/auth/policyEngine";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 const InputSchema = z.object({
   name: z.string().min(1).max(160),
@@ -52,7 +53,7 @@ export class CreateTenantUseCase {
       id: newId(),
       eventName: "tenant.created",
       actorScope: ctx.actorScope,
-      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
+      actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: id,
       targetId: id,
       metadata: { slugLength: slug.length },
@@ -60,7 +61,7 @@ export class CreateTenantUseCase {
 
     logEvent("tenant.created", undefined, {
       actorScope: ctx.actorScope,
-      actorId: ctx.actorScope === "SYSTEM" ? undefined : ctx.actorId,
+      actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: id,
       targetId: id,
     });

@@ -1,4 +1,4 @@
-import type { ActorScope } from "@/shared/actorScope";
+import { ACTOR_SCOPE, type ActorScope } from "@/shared/actorScope";
 import { InvalidTenantError } from "@/shared/errors";
 
 export type RequestContext = Readonly<{
@@ -15,7 +15,7 @@ function freeze<T extends object>(value: T): Readonly<T> {
 export function assertTenantContext(
   ctx: RequestContext
 ): asserts ctx is RequestContext & { tenantId: string } {
-  if (ctx.actorScope === "TENANT" && !ctx.tenantId) {
+  if (ctx.actorScope === ACTOR_SCOPE.TENANT && !ctx.tenantId) {
     throw new InvalidTenantError("Tenant context requires tenantId");
   }
 }
@@ -24,13 +24,13 @@ export const systemContext = (
   options?: Readonly<{ bootstrapMode?: boolean }>
 ): RequestContext =>
   freeze({
-    actorScope: "SYSTEM",
+    actorScope: ACTOR_SCOPE.SYSTEM,
     bootstrapMode: options?.bootstrapMode === true,
   });
 
 export const platformContext = (actorId: string): RequestContext =>
   freeze({
-    actorScope: "PLATFORM",
+    actorScope: ACTOR_SCOPE.PLATFORM,
     actorId,
   });
 
@@ -39,7 +39,7 @@ export const tenantContext = (
   actorId?: string
 ): RequestContext =>
   freeze({
-    actorScope: "TENANT",
+    actorScope: ACTOR_SCOPE.TENANT,
     tenantId,
     actorId,
   });

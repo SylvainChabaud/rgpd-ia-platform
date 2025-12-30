@@ -17,11 +17,14 @@ import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
 import { withCurrentUser } from '@/middleware/tenant';
 import { requireContext } from '@/lib/requestContext';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { internalError } from '@/lib/errorResponse';
 import { exportUserData } from '@/app/usecases/rgpd/exportUserData';
 import { PgConsentRepo } from '@/infrastructure/repositories/PgConsentRepo';
 import { PgAiJobRepo } from '@/infrastructure/repositories/PgAiJobRepo';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
+import { PgAuditEventReader } from '@/infrastructure/audit/PgAuditEventReader';
+import { logger } from '@/infrastructure/logging/logger';
 
 export const POST = withLogging(
   withAuth(
@@ -31,7 +34,7 @@ export const POST = withLogging(
           const context = requireContext(req);
 
           // Only TENANT scope users can export their data
-          if (context.scope !== 'TENANT' || !context.tenantId) {
+          if (context.scope !== ACTOR_SCOPE.TENANT || !context.tenantId) {
             return NextResponse.json(
               { error: 'Forbidden', message: 'Only tenant users can export their data' },
               { status: 403 }
@@ -42,12 +45,14 @@ export const POST = withLogging(
           const consentRepo = new PgConsentRepo();
           const aiJobRepo = new PgAiJobRepo();
           const auditWriter = new PgAuditEventWriter();
+          const auditEventReader = new PgAuditEventReader();
 
           // Execute export use-case
           const result = await exportUserData(
             consentRepo,
             aiJobRepo,
             auditWriter,
+            auditEventReader,
             {
               tenantId: context.tenantId,
               userId: context.userId,
@@ -63,7 +68,10 @@ export const POST = withLogging(
             message: 'Export created successfully. Save the password - it will not be shown again.',
           });
         } catch (error) {
-          console.error('POST /api/rgpd/export error:', error);
+          logger.error({
+            event: 'rgpd_export_error',
+            error: error instanceof Error ? error.message : String(error),
+          }, 'POST /api/rgpd/export error');
           return NextResponse.json(
             internalError(),
             { status: 500 }

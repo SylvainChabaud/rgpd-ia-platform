@@ -8,6 +8,10 @@ BEGIN;
 -- SOFT DELETE: Add deleted_at to sensitive tables
 -- =========================
 
+-- Tenants table: track tenant deletion requests (soft delete)
+ALTER TABLE tenants
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ NULL;
+
 -- Users table: track user deletion requests
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ NULL;
@@ -23,6 +27,11 @@ ALTER TABLE ai_jobs
 -- =========================
 -- INDEXES: Optimize queries filtering deleted records
 -- =========================
+
+-- Index for active tenants (WHERE deleted_at IS NULL)
+CREATE INDEX IF NOT EXISTS idx_tenants_active
+  ON tenants(id)
+  WHERE deleted_at IS NULL;
 
 -- Index for active users (WHERE deleted_at IS NULL)
 CREATE INDEX IF NOT EXISTS idx_users_active

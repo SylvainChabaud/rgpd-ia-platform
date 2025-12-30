@@ -13,7 +13,6 @@
  */
 
 import { pool } from "@/infrastructure/db/pg";
-import { withPlatformContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
 import { PoolClient } from "pg";
 

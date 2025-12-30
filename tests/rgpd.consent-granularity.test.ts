@@ -113,6 +113,18 @@ async function findAllConsents(
  * Setup: create test tenant
  */
 async function setupTenant() {
+  // Delete tenant first if it exists by slug (idempotent setup)
+  const existing = await pool.query("SELECT id FROM tenants WHERE slug = $1", [
+    "consent-granularity-test",
+  ]);
+
+  if (existing.rows.length > 0) {
+    const existingId = existing.rows[0].id;
+    await pool.query("DELETE FROM consents WHERE tenant_id = $1", [existingId]);
+    await pool.query("DELETE FROM tenants WHERE id = $1", [existingId]);
+  }
+
+  // Now create fresh tenant
   await pool.query("INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)", [
     TENANT_ID,
     "consent-granularity-test",

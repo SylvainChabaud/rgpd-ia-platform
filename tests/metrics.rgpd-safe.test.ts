@@ -21,7 +21,6 @@ import {
   metrics,
   AppMetrics,
   recordHttpMetrics,
-  MetricsSnapshot,
 } from "@/infrastructure/logging/metrics";
 
 describe("LOT 6.1 BLOCKER: Metrics RGPD-Safe", () => {
@@ -123,7 +122,7 @@ describe("LOT 6.1 BLOCKER: Metrics RGPD-Safe", () => {
 
   test("BLOCKER: metric labels use ONLY allowed dimensions (P0/P1)", () => {
     // Allowed labels (P0/P1 - technical data only)
-    const allowedLabels = [
+    const _allowedLabels = [
       "method", // HTTP method (GET, POST, etc.)
       "path", // Sanitized path (/api/users/:id)
       "status", // HTTP status code (200, 404, etc.)
@@ -293,9 +292,8 @@ describe("LOT 6.1 COMPLIANCE: Metrics Aggregation & Anonymization", () => {
 
   test("COMPLIANCE: error metrics do NOT include error messages (may contain PII)", () => {
     // GIVEN: Error with potentially sensitive message
-    const sensitiveError = new Error(
-      "User user@example.com not found in tenant abc-123"
-    );
+    // Example of what NOT to put in metrics:
+    // "User user@example.com not found in tenant abc-123"
 
     // WHEN: Record error (should NOT include message in labels)
     AppMetrics.httpErrors.inc({
@@ -422,7 +420,7 @@ describe("LOT 6.1 RGPD: Metrics Data Classification", () => {
 
     // Find a counter with actual data
     const countersWithData = Object.entries(snapshot.counters).filter(
-      ([_, values]) => Object.keys(values).length > 0
+      ([, values]) => Object.keys(values).length > 0
     );
     expect(countersWithData.length).toBeGreaterThan(0);
 
@@ -434,7 +432,7 @@ describe("LOT 6.1 RGPD: Metrics Data Classification", () => {
 
     // Check that counters have no data (empty objects)
     const countersAfterReset = Object.entries(snapshot.counters).filter(
-      ([_, values]) => Object.keys(values).length > 0
+      ([, values]) => Object.keys(values).length > 0
     );
     expect(countersAfterReset.length).toBe(0);
 

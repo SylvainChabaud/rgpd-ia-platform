@@ -162,4 +162,35 @@ export class PgAiJobRepo implements AiJobRepo {
       return res.rows.map(mapRowToAiJob);
     });
   }
+
+  async softDeleteByUser(tenantId: string, userId: string): Promise<number> {
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for AI job soft delete');
+    }
+
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const result = await client.query(
+        `UPDATE ai_jobs
+         SET deleted_at = NOW()
+         WHERE tenant_id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+        [tenantId, userId]
+      );
+      return result.rowCount ?? 0;
+    });
+  }
+
+  async hardDeleteByUser(tenantId: string, userId: string): Promise<number> {
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for AI job hard delete');
+    }
+
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const result = await client.query(
+        `DELETE FROM ai_jobs
+         WHERE tenant_id = $1 AND user_id = $2`,
+        [tenantId, userId]
+      );
+      return result.rowCount ?? 0;
+    });
+  }
 }

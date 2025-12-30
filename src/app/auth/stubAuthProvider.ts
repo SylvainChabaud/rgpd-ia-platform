@@ -7,7 +7,7 @@
  * DO NOT use in production.
  */
 
-import type { ActorScope } from "@/shared/actorScope";
+import { ACTOR_SCOPE, type ActorScope } from "@/shared/actorScope";
 
 export interface AuthenticatedActor {
   actorId: string;
@@ -43,13 +43,13 @@ export class StubAuthProvider implements AuthProvider {
     // Format: "stub-{scope}-{id}"
     this.validTokens.set("stub-platform-super1", {
       actorId: "platform-super-1",
-      actorScope: "PLATFORM",
+      actorScope: ACTOR_SCOPE.PLATFORM,
       roles: ["SUPERADMIN"],
     });
 
     this.validTokens.set("stub-tenant-admin1", {
       actorId: "tenant-admin-1",
-      actorScope: "TENANT",
+      actorScope: ACTOR_SCOPE.TENANT,
       tenantId: "11111111-1111-4111-8111-111111111111",
       roles: ["TENANT_ADMIN"],
     });

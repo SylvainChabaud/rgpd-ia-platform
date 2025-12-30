@@ -21,7 +21,6 @@ import {
   DataClassification,
   SensitiveDataCategory,
   P3DataStorageForbiddenError,
-  P2EncryptionRequiredError,
   validateClassification,
   enforceClassificationRules,
   createClassifiedData,
@@ -30,12 +29,7 @@ import {
 describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
   describe("P3 Data Storage Rejection (CRITICAL)", () => {
     test("BLOCKER: Attempting to store health data (P3) throws error", () => {
-      // GIVEN: Health data classified as P3
-      const healthData = {
-        diagnosis: "diabète type 2",
-        medication: "insuline",
-        bloodPressure: "140/90",
-      };
+      // GIVEN: Health data classified as P3 (e.g. diagnosis, medication, bloodPressure)
 
       // WHEN: Attempting to enforce classification rules
       // THEN: Must throw P3DataStorageForbiddenError
@@ -62,11 +56,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store racial/ethnic data (P3) throws error", () => {
-      // GIVEN: Racial/ethnic origin data classified as P3
-      const racialData = {
-        ethnicity: "African descent",
-        origin: "West Africa",
-      };
+      // GIVEN: Racial/ethnic origin data classified as P3 (e.g. ethnicity, origin)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -85,11 +75,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store political opinions (P3) throws error", () => {
-      // GIVEN: Political opinions classified as P3
-      const politicalData = {
-        party: "Socialist Party",
-        views: "Progressive economic policy",
-      };
+      // GIVEN: Political opinions classified as P3 (e.g. party, views)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -101,11 +87,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store religious beliefs (P3) throws error", () => {
-      // GIVEN: Religious beliefs classified as P3
-      const religiousData = {
-        religion: "Muslim",
-        practices: "Ramadan observer",
-      };
+      // GIVEN: Religious beliefs classified as P3 (e.g. religion, practices)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -117,11 +99,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store sexual orientation (P3) throws error", () => {
-      // GIVEN: Sexual orientation data classified as P3
-      const sexualData = {
-        orientation: "homosexual",
-        partner_gender: "same-sex",
-      };
+      // GIVEN: Sexual orientation data classified as P3 (e.g. orientation, partner_gender)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -133,11 +111,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store biometric data (P3) throws error", () => {
-      // GIVEN: Biometric data for identification
-      const biometricData = {
-        fingerprint_hash: "a1b2c3d4e5f6",
-        face_encoding: [0.1, 0.2, 0.3],
-      };
+      // GIVEN: Biometric data for identification (e.g. fingerprint_hash, face_encoding)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -149,11 +123,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store genetic data (P3) throws error", () => {
-      // GIVEN: Genetic data
-      const geneticData = {
-        dna_sequence: "ATCGGCTAAGC",
-        markers: ["BRCA1", "BRCA2"],
-      };
+      // GIVEN: Genetic data (e.g. dna_sequence, markers)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -165,11 +135,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("BLOCKER: Attempting to store trade union data (P3) throws error", () => {
-      // GIVEN: Trade union membership
-      const unionData = {
-        union: "CGT",
-        member_since: "2020-01-01",
-      };
+      // GIVEN: Trade union membership (e.g. union name, member_since)
 
       // WHEN/THEN: Must be rejected
       expect(() => {
@@ -212,12 +178,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("P2 data can be stored if encrypted", () => {
-      // GIVEN: P2 data (email, name)
-      const p2Data = {
-        email: "john.doe@example.com",
-        name: "John Doe",
-        phone: "+33612345678",
-      };
+      // GIVEN: P2 data (e.g. email, name, phone)
 
       // WHEN: Enforcing classification rules
       // THEN: Must NOT throw (but caller must ensure encryption)
@@ -252,11 +213,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
 
   describe("P0/P1 Data Storage (No Restrictions)", () => {
     test("P0 public data can be stored without restrictions", () => {
-      // GIVEN: P0 public/non-personal data
-      const p0Data = {
-        documentation: "Public API docs",
-        template: "Generic email template",
-      };
+      // GIVEN: P0 public/non-personal data (e.g. documentation, templates)
 
       // WHEN: Validating classification
       const result = validateClassification(DataClassification.P0);
@@ -274,13 +231,7 @@ describe("BLOCKER: Data Classification Enforcement (Art. 9 RGPD)", () => {
     });
 
     test("P1 technical data can be stored without restrictions", () => {
-      // GIVEN: P1 technical internal data
-      const p1Data = {
-        tenant_id: "550e8400-e29b-41d4-a716-446655440000",
-        user_id: "660e8400-e29b-41d4-a716-446655440000",
-        created_at: new Date(),
-        status: "active",
-      };
+      // GIVEN: P1 technical internal data (e.g. tenant_id, user_id, status)
 
       // WHEN: Validating classification
       const result = validateClassification(DataClassification.P1);

@@ -14,11 +14,12 @@
  */
 
 import { createHmac, randomBytes } from 'crypto';
+import type { UserScope } from '@/shared/actorScope';
 
 export interface JwtPayload {
   userId: string;
   tenantId: string | null;
-  scope: 'PLATFORM' | 'TENANT';
+  scope: UserScope;
   role: string;
   iat: number; // Issued at (seconds since epoch)
   exp: number; // Expiration (seconds since epoch)

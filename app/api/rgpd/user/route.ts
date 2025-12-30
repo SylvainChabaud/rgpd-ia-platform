@@ -2,6 +2,9 @@ import { requireAuth } from "@/app/http/requireAuth";
 import { toErrorResponse } from "@/app/http/errorResponse";
 import { deleteUserData } from "@/app/usecases/rgpd/deleteUserData";
 import { PgRgpdRequestRepo } from "@/infrastructure/repositories/PgRgpdRequestRepo";
+import { PgUserRepo } from "@/infrastructure/repositories/PgUserRepo";
+import { PgConsentRepo } from "@/infrastructure/repositories/PgConsentRepo";
+import { PgAiJobRepo } from "@/infrastructure/repositories/PgAiJobRepo";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
 
 /**
@@ -53,11 +56,21 @@ export const DELETE = requireAuth(async ({ request, actor }) => {
 
     const rgpdRequestRepo = new PgRgpdRequestRepo();
     const auditWriter = new InMemoryAuditEventWriter();
+    const userRepo = new PgUserRepo();
+    const consentRepo = new PgConsentRepo();
+    const aiJobRepo = new PgAiJobRepo();
 
-    const result = await deleteUserData(rgpdRequestRepo, auditWriter, {
-      tenantId: actor.tenantId,
-      userId: body.userId,
-    });
+    const result = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
+        tenantId: actor.tenantId,
+        userId: body.userId,
+      }
+    );
 
     // Return deletion confirmation
     return new Response(

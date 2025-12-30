@@ -16,6 +16,7 @@ import { withAuth } from '@/middleware/auth';
 import { requireContext } from '@/lib/requestContext';
 import { internalError } from '@/lib/errorResponse';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
+import { logger } from '@/infrastructure/logging/logger';
 
 export const GET = withLogging(
   withAuth(
@@ -46,7 +47,10 @@ export const GET = withLogging(
           },
         });
       } catch (error) {
-        console.error('GET /api/auth/me error:', error);
+        logger.error({
+          event: 'auth_me_error',
+          error: error instanceof Error ? error.message : String(error),
+        }, 'GET /api/auth/me error');
         return NextResponse.json(
           internalError(),
           { status: 500 }

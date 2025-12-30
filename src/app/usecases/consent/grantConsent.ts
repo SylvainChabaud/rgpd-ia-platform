@@ -2,6 +2,7 @@ import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { randomUUID } from "crypto";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Grant consent use-case (opt-in)
@@ -44,7 +45,7 @@ export async function grantConsent(
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: "consent.granted",
-    actorScope: "TENANT",
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId: userId,
     tenantId,
     metadata: {

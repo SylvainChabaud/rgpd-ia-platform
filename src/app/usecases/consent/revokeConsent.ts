@@ -2,6 +2,7 @@ import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { randomUUID } from "crypto";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Revoke consent use-case
@@ -39,7 +40,7 @@ export async function revokeConsent(
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: "consent.revoked",
-    actorScope: "TENANT",
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId: userId,
     tenantId,
     metadata: {

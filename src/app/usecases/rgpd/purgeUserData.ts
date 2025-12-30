@@ -1,14 +1,17 @@
 import { randomUUID } from "crypto";
 import type { RgpdRequestRepo } from "@/app/ports/RgpdRequestRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
+import type { UserRepo } from "@/app/ports/UserRepo";
+import type { ConsentRepo } from "@/app/ports/ConsentRepo";
+import type { AiJobRepo } from "@/app/ports/AiJobRepo";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
-import { pool } from "@/infrastructure/db/pg";
-import { withTenantContext } from "@/infrastructure/db/tenantContext";
+import { logger } from "@/infrastructure/logging/logger";
 import {
   getExportMetadataByUserId,
   deleteExportBundle,
   deleteExportMetadata,
 } from "@/infrastructure/storage/ExportStorage";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Purge User Data use-case (RGPD Art. 17 - Right to erasure)
@@ -51,6 +54,9 @@ export type PurgeUserDataOutput = {
 export async function purgeUserData(
   rgpdRequestRepo: RgpdRequestRepo,
   auditWriter: AuditEventWriter,
+  userRepo: UserRepo,
+  consentRepo: ConsentRepo,
+  aiJobRepo: AiJobRepo,
   input: PurgeUserDataInput
 ): Promise<PurgeUserDataOutput> {
   const { requestId } = input;
@@ -73,68 +79,43 @@ export async function purgeUserData(
   const { tenantId, userId } = request;
   const now = new Date();
 
-  // Step 2-6: Execute hard deletes with RLS context
-  const deletedRecords = await withTenantContext(pool, tenantId, async (client) => {
-    // Step 2: Verify user is soft-deleted
-    const userRes = await client.query(
-      `SELECT deleted_at FROM users
-       WHERE tenant_id = $1 AND id = $2 AND deleted_at IS NOT NULL`,
-      [tenantId, userId]
-    );
+  // Step 2: Hard delete consents (tenant-scoped via repository)
+  const consentsDeleted = await consentRepo.hardDeleteByUser(tenantId, userId);
 
-    if (userRes.rowCount === 0) {
-      throw new Error("User not found or not soft-deleted");
+  // Step 3: Hard delete ai_jobs (tenant-scoped via repository)
+  const aiJobsDeleted = await aiJobRepo.hardDeleteByUser(tenantId, userId);
+
+  // Step 4: Crypto-shredding - delete export bundles
+  // Find all exports for this user
+  const exportMetadataList = getExportMetadataByUserId(tenantId, userId);
+  let deletedExports = 0;
+
+  for (const metadata of exportMetadataList) {
+    try {
+      // Delete encrypted file (crypto-shredding: key becomes inaccessible)
+      await deleteExportBundle(metadata.exportId);
+      // Delete metadata
+      deleteExportMetadata(metadata.exportId);
+      deletedExports++;
+    } catch (error) {
+      // Log error but continue purge (best effort)
+      logger.error({
+        event: 'export_cleanup_failed',
+        exportId: metadata.exportId,
+        error: error instanceof Error ? error.message : String(error),
+      }, 'Failed to delete export during purge');
     }
+  }
 
-    // Retention validation is already done by findPendingPurges()
-    // (which checks scheduledPurgeAt <= NOW())
+  // Step 5: Hard delete user (tenant-scoped via repository)
+  const userDeleted = await userRepo.hardDeleteUserByTenant(tenantId, userId);
 
-    // Step 3: Hard delete consents (tenant-scoped)
-    const consentsRes = await client.query(
-      `DELETE FROM consents
-       WHERE tenant_id = $1 AND user_id = $2`,
-      [tenantId, userId]
-    );
-
-    // Step 4: Hard delete ai_jobs (tenant-scoped)
-    const jobsRes = await client.query(
-      `DELETE FROM ai_jobs
-       WHERE tenant_id = $1 AND user_id = $2`,
-      [tenantId, userId]
-    );
-
-    // Step 5: Crypto-shredding - delete export bundles
-    // Find all exports for this user
-    const exportMetadataList = getExportMetadataByUserId(tenantId, userId);
-    let deletedExports = 0;
-
-    for (const metadata of exportMetadataList) {
-      try {
-        // Delete encrypted file (crypto-shredding: key becomes inaccessible)
-        await deleteExportBundle(metadata.exportId);
-        // Delete metadata
-        deleteExportMetadata(metadata.exportId);
-        deletedExports++;
-      } catch (error) {
-        // Log error but continue purge (best effort)
-        console.error(`Failed to delete export ${metadata.exportId}:`, error);
-      }
-    }
-
-    // Step 6: Hard delete user (tenant-scoped)
-    const userDeleteRes = await client.query(
-      `DELETE FROM users
-       WHERE tenant_id = $1 AND id = $2`,
-      [tenantId, userId]
-    );
-
-    return {
-      consents: consentsRes.rowCount || 0,
-      aiJobs: jobsRes.rowCount || 0,
-      exports: deletedExports,
-      users: userDeleteRes.rowCount || 0,
-    };
-  });
+  const deletedRecords = {
+    consents: consentsDeleted,
+    aiJobs: aiJobsDeleted,
+    exports: deletedExports,
+    users: userDeleted,
+  };
 
   // Step 7: Update RGPD request status
   await rgpdRequestRepo.updateStatus(requestId, "COMPLETED", now);
@@ -144,7 +125,7 @@ export async function purgeUserData(
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: "rgpd.deletion.completed",
-    actorScope: "PLATFORM", // PLATFORM scope for automated purge
+    actorScope: ACTOR_SCOPE.PLATFORM, // PLATFORM scope for automated purge
     actorId: "system",
     tenantId,
     metadata: {

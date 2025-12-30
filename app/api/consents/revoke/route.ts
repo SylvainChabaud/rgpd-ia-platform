@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { requireAuth } from "@/app/http/requireAuth";
 import { toErrorResponse } from "@/app/http/errorResponse";
 import { revokeConsent } from "@/app/usecases/consent/revokeConsent";

@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AiJobRepo } from "@/app/ports/AiJobRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
+import type { AuditEventReader } from "@/app/ports/AuditEventReader";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import type {
   ExportBundle,
@@ -11,7 +12,6 @@ import type {
 } from "@/domain/rgpd/ExportBundle";
 import {
   EXPORT_TTL_DAYS,
-  EXPORT_MAX_DOWNLOADS,
   EXPORT_VERSION,
 } from "@/domain/rgpd/ExportBundle";
 import {
@@ -22,7 +22,7 @@ import {
   storeEncryptedBundle,
   storeExportMetadata,
 } from "@/infrastructure/storage/ExportStorage";
-import { pool } from "@/infrastructure/db/pg";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Export User Data use-case (RGPD Art. 15, 20)
@@ -53,6 +53,7 @@ export async function exportUserData(
   consentRepo: ConsentRepo,
   aiJobRepo: AiJobRepo,
   auditWriter: AuditEventWriter,
+  auditEventReader: AuditEventReader,
   input: ExportUserDataInput
 ): Promise<ExportUserDataOutput> {
   const { tenantId, userId } = input;
@@ -69,12 +70,20 @@ export async function exportUserData(
   const now = new Date();
   const expiresAt = new Date(now.getTime() + EXPORT_TTL_DAYS * 24 * 60 * 60 * 1000);
 
-  // Step 1: Collect user data (tenant-scoped)
-  const [consents, aiJobs, auditEvents] = await Promise.all([
+  // Step 1: Collect user data (tenant-scoped via repositories)
+  const [consents, aiJobs, auditEventsRaw] = await Promise.all([
     consentRepo.findByUser(tenantId, userId),
     aiJobRepo.findByUser(tenantId, userId),
-    fetchAuditEvents(tenantId, userId),
+    auditEventReader.findByUser(tenantId, userId, 1000),
   ]);
+
+  // Map audit events to export format
+  const auditEvents: ExportAuditEvent[] = auditEventsRaw.map((event) => ({
+    id: event.id,
+    eventName: event.eventType,
+    occurredAt: event.createdAt,
+    actorScope: ACTOR_SCOPE.TENANT, // Simplified: assume TENANT scope for user events
+  }));
 
   const exportData: ExportData = {
     consents,
@@ -117,7 +126,7 @@ export async function exportUserData(
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: "rgpd.export.created",
-    actorScope: "TENANT",
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId: userId,
     tenantId,
     metadata: {
@@ -131,32 +140,4 @@ export async function exportUserData(
     password,
     expiresAt,
   };
-}
-
-/**
- * Fetch audit events for user (P1 data only)
- *
- * Returns minimal audit event info (no metadata to avoid P2 leakage)
- */
-async function fetchAuditEvents(
-  tenantId: string,
-  userId: string
-): Promise<ExportAuditEvent[]> {
-  // Query audit_events table (P1 data only)
-  // Note: DB schema uses event_type, created_at (LOT 1 migration)
-  const res = await pool.query(
-    `SELECT id, event_type, created_at
-     FROM audit_events
-     WHERE tenant_id = $1 AND actor_id = $2
-     ORDER BY created_at DESC
-     LIMIT 1000`,
-    [tenantId, userId]
-  );
-
-  return res.rows.map((row) => ({
-    id: row.id,
-    eventName: row.event_type,
-    occurredAt: new Date(row.created_at),
-    actorScope: "TENANT", // Simplified: assume TENANT scope for user events
-  }));
 }

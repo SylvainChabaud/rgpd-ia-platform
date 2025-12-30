@@ -43,7 +43,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
       );
 
       // WHEN: Processing request through middleware
-      const response = middleware(httpRequest);
+      middleware(httpRequest);
 
       // THEN: Should either:
       // 1. Redirect to HTTPS (301/302)
@@ -304,7 +304,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
         "https://example.com/api/health"
       );
 
-      const response = middleware(httpsRequest);
+      middleware(httpsRequest);
 
       // THEN: Should eventually include HSTS header (future enhancement)
       // Strict-Transport-Security: max-age=31536000; includeSubDomains

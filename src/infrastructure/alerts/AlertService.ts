@@ -14,7 +14,6 @@
 import type {
   AlertService,
   Alert,
-  AlertSeverity,
 } from "@/app/ports/AlertService";
 import { logEvent, logError } from "@/shared/logger";
 

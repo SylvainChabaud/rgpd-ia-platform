@@ -36,7 +36,7 @@ export class PgAuditEventReader implements AuditEventReader {
 
     // Filter by event type
     if (eventType) {
-      whereClauses.push(`event_name = $${paramIndex++}`);
+      whereClauses.push(`event_type = $${paramIndex++}`);
       values.push(eventType);
     }
 
@@ -47,7 +47,7 @@ export class PgAuditEventReader implements AuditEventReader {
     values.push(limit, offset);
 
     const res = await pool.query(
-      `SELECT id, event_name, actor_id, tenant_id, target_id, created_at
+      `SELECT id, event_type, actor_id, tenant_id, target_id, created_at
        FROM audit_events
        ${whereClause}
        ORDER BY created_at DESC
@@ -57,7 +57,32 @@ export class PgAuditEventReader implements AuditEventReader {
 
     return res.rows.map(row => ({
       id: row.id,
-      eventType: row.event_name,
+      eventType: row.event_type,
+      actorId: row.actor_id,
+      tenantId: row.tenant_id,
+      targetId: row.target_id,
+      createdAt: new Date(row.created_at),
+    }));
+  }
+
+  async findByUser(tenantId: string, userId: string, limit = 1000): Promise<AuditEventRecord[]> {
+    // BLOCKER: validate tenantId is provided (RGPD isolation)
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for audit event queries');
+    }
+
+    const res = await pool.query(
+      `SELECT id, event_type, actor_id, tenant_id, target_id, created_at
+       FROM audit_events
+       WHERE tenant_id = $1 AND actor_id = $2
+       ORDER BY created_at DESC
+       LIMIT $3`,
+      [tenantId, userId, limit]
+    );
+
+    return res.rows.map(row => ({
+      id: row.id,
+      eventType: row.event_type,
       actorId: row.actor_id,
       tenantId: row.tenant_id,
       targetId: row.target_id,

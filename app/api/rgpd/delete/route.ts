@@ -38,6 +38,9 @@ export const POST = withLogging(
           const result = await deleteUserData(
             new PgRgpdRequestRepo(),
             new PgAuditEventWriter(),
+            new PgUserRepo(),
+            new PgConsentRepo(),
+            new PgAiJobRepo(),
             {
               tenantId: context.tenantId!,
               userId: context.userId,

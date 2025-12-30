@@ -28,7 +28,7 @@ export type LogEventInput = Omit<LogEvent, "at">;
 type LogSink = (level: LogLevel, entry: LogEvent) => void;
 
 const defaultSink: LogSink = (level, entry) => {
-  // eslint-disable-next-line no-console
+   
   console[level](JSON.stringify(entry));
 };
 

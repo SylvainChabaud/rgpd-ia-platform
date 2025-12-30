@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractContext, isPlatformAdmin } from '@/lib/requestContext';
 import { forbiddenError } from '@/lib/errorResponse';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 /**
  * RBAC middleware factory
@@ -118,7 +119,7 @@ export function withTenantAdmin<T extends NextHandler>(
       );
     }
 
-    if (ctx.scope !== 'TENANT') {
+    if (ctx.scope !== ACTOR_SCOPE.TENANT) {
       return NextResponse.json(
         forbiddenError('Tenant scope required'),
         { status: 403 }

@@ -12,6 +12,7 @@ import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import { systemContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 const InputSchema = z.object({
   email: z.email(),
@@ -66,7 +67,7 @@ export class CreatePlatformSuperAdminUseCase {
     });
 
     logEvent("bootstrap.superadmin.created", undefined, {
-      actorScope: "SYSTEM",
+      actorScope: ACTOR_SCOPE.SYSTEM,
       targetId: id,
     });
 

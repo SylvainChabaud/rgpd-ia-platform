@@ -14,6 +14,7 @@ import type { UserRepo } from '@/app/ports/UserRepo';
 import type { PasswordHasher } from '@/app/ports/PasswordHasher';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { createHash } from 'crypto';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 export interface CreateUserInput {
   tenantId: string;
@@ -76,7 +77,7 @@ export async function createUser(
     emailHash,
     displayName,
     passwordHash,
-    scope: 'TENANT', // Users created via API are always TENANT-scoped
+    scope: ACTOR_SCOPE.TENANT, // Users created via API are always TENANT-scoped
     role,
   });
 
@@ -84,7 +85,7 @@ export async function createUser(
   await auditEventWriter.write({
     id: newId(),
     eventName: 'user.created',
-    actorScope: 'TENANT',
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId,
     tenantId,
     targetId: userId,

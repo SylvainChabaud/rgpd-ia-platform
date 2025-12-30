@@ -17,9 +17,11 @@
 
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
+import { PgUserRepo } from "@/infrastructure/repositories/PgUserRepo";
 import { PgConsentRepo } from "@/infrastructure/repositories/PgConsentRepo";
 import { PgAiJobRepo } from "@/infrastructure/repositories/PgAiJobRepo";
 import { PgRgpdRequestRepo } from "@/infrastructure/repositories/PgRgpdRequestRepo";
+import { PgAuditEventReader } from "@/infrastructure/audit/PgAuditEventReader";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
 import { deleteUserData } from "@/app/usecases/rgpd/deleteUserData";
 import { purgeUserData } from "@/app/usecases/rgpd/purgeUserData";
@@ -112,9 +114,11 @@ afterAll(async () => {
 });
 
 describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
+  const userRepo = new PgUserRepo();
   const consentRepo = new PgConsentRepo();
   const aiJobRepo = new PgAiJobRepo();
   const rgpdRequestRepo = new PgRgpdRequestRepo();
+  const auditEventReader = new PgAuditEventReader();
   const auditWriter = new InMemoryAuditEventWriter();
 
   test("BLOCKER: Soft delete makes data immediately inaccessible", async () => {
@@ -132,10 +136,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // WHEN: User A requests deletion
-    const result = await deleteUserData(rgpdRequestRepo, auditWriter, {
-      tenantId: TENANT_A_ID,
-      userId: USER_A_ID,
-    });
+    const result = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
+        tenantId: TENANT_A_ID,
+        userId: USER_A_ID,
+      }
+    );
 
     // THEN: Deletion request created
     expect(result.requestId).toBeDefined();
@@ -186,10 +197,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     // WHEN: Attempt to delete User B with wrong tenant (Tenant A)
     // THEN: Should fail or not affect User B
     await expect(
-      deleteUserData(rgpdRequestRepo, auditWriter, {
-        tenantId: TENANT_A_ID,
-        userId: USER_B_ID,
-      })
+      deleteUserData(
+        rgpdRequestRepo,
+        auditWriter,
+        userRepo,
+        consentRepo,
+        aiJobRepo,
+        {
+          tenantId: TENANT_A_ID,
+          userId: USER_B_ID,
+        }
+      )
     ).rejects.toThrow(/not found/i);
 
     // VERIFY: User B still exists and not deleted
@@ -235,10 +253,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // WHEN: Request deletion (soft delete)
-    const deleteResult = await deleteUserData(rgpdRequestRepo, auditWriter, {
-      tenantId: TENANT_A_ID,
-      userId: freshUserId,
-    });
+    const deleteResult = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
+        tenantId: TENANT_A_ID,
+        userId: freshUserId,
+      }
+    );
 
     // HACK: Manually set scheduledPurgeAt to past (simulate retention period passed)
     await withTenantContext(pool, TENANT_A_ID, async (client) => {
@@ -251,9 +276,16 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // WHEN: Execute purge
-    const purgeResult = await purgeUserData(rgpdRequestRepo, auditWriter, {
-      requestId: deleteResult.requestId,
-    });
+    const purgeResult = await purgeUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
+        requestId: deleteResult.requestId,
+      }
+    );
 
     // THEN: Records deleted
     expect(purgeResult.deletedRecords.users).toBe(1);
@@ -327,6 +359,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
       consentRepo,
       aiJobRepo,
       auditWriter,
+      auditEventReader,
       {
         tenantId: TENANT_A_ID,
         userId: exportUserId,
@@ -341,7 +374,13 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     expect(existsSync(exportFile)).toBe(true);
 
     // WHEN: Request deletion
-    const deleteResult = await deleteUserData(rgpdRequestRepo, auditWriter, {
+    const deleteResult = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
       tenantId: TENANT_A_ID,
       userId: exportUserId,
     });
@@ -357,9 +396,16 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // WHEN: Execute purge
-    const purgeResult = await purgeUserData(rgpdRequestRepo, auditWriter, {
-      requestId: deleteResult.requestId,
-    });
+    const purgeResult = await purgeUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
+        requestId: deleteResult.requestId,
+      }
+    );
 
     // THEN: Export file deleted (crypto-shredding)
     expect(purgeResult.deletedRecords.exports).toBeGreaterThan(0);
@@ -394,6 +440,9 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     const deleteResult = await deleteUserData(
       rgpdRequestRepo,
       freshAuditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
       {
         tenantId: TENANT_A_ID,
         userId: auditUserId,
@@ -424,7 +473,13 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     const freshAuditWriter2 = new InMemoryAuditEventWriter();
-    await purgeUserData(rgpdRequestRepo, freshAuditWriter2, {
+    await purgeUserData(
+      rgpdRequestRepo,
+      freshAuditWriter2,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
       requestId: deleteResult.requestId,
     });
 
@@ -456,12 +511,24 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // WHEN: Request deletion twice
-    const result1 = await deleteUserData(rgpdRequestRepo, auditWriter, {
+    const result1 = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
       tenantId: TENANT_A_ID,
       userId: idempotentUserId,
     });
 
-    const result2 = await deleteUserData(rgpdRequestRepo, auditWriter, {
+    const result2 = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
       tenantId: TENANT_A_ID,
       userId: idempotentUserId,
     });
@@ -502,7 +569,13 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
       );
     });
 
-    const deleteResult = await deleteUserData(rgpdRequestRepo, auditWriter, {
+    const deleteResult = await deleteUserData(
+      rgpdRequestRepo,
+      auditWriter,
+      userRepo,
+      consentRepo,
+      aiJobRepo,
+      {
       tenantId: TENANT_A_ID,
       userId: recentUserId,
     });
@@ -510,9 +583,16 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     // WHEN: Attempt to purge IMMEDIATELY (retention period not passed)
     // THEN: Should fail
     await expect(
-      purgeUserData(rgpdRequestRepo, auditWriter, {
-        requestId: deleteResult.requestId,
-      })
+      purgeUserData(
+        rgpdRequestRepo,
+        auditWriter,
+        userRepo,
+        consentRepo,
+        aiJobRepo,
+        {
+          requestId: deleteResult.requestId,
+        }
+      )
     ).rejects.toThrow(/not ready for purge/i);
 
     // VERIFY: User still exists (soft deleted but not purged)

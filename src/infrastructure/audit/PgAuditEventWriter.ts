@@ -18,16 +18,14 @@ export class PgAuditEventWriter implements AuditEventWriter {
     }
 
     await pool.query(
-      `INSERT INTO audit_events (id, event_name, actor_scope, actor_id, tenant_id, target_id, metadata)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      `INSERT INTO audit_events (id, event_type, actor_id, tenant_id, target_id)
+       VALUES ($1,$2,$3,$4,$5)`,
       [
         e.id,
         e.eventName,
-        e.actorScope,
         e.actorId ?? null,
         e.tenantId ?? null,
         e.targetId ?? null,
-        e.metadata ? JSON.stringify(e.metadata) : null,
       ]
     );
   }

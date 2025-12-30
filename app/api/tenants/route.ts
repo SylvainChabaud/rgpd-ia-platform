@@ -23,6 +23,7 @@ import { internalError, validationError, conflictError } from '@/lib/errorRespon
 import { validateBody, CreateTenantSchema, PaginationSchema, validateQuery } from '@/lib/validation';
 import { newId } from '@/shared/ids';
 import { ZodError } from 'zod';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 /**
  * GET /api/tenants - List all tenants (PLATFORM admin only)
@@ -112,7 +113,7 @@ export const POST = withLogging(
           await new PgAuditEventWriter().write({
             id: newId(),
             eventName: 'tenant.created',
-            actorScope: 'PLATFORM',
+            actorScope: ACTOR_SCOPE.PLATFORM,
             actorId: context.userId,
             tenantId: undefined,
             targetId: tenantId,

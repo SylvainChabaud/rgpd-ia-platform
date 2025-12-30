@@ -20,6 +20,7 @@ import type { PasswordHasher } from '@/app/ports/PasswordHasher';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
 import { randomUUID } from 'crypto';
+import { ACTOR_SCOPE, type UserScope } from '@/shared/actorScope';
 
 export type AuthenticateUserInput = {
   email: string;
@@ -29,7 +30,7 @@ export type AuthenticateUserInput = {
 export type AuthenticateUserOutput = {
   userId: string;
   tenantId: string | null;
-  scope: 'PLATFORM' | 'TENANT';
+  scope: UserScope;
   role: string;
   displayName: string;
 };
@@ -58,7 +59,7 @@ export async function authenticateUser(
     await emitAuditEvent(auditWriter, {
       id: randomUUID(),
       eventName: 'auth.login.failed',
-      actorScope: 'PLATFORM',
+      actorScope: ACTOR_SCOPE.PLATFORM,
       actorId: undefined,
       tenantId: undefined,
       metadata: {

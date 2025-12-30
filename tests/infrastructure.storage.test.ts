@@ -21,7 +21,7 @@ import {
   cleanupExpiredExports,
 } from "@/infrastructure/storage/ExportStorage";
 import type { ExportMetadata } from "@/domain/rgpd/ExportBundle";
-import { existsSync, unlinkSync, rmdirSync } from "fs";
+import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
 const TEST_EXPORT_DIR = "./data/exports";

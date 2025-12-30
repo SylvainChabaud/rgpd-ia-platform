@@ -202,7 +202,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
 
   test("BLOCKER: no service exposes database port 5432", () => {
     // Verify NO service exposes PostgreSQL default port
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       if (service.ports) {
         const exposedPorts = Array.isArray(service.ports)
           ? service.ports
@@ -224,7 +224,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
 
   test("BLOCKER: no service exposes Ollama port 11434", () => {
     // Verify NO service exposes Ollama default port
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       if (service.ports) {
         const exposedPorts = Array.isArray(service.ports)
           ? service.ports
@@ -241,14 +241,14 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
   });
 
   test("BLOCKER: all services have restart policy (resilience)", () => {
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       expect(service.restart).toBeDefined();
       expect(service.restart).toBe("unless-stopped");
     }
   });
 
   test("BLOCKER: all services have healthchecks (monitoring)", () => {
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       expect(service.healthcheck).toBeDefined();
       expect(service.healthcheck?.test).toBeDefined();
       expect(service.healthcheck?.interval).toBeDefined();
@@ -283,7 +283,7 @@ describe("LOT 6.0 BLOCKER: Docker Network Isolation", () => {
     let totalExposedPorts = 0;
     const exposedPorts: string[] = [];
 
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       if (service.ports) {
         const ports = Array.isArray(service.ports)
           ? service.ports
@@ -309,7 +309,7 @@ describe("LOT 6.0 SECURITY: Docker Compose Validation", () => {
   });
 
   test("SECURITY: no hardcoded passwords in environment", () => {
-    for (const [serviceName, service] of Object.entries(config.services)) {
+    for (const [, service] of Object.entries(config.services)) {
       if (service.environment) {
         const env = service.environment;
 
@@ -374,7 +374,7 @@ describe("LOT 6.0 SECURITY: Docker Compose Validation", () => {
   test("SECURITY: all secrets use external files (not inline)", () => {
     expect(config.secrets).toBeDefined();
 
-    for (const [secretName, secretConfig] of Object.entries(config.secrets ?? {})) {
+    for (const [, secretConfig] of Object.entries(config.secrets ?? {})) {
       expect(secretConfig?.file).toBeDefined();
 
       // Secret files must be in ./secrets/ directory

@@ -10,6 +10,7 @@ import {
   deleteExportMetadata,
 } from "@/infrastructure/storage/ExportStorage";
 import { EXPORT_MAX_DOWNLOADS } from "@/domain/rgpd/ExportBundle";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
  * Download Export use-case
@@ -84,7 +85,7 @@ export async function downloadExport(
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: "rgpd.export.downloaded",
-    actorScope: "TENANT",
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId: requestingUserId,
     tenantId: requestingTenantId,
     metadata: {

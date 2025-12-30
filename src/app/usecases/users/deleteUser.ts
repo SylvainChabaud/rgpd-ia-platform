@@ -11,6 +11,7 @@
 import type { UserRepo } from '@/app/ports/UserRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { newId } from '@/shared/ids';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 export interface DeleteUserInput {
   tenantId: string;
@@ -61,7 +62,7 @@ export async function deleteUser(
   await auditEventWriter.write({
     id: newId(),
     eventName: 'user.deleted',
-    actorScope: 'TENANT',
+    actorScope: ACTOR_SCOPE.TENANT,
     actorId,
     tenantId,
     targetId: userId,

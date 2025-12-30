@@ -23,6 +23,7 @@ import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
 import { signJwt } from "@/lib/jwt";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 // Check if E2E tests should be skipped
 const SKIP_E2E = process.env.TEST_SKIP_E2E === "true";
@@ -45,7 +46,7 @@ function generateToken(
   return signJwt({
     userId,
     tenantId,
-    scope: "TENANT",
+    scope: ACTOR_SCOPE.TENANT,
     role,
   });
 }

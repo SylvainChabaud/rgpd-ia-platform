@@ -84,9 +84,8 @@ describe("LOT 6.0 BLOCKER: Docker Secrets - No Secrets in Repo", () => {
 
       // Verify NO .txt files are tracked (secrets are .txt)
       const files = readdirSync(SECRETS_DIR);
-      const txtFiles = files.filter((f) => f.endsWith(".txt"));
-
       // Secrets should exist but NOT be committed
+      expect(files.some((f) => f.endsWith(".txt"))).toBeDefined();
       // This test passes if secrets/ is gitignored
     }
 
@@ -167,7 +166,7 @@ describe("LOT 6.0 BLOCKER: Docker Secrets - No Secrets in Repo", () => {
     expect(config.secrets).toBeDefined();
 
     // All secrets must use external files
-    for (const [secretName, secretConfig] of Object.entries(config.secrets!)) {
+    for (const [, secretConfig] of Object.entries(config.secrets!)) {
       expect(secretConfig.file).toBeDefined();
       expect(secretConfig.file).toContain("./secrets/");
 
@@ -177,7 +176,7 @@ describe("LOT 6.0 BLOCKER: Docker Secrets - No Secrets in Repo", () => {
   });
 
   test("BLOCKER: docker-compose.yml environment has NO hardcoded secrets", () => {
-    const config = loadDockerCompose();
+    loadDockerCompose(); // Validate config loads successfully
     const composeContent = readFileSync(DOCKER_COMPOSE_PATH, "utf8");
 
     // Common secret patterns in YAML

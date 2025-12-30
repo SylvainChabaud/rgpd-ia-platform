@@ -26,7 +26,20 @@
       "Bash(npm run db:migrate:*)",
       "Bash(npm run:*)",
       "Bash(npx tsx:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(git -C /c/workspace/ia-tools/rgpd-ia-platform/rgpd-ia-platform check-ignore:*)",
+      "Bash(git -C /c/workspace/ia-tools/rgpd-ia-platform/rgpd-ia-platform log --oneline --all --grep=\"password\\\\|secret\\\\|api.key\" -i --max-count=5)",
+      "Bash(npx next lint)",
+      "Bash(export DATABASE_URL:*)",
+      "Bash(export:*)",
+      "Bash(sort:*)",
+      "Bash(python3:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx --yes next lint .)",
+      "Bash(next lint:*)",
+      "Bash(./node_modules/.bin/next lint:*)",
+      "Bash(npx --yes eslint:*)"
     ]
   }
 }

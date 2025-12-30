@@ -6,13 +6,15 @@
  * Used by authentication and user management use-cases
  */
 
+import type { UserScope } from '@/shared/actorScope';
+
 export interface User {
   id: string;
   tenantId: string | null;
   emailHash: string;
   displayName: string;
   passwordHash: string;
-  scope: 'PLATFORM' | 'TENANT';
+  scope: UserScope;
   role: string;
   createdAt: Date;
   deletedAt?: Date | null;
@@ -51,4 +53,25 @@ export interface UserRepo {
    * Soft delete user
    */
   softDeleteUser(userId: string): Promise<void>;
+
+  /**
+   * Soft delete user (tenant-scoped RGPD deletion)
+   * LOT 5.2 - Art. 17 RGPD
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier
+   * @returns Number of rows affected (0 or 1)
+   */
+  softDeleteUserByTenant(tenantId: string, userId: string): Promise<number>;
+
+  /**
+   * Hard delete user (purge after retention period)
+   * LOT 5.2 - Art. 17 RGPD
+   * CRITICAL: Only call after soft delete + retention period
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @param userId - user identifier
+   * @returns Number of rows affected (0 or 1)
+   */
+  hardDeleteUserByTenant(tenantId: string, userId: string): Promise<number>;
 }

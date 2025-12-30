@@ -1,5 +1,4 @@
 import { requireAuth } from "@/app/http/requireAuth";
-import { stubAuthProvider } from "@/app/auth/stubAuthProvider";
 
 const testHandler = requireAuth(async ({ actor }) => {
   return new Response(JSON.stringify({ actorId: actor.actorId }), {

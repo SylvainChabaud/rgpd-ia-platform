@@ -139,4 +139,35 @@ export class PgConsentRepo implements ConsentRepo {
       );
     });
   }
+
+  async softDeleteByUser(tenantId: string, userId: string): Promise<number> {
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for consent soft delete');
+    }
+
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const result = await client.query(
+        `UPDATE consents
+         SET deleted_at = NOW()
+         WHERE tenant_id = $1 AND user_id = $2 AND deleted_at IS NULL`,
+        [tenantId, userId]
+      );
+      return result.rowCount ?? 0;
+    });
+  }
+
+  async hardDeleteByUser(tenantId: string, userId: string): Promise<number> {
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for consent hard delete');
+    }
+
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const result = await client.query(
+        `DELETE FROM consents
+         WHERE tenant_id = $1 AND user_id = $2`,
+        [tenantId, userId]
+      );
+      return result.rowCount ?? 0;
+    });
+  }
 }
