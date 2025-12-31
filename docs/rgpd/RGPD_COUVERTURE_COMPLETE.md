@@ -1,8 +1,8 @@
 # 🛡️ Couverture RGPD Complète — Plateforme IA RGPD Multi-Tenant
 
 > **Document de référence** : Vue d'ensemble de la conformité RGPD de la plateforme
-> **Dernière mise à jour** : 26 décembre 2025
-> **Statut** : FULL RGPD LOCAL (après développement complet des EPICs)
+> **Dernière mise à jour** : 31 décembre 2025
+> **Statut** : ⚙️ EN COURS (~70%) — EPICs 9-13 requis pour FULL RGPD
 
 ---
 
@@ -10,17 +10,31 @@
 
 La plateforme **RGPD-IA** est conçue pour permettre à des entreprises d'utiliser l'Intelligence Artificielle sur leurs documents **en totale conformité avec le Règlement Général sur la Protection des Données (RGPD)**.
 
-### 🏆 Notre niveau de conformité : FULL RGPD LOCAL
+### ⚙️ Notre niveau de conformité actuel : ~70%
 
-| Caractéristique | Statut |
-|-----------------|--------|
-| **Traitement IA 100% local** | ✅ Aucune donnée envoyée à des tiers |
-| **Aucun transfert hors UE** | ✅ Données restent sur votre serveur |
-| **Aucun sous-traitant IA** | ✅ Pas d'OpenAI, Anthropic, etc. |
-| **Droits utilisateurs complets** | ✅ Accès, export, effacement, opposition |
-| **Consentement explicite** | ✅ Opt-in obligatoire avant tout traitement IA |
-| **Isolation des données** | ✅ Chaque entreprise totalement isolée |
-| **Traçabilité complète** | ✅ Audit trail de toutes les actions |
+| Caractéristique | Statut | État réel |
+|-----------------|--------|-----------|
+| **Traitement IA 100% local** | ✅ | Aucune donnée envoyée à des tiers |
+| **Aucun transfert hors UE** | ✅ | Données restent sur votre serveur |
+| **Aucun sous-traitant IA** | ✅ | Pas d'OpenAI, Anthropic, etc. |
+| **Droits fondamentaux** | ✅ | Accès (15), Export (20), Effacement (17) |
+| **Consentement explicite** | ✅ | Opt-in obligatoire avant tout traitement IA |
+| **Isolation des données** | ✅ | RLS PostgreSQL — 100% isolation |
+| **Traçabilité complète** | ✅ | Audit trail de toutes les actions |
+| **Art. 18 — Limitation** | ❌ | Non implémenté (LOT 10.6) |
+| **Art. 21 — Opposition** | ❌ | Non implémenté (LOT 10.6) |
+| **Art. 22 — Révision humaine IA** | ❌ | 🔴 Non implémenté (LOT 10.6) — **CRITIQUE** |
+| **Art. 33-34 — Violations** | ❌ | 🔴 Non implémenté (EPIC 9) — **BLOQUANT** |
+| **ePrivacy — Cookies** | ❌ | Non implémenté (LOT 10.3) — **BLOQUANT** |
+
+### 🔴 Gaps bloquants pour production
+
+| Gap | Article | Risque | EPIC/LOT |
+|-----|---------|--------|----------|
+| Notification CNIL 72h | Art. 33 | ⛔ Amende | EPIC 9 |
+| Cookie consent banner | ePrivacy | ⛔ Amende | LOT 10.3 |
+| Révision humaine décisions IA | Art. 22 | ⛔ Non-conformité IA | LOT 10.6 |
+| Documents légaux publiés | Art. 12-14 | ⚠️ Information | LOT 10.0-10.2 |
 
 ---
 
@@ -43,17 +57,17 @@ Cette matrice montre comment chaque article du RGPD est couvert par les différe
 
 ### Droits des personnes (Art. 12-22)
 
-| Article | Droit | Description | Implémentation | EPIC |
-|---------|-------|-------------|----------------|------|
-| **Art. 12** | Transparence | Communication claire et accessible | Langage simple dans toutes les interfaces | EPIC 10-13 |
-| **Art. 13-14** | Information | Informer sur le traitement des données | Politique de confidentialité, popups | EPIC 10 |
-| **Art. 15** | Accès | Obtenir copie de ses données | Export RGPD (bundle chiffré) | LOT 5.1, EPIC 13 |
-| **Art. 16** | Rectification | Corriger ses données | Édition profil utilisateur | EPIC 12, 13 |
-| **Art. 17** | Effacement | "Droit à l'oubli" | Suppression compte + données | LOT 5.2, EPIC 13 |
-| **Art. 18** | Limitation | Suspendre le traitement | Bouton "Suspendre mes données" | EPIC 10 |
-| **Art. 20** | Portabilité | Récupérer ses données (format standard) | Export JSON/CSV | LOT 5.1, EPIC 13 |
-| **Art. 21** | Opposition | S'opposer au traitement | Formulaire opposition + suspension | EPIC 10 |
-| **Art. 22** | Décisions automatisées | Contester une décision IA | Demande révision humaine | EPIC 10 |
+| Article | Droit | Description | Implémentation | EPIC | Statut |
+|---------|-------|-------------|----------------|------|--------|
+| **Art. 12** | Transparence | Communication claire et accessible | Langage simple dans toutes les interfaces | EPIC 10-13 | ⚙️ Partiel |
+| **Art. 13-14** | Information | Informer sur le traitement des données | ❌ Documents non créés | LOT 10.0-10.2 | ❌ |
+| **Art. 15** | Accès | Obtenir copie de ses données | ✅ `GET /api/rgpd/export` | LOT 5.1 | ✅ |
+| **Art. 16** | Rectification | Corriger ses données | ✅ API users update | EPIC 12, 13 | ✅ |
+| **Art. 17** | Effacement | "Droit à l'oubli" | ✅ `DELETE /api/rgpd/delete` | LOT 5.2 | ✅ |
+| **Art. 18** | Limitation | Suspendre le traitement | ❌ Non implémenté | LOT 10.6 | ❌ |
+| **Art. 20** | Portabilité | Récupérer ses données (format standard) | ✅ Export JSON/CSV chiffré | LOT 5.1 | ✅ |
+| **Art. 21** | Opposition | S'opposer au traitement | ❌ Non implémenté | LOT 10.6 | ❌ |
+| **Art. 22** | Décisions automatisées | Contester une décision IA | ❌ **Non implémenté — 🔴 CRITIQUE** | LOT 10.6 | ❌ |
 
 ### Responsabilités (Art. 24-32)
 
@@ -66,10 +80,12 @@ Cette matrice montre comment chaque article du RGPD est couvert par les différe
 
 ### Violations de données (Art. 33-34)
 
-| Article | Obligation | Description | Implémentation | EPIC |
-|---------|------------|-------------|----------------|------|
-| **Art. 33** | Notification autorité | Informer la CNIL sous 72h | Runbook incident + workflow | EPIC 9 |
-| **Art. 34** | Notification personnes | Informer les utilisateurs si risque élevé | Email automatique + registre | EPIC 9 |
+| Article | Obligation | Description | Implémentation | EPIC | Statut |
+|---------|------------|-------------|----------------|------|--------|
+| **Art. 33** | Notification autorité | Informer la CNIL sous 72h | ❌ **Non implémenté — 🔴 BLOQUANT** | EPIC 9 | ❌ |
+| **Art. 34** | Notification personnes | Informer les utilisateurs si risque élevé | ❌ **Non implémenté — 🔴 BLOQUANT** | EPIC 9 | ❌ |
+
+> ⚠️ **ATTENTION** : Sans EPIC 9, la plateforme ne peut pas être mise en production car elle ne serait pas conforme en cas de violation de données.
 
 ### Analyse d'impact (Art. 35)
 
@@ -79,43 +95,45 @@ Cette matrice montre comment chaque article du RGPD est couvert par les différe
 
 ### Cookies et vie privée (Directive ePrivacy)
 
-| Exigence | Description | Implémentation | EPIC |
-|----------|-------------|----------------|------|
-| **Consentement cookies** | Opt-in avant dépôt cookies non-essentiels | Cookie banner + gestion catégories | EPIC 10 |
-| **Anonymisation IP** | IP = donnée personnelle | Anonymisation après 7 jours | EPIC 8 |
+| Exigence | Description | Implémentation | EPIC | Statut |
+|----------|-------------|----------------|------|--------|
+| **Consentement cookies** | Opt-in avant dépôt cookies non-essentiels | ❌ **Non implémenté — 🔴 BLOQUANT** | LOT 10.3 | ❌ |
+| **Anonymisation IP** | IP = donnée personnelle | ❌ Non implémenté | LOT 8.1 | ❌ |
+
+> ⚠️ **ATTENTION** : Sans cookie banner, la plateforme ne peut pas être mise en production conformément à la directive ePrivacy.
 
 ---
 
 ## 📊 Vue synthétique par EPIC
 
-### EPICs Backend (Fondations RGPD)
+### EPICs Backend (Fondations RGPD) — ✅ IMPLÉMENTÉS
 
-| EPIC | Nom | Articles couverts | Fonctionnalités clés |
-|------|-----|-------------------|----------------------|
-| **LOT 1** | Fondations | Art. 5, 25, 32 | Isolation tenant, auth, audit trail |
-| **LOT 2** | Infrastructure | Art. 32 | Sécurisation serveur, Docker, backups |
-| **LOT 3** | Gateway LLM | Art. 5, 25 | IA locale, stateless, pas de stockage |
-| **LOT 4.0** | Stockage RGPD | Art. 5, 30 | Tables consents, ai_jobs (métadonnées) |
-| **LOT 4.1** | Purge | Art. 5(e) | Rétention 90 jours, suppression auto |
-| **LOT 5.0** | Consentements | Art. 6, 7 | Opt-in obligatoire par purpose |
-| **LOT 5.1** | Export | Art. 15, 20 | Bundle chiffré, téléchargement sécurisé |
-| **LOT 5.2** | Effacement | Art. 17 | Suppression complète, audit |
+| EPIC | Nom | Articles couverts | Fonctionnalités clés | Statut |
+|------|-----|-------------------|----------------------|--------|
+| **LOT 1** | Fondations | Art. 5, 25, 32 | Isolation tenant, auth, audit trail | ✅ |
+| **LOT 2** | Infrastructure | Art. 32 | Sécurisation serveur, Docker, backups | ✅ |
+| **LOT 3** | Gateway LLM | Art. 5, 25 | IA locale, stateless, pas de stockage | ✅ |
+| **LOT 4.0** | Stockage RGPD | Art. 5, 30 | Tables consents, ai_jobs (métadonnées) | ✅ |
+| **LOT 4.1** | Purge | Art. 5(e) | Rétention 90 jours, suppression auto | ✅ |
+| **LOT 5.0** | Consentements | Art. 6, 7 | Opt-in obligatoire par purpose | ✅ |
+| **LOT 5.1** | Export | Art. 15, 20 | Bundle chiffré, téléchargement sécurisé | ✅ |
+| **LOT 5.2** | Effacement | Art. 17 | Suppression complète, audit | ✅ |
 
-### EPICs Sécurité & Conformité
+### EPICs Sécurité & Conformité — ⚙️ PARTIELLEMENT IMPLÉMENTÉS
 
-| EPIC | Nom | Articles couverts | Fonctionnalités clés |
-|------|-----|-------------------|----------------------|
-| **EPIC 8** | Anonymisation | Art. 5, 32, ePrivacy | Anonymisation IP, scan PII logs |
-| **EPIC 9** | Incidents | Art. 33, 34 | Runbook violations, notifications CNIL |
-| **EPIC 10** | Documents légaux | Art. 13-14, 18, 21, 22, 30, 35 | Politique confidentialité, CGU, DPIA |
+| EPIC | Nom | Articles couverts | Fonctionnalités clés | Statut |
+|------|-----|-------------------|----------------------|--------|
+| **EPIC 8** | Anonymisation | Art. 5, 32, ePrivacy | ⚙️ Scan PII logs (IP anonymisation pending) | ⚙️ Partiel |
+| **EPIC 9** | Incidents | Art. 33, 34 | ❌ Runbook + workflow non créés | ❌ |
+| **EPIC 10** | Documents légaux | Art. 13-14, 18, 21, 22, 30, 35 | ⚙️ DPIA ok, reste non créé | ⚙️ Partiel |
 
-### EPICs Frontend (Interfaces utilisateur)
+### EPICs Frontend (Interfaces utilisateur) — ❌ NON IMPLÉMENTÉS
 
-| EPIC | Nom | Articles couverts | Fonctionnalités clés |
-|------|-----|-------------------|----------------------|
-| **EPIC 11** | Back Office Super Admin | Art. 25, 32 | Gestion tenants, monitoring |
-| **EPIC 12** | Back Office Tenant Admin | Art. 15-20, 25 | Gestion users, consentements, RGPD |
-| **EPIC 13** | Front User | Art. 6, 15-17, 20-22 | IA tools, droits RGPD, consentements |
+| EPIC | Nom | Articles couverts | Fonctionnalités clés | Statut |
+|------|-----|-------------------|----------------------|--------|
+| **EPIC 11** | Back Office Super Admin | Art. 25, 32 | ❌ Gestion tenants, monitoring | ❌ |
+| **EPIC 12** | Back Office Tenant Admin | Art. 15-20, 25 | ❌ Gestion users, consentements, RGPD | ❌ |
+| **EPIC 13** | Front User | Art. 6, 15-17, 20-22 | ❌ IA tools, droits RGPD, consentements | ❌ |
 
 ---
 
@@ -144,12 +162,28 @@ Cette matrice montre comment chaque article du RGPD est couvert par les différe
 
 ## ✅ Certification de conformité
 
-Après développement complet de tous les EPICs, la plateforme peut affirmer :
+### État actuel (31 décembre 2025)
 
-> ### Déclaration de conformité RGPD
+> ### ⚙️ Déclaration de conformité RGPD — EN COURS
 >
-> **La plateforme RGPD-IA est FULL RGPD LOCAL :**
+> **La plateforme RGPD-IA est à ~70% de conformité RGPD :**
 >
+> ✅ Conforme Art. 5 — Principes fondamentaux (Privacy by Design)  
+> ✅ Conforme Art. 6-7 — Base légale (consentements opt-in)  
+> ✅ Conforme Art. 15, 17, 20 — Droits accès, effacement, portabilité  
+> ✅ Conforme Art. 24-25 — Responsabilité et Privacy by Design  
+> ✅ Conforme Art. 30, 35 — Documentation (registre, DPIA)  
+> ✅ Traitement IA 100% local (aucun tiers)  
+>
+> ❌ **Non conforme Art. 33-34** — Workflow violations absent (EPIC 9)  
+> ❌ **Non conforme Art. 22** — Révision humaine décisions IA absente (LOT 10.6)  
+> ❌ **Non conforme ePrivacy** — Cookie banner absent (LOT 10.3)  
+> ❌ **Non conforme Art. 18, 21** — Droits limitation/opposition absents (LOT 10.6)
+
+### 🏆 Objectif FULL RGPD LOCAL
+
+Après développement des EPICs 9-13, la plateforme pourra affirmer :
+
 > ✅ Conforme au Règlement (UE) 2016/679 (RGPD)  
 > ✅ Conforme à la Directive 2002/58/CE (ePrivacy)  
 > ✅ Traitement IA 100% local (aucun tiers)  
@@ -157,6 +191,8 @@ Après développement complet de tous les EPICs, la plateforme peut affirmer :
 > ✅ Droits des personnes garantis (Art. 15-22)  
 > ✅ Documentation complète (Art. 30, 35)  
 > ✅ Procédures incidents (Art. 33-34)
+
+**Estimation pour 100%** : ~28 jours de développement (EPICs 9-13)
 
 ---
 
