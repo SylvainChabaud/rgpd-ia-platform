@@ -251,29 +251,16 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 |------|------------|-----------|-------------------|
 | **EPIC 1-7** | Socle, users, audit, consents, ai_jobs, RGPD | ✅ Oui | — |
 | **LOT 4.0** | RLS (Row-Level Security) + tenant isolation | ✅ Oui | 004-013 ✅ |
-| **EPIC 8** | Anonymisation (PII tokens) | ⚠️ Partiel | `014_anonymisation.sql` |
-| **EPIC 9** | Registre violations (incidents) | ❌ Non | `015_incidents.sql` |
-| **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `016_legal_compliance.sql` |
+| **EPIC 8** | Anonymisation (PII masking) | ✅ Oui | — (implémenté en app) |
+| **EPIC 9** | Registre violations (incidents) | ❌ Non | `014_incidents.sql` |
+| **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `015_legal_compliance.sql` |
 | **EPIC 11** | Back Office Super Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 12** | Back Office Tenant Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
 
 ### Migrations futures prévues
 
-#### `014_anonymisation.sql` (EPIC 8)
-```sql
--- Prévu pour LOT 8.0-8.2
--- Table pour stocker les tokens de pseudonymisation
-CREATE TABLE pii_tokens (
-  id UUID PRIMARY KEY,
-  tenant_id UUID NOT NULL REFERENCES tenants(id),
-  original_hash TEXT NOT NULL,  -- Hash du PII original
-  token TEXT NOT NULL UNIQUE,   -- Token pseudonymisé
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-```
-
-#### `015_incidents.sql` (EPIC 9)
+#### `014_incidents.sql` (EPIC 9)
 ```sql
 -- Prévu pour LOT 9.0
 -- Registre des violations de données (Art. 33-34)
@@ -290,7 +277,7 @@ CREATE TABLE security_incidents (
 );
 ```
 
-#### `016_legal_compliance.sql` (EPIC 10)
+#### `015_legal_compliance.sql` (EPIC 10)
 ```sql
 -- Prévu pour LOT 10.3-10.5
 -- Tracking des cookies et DPIAs

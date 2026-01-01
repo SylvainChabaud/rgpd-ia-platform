@@ -102,6 +102,14 @@ tests/                           ← Implémentation des tests
 | `storage.classification-enforcement.test.ts` | Art. 9 RGPD | ✅ |
 | `runtime.network-egress.test.ts` | §3 EPIC 3 | ✅ |
 | `api.e2e.critical-routes.test.ts` | §3 E2E | ✅ |
+| `rgpd.pii-detection.test.ts` | §3 EPIC 8.0 (35 tests) | ✅ |
+| `rgpd.pii-masking.test.ts` | §3 EPIC 8.0 (25 tests) | ✅ |
+| `rgpd.pii-restoration.test.ts` | §3 EPIC 8.0 (15 tests) | ✅ |
+| `rgpd.pii-integration.test.ts` | §3 EPIC 8 E2E | ✅ |
+| `rgpd.pii-scan-logs.test.ts` | §3 EPIC 8.2 (10 tests) | ✅ |
+| `rgpd.pii-audit.test.ts` | §3 EPIC 8 (10 tests) | ✅ |
+| `rgpd.ip-anonymization.test.ts` | §3 EPIC 8.1 (15 tests) | ✅ |
+| `rgpd.no-cross-tenant.test.ts` | §3 EPIC 4 (isolation, 3 tests) | ✅ |
 
 ---
 
@@ -123,6 +131,13 @@ pnpm audit:full
 
 ---
 
+## 📅 Documents complétés
+
+| Document | EPIC | Statut |
+|----------|------|--------|
+| `RGPD_TESTING.md` | 1-8 | ✅ À jour (EPIC 8 ajouté) |
+| `VERIFICATION_REPORT.md` | — | ✅ Rapport de vérification 2026-01-01 |
+
 ## 📅 Documents futurs (prévus)
 
 | Document | EPIC | Description |
@@ -140,4 +155,10 @@ pnpm audit:full
 | [TASKS.md](../../TASKS.md) | Roadmap par EPIC/LOT |
 | [DATA_CLASSIFICATION.md](../data/DATA_CLASSIFICATION.md) | Classification P0-P3 |
 | [BOUNDARIES.md](../architecture/BOUNDARIES.md) | Règles d'architecture |
+| [docs/rgpd/README.md](../rgpd/README.md) | Navigation conformité RGPD |
 | [scripts/audit/README.md](../../scripts/audit/README.md) | Scripts d'audit |
+
+---
+
+**Dernière mise à jour** : 2026-01-01 (sync EPIC 8)  
+**Couverture tests** : 19 fichiers rgpd*.test.ts + 15+ autres = ~90% couverture RGPD

@@ -229,8 +229,7 @@ En cas de problème de sécurité, nous avons des procédures pour vous préveni
 |----------|----------|---------|
 | [Politique de confidentialité](../legal/POLITIQUE_CONFIDENTIALITE.md) | Tous | Détail complet du traitement des données |
 | [CGU](../legal/CGU.md) | Tous | Conditions d'utilisation |
-| [Couverture RGPD complète](./RGPD_COUVERTURE_COMPLETE.md) | DPO, auditeurs | Matrice articles RGPD ↔ implémentation |
-| [Matrice de conformité](./RGPD_MATRICE_CONFORMITE.md) | DPO, auditeurs | Détail article par article |
+| [Matrice de conformité RGPD](./RGPD_MATRICE_CONFORMITE.md) | DPO, auditeurs | Mapping exhaustif articles RGPD ↔ implémentation |
 | [Registre des traitements](./registre-traitements.md) | DPO | Liste des traitements Art. 30 |
 | [DPIA Gateway LLM](./dpia.md) | DPO | Analyse d'impact de l'IA |
 

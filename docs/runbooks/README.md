@@ -24,6 +24,8 @@ Un **runbook** est une procédure documentée qui décrit **pas à pas** comment
 | [backup-policy.md](backup-policy.md) | LOT 2.0 | Stratégie de sauvegarde et restauration | DevOps, RSSI | 🔴 **RGPD Art. 32** |
 | [security-hardening.md](security-hardening.md) | LOT 2.0 | Checklist sécurité production | DevOps, RSSI | 🔴 **RGPD Art. 32** |
 | [incident.md](incident.md) | LOT 2.0 | Gestion des violations de données | DPO, RSSI, DevOps | 🔴 **RGPD Art. 33-34** |
+| [JOBS_CRON_PII.md](JOBS_CRON_PII.md) | EPIC 4 | Opération des cron jobs PII (anonymisation, scan) | DevOps, SRE | 🔴 **RGPD Art. 5, 32** |
+| [CNIL_COOPERATION.md](CNIL_COOPERATION.md) | EPIC 7 | Procédure de coopération avec la CNIL | DPO, RSSI | 🔴 **RGPD Art. 31** |
 
 ---
 
@@ -127,6 +129,47 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 
 ---
 
+### `JOBS_CRON_PII.md` — Cron jobs PII (anonymisation)
+
+**Quand** :
+- ✅ Configuration initiale des cron jobs
+- ✅ Dépannage des jobs PII
+- ✅ Maintenance et monitoring quotidien
+
+**Qui** : DevOps, SRE, Équipe sécurité
+
+**Contenus clés** :
+- Job 1: Anonymisation des adresses IP (03:00 UTC quotidien)
+- Job 2: Scan des logs PII (04:00 UTC quotidien)
+- Monitoring et alertes
+- Procédure de restauration
+
+**Obligation RGPD** :
+- Art. 5 — Rétention et purge des données
+- Art. 32 — Mesures techniques de sécurité
+
+---
+
+### `CNIL_COOPERATION.md` — Coopération CNIL
+
+**Quand** :
+- ✅ Suite à une demande d'information de la CNIL
+- ✅ Audit/contrôle CNIL
+- ✅ Notification d'incident grave
+
+**Qui** : DPO, RSSI, Direction
+
+**Contenus clés** :
+- Procédure de réception des demandes CNIL
+- Timeline de réponse (obligation 30-45 jours)
+- Préparation de dossiers d'audit
+- Escalade interne
+- Templates de correspondance
+
+**Obligation RGPD** : Art. 31 — Coopération avec l'autorité de contrôle
+
+---
+
 ## 📊 Matrice d'utilisation
 
 | Situation | Runbook à utiliser |
@@ -135,7 +178,9 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 | Premier déploiement production | `bootstrap.md` → `security-hardening.md` |
 | Nouveau client/tenant | `bootstrap.md` |
 | Maintenance planifiée | `backup-policy.md` |
+| Cron job PII à configurer/dépanner | `JOBS_CRON_PII.md` |
 | Incident de sécurité | `incident.md` |
+| Demande d'information CNIL | `CNIL_COOPERATION.md` |
 | Audit CNIL | Tous (preuves de conformité) |
 | Restauration après crash | `backup-policy.md` |
 
@@ -147,7 +192,9 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 
 | Article | Exigence | Runbook |
 |---------|----------|---------|
-| **Art. 32** | Mesures de sécurité techniques | `security-hardening.md`, `backup-policy.md` |
+| **Art. 5** | Rétention et purge des données | `JOBS_CRON_PII.md`, `backup-policy.md` |
+| **Art. 31** | Coopération avec l'autorité de contrôle | `CNIL_COOPERATION.md` |
+| **Art. 32** | Mesures de sécurité techniques | `security-hardening.md`, `backup-policy.md`, `JOBS_CRON_PII.md` |
 | **Art. 33** | Notification CNIL (72h) | `incident.md` |
 | **Art. 34** | Notification aux personnes | `incident.md` |
 

@@ -4,7 +4,7 @@
 >
 > **Usage** : Audit CNIL, due diligence client, certification ISO 27001/27701
 >
-> **Dernière mise à jour** : 2025-12-25
+> **Dernière mise à jour** : 2026-01-01
 > **Maintenu par** : DPO + RSSI
 
 ---
@@ -556,6 +556,6 @@ Pour qu'un LOT soit considéré comme **terminé et conforme**, toutes les condi
 
 ---
 
-**Dernière mise à jour** : 2025-12-25
+**Dernière mise à jour** : 2026-01-01
 **Maintenu par** : DPO + RSSI
 **Version** : 1.0

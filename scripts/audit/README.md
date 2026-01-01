@@ -61,7 +61,7 @@ bash scripts/audit/run-rgpd-tests.sh
 - `audit-artifacts/coverage-rgpd/` — Rapport de couverture tests RGPD
 
 **Tests exécutés** :
-- `tests/rgpd/**/*.test.ts` — Tous les tests dans le dossier `rgpd/`
+- `tests/rgpd/**/*.test.ts` — Tous les tests dans le dossier `rgpd/` (actuellement 19 tests)
 
 **Utilisation CI/CD** :
 ```yaml

@@ -120,7 +120,30 @@ Exemples :
 - Traçabilité entre tests, code et documentation
 
 ---
+### EPIC 8 — Anonymisation & Pseudonymisation (LOT 8.0-8.2)
 
+- Test PII detection (6 types : EMAIL, PHONE, PERSON, SSN, IBAN, CARD) — 35 tests
+- Test PII masking (tokens réversibles, consistance) — 25 tests
+- Test PII restoration (démasquage après LLM) — 15 tests
+- Test PII audit events (tracé sans valeurs PII, métadonnées) — 10 tests
+- Test PII log scanning (détection patterns dans logs existants) — 10 tests
+- Test PII integration E2E (detection → masking → inference → restoration) — E2E
+- Test IP anonymisation (masquage dernier octet après 7 jours) — 15 tests
+- Test cross-tenant isolation (données isolées par tenant) — 3 tests
+
+**Total EPIC 8** : 110+ tests couvrant Art. 32 (pseudonymisation, anonymisation)
+
+Fichiers tests :
+- `rgpd.pii-detection.test.ts`
+- `rgpd.pii-masking.test.ts`
+- `rgpd.pii-restoration.test.ts`
+- `rgpd.pii-audit.test.ts`
+- `rgpd.pii-scan-logs.test.ts`
+- `rgpd.pii-integration.test.ts`
+- `rgpd.ip-anonymization.test.ts`
+- `rgpd.no-cross-tenant.test.ts`
+
+---
 ## 4. Tests critiques transverses (bloquants)
 
 ### A. Test « no‑bypass Gateway LLM »
@@ -145,7 +168,14 @@ Exemples :
 - Vérification d’irréversibilité
 
 ---
+### D. Test « PII masking obligatoire avant LLM »
 
+- Tous les types PII détectés avant envoi à l'IA
+- Masking réversible (tokens UUID) appliqué
+- Audit trail tracé (quoi, où, quand, pas les valeurs)
+- Restauration appliquée en sortie LLM
+
+---
 ## 5. Automatisation CI/CD
 
 ### Gates obligatoires
@@ -199,9 +229,13 @@ Ces preuves alimentent le **dossier d’audit EPIC 7**.
 - DATA_CLASSIFICATION.md
 - LLM_USAGE_POLICY.md
 - BOUNDARIES.md
-- EPIC 1 à EPIC 7
+- EPIC 1 à EPIC 8
+- [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) (état réel vs stratégie)
 
 ---
 
 **Document normatif — une fonctionnalité non testée RGPD est non livrable.**
+
+**Dernière mise à jour** : 2026-01-01 (ajout EPIC 8)  
+**Statut** : ✅ À jour (EPICs 1-8)
 
