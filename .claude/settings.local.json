@@ -39,7 +39,10 @@
       "Bash(npx --yes next lint .)",
       "Bash(next lint:*)",
       "Bash(./node_modules/.bin/next lint:*)",
-      "Bash(npx --yes eslint:*)"
+      "Bash(npx --yes eslint:*)",
+      "Bash(npm install:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }
