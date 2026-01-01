@@ -289,7 +289,9 @@ async list(filters: ListAuditEventsFilters): Promise<AuditEventRecord[]>
 
 **POST /api/rgpd/delete**
 
-**Fichier** : [`src/app/api/rgpd/delete/route.ts`](src/app/api/rgpd/delete/route.ts)
+**Fichier** : [`app/api/rgpd/delete/route.ts`](../../app/api/rgpd/delete/route.ts)
+
+> **Note architecture** : Next.js App Router place le répertoire `app/` à la racine du projet (pas dans `src/`). C'est la convention standard Next.js 13+.
 
 **Middleware** : `withLogging` → `withAuth` → `withCurrentUser`
 
@@ -320,7 +322,7 @@ async list(filters: ListAuditEventsFilters): Promise<AuditEventRecord[]>
 
 **DELETE /api/consents/:id**
 
-**Fichier** : [`src/app/api/consents/[id]/route.ts`](src/app/api/consents/[id]/route.ts)
+**Fichier** : [`app/api/consents/[id]/route.ts`](../../app/api/consents/[id]/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withCurrentUser`
 
@@ -351,7 +353,7 @@ async list(filters: ListAuditEventsFilters): Promise<AuditEventRecord[]>
 
 **POST /api/ai/invoke**
 
-**Fichier** : [`src/app/api/ai/invoke/route.ts`](src/app/api/ai/invoke/route.ts)
+**Fichier** : [`app/api/ai/invoke/route.ts`](../../app/api/ai/invoke/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withRateLimit(50)`
 
@@ -398,7 +400,7 @@ if (!consent || !consent.granted) {
 
 **GET /api/ai/jobs**
 
-**Fichier** : [`src/app/api/ai/jobs/route.ts`](src/app/api/ai/jobs/route.ts)
+**Fichier** : [`app/api/ai/jobs/route.ts`](../../app/api/ai/jobs/route.ts)
 
 **Middleware** : `withLogging` → `withAuth`
 
@@ -440,7 +442,7 @@ if (!consent || !consent.granted) {
 
 **GET /api/ai/jobs/:id**
 
-**Fichier** : [`src/app/api/ai/jobs/[id]/route.ts`](src/app/api/ai/jobs/[id]/route.ts)
+**Fichier** : [`app/api/ai/jobs/[id]/route.ts`](../../app/api/ai/jobs/[id]/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withCurrentUser`
 
@@ -477,7 +479,7 @@ if (!consent || !consent.granted) {
 
 **GET /api/users**
 
-**Fichier** : [`src/app/api/users/route.ts`](src/app/api/users/route.ts)
+**Fichier** : [`app/api/users/route.ts`](../../app/api/users/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withTenantAdmin`
 
@@ -513,7 +515,7 @@ if (!consent || !consent.granted) {
 
 **POST /api/users**
 
-**Fichier** : [`src/app/api/users/route.ts`](src/app/api/users/route.ts)
+**Fichier** : [`app/api/users/route.ts`](../../app/api/users/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withTenantAdmin`
 
@@ -559,7 +561,7 @@ if (!consent || !consent.granted) {
 
 **DELETE /api/users/:id**
 
-**Fichier** : [`src/app/api/users/[id]/route.ts`](src/app/api/users/[id]/route.ts)
+**Fichier** : [`app/api/users/[id]/route.ts`](../../app/api/users/[id]/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withTenantAdmin`
 
@@ -585,8 +587,8 @@ Voir détails dans [LOT5.3_DELIVERY_SUMMARY.md](LOT5.3_DELIVERY_SUMMARY.md).
 **DELETE /api/tenants/:id**
 
 **Fichiers** :
-- [`src/app/api/tenants/route.ts`](src/app/api/tenants/route.ts)
-- [`src/app/api/tenants/[id]/route.ts`](src/app/api/tenants/[id]/route.ts)
+- [`app/api/tenants/route.ts`](../../app/api/tenants/route.ts)
+- [`app/api/tenants/[id]/route.ts`](../../app/api/tenants/[id]/route.ts)
 
 **Middleware** : `withLogging` → `withAuth` → `withPlatformAdmin`
 
@@ -604,7 +606,7 @@ Voir détails dans [LOT5.3_DELIVERY_SUMMARY.md](LOT5.3_DELIVERY_SUMMARY.md).
 
 **GET /api/audit/events**
 
-**Fichier** : [`src/app/api/audit/events/route.ts`](src/app/api/audit/events/route.ts)
+**Fichier** : [`app/api/audit/events/route.ts`](../../app/api/audit/events/route.ts)
 
 **Middleware** : `withLogging` → `withAuth`
 
@@ -858,7 +860,7 @@ return NextResponse.json({
 
 ### Consentement AI
 
-**Vérification obligatoire** : [`src/app/api/ai/invoke/route.ts:48-58`](src/app/api/ai/invoke/route.ts#L48-L58)
+**Vérification obligatoire** : [`app/api/ai/invoke/route.ts:48-58`](../../app/api/ai/invoke/route.ts#L48-L58)
 
 **Code critique** :
 ```typescript
@@ -1393,36 +1395,38 @@ curl -X GET 'http://localhost:3000/api/audit/events?limit=10' \
 ### Arborescence complète
 
 ```
-src/
-├── app/
-│   ├── api/
-│   │   ├── ai/
-│   │   │   ├── invoke/
-│   │   │   │   └── route.ts ✨ NEW
-│   │   │   └── jobs/
-│   │   │       ├── route.ts ✨ NEW
-│   │   │       └── [id]/
-│   │   │           └── route.ts ✨ NEW
-│   │   ├── audit/
-│   │   │   └── events/
-│   │   │       └── route.ts ✨ NEW
-│   │   ├── consents/
-│   │   │   ├── route.ts (existant)
-│   │   │   └── [id]/
-│   │   │       └── route.ts ✨ NEW
-│   │   ├── rgpd/
-│   │   │   ├── export/
-│   │   │   │   └── route.ts (existant)
-│   │   │   └── delete/
-│   │   │       └── route.ts ✨ NEW
-│   │   ├── tenants/
-│   │   │   ├── route.ts ✨ NEW
-│   │   │   └── [id]/
-│   │   │       └── route.ts ✨ NEW
-│   │   └── users/
+app/                           # ⚠️ Next.js App Router (racine, pas dans src/)
+├── api/
+│   ├── ai/
+│   │   ├── invoke/
+│   │   │   └── route.ts ✨ NEW
+│   │   └── jobs/
 │   │       ├── route.ts ✨ NEW
 │   │       └── [id]/
 │   │           └── route.ts ✨ NEW
+│   ├── audit/
+│   │   └── events/
+│   │       └── route.ts ✨ NEW
+│   ├── consents/
+│   │   ├── route.ts (existant)
+│   │   └── [id]/
+│   │       └── route.ts ✨ NEW
+│   ├── rgpd/
+│   │   ├── export/
+│   │   │   └── route.ts (existant)
+│   │   └── delete/
+│   │       └── route.ts ✨ NEW
+│   ├── tenants/
+│   │   ├── route.ts ✨ NEW
+│   │   └── [id]/
+│   │       └── route.ts ✨ NEW
+│   └── users/
+│       ├── route.ts ✨ NEW
+│       └── [id]/
+│           └── route.ts ✨ NEW
+
+src/
+├── app/
 │   ├── ports/
 │   │   ├── AuditEventReader.ts ✨ NEW
 │   │   ├── TenantRepo.ts (modifié)
@@ -1442,9 +1446,9 @@ src/
 │   │   └── PgAuditEventReader.ts ✨ NEW
 │   └── repositories/
 │       └── PgTenantRepo.ts (modifié)
-├── lib/
-│   └── requestContext.ts (modifié)
-└── middleware.ts ✨ NEW (CORS)
+└── middleware.ts ✨ NEW
+
+middleware.ts ✨ NEW (CORS - racine projet)
 
 tests/
 └── helpers/
