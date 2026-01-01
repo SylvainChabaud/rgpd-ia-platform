@@ -2,6 +2,9 @@
 
 > **Procédures opérationnelles** pour l'exploitation et la maintenance de la plateforme.
 
+**Dernière mise à jour** : 2026-01-02
+**Version** : EPIC 9 complet
+
 ---
 
 ## 📋 Qu'est-ce qu'un runbook ?
@@ -22,8 +25,9 @@ Un **runbook** est une procédure documentée qui décrit **pas à pas** comment
 | [bootstrap.md](bootstrap.md) | LOT 1.0 | Initialisation plateforme (SuperAdmin, tenants) | DevOps, Dev | ✅ Essentiel |
 | [docker-dev.md](docker-dev.md) | LOT 2.1 | Environnement de développement Docker | Dev | ✅ Essentiel |
 | [backup-policy.md](backup-policy.md) | LOT 2.0 | Stratégie de sauvegarde et restauration | DevOps, RSSI | 🔴 **RGPD Art. 32** |
+| [BACKUP_RESTORE.md](BACKUP_RESTORE.md) | **LOT 9.2** | Procédures backup/restore complètes (RTO/RPO) | DevOps, SRE | 🔴 **RGPD Art. 32** |
 | [security-hardening.md](security-hardening.md) | LOT 2.0 | Checklist sécurité production | DevOps, RSSI | 🔴 **RGPD Art. 32** |
-| [incident.md](incident.md) | LOT 2.0 | Gestion des violations de données | DPO, RSSI, DevOps | 🔴 **RGPD Art. 33-34** |
+| [incident.md](incident.md) | **LOT 9.0** | Gestion des violations de données (72h CNIL) | DPO, RSSI, DevOps | 🔴 **RGPD Art. 33-34** |
 | [JOBS_CRON_PII.md](JOBS_CRON_PII.md) | EPIC 4 | Opération des cron jobs PII (anonymisation, scan) | DevOps, SRE | 🔴 **RGPD Art. 5, 32** |
 | [CNIL_COOPERATION.md](CNIL_COOPERATION.md) | EPIC 7 | Procédure de coopération avec la CNIL | DPO, RSSI | 🔴 **RGPD Art. 31** |
 
@@ -83,6 +87,39 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 - Procédure de restauration
 
 **Obligation RGPD** : Art. 32 — Mesures techniques garantissant disponibilité et résilience
+
+---
+
+### `BACKUP_RESTORE.md` — Procédures backup/restore (RTO/RPO) ⚠️
+
+**Quand** :
+- 🚨 **Restauration après crash/incident** (urgence)
+- ✅ Test mensuel de restauration (validation RTO/RPO)
+- ✅ Après un incident majeur (post-mortem)
+- ✅ Audit de conformité (preuve de résilience)
+
+**Qui** : DevOps, SRE, RSSI (validation)
+
+**Contenus clés** :
+- Procédure de sauvegarde complète (DB, fichiers, secrets)
+- Procédure de restauration pas à pas
+- Validation RTO < 4h, RPO < 1h
+- Tests de restauration (checklist)
+- Rollback et recovery
+
+**Commandes clés** :
+```bash
+# Backup manuel
+pg_dump -Fc rgpd_platform > backup_$(date +%Y%m%d).dump
+
+# Restauration
+pg_restore -d rgpd_platform backup_20260101.dump
+
+# Vérification intégrité
+pnpm db:verify
+```
+
+**Obligation RGPD** : Art. 32 — Capacité de rétablir la disponibilité et l'accès aux données
 
 ---
 
@@ -179,10 +216,13 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 | Nouveau client/tenant | `bootstrap.md` |
 | Maintenance planifiée | `backup-policy.md` |
 | Cron job PII à configurer/dépanner | `JOBS_CRON_PII.md` |
-| Incident de sécurité | `incident.md` |
+| Incident de sécurité / violation données | `incident.md` → `CNIL_COOPERATION.md` |
 | Demande d'information CNIL | `CNIL_COOPERATION.md` |
 | Audit CNIL | Tous (preuves de conformité) |
-| Restauration après crash | `backup-policy.md` |
+| Restauration après crash | `BACKUP_RESTORE.md` |
+| Test mensuel RTO/RPO | `BACKUP_RESTORE.md` |
+| Violation données détectée (72h) | `incident.md` → `CNIL_COOPERATION.md` |
+| Post-mortem incident | `incident.md` + `BACKUP_RESTORE.md` |
 
 ---
 
@@ -194,7 +234,7 @@ docker compose -f docker-compose.dev.yml down       # Arrêter
 |---------|----------|---------|
 | **Art. 5** | Rétention et purge des données | `JOBS_CRON_PII.md`, `backup-policy.md` |
 | **Art. 31** | Coopération avec l'autorité de contrôle | `CNIL_COOPERATION.md` |
-| **Art. 32** | Mesures de sécurité techniques | `security-hardening.md`, `backup-policy.md`, `JOBS_CRON_PII.md` |
+| **Art. 32** | Mesures de sécurité techniques | `security-hardening.md`, `backup-policy.md`, `BACKUP_RESTORE.md`, `JOBS_CRON_PII.md` |
 | **Art. 33** | Notification CNIL (72h) | `incident.md` |
 | **Art. 34** | Notification aux personnes | `incident.md` |
 
@@ -205,7 +245,9 @@ Ces runbooks constituent des **preuves documentaires** de conformité :
 - ✅ Procédures de sécurité formalisées (Art. 32)
 - ✅ Procédure de notification des violations (Art. 33-34)
 - ✅ Politique de sauvegarde (disponibilité, résilience)
+- ✅ Procédures de restauration testées (RTO/RPO) — **EPIC 9**
 - ✅ Checklist de durcissement (sécurité)
+- ✅ Registre des incidents de sécurité (Art. 33.5) — **EPIC 9**
 
 ---
 

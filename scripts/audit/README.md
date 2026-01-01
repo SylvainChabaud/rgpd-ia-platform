@@ -208,6 +208,9 @@ pnpm audit:full
 # - docs/rgpd/registre-traitements.md
 # - docs/rgpd/dpia.md
 # - docs/runbooks/incident.md
+# - docs/implementation/LOT9.md  ← Nouveau (EPIC 9)
+# - .github/workflows/security-scan.yml  ← Nouveau (EPIC 9.1)
+# - scripts/chaos/run-chaos-tests.sh  ← Nouveau (EPIC 9.2)
 ```
 
 ---

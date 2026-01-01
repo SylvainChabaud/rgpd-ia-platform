@@ -21,6 +21,7 @@
 | **011** | `011_fix_users_platform_policies.sql` | LOT 4.0 | Fix users policies (empty string) |
 | **012** | `012_fix_audit_events_policy.sql` | LOT 4.0 | Fix audit_events SELECT policy |
 | **013** | `013_fix_rgpd_requests_platform_policies.sql` | LOT 5.2 | Fix rgpd_requests pour opérations platform |
+| **014** | `014_incidents.sql` | LOT 9.0 | Registre violations (Art. 33-34) + incident audit log |
 
 ---
 
@@ -252,7 +253,7 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | **EPIC 1-7** | Socle, users, audit, consents, ai_jobs, RGPD | ✅ Oui | — |
 | **LOT 4.0** | RLS (Row-Level Security) + tenant isolation | ✅ Oui | 004-013 ✅ |
 | **EPIC 8** | Anonymisation (PII masking) | ✅ Oui | — (implémenté en app) |
-| **EPIC 9** | Registre violations (incidents) | ❌ Non | `014_incidents.sql` |
+| **EPIC 9** | Registre violations (incidents) | ✅ Oui | `014_incidents.sql` ✅ |
 | **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `015_legal_compliance.sql` |
 | **EPIC 11** | Back Office Super Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 12** | Back Office Tenant Admin | ✅ Oui | — (utilise tables existantes) |
@@ -260,22 +261,24 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 
 ### Migrations futures prévues
 
-#### `014_incidents.sql` (EPIC 9)
-```sql
--- Prévu pour LOT 9.0
--- Registre des violations de données (Art. 33-34)
-CREATE TABLE security_incidents (
-  id UUID PRIMARY KEY,
-  tenant_id UUID REFERENCES tenants(id),  -- NULL = platform-wide
-  severity TEXT NOT NULL CHECK (severity IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
-  type TEXT NOT NULL,
-  description TEXT,
-  detected_at TIMESTAMPTZ NOT NULL,
-  notified_cnil_at TIMESTAMPTZ,
-  resolved_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-```
+#### `014_incidents.sql` (EPIC 9) ✅ IMPLÉMENTÉ
+
+**LOT** : 9.0
+**Description** : Registre des violations de données (Art. 33-34 RGPD)
+
+**Tables créées** :
+- `security_incidents` — Registre principal des incidents
+- `incident_audit_log` — Audit trail immuable des modifications
+
+**Fonctionnalités clés** :
+- 4 niveaux de sévérité (LOW, MEDIUM, HIGH, CRITICAL)
+- 9 types d'incidents (UNAUTHORIZED_ACCESS, CROSS_TENANT_ACCESS, etc.)
+- Calcul automatique deadline CNIL (72h)
+- Tracking notifications CNIL et utilisateurs
+- RLS policies (SUPER_ADMIN, DPO, TENANT_ADMIN)
+- Indexes optimisés (CNIL deadline queries)
+
+**Voir** : `migrations/014_incidents.sql` pour le schéma complet
 
 #### `015_legal_compliance.sql` (EPIC 10)
 ```sql

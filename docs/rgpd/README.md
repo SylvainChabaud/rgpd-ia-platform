@@ -2,10 +2,10 @@
 
 > **Accueil de la documentation RGPD** : Tous les documents permettant de comprendre et vérifier la conformité de la plateforme RGPD-IA aux exigences légales (RGPD, ePrivacy).
 
-**Dernière mise à jour** : 2026-01-01  
-**Version** : 2.0 (consolidée)  
-**Conformité globale** : ⚙️ ~70% (32/45 articles)  
-**Status** : ✅ Production-ready backend | ❌ Frontend + Legal requis
+**Dernière mise à jour** : 2026-01-01
+**Version** : 2.1 (EPIC 9 intégré)
+**Conformité globale** : ⚙️ ~76% (34/45 articles)
+**Status** : ✅ Production-ready backend + Security | ❌ Frontend + Legal requis
 
 ---
 
@@ -217,13 +217,13 @@ Ce document explique en langage simple :
 
 ## 📊 État de la Conformité — Vue Synthétique
 
-### Score Global : ⚙️ ~70%
+### Score Global : ⚙️ ~76%
 
 ```
-✅ Conforme          : 32 articles (60%)
-⚙️  Partiellement    : 4 articles (7%)
-❌ Non conforme      : 7 articles (13%)
-🔵 Non applicable    : ~50 articles (20%)
+✅ Conforme          : 34 articles (64%)
+⚙️  Partiellement    : 2 articles (4%)
+❌ Non conforme      : 5 articles (9%)
+🔵 Non applicable    : ~50 articles (23%)
 ```
 
 ### Articles Conformes ✅
@@ -232,14 +232,14 @@ Ce document explique en langage simple :
 - Art. 15-17, 20 (Droits : accès, rectification, effacement, portabilité)
 - Art. 24-25 (Responsabilité + Privacy by Design)
 - Art. 30 (Registre) — Documenté
-- Art. 32 (Sécurité) — 90% (manque pentest + chaos)
+- Art. 32 (Sécurité) — 100% (pentest + chaos + scanning)
+- Art. 33-34 (Violations) — 100% (notification CNIL 72h + utilisateurs)
 - Art. 35 (DPIA) — Complète
 
 ### Gaps Critiques ❌
 
 | Gap | Critique | Effort | EPIC |
 |-----|----------|--------|------|
-| Art. 33-34 (Violations CNIL 72h) | 🔴 Bloquant prod | 5j | EPIC 9 |
 | ePrivacy (Cookie banner) | 🔴 Bloquant web | 3j | LOT 10.3 |
 | Art. 22 (Révision humaine IA) | 🔴 Critique IA | 3j | LOT 10.6 |
 
@@ -248,7 +248,7 @@ Ce document explique en langage simple :
 - Art. 18 (Limitation) — 2j (LOT 10.6)
 - Art. 21 (Opposition) — 2j (LOT 10.6)
 
-**Total pour 100% conformité** : ~28 jours (4-5 semaines) avec EPICs 9-10
+**Total pour 100% conformité** : ~15 jours (3 semaines) avec EPIC 10
 
 ---
 
@@ -265,8 +265,8 @@ Besoin de vérifier un article spécifique ? Consultez :
 | **Art. 24-25** | Responsabilité + Privacy by Design | RGPD_MATRICE_CONFORMITE.md (section 4) | ✅ 100% |
 | **Art. 28** | Sous-traitant (DPA) | RGPD_MATRICE_CONFORMITE.md (section 4) | ✅ 100% |
 | **Art. 30** | Registre traitements | registre-traitements.md | ✅ 100% |
-| **Art. 32** | Sécurité | RGPD_MATRICE_CONFORMITE.md (section 6) | ⚙️ 90% |
-| **Art. 33-34** | Violations CNIL | RGPD_MATRICE_CONFORMITE.md (section 7) | ❌ 0% |
+| **Art. 32** | Sécurité | RGPD_MATRICE_CONFORMITE.md (section 6) | ✅ 100% |
+| **Art. 33-34** | Violations CNIL | docs/runbooks/incident.md + docs/implementation/LOT9.md | ✅ 100% |
 | **Art. 35** | DPIA | dpia.md | ✅ 100% |
 | **Cookies** | Directive ePrivacy | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ❌ 0% |
 | **Art. 1-99** | Vue exhaustive | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ⚙️ 70% |
@@ -296,25 +296,23 @@ TOTAL                : 252+ tests ✅ (100% passing)
 
 | Phase | Semaines | EPICs | Effort |
 |-------|----------|-------|--------|
-| **Actuellement** | 0 | 1-8 | ✅ Complet |
-| **Phase 1** | 1-2 | 8 (suite) | Anonymisation IP (LOT 8.1) — 2j |
-| **Phase 2** | 2-3 | 9 | Incidents CNIL (5j) + Pentest (3j) |
-| **Phase 3** | 3-4 | 10 | Documents légaux (5j) + Droits RGPD (5j) + Cookies (3j) |
-| **Validation** | 4-5 | 11-13 | Frontend avec tous endpoints — 2-3 semaines |
-| **🎯 TOTAL** | ~5 semaines | 9-13 | **100% RGPD + Production-ready** |
+| **Actuellement** | 0 | 1-9 | ✅ Complet |
+| **Phase 1** | 1-2 | 10 | Documents légaux (5j) + Droits RGPD (5j) + Cookies (3j) |
+| **Phase 2** | 2-4 | 11-13 | Frontend avec tous endpoints — 2-3 semaines |
+| **🎯 TOTAL** | ~4 semaines | 10-13 | **100% RGPD + Production-ready** |
 
 ---
 
 ## ❓ FAQ Rapide
 
 ### Q1 : Puis-je mettre en production maintenant ?
-**R** : Partiellement. Le backend est ✅ 100% conforme. Manquent : cookie banner (3j), workflow violations CNIL (5j), révision humaine IA (3j).
+**R** : Presque. Le backend est ✅ 100% conforme incluant violations CNIL (Art. 33-34). Manquent : cookie banner (3j), révision humaine IA (3j).
 
 ### Q2 : Où vérifier si mon feature respecte le RGPD ?
 **R** : RGPD_MATRICE_CONFORMITE.md → trouvez l'article concerné → consultez "Implémentation" et "Fichier test".
 
-### Q3 : Comment répondre à une demande CNIL ?
-**R** : Voir runbook (pas encore créé — EPIC 9 prévu). Utilisez `registre-traitements.md` + `dpia.md`.
+### Q3 : Comment répondre à une demande CNIL ou incident RGPD ?
+**R** : Voir runbook `docs/runbooks/incident.md` (EPIC 9 ✅ terminé). Utilisez aussi `registre-traitements.md` + `dpia.md`.
 
 ### Q4 : Où sont les documents légaux publics ?
 **R** : Non publiés. En attente EPIC 10 LOT 10.0-10.2. Templates dans `docs/legal/`.

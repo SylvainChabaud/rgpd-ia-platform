@@ -110,6 +110,10 @@ tests/                           ← Implémentation des tests
 | `rgpd.pii-audit.test.ts` | §3 EPIC 8 (10 tests) | ✅ |
 | `rgpd.ip-anonymization.test.ts` | §3 EPIC 8.1 (15 tests) | ✅ |
 | `rgpd.no-cross-tenant.test.ts` | §3 EPIC 4 (isolation, 3 tests) | ✅ |
+| `rgpd.incident-detection.test.ts` | §3 EPIC 9 (20 tests) | ✅ |
+| `rgpd.security-incident.test.ts` | §3 EPIC 9 (20 tests) | ✅ |
+| `chaos.resilience.test.ts` | §3 EPIC 9.2 (20 tests) | ✅ |
+| `security.scanning.test.ts` | §3 EPIC 9.1 | ✅ |
 
 ---
 
@@ -138,11 +142,18 @@ pnpm audit:full
 | `RGPD_TESTING.md` | 1-8 | ✅ À jour (EPIC 8 ajouté) |
 | `VERIFICATION_REPORT.md` | — | ✅ Rapport de vérification 2026-01-01 |
 
+## 📅 Documents implémentés (EPIC 9)
+
+| Document | EPIC | Description | Statut |
+|----------|------|-------------|--------|
+| Tests chaos engineering | EPIC 9.2 | Backup/restore, container recovery, DB exhaustion, network partition | ✅ Implémenté |
+| Tests security scanning | EPIC 9.1 | npm audit, OWASP ZAP, Trivy, dependency review | ✅ Implémenté |
+| Tests incident detection | EPIC 9.0 | Brute force, cross-tenant, mass export, PII logs, backup failure | ✅ Implémenté |
+
 ## 📅 Documents futurs (prévus)
 
 | Document | EPIC | Description |
 |----------|------|-------------|
-| `SECURITY_TESTING.md` | EPIC 9 | Tests de sécurité (pentest, vulnérabilités) |
 | `PERFORMANCE_TESTING.md` | — | Tests de performance LLM |
 | `E2E_TESTING.md` | EPIC 11-13 | Tests E2E des frontends |
 

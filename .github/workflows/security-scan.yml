@@ -1,0 +1,262 @@
+# =============================================================================
+# Security Scanning CI Workflow
+# EPIC 9 — LOT 9.1 — Pentest & Vulnerability Scanning
+#
+# Runs security scans on pull requests and scheduled weekly.
+#
+# RGPD Compliance:
+# - Art. 32: Test régulier sécurité automatisé
+#
+# Triggers:
+# - Pull requests to main/develop
+# - Weekly schedule (Sunday 2:00 AM UTC)
+# - Manual dispatch
+# =============================================================================
+
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Weekly on Sunday at 2:00 AM UTC
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Type of scan to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - npm
+          - zap
+          - trivy
+
+env:
+  NODE_VERSION: "20"
+  FAIL_ON_HIGH: "true"
+
+jobs:
+  # ===========================================================================
+  # NPM AUDIT - Dependency Vulnerabilities
+  # ===========================================================================
+  npm-audit:
+    name: NPM Audit
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'npm' || github.event_name != 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: audit
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          
+          CRITICAL=$(cat npm-audit-report.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat npm-audit-report.json | jq '.metadata.vulnerabilities.high // 0')
+          MODERATE=$(cat npm-audit-report.json | jq '.metadata.vulnerabilities.moderate // 0')
+          LOW=$(cat npm-audit-report.json | jq '.metadata.vulnerabilities.low // 0')
+          
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "moderate=$MODERATE" >> $GITHUB_OUTPUT
+          echo "low=$LOW" >> $GITHUB_OUTPUT
+          
+          echo "## 📦 NPM Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟠 High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟡 Moderate | $MODERATE |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟢 Low | $LOW |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+          retention-days: 30
+
+      - name: Check for high/critical vulnerabilities
+        if: env.FAIL_ON_HIGH == 'true'
+        run: |
+          CRITICAL=${{ steps.audit.outputs.critical }}
+          HIGH=${{ steps.audit.outputs.high }}
+          
+          if [[ $CRITICAL -gt 0 ]] || [[ $HIGH -gt 0 ]]; then
+            echo "❌ Found $CRITICAL critical and $HIGH high vulnerabilities"
+            exit 1
+          fi
+          echo "✅ No high/critical vulnerabilities found"
+
+  # ===========================================================================
+  # OWASP ZAP - Dynamic Application Security Testing
+  # ===========================================================================
+  zap-scan:
+    name: OWASP ZAP Scan
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'zap' || github.event_name != 'workflow_dispatch' }}
+    needs: npm-audit
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: rgpd_platform
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/rgpd_platform
+
+      - name: Start application
+        run: |
+          npm run start &
+          sleep 10
+          curl --retry 5 --retry-delay 5 --retry-connrefused http://localhost:3000/api/health
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/rgpd_platform
+          NODE_ENV: production
+
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: "http://localhost:3000"
+          rules_file_name: "scripts/security/owasp-zap-config.yaml"
+          allow_issue_writing: false
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report
+          path: report_html.html
+          retention-days: 30
+
+  # ===========================================================================
+  # TRIVY - Container Image Vulnerabilities
+  # ===========================================================================
+  trivy-scan:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'trivy' || github.event_name != 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t rgpd-ia-platform:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "rgpd-ia-platform:${{ github.sha }}"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+      - name: Run Trivy and check for critical
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "rgpd-ia-platform:${{ github.sha }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: ${{ env.FAIL_ON_HIGH == 'true' && '1' || '0' }}
+
+  # ===========================================================================
+  # DEPENDENCY REVIEW (for PRs)
+  # ===========================================================================
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+          comment-summary-in-pr: always
+
+  # ===========================================================================
+  # SUMMARY
+  # ===========================================================================
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [npm-audit, zap-scan, trivy-scan]
+    if: always()
+
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: reports
+
+      - name: Generate summary
+        run: |
+          echo "# 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -Iseconds)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| NPM Audit | ${{ needs.npm-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| OWASP ZAP | ${{ needs.zap-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy | ${{ needs.trivy-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## RGPD Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "These security scans support RGPD Art. 32 requirements for regular security testing." >> $GITHUB_STEP_SUMMARY

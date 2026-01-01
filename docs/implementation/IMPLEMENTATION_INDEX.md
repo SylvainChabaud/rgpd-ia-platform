@@ -1,9 +1,9 @@
-# Index des implémentations — EPICs 1-8
+# Index des implémentations — EPICs 1-9
 
 > **Objectif** : Table de correspondance exhaustive entre LOTs (TASKS.md), fichiers implémentés et tests RGPD.
 
 **Dernière mise à jour** : 2026-01-01
-**Status global** : ✅ EPICs 1-8 terminés (100%)
+**Status global** : ✅ EPICs 1-9 terminés (100%)
 
 ---
 
@@ -19,8 +19,9 @@
 | **EPIC 6** | 6.0-6.1 (2 LOTs) | [LOT6.0](LOT6.0_IMPLEMENTATION.md), [LOT6.1](LOT6.1_IMPLEMENTATION.md) | ✅ 100% | - |
 | **EPIC 7** | 7.0-7.1 (2 LOTs) | [LOT7_IMPLEMENTATION.md](LOT7_IMPLEMENTATION.md) | ✅ 100% | - |
 | **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110/110 |
+| **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60/60 |
 
-**Total** : 22 LOTs implémentés, 252+ tests RGPD passing
+**Total** : 25 LOTs implémentés, 312+ tests RGPD passing
 
 ---
 
@@ -384,6 +385,92 @@
 
 ---
 
+## EPIC 9 — Incident Response & Security Hardening
+
+> **RGPD Coverage** : Art. 32 (Sécurité), Art. 33 (Notification CNIL 72h), Art. 34 (Notification personnes)
+
+### LOT 9.0 — Runbook "Incident RGPD" + API Backend
+
+**Document** : [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `SecurityIncident.ts` | Domain | [src/domain/incident/SecurityIncident.ts](../../src/domain/incident/SecurityIncident.ts) | ✅ |
+| `SecurityIncidentRepo.ts` | Port | [src/domain/incident/SecurityIncidentRepo.ts](../../src/domain/incident/SecurityIncidentRepo.ts) | ✅ |
+| `CreateIncidentUseCase.ts` | Use-case | [src/app/usecases/incident/CreateIncidentUseCase.ts](../../src/app/usecases/incident/CreateIncidentUseCase.ts) | ✅ |
+| `DetectIncidentUseCase.ts` | Use-case | [src/app/usecases/incident/DetectIncidentUseCase.ts](../../src/app/usecases/incident/DetectIncidentUseCase.ts) | ✅ |
+| `PgSecurityIncidentRepo.ts` | Repository | [src/infrastructure/repositories/PgSecurityIncidentRepo.ts](../../src/infrastructure/repositories/PgSecurityIncidentRepo.ts) | ✅ |
+| `IncidentAlertService.ts` | Alert | [src/infrastructure/alerts/IncidentAlertService.ts](../../src/infrastructure/alerts/IncidentAlertService.ts) | ✅ |
+| `route.ts` (incidents) | API | [app/api/incidents/route.ts](../../app/api/incidents/route.ts) | ✅ |
+| `route.ts` ([id]) | API | [app/api/incidents/[id]/route.ts](../../app/api/incidents/[id]/route.ts) | ✅ |
+| `route.ts` (stats) | API | [app/api/incidents/stats/route.ts](../../app/api/incidents/stats/route.ts) | ✅ |
+| `route.ts` (pending-cnil) | API | [app/api/incidents/pending-cnil/route.ts](../../app/api/incidents/pending-cnil/route.ts) | ✅ |
+| `014_incidents.sql` | Migration | [migrations/014_incidents.sql](../../migrations/014_incidents.sql) | ✅ |
+| `incident.md` | Runbook | [docs/runbooks/incident.md](../runbooks/incident.md) | ✅ |
+
+**Endpoints API** :
+- `GET /api/incidents` — Liste avec pagination + filters
+- `POST /api/incidents` — Création manuelle incident
+- `GET /api/incidents/:id` — Détails incident
+- `PATCH /api/incidents/:id` — Update + actions (mark_cnil_notified, mark_resolved)
+- `GET /api/incidents/stats` — Statistiques par sévérité/type
+- `GET /api/incidents/pending-cnil` — Incidents en attente notification CNIL
+
+**Business Rules RGPD** :
+- `isCnilNotificationRequired()` — Art. 33 (HIGH/MEDIUM risk, CRITICAL severity)
+- `isUsersNotificationRequired()` — Art. 34 (HIGH risk only)
+- `getCnilDeadline()` — Calcul 72h depuis détection
+- `isCnilDeadlineApproaching()` — Flag < 24h restantes
+
+**Tests** : [tests/rgpd.incident-detection.test.ts](../../tests/rgpd.incident-detection.test.ts) (20+ tests)
+
+---
+
+### LOT 9.1 — Détection automatique violations
+
+**Document** : [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `incidentDetection.ts` | Middleware | [src/middleware/incidentDetection.ts](../../src/middleware/incidentDetection.ts) | ✅ |
+| `FailedLoginTracker.ts` | Security | [src/infrastructure/security/FailedLoginTracker.ts](../../src/infrastructure/security/FailedLoginTracker.ts) | ✅ |
+
+**Types de détection** :
+
+| Type | Seuil | Sévérité | Risque |
+|------|-------|----------|--------|
+| Brute Force | 10 failed logins / 5 min | MEDIUM | LOW |
+| Cross-Tenant | ANY attempt | CRITICAL | HIGH |
+| Mass Export | 10,000 records / 60 min | HIGH | MEDIUM |
+| PII in Logs | ANY detection | HIGH | MEDIUM-HIGH |
+| Backup Failure | 2 consecutive failures | HIGH | MEDIUM |
+
+**Alerting multi-canal** :
+- LOW/MEDIUM → Email (DPO, DevOps)
+- HIGH → Email + Slack
+- CRITICAL → Email + Slack + PagerDuty
+
+**Tests** : [tests/rgpd.incident-usecases.test.ts](../../tests/rgpd.incident-usecases.test.ts) (20+ tests)
+
+---
+
+### LOT 9.2 — Chaos Engineering & Résilience
+
+**Document** : [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `BACKUP_RESTORE.md` | Runbook | [docs/runbooks/BACKUP_RESTORE.md](../runbooks/BACKUP_RESTORE.md) | ✅ |
+| Tests résilience | Tests | [tests/chaos.resilience.test.ts](../../tests/chaos.resilience.test.ts) | ✅ |
+
+**Métriques** :
+- RTO (Recovery Time Objective) : < 4h
+- RPO (Recovery Point Objective) : < 1h
+
+**Tests** : [tests/rgpd.incident-api.test.ts](../../tests/rgpd.incident-api.test.ts) (20+ tests)
+
+---
+
 ## Migrations DB
 
 | Migration | LOT | Description | Status |
@@ -401,8 +488,9 @@
 | 011_fix_users_platform_policies.sql | 6.2 | Fix PLATFORM users RLS | ✅ |
 | 012_fix_audit_events_policy.sql | 6.2 | Fix audit_events RLS | ✅ |
 | 013_fix_rgpd_requests_platform_policies.sql | 6.2 | Fix rgpd_requests RLS | ✅ |
+| 014_incidents.sql | 9.0 | Table security_incidents + audit (Art. 33-34) | ✅ |
 
-> **Note** : Migrations 004-013 font partie de LOT 6.2 (non encore documenté officiellement).
+> **Note** : Migrations 004-013 font partie de LOT 6.2. Migration 014 fait partie de LOT 9.0.
 
 ---
 
@@ -428,8 +516,11 @@
 | http.authz.test.ts | 7 | Authorization (403) |
 | http.tenant-guard.test.ts | 4 | Tenant guard |
 | logging.sentinel.test.ts | ~30 | Logging RGPD-safe |
+| rgpd.incident-detection.test.ts | 20+ | Détection incidents (Art. 33) |
+| rgpd.incident-usecases.test.ts | 20+ | Use cases incidents (Art. 33-34) |
+| rgpd.incident-api.test.ts | 20+ | API incidents (CNIL notification) |
 
-**Total** : ~252 tests RGPD passing
+**Total** : ~312 tests RGPD passing
 
 ---
 
@@ -463,6 +554,14 @@ ls src/infrastructure/logging/logger.ts
 # EPIC 8
 ls src/infrastructure/pii/detector.ts
 ls src/infrastructure/pii/anonymizer.ts
+
+# EPIC 9
+ls src/domain/incident/SecurityIncident.ts
+ls src/app/usecases/incident/CreateIncidentUseCase.ts
+ls src/infrastructure/alerts/IncidentAlertService.ts
+ls src/middleware/incidentDetection.ts
+ls app/api/incidents/route.ts
+ls migrations/014_incidents.sql
 ```
 
 ### Vérifier tests
@@ -503,6 +602,24 @@ grep "LOT" migrations/*.sql
 
 ---
 
+## Documentation associée
+
+### 📂 Index par dossier
+
+| Dossier | README | Description |
+|---------|--------|-------------|
+| **docs/deployment/** | [README.md](../deployment/README.md) | Déploiement et configuration |
+| **docs/runbooks/** | [README.md](../runbooks/README.md) | Procédures opérationnelles |
+| **docs/architecture/** | [BOUNDARIES.md](../architecture/BOUNDARIES.md) | Règles d'architecture |
+| **docs/data/** | [DATA_CLASSIFICATION.md](../data/DATA_CLASSIFICATION.md) | Classification P0-P3 |
+| **docs/testing/** | [RGPD_TESTING.md](../testing/RGPD_TESTING.md) | Stratégie de tests RGPD |
+| **docs/observability/** | [LOGGING.md](../observability/LOGGING.md) | Logging RGPD-safe |
+| **docs/rgpd/** | [registre-traitements.md](../rgpd/registre-traitements.md) | Registre RGPD Art. 30 |
+| **docs/legal/** | [DPA_TEMPLATE.md](../legal/DPA_TEMPLATE.md) | Templates légaux |
+| **docs/audit/** | [evidence.md](../audit/evidence.md) | Preuves d'audit |
+
+---
+
 ## Références
 
 - **TASKS.md** : [TASKS.md](../../TASKS.md) (source de vérité)
@@ -515,4 +632,4 @@ grep "LOT" migrations/*.sql
 
 **Maintenu par** : Claude Code (Sonnet 4.5)
 **Dernière mise à jour** : 2026-01-01
-**Version** : 1.0
+**Version** : 1.1

@@ -1,0 +1,273 @@
+# OWASP ZAP Configuration
+# EPIC 9 — LOT 9.1 — Pentest & Vulnerability Scanning
+#
+# DAST (Dynamic Application Security Testing) configuration
+# for automated security scanning of the RGPD IA Platform.
+#
+# RGPD Compliance:
+# - Art. 32: Test régulier sécurité
+# - Art. 5.1(f): Intégrité et confidentialité
+#
+# Usage:
+#   docker run -v $(pwd):/zap/wrk owasp/zap2docker-stable zap-baseline.py \
+#     -t http://localhost:3000 -c owasp-zap-config.yaml -r report.html
+
+# =============================================================================
+# ENVIRONMENT
+# =============================================================================
+env:
+  contexts:
+    - name: "RGPD-IA-Platform"
+      urls:
+        - "http://localhost:3000"
+      includePaths:
+        - "http://localhost:3000.*"
+      excludePaths:
+        - "http://localhost:3000/api/health.*"
+        - "http://localhost:3000/_next/.*"
+        - "http://localhost:3000/static/.*"
+      authentication:
+        method: "json"
+        loginUrl: "http://localhost:3000/api/auth/login"
+        loginRequestData: '{"email":"test@example.com","password":"testpass"}'
+        usernameField: "email"
+        passwordField: "password"
+
+# =============================================================================
+# PASSIVE SCAN RULES
+# =============================================================================
+passiveScan:
+  maxAlertsPerRule: 10
+  scanOnlyInScope: true
+  rules:
+    # Security Headers (RGPD-critical)
+    - id: 10015  # Incomplete or No Cache-control and Pragma HTTP Header Set
+      threshold: LOW
+    - id: 10016  # Web Browser XSS Protection Not Enabled
+      threshold: MEDIUM
+    - id: 10017  # Cross-Domain JavaScript Source File Inclusion
+      threshold: MEDIUM
+    - id: 10019  # Content-Type Header Missing
+      threshold: MEDIUM
+    - id: 10020  # X-Frame-Options Header
+      threshold: MEDIUM
+    - id: 10021  # X-Content-Type-Options Header Missing
+      threshold: LOW
+    - id: 10023  # Information Disclosure - Debug Error Messages
+      threshold: MEDIUM
+    - id: 10024  # Information Disclosure - Sensitive Information in URL
+      threshold: HIGH  # RGPD: Never expose PII in URLs
+    - id: 10025  # Information Disclosure - Sensitive Information in HTTP Referrer Header
+      threshold: HIGH
+    - id: 10027  # Information Disclosure - Suspicious Comments
+      threshold: LOW
+    - id: 10028  # Open Redirect
+      threshold: MEDIUM
+    - id: 10029  # Cookie Poisoning
+      threshold: MEDIUM
+    - id: 10030  # User Controllable Charset
+      threshold: LOW
+    - id: 10031  # User Controllable HTML Element Attribute
+      threshold: LOW
+    - id: 10032  # Viewstate
+      threshold: OFF  # Not applicable (Next.js)
+    - id: 10033  # Directory Browsing
+      threshold: MEDIUM
+    - id: 10034  # Heartbleed OpenSSL Vulnerability
+      threshold: HIGH
+    - id: 10035  # Strict-Transport-Security Header
+      threshold: HIGH  # HTTPS enforcement critical
+    - id: 10036  # Server Leaks Version Information
+      threshold: LOW
+    - id: 10037  # Server Leaks Information via "X-Powered-By"
+      threshold: LOW
+    - id: 10038  # Content Security Policy (CSP) Header Not Set
+      threshold: MEDIUM
+    - id: 10039  # X-Backend-Server Header Information Leak
+      threshold: LOW
+    - id: 10040  # Secure Pages Include Mixed Content
+      threshold: MEDIUM
+    - id: 10054  # Cookie Without SameSite Attribute
+      threshold: MEDIUM
+    - id: 10055  # CSP: Wildcard Directive
+      threshold: MEDIUM
+    - id: 10056  # CSP: script-src unsafe-inline
+      threshold: MEDIUM
+    - id: 10057  # Username Hash Found
+      threshold: HIGH  # RGPD: PII protection
+    - id: 10096  # Timestamp Disclosure
+      threshold: LOW
+    - id: 10097  # Hash Disclosure
+      threshold: MEDIUM
+    - id: 10098  # Cross-Domain Misconfiguration
+      threshold: MEDIUM
+    - id: 10105  # Weak Authentication Method
+      threshold: HIGH
+    - id: 10108  # Reverse Tabnabbing
+      threshold: MEDIUM
+    - id: 10109  # Modern Web Application
+      threshold: OFF
+    - id: 10110  # Dangerous JS Functions
+      threshold: LOW
+    - id: 90001  # Insecure JSF ViewState
+      threshold: OFF
+    - id: 90011  # Charset Mismatch
+      threshold: LOW
+    - id: 90022  # Application Error Disclosure
+      threshold: MEDIUM
+    - id: 90033  # Loosely Scoped Cookie
+      threshold: LOW
+
+# =============================================================================
+# ACTIVE SCAN RULES
+# =============================================================================
+activeScan:
+  policy: "API-Scan"
+  maxRuleDurationInMins: 5
+  maxScanDurationInMins: 60
+  threadPerHost: 2
+  rules:
+    # Injection Tests (Critical for RGPD data protection)
+    - id: 40018  # SQL Injection
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 40019  # SQL Injection - MySQL
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 40020  # SQL Injection - Hypersonic SQL
+      threshold: OFF
+    - id: 40021  # SQL Injection - Oracle
+      threshold: OFF
+    - id: 40022  # SQL Injection - PostgreSQL
+      threshold: HIGH  # We use PostgreSQL
+      strength: MEDIUM
+    - id: 90018  # SQL Injection - SQLite
+      threshold: OFF
+    - id: 40014  # Cross Site Scripting (Persistent)
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 40012  # Cross Site Scripting (Reflected)
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 40013  # Session ID in URL Rewrite
+      threshold: HIGH
+    - id: 40003  # CRLF Injection
+      threshold: MEDIUM
+      strength: LOW
+    - id: 40008  # Parameter Tampering
+      threshold: MEDIUM
+      strength: LOW
+    - id: 40009  # Server Side Include
+      threshold: LOW
+      strength: OFF
+    - id: 40028  # ELMAH Information Leak
+      threshold: OFF
+    - id: 40032  # .htaccess Information Leak
+      threshold: OFF
+    - id: 40034  # .env Information Leak
+      threshold: HIGH  # Critical: env files may contain secrets
+    - id: 90019  # Server Side Code Injection
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 90020  # Remote OS Command Injection
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 90021  # XPath Injection
+      threshold: LOW
+      strength: OFF
+    - id: 90023  # XML External Entity Attack
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 90024  # Generic Padding Oracle
+      threshold: MEDIUM
+      strength: LOW
+    - id: 90025  # Expression Language Injection
+      threshold: MEDIUM
+      strength: LOW
+    - id: 90026  # SOAP Action Spoofing
+      threshold: OFF
+    - id: 90029  # SOAP XML Injection
+      threshold: OFF
+
+    # Authentication Tests
+    - id: 10101  # Insufficient Authentication
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 10102  # Session Fixation
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 10103  # Session ID in URL
+      threshold: HIGH
+
+    # Authorization Tests (Critical for tenant isolation)
+    - id: 10104  # Insecure Direct Object Reference
+      threshold: HIGH  # RGPD: Tenant isolation
+      strength: HIGH
+    - id: 10105  # Path Traversal
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 10106  # Remote File Inclusion
+      threshold: HIGH
+      strength: MEDIUM
+    - id: 10107  # Local File Inclusion
+      threshold: HIGH
+      strength: MEDIUM
+
+# =============================================================================
+# API SCAN SPECIFIC
+# =============================================================================
+apis:
+  openApiFile: "./docs/openapi.yaml"
+  targetUrl: "http://localhost:3000"
+  format: "openapi"
+
+# =============================================================================
+# ALERTING
+# =============================================================================
+alerting:
+  # Minimum level to include in report
+  minLevel: LOW
+
+  # Fail scan if any alerts at this level or above
+  failOn: HIGH
+
+  # Generate alerts for RGPD-specific patterns
+  customAlerts:
+    - name: "PII in Response Body"
+      pattern: "(email|phone|ssn|credit.?card|password|secret|token)"
+      level: HIGH
+      description: "Potential PII detected in API response"
+
+    - name: "Tenant ID Leak"
+      pattern: "tenant.?id.*[0-9a-f]{8}-[0-9a-f]{4}"
+      level: MEDIUM
+      description: "Tenant identifier exposed in response"
+
+    - name: "Debug Information"
+      pattern: "(stack.?trace|debug|verbose|__DEV__)"
+      level: MEDIUM
+      description: "Debug information in production response"
+
+# =============================================================================
+# REPORTING
+# =============================================================================
+reporting:
+  format:
+    - html
+    - json
+    - xml
+  outputDir: "./reports/security/zap"
+  riskThreshold: HIGH
+  includePassResults: false
+  template: "traditional-html"
+
+# =============================================================================
+# HOOKS (for CI/CD integration)
+# =============================================================================
+hooks:
+  beforeScan:
+    - "echo 'Starting OWASP ZAP scan...'"
+  afterScan:
+    - "echo 'Scan complete. Reports generated.'"
+  onAlert:
+    - "echo 'Alert: {{alertName}} ({{riskLevel}})'"
