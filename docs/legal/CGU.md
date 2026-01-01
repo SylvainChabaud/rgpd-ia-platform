@@ -183,11 +183,56 @@ Le traitement de vos données personnelles est régi par notre [Politique de Con
 - ✅ Droits RGPD complets : accès, rectification, effacement, portabilité
 - ✅ Consentement explicite avant tout traitement IA
 
-### 7.2 Sous-traitance
+### 7.2 Rôles et responsabilités RGPD (Art. 26, 28)
 
-En utilisant la Plateforme dans le cadre d'un Tenant, vous reconnaissez que :
-- L'Éditeur agit en qualité de sous-traitant au sens de l'Art. 28 RGPD
-- Votre organisation reste responsable de traitement pour ses propres utilisateurs
+#### 7.2.1 Clarification des rôles
+
+Dans le cadre de l'utilisation de la Plateforme RGPD-IA :
+
+**L'Éditeur (RGPD-IA Platform) agit en qualité de :**
+- **Sous-traitant au sens de l'Art. 28 RGPD** pour les Tenants clients
+- L'Éditeur traite les données personnelles **uniquement sur instruction du Tenant**
+- L'Éditeur ne détermine **ni les finalités, ni les moyens** du traitement des données métier du Tenant
+
+**Le Tenant (votre organisation) agit en qualité de :**
+- **Responsable de traitement au sens de l'Art. 4.7 RGPD** pour ses propres utilisateurs
+- Le Tenant détermine **les finalités et les moyens** du traitement de ses données
+- Le Tenant reste **pleinement responsable** du respect du RGPD vis-à-vis de ses utilisateurs finaux
+
+**Nous ne sommes PAS des responsables conjoints (Art. 26)** :
+- Il n'y a **pas de détermination conjointe** des finalités et moyens du traitement
+- Chaque partie a des responsabilités clairement délimitées
+- Le Tenant conserve le contrôle total de ses données et de ses utilisateurs
+
+#### 7.2.2 Data Processing Agreement (DPA)
+
+Conformément à l'Art. 28.3 RGPD, un **Data Processing Agreement (DPA)** sera mis à votre disposition lors de la création de votre Tenant. Ce contrat définit :
+- Les obligations du sous-traitant (l'Éditeur)
+- Les garanties de sécurité et de confidentialité
+- Les droits d'audit et de contrôle du Tenant
+- Les conditions de suppression ou restitution des données
+
+**Localisation du template DPA** : [docs/legal/DPA_TEMPLATE.md](../../docs/legal/DPA_TEMPLATE.md)
+
+#### 7.2.3 Responsabilités du Tenant
+
+En tant que responsable de traitement, le Tenant doit :
+- ✅ Informer ses utilisateurs du traitement de leurs données (Art. 13-14)
+- ✅ Obtenir les consentements nécessaires avant tout traitement IA
+- ✅ Respecter les droits des personnes concernées (accès, effacement, etc.)
+- ✅ Disposer d'une base légale valide pour chaque traitement
+- ✅ Tenir son propre registre des traitements (Art. 30)
+- ✅ Notifier la CNIL en cas de violation de données (Art. 33, délai 72h)
+
+#### 7.2.4 Responsabilités de l'Éditeur (sous-traitant)
+
+En tant que sous-traitant, l'Éditeur s'engage à :
+- ✅ Traiter les données **uniquement sur instruction documentée** du Tenant
+- ✅ Garantir la **sécurité et la confidentialité** des données (Art. 32)
+- ✅ Assister le Tenant dans l'exercice des droits RGPD (APIs disponibles)
+- ✅ Notifier le Tenant en cas de violation de données (délai 24h)
+- ✅ Supprimer ou restituer les données à la fin du contrat
+- ✅ Mettre à disposition la documentation de conformité (DPIA, registre, audits)
 
 ---
 
