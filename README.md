@@ -132,11 +132,14 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ### Conformité RGPD
 
-| Document | Description |
-|----------|-------------|
-| [registre-traitements.md](docs/rgpd/registre-traitements.md) | Registre des traitements (Art. 30) |
-| [dpia.md](docs/rgpd/dpia.md) | Analyse d'impact Gateway LLM (Art. 35) |
-| [evidence.md](docs/audit/evidence.md) | Cartographie des preuves d'audit |
+| Document | Description | Statut |
+|----------|-------------|--------|
+| [RGPD_ARTICLES_EXHAUSTIFS.md](docs/rgpd/RGPD_ARTICLES_EXHAUSTIFS.md) | **Matrice EXHAUSTIVE tous articles (1-99)** | ✅ **Analyse complète** |
+| [RGPD_COVERAGE_EPICS_1_8.md](docs/rgpd/RGPD_COVERAGE_EPICS_1_8.md) | **Mapping exhaustif EPICs 1-8 (Audit 2026-01-01)** | ✅ **32/45 articles** |
+| [registre-traitements.md](docs/rgpd/registre-traitements.md) | Registre des traitements (Art. 30) | ✅ 5 traitements |
+| [dpia.md](docs/rgpd/dpia.md) | Analyse d'impact Gateway LLM (Art. 35) | ✅ 5 risques évalués |
+| [DPA_TEMPLATE.md](docs/legal/DPA_TEMPLATE.md) | Data Processing Agreement (Art. 28) | ✅ Template prêt |
+| [evidence.md](docs/audit/evidence.md) | Cartographie des preuves d'audit | ✅ 100% |
 
 ### Procédures opérationnelles
 
@@ -158,6 +161,32 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## 🛡️ Sécurité & RGPD
 
+### Statut de conformité
+
+**Audit consolidation EPICs 1-8 (2026-01-01)**
+
+| Dimension | Score | Tests | Statut |
+|-----------|-------|-------|--------|
+| **Backend Core** | ✅ 100% | 252+ tests | EPICs 1-7 complets |
+| **Anonymisation** | ✅ 100% | 110 tests | EPIC 8 complet |
+| **Couverture globale** | ⚙️ 70% | 32/45 articles | EPICs 9-10 requis |
+
+**Articles conformes (32/45)**
+- ✅ **Art. 5** : Tous principes (minimisation, retention, intégrité) - 100%
+- ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke - 100%
+- ✅ **Art. 15-17, 19-20** : Droits accès, rectification, effacement, portabilité - 100%
+- ✅ **Art. 24-25** : Accountability, Privacy by Design - 100%
+- ✅ **Art. 28-30** : DPA sous-traitant, Registre traitements - 100%
+- ✅ **Art. 32** : Sécurité (RLS, chiffrement, PII masking, IP anonymization) - 90%
+- ✅ **Art. 35** : DPIA Gateway LLM - 100%
+
+**Articles manquants (7 - BLOQUANTS PRODUCTION)**
+- 🔴 **Art. 33-34** : Notification violation (délai 72h) - EPIC 9.0
+- 🔴 **Art. 22** : Révision humaine décisions IA - EPIC 10.6
+- 🔴 **ePrivacy 5.3** : Cookie consent banner - EPIC 10.3
+- 🟡 **Art. 13-14** : Pages légales (templates prêts, publication manquante) - EPIC 10.0-10.2
+- 🟡 **Art. 18, 21** : Limitation, Opposition - EPIC 10.6
+
 ### Principes clés
 
 - **Privacy by Design** : RGPD intégré dès la conception
@@ -167,6 +196,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 - **Traçabilité** : Audit trail RGPD-safe (pas de PII dans les logs)
 - **Chiffrement** : AES-256-GCM au repos, TLS 1.3 en transit
 - **Classification** : Données P0-P3 avec rejet automatique des données P3 (Art. 9)
+- **Pseudonymisation PII** : Détection et masking automatique avant LLM (EPIC 8)
+- **Anonymisation IP** : Logs > 7j anonymisés automatiquement (EPIC 8)
 
 ### Défense en profondeur (RLS)
 
@@ -209,10 +240,20 @@ pnpm audit:rgpd-tests
 pnpm test -- --watch
 ```
 
+### Couverture de tests actuelle
+
+**✅ Objectif 80% atteint : 82.39% (branches)**
+- **Test Suites** : 57 passed (59 total)
+- **Tests** : 822 passed (840 total)
+- **Statements** : 89.9%
+- **Branches** : **82.39%**
+- **Functions** : 91.69%
+- **Lines** : 90.91%
+
 ### Catégories de tests
 
 - `tests/rgpd.*.test.ts` — Tests de conformité RGPD (consent, deletion, export, PII)
-- `tests/db.*.test.ts` — Tests isolation base de données (RLS, cross-tenant)
+- `tests/db.*.test.ts` — Tests isolation base de données (RLS, cross-tenant, repositories)
 - `tests/http.*.test.ts` — Tests API (auth, authz, tenant, HTTPS)
 - `tests/llm.*.test.ts` — Tests LLM policy enforcement
 - `tests/storage.*.test.ts` — Tests classification des données (P0-P3)

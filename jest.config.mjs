@@ -14,6 +14,15 @@ const customJestConfig = {
   transformIgnorePatterns: ["/node_modules/"],
   // Load .env.test before running tests
   setupFiles: ["<rootDir>/jest.setup.js"],
+  // Coverage thresholds (Phase 4.3 - Audit EPICs 1-8)
+  coverageThreshold: {
+    global: {
+      lines: 80,
+      statements: 80,
+      functions: 80,
+      branches: 80,
+    },
+  },
 };
 
 export default createJestConfig(customJestConfig);
