@@ -21,7 +21,7 @@
 | **EPIC 6** | Stack IA Docker RGPD-ready (industrialisation) | ✅ 100% | LOT 6.0-6.1 |
 | **EPIC 7** | Kit conformité & audit RGPD | ✅ 100% | LOT 7.0-7.1 |
 | **EPIC 8** | Anonymisation & Pseudonymisation (Backend) | ✅ 100% | LOT 8.0-8.2 |
-| **EPIC 9** | Incident Response & Security Hardening (Backend) | ❌ TODO | LOT 9.0-9.2 |
+| **EPIC 9** | Incident Response & Security Hardening (Backend) | ✅ 100% | LOT 9.0-9.2 |
 | **EPIC 10** | RGPD Legal & Compliance (Backend + Frontend + Docs) | ❌ TODO | LOT 10.0-10.6 |
 | **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ❌ TODO | LOT 11.0-11.3 |
 | **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | ❌ TODO | LOT 12.0-12.3 |
@@ -85,8 +85,6 @@ Références de cadrage (utiles) :
 ### Phase 2 : Backend RGPD 100% — 🔴 CRITIQUE
 **Objectif** : Combler gaps RGPD backend identifiés, atteindre 100% conformité production
 
-**Phase 2 est divisée en 3 sous-phases pour gérer les dépendances frontend** :
-
 ---
 
 #### **Phase 2A : Backend RGPD Core (EPIC 8-9)** — **PAS de dépendances frontend**
@@ -98,65 +96,70 @@ Références de cadrage (utiles) :
    - ✅ LOT 8.2 : Audit PII Logs (Scan automatique) — 10 tests passing
    - **Total**: 110/110 tests passing (100% coverage)
 
-2. ❌ **EPIC 9** : Incident Response & Security Hardening (Backend) — **BLOQUANT Art. 33-34**
-   - LOT 9.0 : Runbook "Incident RGPD" + API backend registre violations (interface web dans Phase 2C)
-   - LOT 9.1 : Pentest & Vulnerability Scanning
-   - LOT 9.2 : Chaos Engineering & Résilience
+2. ✅ **EPIC 9** : Incident Response & Security Hardening (Backend) — **COMPLETED**
+   - ✅ LOT 9.0 : Runbook "Incident RGPD" + API backend registre violations — 25 tests passing
+   - ✅ LOT 9.1 : Pentest & Vulnerability Scanning — 20 tests passing
+   - ✅ LOT 9.2 : Chaos Engineering & Résilience — 15 tests passing
+   - **Total**: 60/60 tests passing (100% coverage)
 
-**Prérequis Phase 3** : ✅ Phase 2A terminée (backend RGPD core production-ready)
+**Prérequis Phase 2B** : ✅ Phase 2A terminée (backend RGPD core production-ready)
 
 ---
 
-#### **Phase 2B : RGPD Legal Docs (LOT 10.0-10.2)** — **Pages statiques SSG**
+#### **Phase 2B : RGPD Legal & Compliance (EPIC 10)** — **BLOQUANT pour Phase 3**
 
-**Peut être fait en parallèle de Phase 2A ou Phase 3** (docs légaux, pas de complexité frontend)
+**DOIT être terminé AVANT Phase 3** (fournit APIs + docs + composants requis par frontends)
 
-3. ❌ **EPIC 10 (partiel)** : Pages légales statiques
-   - LOT 10.0 : Politique de Confidentialité (page SSG `/legal/privacy-policy`)
-   - LOT 10.1 : CGU / CGV (page SSG `/legal/terms-of-service`)
-   - LOT 10.2 : Page "Informations RGPD" (page SSG `/legal/rgpd-info`)
+3. ❌ **EPIC 10** : RGPD Legal & Compliance (Backend + Docs + Composants)
+   - LOT 10.0 : Politique de Confidentialité (doc + page SSG)
+   - LOT 10.1 : CGU / CGV (doc + page SSG + workflow acceptation)
+   - LOT 10.2 : Page "Informations RGPD" (page SSG + formulaire DPO)
+   - LOT 10.3 : Cookie Consent (API backend + composant React)
+   - LOT 10.4 : Registre des Traitements (doc markdown)
+   - LOT 10.5 : DPIA Gateway LLM (doc markdown)
+   - LOT 10.6 : APIs Droits RGPD Art. 18/21/22 (9 endpoints backend)
 
-**Note** : Ces pages sont servies par le backend Next.js existant (EPIC 1-7), accessibles publiquement.
-Les liens footer seront ajoutés dans LOT 13.0 (Frontend User).
+**Durée estimée** : 2-3 semaines  
+**Tests** : ~100-130 tests (backend + composant React)  
+**Blocages** : ❌ Aucun (peut démarrer MAINTENANT)
+
+**Livrables** :
+- ✅ 9 endpoints backend (cookies, suspend, oppose, contest)
+- ✅ 4 documents légaux (politique, CGU, registre, DPIA)
+- ✅ 3 pages SSG Next.js accessibles publiquement
+- ✅ Composant React `CookieConsentBanner.tsx` prêt à intégrer
+- ✅ Tables DB (cgu_versions, user_cgu_acceptances, user_disputes, user_oppositions)
+
+**Prérequis Phase 3** : ✅ Phase 2B terminée (tous les endpoints/docs/composants EPIC 10 prêts)
 
 ---
 
 ### Phase 3 : Frontend (EPIC 11-13) — 🟢 INTERFACES UTILISATEURS
 **Objectif** : Interfaces web pour administrer et utiliser la plateforme
 
-**Prérequis** : ✅ Phase 2A terminée (backend RGPD core production-ready)
+**Prérequis** : 
+- ✅ Phase 2A terminée (EPIC 8-9 backend RGPD core production-ready)
+- ✅ Phase 2B terminée (EPIC 10 backend APIs + docs + composants prêts)
 
 **Ordre recommandé** :
 1. ❌ **EPIC 11** : Back Office Super Admin (Frontend PLATFORM)
    - LOT 11.0 : Infra Back Office (Next.js App Router + Auth)
    - LOT 11.1 : Gestion Tenants (CRUD)
    - LOT 11.2 : Gestion Users Plateforme (CRUD)
-   - LOT 11.3 : Audit & Monitoring Dashboard (intègre LOT 9.0, 10.4, 10.5)
+   - LOT 11.3 : Audit & Monitoring Dashboard (intègre affichage Registre EPIC 10/LOT 10.4 + DPIA EPIC 10/LOT 10.5 + registre violations EPIC 9/LOT 9.0)
 
 2. ❌ **EPIC 12** : Back Office Tenant Admin (Frontend TENANT)
    - LOT 12.0 : Dashboard Tenant (Stats + Activity Feed)
    - LOT 12.1 : Gestion Users Tenant (CRUD)
    - LOT 12.2 : Gestion Consentements (Purposes + Tracking)
-   - LOT 12.3 : RGPD Management (Export/Delete Requests)
+   - LOT 12.3 : RGPD Management (Export/Delete Requests + intègre dashboards suspensions/oppositions/contests EPIC 10/LOT 10.6)
 
 3. ❌ **EPIC 13** : Front User (Frontend utilisateur final)
-   - LOT 13.0 : Authentification & Layout User (intègre LOT 10.3 Cookie Banner + liens footer LOT 10.0-10.2)
+   - LOT 13.0 : Authentification & Layout User (intègre Cookie Banner EPIC 10/LOT 10.3 + liens footer pages légales EPIC 10/LOT 10.0-10.2)
    - LOT 13.1 : AI Tools (Interface Gateway LLM)
    - LOT 13.2 : Historique AI Jobs (Liste + Filtres)
    - LOT 13.3 : Mes Consentements (Gestion + Historique)
-   - LOT 13.4 : Mes Données RGPD (Export + Effacement)
-
----
-
-#### **Phase 2C : RGPD Legal Compliance finalisée (LOT 10.3-10.6)** — **Après Phase 3**
-
-**Prérequis** : ✅ Phase 3 terminée (frontends créés)
-
-4. ❌ **EPIC 10 (compléments)** : Intégrations frontend RGPD
-   - LOT 10.3 : Cookie Consent Banner (intégré dans LOT 13.0)
-   - LOT 10.4 : Registre des Traitements (interface Back Office dans LOT 11.3)
-   - LOT 10.5 : DPIA Gateway LLM (interface Back Office dans LOT 11.3)
-   - LOT 10.6 : Droits complémentaires (intégré dans LOT 13.4)
+   - LOT 13.4 : Mes Données RGPD (Export + Effacement + intègre droits Art. 18/21/22 EPIC 10/LOT 10.6)
 
 ---
 
@@ -1016,6 +1019,9 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 # EPIC 10 — RGPD Legal & Compliance (Backend + Frontend + Docs)
 
+**Durée estimée** : **2-3 semaines**  
+**Tests estimés** : **~80 tests** (backend 50 + frontend 30)
+
 ## LOT 10.0 — Politique de Confidentialité
 
 **EPIC couverts** : EPIC 10 (Art. 13-14)
@@ -1024,12 +1030,9 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Objectif** : rédiger et publier politique de confidentialité RGPD-compliant.
 
-**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement sans authentification. Lien footer ajouté dans LOT 13.0.
-
 **Artefacts attendus**
 - Document `/docs/legal/POLITIQUE_CONFIDENTIALITE.md`
-- Page frontend `/legal/privacy-policy` (Next.js SSG)
-- Lien footer "Politique de confidentialité" (template, activation dans LOT 13.0)
+- Page frontend `/legal/privacy-policy` (Next.js SSG, accessible publiquement)
 - Versioning (date dernière modification)
 - Contenu complet (Art. 13-14) :
   - Identité responsable traitement
@@ -1064,12 +1067,9 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Objectif** : rédiger CGU + processus acceptation signup.
 
-**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement. Lien footer ajouté dans LOT 13.0.
-
 **Artefacts attendus**
 - Document `/docs/legal/CGU.md`
-- Page frontend `/legal/terms-of-service`
-- Lien footer "CGU" (template, activation dans LOT 13.0)
+- Page frontend `/legal/terms-of-service` (Next.js SSG, accessible publiquement)
 - Checkbox signup "J'accepte les CGU" (obligatoire)
 - Table DB `cgu_versions` (versioning)
 - Table DB `user_cgu_acceptances` (traçabilité)
@@ -1096,11 +1096,8 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Objectif** : créer page centralisée informations RGPD (DPO, droits, réclamation).
 
-**Intégration** : Page SSG Next.js servie par le backend existant (EPIC 1-7), accessible publiquement. Lien footer ajouté dans LOT 13.0.
-
 **Artefacts attendus**
-- Page frontend `/legal/rgpd-info`
-- Lien footer "Informations RGPD" (template, activation dans LOT 13.0)
+- Page frontend `/legal/rgpd-info` (Next.js SSG, accessible publiquement)
 - Contenu :
   - Identité responsable traitement
   - Contact DPO (email + formulaire)
@@ -1134,25 +1131,34 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Artefacts attendus**
 - Component `src/app/components/CookieConsentBanner.tsx`
+- **Backend API** :
+  - `app/api/consents/cookies/route.ts` :
+    - `GET /api/consents/cookies` (récupérer préférences user)
+    - `POST /api/consents/cookies` (enregistrer préférences)
+  - Table `cookie_consents` (tenant_id, user_id, necessary, analytics, marketing, created_at)
 - Catégories cookies :
   - Nécessaires (JWT, CSRF) : pré-cochées, non modifiables
   - Analytics (optionnel) : checkbox opt-in
   - Marketing (optionnel) : checkbox opt-in
 - Boutons : "Accepter tout", "Refuser tout", "Personnaliser"
-- Persistance choix localStorage (`cookie_consent`, 12 mois)
+- Persistance choix backend + localStorage fallback (12 mois)
 - Blocage scripts analytics/marketing si refus
 - Page "Gérer cookies" (footer) : révocation possible
+- Audit event : `cookies.consent.saved`
 
 **Acceptance criteria (bloquants)**
 - Banner affiché première visite (si pas de choix)
-- Choix persistés 12 mois
+- Choix persistés backend (12 mois) + localStorage fallback
 - Scripts bloqués si refus (tests E2E)
 - Révocation possible (page "Gérer cookies")
 - Conformité CNIL (guidelines cookies françaises)
+- Backend API endpoints fonctionnels (GET/POST)
+- Migration 015 appliquée (table cookie_consents)
 
 **Tests obligatoires**
 - tests/rgpd.cookie-banner.test.ts (affichage première visite)
 - tests/rgpd.cookie-banner.test.ts (blocage scripts si refus)
+- tests/api.consents.cookies.test.ts (backend GET/POST endpoints)
 
 ---
 
@@ -1166,6 +1172,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Artefacts attendus**
 - Document `/docs/rgpd/REGISTRE_TRAITEMENTS.md`
+- **Backend API** :
+  - `app/api/docs/registre/route.ts` :
+    - `GET /api/docs/registre` (lecture registre)
+    - Protection RBAC : SUPER_ADMIN ou DPO uniquement
+    - Parser markdown → HTML (`marked` library)
 - 5 traitements documentés :
   1. Authentification users
   2. Invocation Gateway LLM
@@ -1175,15 +1186,16 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Versioning (date dernière mise à jour)
 - Validation DPO (signature électronique)
 
-**Note** : Accessible via interface Back Office (lecture seule) dans LOT 11.3.
-
 **Acceptance criteria (bloquants)**
 - Document complet (finalités, bases légales, catégories données, destinataires, durées, sécurité)
 - 5 traitements documentés
 - Format markdown exploitable
 - Validation DPO
+- Backend API `/api/docs/registre` fonctionnel
+- Parser markdown → HTML actif
 
 **Tests obligatoires**
+- tests/api.docs.registre.test.ts (backend GET endpoint, protection RBAC)
 - Tests E2E accès registre (Super Admin uniquement, implémenté dans LOT 11.3)
 
 ---
@@ -1198,6 +1210,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Artefacts attendus**
 - Document `/docs/rgpd/DPIA_GATEWAY_LLM.md`
+- **Backend API** :
+  - `app/api/docs/dpia/route.ts` :
+    - `GET /api/docs/dpia` (lecture DPIA)
+    - Protection RBAC : SUPER_ADMIN ou DPO uniquement
+    - Parser markdown → HTML (`marked` library)
 - Contenu DPIA :
   1. Description systématique traitement (Gateway LLM, modèles, purposes)
   2. Nécessité et proportionnalité
@@ -1205,16 +1222,17 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
   4. Mesures atténuation (consentement, pseudonymisation EPIC 8, audit trail, chiffrement)
   5. Validation DPO (signature)
 
-**Note** : Accessible via interface Back Office (lecture seule) dans LOT 11.3.
-
 **Acceptance criteria (bloquants)**
 - Document DPIA complet (5 sections)
 - 5 risques évalués (impact, vraisemblance, risque résiduel)
 - Mesures atténuation documentées (EPICs 1-13)
 - Validation DPO (signature)
 - Format markdown exploitable
+- Backend API `/api/docs/dpia` fonctionnel
+- Parser markdown → HTML actif
 
 **Tests obligatoires**
+- tests/api.docs.dpia.test.ts (backend GET endpoint, protection RBAC)
 - Tests E2E accès DPIA (Super Admin/DPO uniquement, implémenté dans LOT 11.3)
 
 ---
@@ -1228,19 +1246,67 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 **Objectif** : implémenter droits RGPD manquants (limitation, opposition, révision humaine).
 
 **Artefacts attendus**
-- **Art. 18 - Limitation** :
+- **Backend API Art. 18 (Limitation)** :
+  - `app/api/rgpd/suspend/route.ts` :
+    - `POST /api/rgpd/suspend` (user suspend données)
+    - Flag DB `users.data_suspended = true`
+    - Email confirmation suspension
+    - Audit event : `user.data_suspended`
+  - `app/api/rgpd/unsuspend/route.ts` :
+    - `POST /api/rgpd/unsuspend` (user réactive données)
+    - Email confirmation réactivation
+    - Audit event : `user.data_reactivated`
+  - Middleware Gateway LLM : vérifier `data_suspended = true` → HTTP 403
+  - `GET /api/tenants/:id/rgpd/suspensions` (Tenant Admin liste suspensions)
+- **Backend API Art. 21 (Opposition)** :
+  - `app/api/rgpd/oppose/route.ts` :
+    - `POST /api/rgpd/oppose` (user soumet opposition traitement)
+    - Table `user_oppositions` (tenant_id, user_id, treatment_type, reason, status)
+    - Email confirmation : "Opposition enregistrée, réponse sous 1 mois"
+    - Audit event : `user.opposition_submitted`
+  - `GET /api/rgpd/oppositions` (user liste ses oppositions)
+  - `GET /api/tenants/:id/rgpd/oppositions` (Tenant Admin liste oppositions)
+- **Backend API Art. 22 (Révision humaine)** :
+  - `app/api/rgpd/contest/route.ts` :
+    - `POST /api/rgpd/contest` (user conteste décision IA)
+    - Table `user_disputes` (tenant_id, user_id, ai_job_id, reason, attachment_url, status, admin_response)
+    - Upload pièce jointe (< 10MB, table `uploaded_files`, chiffré, purge auto 1 mois)
+    - Email confirmation : "Contestation enregistrée, révision humaine sous 30 jours"
+    - Audit event : `user.dispute_submitted`
+  - `GET /api/rgpd/contests?status=pending|resolved` (user liste ses contestations)
+  - `PATCH /api/rgpd/contests/:id` (Tenant Admin résout contestation)
+    - Champs : status, admin_response, reviewed_by
+    - Email user : réponse admin
+    - Audit event : `admin.dispute_resolved`
+  - `GET /api/tenants/:id/rgpd/contests` (Tenant Admin liste contestations tenant)
+- **Frontend** :
   - Bouton "Suspendre mes données" (My Data page)
-  - Flag DB `users.data_suspended`
-  - Effet : Bloc invocations LLM (HTTP 403)
-  - Email confirmation suspension
-  - Bouton "Réactiver mes données"
-- **Art. 21 - Opposition** :
   - Page "Opposition traitement"
-  - Formulaire : traitement concerné, motif
-  - Workflow back-office : ticket support
-  - Email confirmation
-- **Art. 22 - Révision humaine** :
   - Bouton "Contester ce résultat" (outputs IA)
+  - Modal formulaires (motif, upload)
+- **Migration 015** :
+  - `users.data_suspended`, `users.data_suspended_at`, `users.data_suspended_reason`
+  - `user_disputes` (contestations Art. 22)
+  - `user_oppositions` (oppositions Art. 21)
+  - `uploaded_files` (pièces jointes, chiffré, purge auto)
+
+**Acceptance criteria (bloquants)**
+- Backend endpoints fonctionnels (9 endpoints Art. 18/21/22)
+- Middleware Gateway LLM bloque si `data_suspended = true`
+- Emails confirmation envoyés
+- Tables `user_disputes`, `user_oppositions`, `uploaded_files` créées (migration 015)
+- Upload pièces jointes fonctionnel (< 10MB, chiffré, purge auto)
+- Workflow Tenant Admin fonctionnel (résoudre contestations/oppositions)
+- Audit events enregistrés
+- Frontend UI fonctionnels (boutons, modals)
+
+**Tests obligatoires**
+- tests/api.rgpd.suspend.test.ts (backend suspend/unsuspend)
+- tests/api.rgpd.oppose.test.ts (backend opposition)
+- tests/api.rgpd.contest.test.ts (backend contestation)
+- tests/middleware.gateway-llm.test.ts (blocage si data_suspended)
+- tests/rgpd.contests-workflow.test.ts (workflow admin résout contestation)
+- tests/uploaded-files.purge.test.ts (purge auto pièces jointes)
   - Formulaire : motif, upload preuve
   - Table DB `user_disputes`
   - Workflow back-office : admin révise, répond
@@ -1608,12 +1674,17 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Display result (affichage résultat, non persisté par défaut)
 - Option "Sauvegarder résultat" (si besoin)
 - **Storage temporaire documents uploadés** :
-  - Stockage : local disk `/tmp/uploads` (dev) ou S3 bucket (prod)
-  - Chiffrement : AES-256-GCM (clé par tenant)
-  - TTL : 1 heure après traitement
-  - Purge automatique : job cron (toutes les heures)
-  - Validation : whitelist types (PDF, TXT, DOCX), max 10 MB
-  - Isolation tenant : `/{tenantId}/{userId}/{jobId}/document.pdf`
+  - **Stockage** : local disk `/tmp/uploads` (dev) ou S3 bucket (prod)
+  - **Chiffrement** : AES-256-GCM, clé dérivée de `tenantId` + master secret (env var `ENCRYPTION_MASTER_KEY`)
+  - **DB tracking** : Table `uploaded_files` (tenant_id, user_id, file_path, file_size, encrypted, expires_at, purged_at, purge_attempted_at)
+  - **TTL** : 1 heure après upload (expires_at = created_at + 1h)
+  - **Purge automatique** : Job cron `src/infrastructure/jobs/purge-uploaded-files.job.ts` (toutes les heures)
+    - Sélectionne `uploaded_files WHERE expires_at < NOW() AND purged_at IS NULL`
+    - Supprime fichiers disque/S3
+    - Update `purged_at = NOW()`
+  - **Validation** : Whitelist types (PDF, TXT, DOCX), max 10 MB
+  - **Isolation tenant** : Chemin `/{tenantId}/{userId}/{jobId}/document.pdf`
+  - **Art. 32 RGPD** : Chiffrement garantit sécurité (données sensibles P2-P3)
 
 **Acceptance criteria (bloquants)**
 - Upload document fonctionnel
@@ -1621,9 +1692,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Consent popup obligatoire (1ère fois)
 - Résultat affiché en temps réel
 - Streaming optionnel (améliore UX)
-- Documents stockés temporairement et chiffrés
-- Purge automatique après TTL
+- Documents stockés temporairement et chiffrés (AES-256-GCM)
+- Purge automatique après TTL (job cron actif)
 - Validation types/taille stricte
+- Table `uploaded_files` créée (migration 015)
+- Job purge fonctionnel (tests unitaires)
 
 **Tests obligatoires**
 - Upload document + invoke LLM E2E
@@ -1631,6 +1704,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Résultat affiché correctement
 - Validation upload (type/taille rejetés)
 - Purge automatique documents (TTL respecté)
+- tests/jobs.purge-uploaded-files.test.ts (job cron purge fichiers expirés)
 
 ---
 

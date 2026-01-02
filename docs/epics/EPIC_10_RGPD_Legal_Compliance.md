@@ -1,11 +1,36 @@
-# EPIC 10 — RGPD Legal & Compliance (Frontend + Docs)
+# EPIC 10 — RGPD Legal & Compliance (Backend + Documents)
 
-**Date** : 25 décembre 2025  
+**Date** : 25 décembre 2025 (mis à jour 2 janvier 2026)  
 **Statut** : ❌ TODO  
-**Périmètre** : Frontend (All Scopes) + Documents Légaux  
+**Périmètre** : Backend APIs + Documents Légaux + Composants React  
 **Scope** : PLATFORM / TENANT / MEMBER  
 **RGPD Coverage** : Art. 13-14 (Information), Art. 18-22 (Droits), Art. 30 (Registre), Art. 35 (DPIA), ePrivacy (Cookies)  
-**Durée estimée** : 3 semaines
+**Durée estimée** : **2-3 semaines**  
+**Tests estimés** : **~80 tests** (backend 50 + frontend 30)
+
+---
+
+## 📋 Périmètre de l'EPIC 10
+
+Cet EPIC fournit **tous les composants backend et documents** requis pour conformité RGPD légale :
+
+**Livrables** :
+- ✅ **9 endpoints backend** : Cookies consent + Droits Art. 18/21/22 (suspend, oppose, contest)
+- ✅ **4 documents légaux** : Politique confidentialité, CGU, Registre traitements, DPIA
+- ✅ **3 pages SSG Next.js** : `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/rgpd-info`
+- ✅ **Composant React** : `CookieConsentBanner.tsx` (standalone, prêt à intégrer)
+- ✅ **Tables DB** : `cgu_versions`, `user_cgu_acceptances`, `user_disputes`, `user_oppositions`
+
+**Intégrations frontend** (responsabilité EPIC 11-13) :
+- Cookie Banner dans layout → **EPIC 13/LOT 13.0**
+- Droits Art. 18/21/22 UI → **EPIC 13/LOT 13.4**
+- Accès Registre/DPIA → **EPIC 11/LOT 11.3**
+- Dashboards suspensions/contests → **EPIC 12/LOT 12.3**
+
+**Ordonnancement** :
+1. ✅ EPIC 8-9 (terminés)
+2. **👉 EPIC 10 (démarrer MAINTENANT)** ← Backend + Docs + Composants
+3. EPIC 11-13 (frontends, incluent nativement intégrations RGPD)
 
 ---
 
@@ -781,67 +806,18 @@ Questions : support@example.com
 └─────────────────────────────────────────────┘
 ```
 
-**Implémentation** :
-```typescript
-// src/app/components/CookieConsentBanner.tsx
-'use client';
+**Backend API** :
+- `GET /api/consents/cookies` : Récupérer préférences cookies user
+- `POST /api/consents/cookies` : Enregistrer préférences (necessary, analytics, marketing)
+- Table : `cookie_consents` (tenant_id, user_id, necessary, analytics, marketing)
+- Audit event : `cookies.consent.saved`
 
-import { useState, useEffect } from 'react';
-
-export function CookieConsentBanner() {
-  const [showBanner, setShowBanner] = useState(false);
-  const [preferences, setPreferences] = useState({
-    necessary: true, // Non modifiable
-    analytics: false,
-    marketing: false,
-  });
-
-  useEffect(() => {
-    const consent = localStorage.getItem('cookie_consent');
-    if (!consent) {
-      setShowBanner(true);
-    } else {
-      const prefs = JSON.parse(consent);
-      loadScripts(prefs);
-    }
-  }, []);
-
-  const acceptAll = () => {
-    const prefs = { necessary: true, analytics: true, marketing: true };
-    saveConsent(prefs);
-    setShowBanner(false);
-  };
-
-  const rejectAll = () => {
-    const prefs = { necessary: true, analytics: false, marketing: false };
-    saveConsent(prefs);
-    setShowBanner(false);
-  };
-
-  const saveConsent = (prefs) => {
-    localStorage.setItem('cookie_consent', JSON.stringify(prefs));
-    localStorage.setItem('cookie_consent_date', new Date().toISOString());
-    loadScripts(prefs);
-  };
-
-  const loadScripts = (prefs) => {
-    if (prefs.analytics) {
-      // Load Google Analytics ou Plausible
-    }
-    if (prefs.marketing) {
-      // Load scripts marketing
-    }
-  };
-
-  if (!showBanner) return null;
-
-  return (
-    <div className="cookie-banner">
-      {/* Contenu banner */}
-    </div>
-  );
-}
-```
+**Frontend Component** :
+- `src/app/components/CookieConsentBanner.tsx`
+- Affichage première visite (si pas de consentement backend)
+- Boutons : "Accepter tout", "Refuser tout", "Personnaliser"
+- Scripts bloqués si refus (analytics, marketing)
+- Révocation possible via page "Gérer cookies"
 
 **Acceptance Criteria** :
 - [ ] Banner non intrusif (bas de page, dismissible)
@@ -953,12 +929,24 @@ export function CookieConsentBanner() {
 **Date validation** : [DATE]
 ```
 
+**Backend API Access** :
+- `GET /api/docs/registre` : Lecture registre (SUPER_ADMIN/DPO uniquement)
+- Fichier source : `docs/rgpd/REGISTRE_TRAITEMENTS.md`
+- Parser markdown → HTML (library `marked`)
+- Response : { title, content (HTML), lastModified }
+
 **Acceptance Criteria** :
 - [ ] Document créé : `/docs/rgpd/REGISTRE_TRAITEMENTS.md`
 - [ ] 5 traitements documentés (Auth, LLM, Consentements, Export/effacement, Audit)
 - [ ] Accessible Super Admin (interface Back Office, lecture seule)
 - [ ] Versioning : Date dernière mise à jour
 - [ ] Validation DPO (signature électronique)
+- [ ] API backend `/api/docs/registre` créée (Super Admin/DPO only)
+- [ ] Parser markdown → HTML fonctionnel
+
+**Tests obligatoires** :
+- Tests API backend (GET /api/docs/registre, protection RBAC)
+- Tests E2E accès registre (Super Admin uniquement, implémenté dans LOT 11.3)
 
 ---
 
@@ -1181,12 +1169,24 @@ export function CookieConsentBanner() {
 **Date** : [DATE]
 ```
 
+**Backend API Access** :
+- `GET /api/docs/dpia` : Lecture DPIA (SUPER_ADMIN/DPO uniquement)
+- Fichier source : `docs/rgpd/DPIA_GATEWAY_LLM.md`
+- Parser markdown → HTML (library `marked`)
+- Response : { title, content (HTML), lastModified }
+
 **Acceptance Criteria** :
 - [ ] Document créé : `/docs/rgpd/DPIA_GATEWAY_LLM.md`
 - [ ] 5 risques évalués (hallucinations, fuite PII, biais, contournement, accès)
 - [ ] Mesures atténuation documentées (EPICs 1-13)
 - [ ] Validation DPO (signature)
 - [ ] Accessible Super Admin (interface Back Office, lecture seule)
+- [ ] API backend `/api/docs/dpia` créée (Super Admin/DPO only)
+- [ ] Parser markdown → HTML fonctionnel
+
+**Tests obligatoires** :
+- Tests API backend (GET /api/docs/dpia, protection RBAC)
+- Tests E2E accès DPIA (Super Admin/DPO uniquement, implémenté dans LOT 11.3)
 
 ---
 
@@ -1209,34 +1209,33 @@ export function CookieConsentBanner() {
 - [ ] Email confirmation suspension
 - [ ] Bouton "Réactiver mes données" (réversible à tout moment)
 - [ ] Audit event : `user.data_suspended` / `user.data_reactivated`
+- [ ] **Backend endpoints créés** :
+  - POST `/api/rgpd/suspend` (user suspend données)
+  - POST `/api/rgpd/unsuspend` (user réactive données)
+  - GET `/api/tenants/:id/rgpd/suspensions` (Tenant Admin liste suspensions)
+- [ ] Middleware Gateway LLM vérifie `data_suspended = true` → HTTP 403
 
-**Implémentation** :
-```typescript
-// src/app/usecases/suspend-user-data.usecase.ts
-export async function suspendUserData(userId: string) {
-  await db.query(
-    `UPDATE users SET data_suspended = true, data_suspended_at = NOW() WHERE id = $1`,
-    [userId]
-  );
-
-  await auditService.log({
-    type: 'user.data_suspended',
-    userId,
-    metadata: { reason: 'User request' },
-  });
-
-  await emailService.send({
-    to: user.email,
-    subject: 'Données suspendues',
-    body: 'Vos données sont suspendues. Réactivez à tout moment via My Data.',
-  });
-}
-
-// Middleware Gateway LLM
-if (user.data_suspended) {
-  throw new ForbiddenError('Données suspendues. Réactivez via My Data.');
-}
-```
+**Backend API** :
+- **Art. 18 Limitation** :
+  - `POST /api/rgpd/suspend` : Suspendre données user (flag `users.data_suspended = true`)
+  - `POST /api/rgpd/unsuspend` : Réactiver données
+  - `GET /api/tenants/:id/rgpd/suspensions` : Liste suspensions (Tenant Admin)
+  - Effet : Middleware Gateway LLM bloque si `data_suspended = true` → HTTP 403
+  - Emails confirmation + audit events
+- **Art. 21 Opposition** :
+  - `POST /api/rgpd/oppose` : Soumettre opposition traitement
+  - `GET /api/rgpd/oppositions` : Liste oppositions user
+  - `GET /api/tenants/:id/rgpd/oppositions` : Liste oppositions (Tenant Admin)
+  - Table : `user_oppositions` (treatment_type, reason, status)
+  - Emails confirmation + audit events
+- **Art. 22 Révision humaine** :
+  - `POST /api/rgpd/contest` : Contester décision IA
+  - `GET /api/rgpd/contests?status=pending|resolved` : Liste contestations user
+  - `PATCH /api/rgpd/contests/:id` : Résoudre contestation (Tenant Admin)
+  - `GET /api/tenants/:id/rgpd/contests` : Liste contestations (Tenant Admin)
+  - Table : `user_disputes` (ai_job_id, reason, attachment_url, status, admin_response)
+  - Upload pièces jointes (< 10MB, table `uploaded_files`, chiffré)
+  - Emails confirmation/réponse + audit events
 
 ---
 
@@ -1254,6 +1253,10 @@ if (user.data_suspended) {
 - [ ] Email confirmation : "Opposition enregistrée, réponse sous 1 mois"
 - [ ] Workflow back-office : Ticket support pour traitement manuel
 - [ ] Audit event : `user.opposition_submitted`
+- [ ] **Backend endpoints créés** :
+  - POST `/api/rgpd/oppose` (user soumet opposition)
+  - GET `/api/rgpd/oppositions` (user liste ses oppositions)
+  - GET `/api/tenants/:id/rgpd/oppositions` (Tenant Admin liste oppositions)
 
 **Note** : Si tous traitements = consentement opt-in, ce droit est moins pertinent (révocation consentement suffit). À implémenter si ajout traitements intérêt légitime futur (analytics, marketing).
 
@@ -1275,6 +1278,12 @@ if (user.data_suspended) {
 - [ ] Workflow back-office : Admin voit disputes, révise manuellement, répond
 - [ ] Email réponse : "Révision terminée, voici conclusion"
 - [ ] Audit event : `user.dispute_submitted` / `admin.dispute_resolved`
+- [ ] **Backend endpoints créés** :
+  - POST `/api/rgpd/contest` (user conteste décision IA)
+  - GET `/api/rgpd/contests?status=pending|resolved` (user liste ses contestations)
+  - PATCH `/api/rgpd/contests/:id` (Tenant Admin résout contestation)
+  - GET `/api/tenants/:id/rgpd/contests` (Tenant Admin liste contestations tenant)
+- [ ] Table `uploaded_files` pour stockage temporaire pièces jointes (< 10MB, chiffré, purge auto 1 mois)
 
 **Implémentation** :
 ```sql
