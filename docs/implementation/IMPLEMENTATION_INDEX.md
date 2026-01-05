@@ -1,9 +1,9 @@
-# Index des implémentations — EPICs 1-9
+# Index des implémentations — EPICs 1-10
 
 > **Objectif** : Table de correspondance exhaustive entre LOTs (TASKS.md), fichiers implémentés et tests RGPD.
 
-**Dernière mise à jour** : 2026-01-01
-**Status global** : ✅ EPICs 1-9 terminés (100%)
+**Dernière mise à jour** : 2026-01-05
+**Status global** : ✅ EPICs 1-10 terminés (100%)
 
 ---
 
@@ -20,8 +20,9 @@
 | **EPIC 7** | 7.0-7.1 (2 LOTs) | [LOT7_IMPLEMENTATION.md](LOT7_IMPLEMENTATION.md) | ✅ 100% | - |
 | **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110/110 |
 | **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60/60 |
+| **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180/180 |
 
-**Total** : 25 LOTs implémentés, 312+ tests RGPD passing
+**Total** : 33 LOTs implémentés, 492+ tests RGPD passing
 
 ---
 
@@ -489,8 +490,10 @@
 | 012_fix_audit_events_policy.sql | 6.2 | Fix audit_events RLS | ✅ |
 | 013_fix_rgpd_requests_platform_policies.sql | 6.2 | Fix rgpd_requests RLS | ✅ |
 | 014_incidents.sql | 9.0 | Table security_incidents + audit (Art. 33-34) | ✅ |
+| 015_cgu_disputes_cookies.sql | 10.0-10.6 | Tables CGU, disputes, oppositions, cookies | ✅ |
+| 016_add_lot10_missing_columns.sql | 10.0-10.6 | Colonnes manquantes LOT 10 (metadata, soft delete) | ✅ |
 
-> **Note** : Migrations 004-013 font partie de LOT 6.2. Migration 014 fait partie de LOT 9.0.
+> **Note** : Migrations 004-013 font partie de LOT 6.2. Migration 014 fait partie de LOT 9.0. Migrations 015-016 font partie de EPIC 10.
 
 ---
 
@@ -517,10 +520,152 @@
 | http.tenant-guard.test.ts | 4 | Tenant guard |
 | logging.sentinel.test.ts | ~30 | Logging RGPD-safe |
 | rgpd.incident-detection.test.ts | 20+ | Détection incidents (Art. 33) |
+| **EPIC 10 tests** | **180** | **Conformité légale RGPD** |
+| legal.politique-confidentialite.test.ts | 16 | Art. 13-14 Information |
+| legal.cgu-cgv.test.ts | 8 | Art. 7 Consentement |
+| legal.informations-rgpd.test.ts | 9 | Art. 12-22 Droits |
+| domain.cookie-consent.test.ts | 6 | ePrivacy Art. 5.3 |
+| domain.cgu-acceptance.test.ts | 8 | Art. 7 CGU |
+| domain.cgu-version.test.ts | 8 | Versioning CGU |
+| domain.data-suspension.test.ts | 5 | Art. 18 Limitation |
+| domain.user-opposition.test.ts | 7 | Art. 21 Opposition |
+| domain.user-dispute.test.ts | 7 | Art. 22 Révision humaine |
+| repository.cookie-consent.test.ts | 6 | Cookie consent repo |
+| repository.cgu.test.ts | 6 | CGU acceptance repo |
+| repository.opposition.test.ts | 6 | Opposition repo |
+| repository.dispute.test.ts | 6 | Dispute repo |
+| usecase.get-cookie-consent.test.ts | 4 | Cookie consent use-case |
+| usecase.save-cookie-consent.test.ts | 4 | Cookie consent use-case |
+| usecase.suspend-user-data.test.ts | 4 | Data suspension use-case |
+| usecase.unsuspend-user-data.test.ts | 4 | Data unsuspension use-case |
+| usecase.submit-opposition.test.ts | 4 | Opposition use-case |
+| usecase.list-oppositions.test.ts | 3 | Opposition use-case |
+| usecase.submit-dispute.test.ts | 4 | Dispute use-case |
+| usecase.list-disputes.test.ts | 2 | Dispute use-case |
+| usecase.resolve-dispute.test.ts | 4 | Dispute use-case |
+| middleware.check-data-suspension.test.ts | 4 | Data suspension middleware |
+| api.consents.cookies.test.ts | 6 | Cookie consent API |
+| api.contact.dpo.test.ts | 4 | DPO contact API |
+| api.legal.cgu.test.ts | 6 | CGU acceptance API |
+| api.tenants.rgpd.test.ts | 8 | RGPD tenant APIs |
 | rgpd.incident-usecases.test.ts | 20+ | Use cases incidents (Art. 33-34) |
 | rgpd.incident-api.test.ts | 20+ | API incidents (CNIL notification) |
 
 **Total** : ~312 tests RGPD passing
+
+---
+
+## EPIC 10 — RGPD Legal & Compliance
+
+### LOT 10.0 — Politique de Confidentialité
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `politique-confidentialite.md` | Document légal | [docs/legal/politique-confidentialite.md](../../docs/legal/politique-confidentialite.md) | ✅ |
+| `page.tsx` | Page SSG | [app/(legal)/politique-confidentialite/page.tsx](../../app/(legal)/politique-confidentialite/page.tsx) | ✅ |
+
+**Tests** : [tests/legal.politique-confidentialite.test.ts](../../tests/legal.politique-confidentialite.test.ts) (16 tests)
+
+---
+
+### LOT 10.1 — CGU / CGV
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `cgu-cgv.md` | Document légal | [docs/legal/cgu-cgv.md](../../docs/legal/cgu-cgv.md) | ✅ |
+| `page.tsx` | Page SSG | [app/(legal)/cgu/page.tsx](../../app/(legal)/cgu/page.tsx) | ✅ |
+
+**Tests** : [tests/legal.cgu-cgv.test.ts](../../tests/legal.cgu-cgv.test.ts) (8 tests)
+
+---
+
+### LOT 10.2 — Informations RGPD + Formulaire DPO
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `informations-rgpd.md` | Document légal | [docs/legal/informations-rgpd.md](../../docs/legal/informations-rgpd.md) | ✅ |
+| `page.tsx` | Page SSG | [app/(legal)/informations-rgpd/page.tsx](../../app/(legal)/informations-rgpd/page.tsx) | ✅ |
+| `DpoContactForm.tsx` | Component React | [app/(legal)/informations-rgpd/DpoContactForm.tsx](../../app/(legal)/informations-rgpd/DpoContactForm.tsx) | ✅ |
+
+**Tests** : [tests/legal.informations-rgpd.test.ts](../../tests/legal.informations-rgpd.test.ts) (9 tests)
+
+---
+
+### LOT 10.3 — Cookie Consent Banner
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `CookieConsent.ts` | Domain | [src/domain/legal/CookieConsent.ts](../../src/domain/legal/CookieConsent.ts) | ✅ |
+| `PgCookieConsentRepo.ts` | Repository | [src/infrastructure/repositories/PgCookieConsentRepo.ts](../../src/infrastructure/repositories/PgCookieConsentRepo.ts) | ✅ |
+| `saveCookieConsent.ts` | Use-case | [src/app/usecases/cookies/saveCookieConsent.ts](../../src/app/usecases/cookies/saveCookieConsent.ts) | ✅ |
+| `getCookieConsent.ts` | Use-case | [src/app/usecases/cookies/getCookieConsent.ts](../../src/app/usecases/cookies/getCookieConsent.ts) | ✅ |
+| `route.ts` | API | [app/api/consents/cookies/route.ts](../../app/api/consents/cookies/route.ts) | ✅ |
+
+**Tests** : 26 tests (domain, repository, use-case, API)
+
+---
+
+### LOT 10.4 — CGU Acceptance
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `CguAcceptance.ts` | Domain | [src/domain/legal/CguAcceptance.ts](../../src/domain/legal/CguAcceptance.ts) | ✅ |
+| `CguVersion.ts` | Domain | [src/domain/legal/CguVersion.ts](../../src/domain/legal/CguVersion.ts) | ✅ |
+| `PgCguRepo.ts` | Repository | [src/infrastructure/repositories/PgCguRepo.ts](../../src/infrastructure/repositories/PgCguRepo.ts) | ✅ |
+| `route.ts` | API | [app/api/legal/cgu/route.ts](../../app/api/legal/cgu/route.ts) | ✅ |
+
+**Tests** : 28 tests (domain, repository, API)
+
+---
+
+### LOT 10.5 — Data Suspension (Art. 18)
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `DataSuspension.ts` | Domain | [src/domain/rgpd/DataSuspension.ts](../../src/domain/rgpd/DataSuspension.ts) | ✅ |
+| `checkDataSuspension.ts` | Middleware | [src/ai/gateway/enforcement/checkDataSuspension.ts](../../src/ai/gateway/enforcement/checkDataSuspension.ts) | ✅ |
+| `suspendUserData.ts` | Use-case | [src/app/usecases/suspension/suspendUserData.ts](../../src/app/usecases/suspension/suspendUserData.ts) | ✅ |
+| `unsuspendUserData.ts` | Use-case | [src/app/usecases/suspension/unsuspendUserData.ts](../../src/app/usecases/suspension/unsuspendUserData.ts) | ✅ |
+
+**Tests** : 17 tests (domain, use-case, middleware)
+
+---
+
+### LOT 10.6 — Opposition (Art. 21) + Révision Humaine (Art. 22)
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `UserOpposition.ts` | Domain | [src/domain/legal/UserOpposition.ts](../../src/domain/legal/UserOpposition.ts) | ✅ |
+| `PgOppositionRepo.ts` | Repository | [src/infrastructure/repositories/PgOppositionRepo.ts](../../src/infrastructure/repositories/PgOppositionRepo.ts) | ✅ |
+| `UserDispute.ts` | Domain | [src/domain/legal/UserDispute.ts](../../src/domain/legal/UserDispute.ts) | ✅ |
+| `PgDisputeRepo.ts` | Repository | [src/infrastructure/repositories/PgDisputeRepo.ts](../../src/infrastructure/repositories/PgDisputeRepo.ts) | ✅ |
+
+**Tests** : 47 tests (domain, repository, use-case, API)
+
+---
+
+### LOT 10.7 — Registre + DPIA
+
+**Document** : [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `registre-traitements.md` | Documentation | [docs/rgpd/registre-traitements.md](../../docs/rgpd/registre-traitements.md) | ✅ |
+| `dpia.md` | Documentation | [docs/rgpd/dpia.md](../../docs/rgpd/dpia.md) | ✅ |
 
 ---
 
@@ -631,5 +776,5 @@ grep "LOT" migrations/*.sql
 ---
 
 **Maintenu par** : Claude Code (Sonnet 4.5)
-**Dernière mise à jour** : 2026-01-01
-**Version** : 1.1
+**Dernière mise à jour** : 2026-01-05
+**Version** : 1.2

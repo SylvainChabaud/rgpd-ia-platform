@@ -109,7 +109,7 @@ ALTER TABLE security_incidents ENABLE ROW LEVEL SECURITY;
 -- SUPER_ADMIN peut voir tous les incidents (platform-wide)
 CREATE POLICY security_incidents_superadmin_all ON security_incidents
     FOR ALL
-    TO authenticated
+    TO PUBLIC
     USING (
         -- SUPER_ADMIN voit tout
         current_setting('app.current_user_role', true) = 'SUPER_ADMIN'
@@ -118,7 +118,7 @@ CREATE POLICY security_incidents_superadmin_all ON security_incidents
 -- DPO peut voir tous les incidents (platform-wide) - lecture seule pour CRUD via use case
 CREATE POLICY security_incidents_dpo_select ON security_incidents
     FOR SELECT
-    TO authenticated
+    TO PUBLIC
     USING (
         current_setting('app.current_user_role', true) = 'DPO'
     );
@@ -126,7 +126,7 @@ CREATE POLICY security_incidents_dpo_select ON security_incidents
 -- TENANT_ADMIN peut voir incidents de son tenant uniquement
 CREATE POLICY security_incidents_tenant_admin ON security_incidents
     FOR SELECT
-    TO authenticated
+    TO PUBLIC
     USING (
         current_setting('app.current_user_role', true) = 'TENANT_ADMIN'
         AND tenant_id = current_setting('app.current_tenant_id', true)::UUID
@@ -173,12 +173,12 @@ ALTER TABLE incident_audit_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY incident_audit_log_superadmin ON incident_audit_log
     FOR ALL
-    TO authenticated
+    TO PUBLIC
     USING (current_setting('app.current_user_role', true) = 'SUPER_ADMIN');
 
 CREATE POLICY incident_audit_log_dpo ON incident_audit_log
     FOR SELECT
-    TO authenticated
+    TO PUBLIC
     USING (current_setting('app.current_user_role', true) = 'DPO');
 
 -- =============================================================================

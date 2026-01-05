@@ -52,6 +52,18 @@ export const AiJobStatusSchema = z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAI
 
 export const RgpdRequestTypeSchema = z.enum(['EXPORT', 'DELETE']);
 
+export const DpoContactRequestTypeSchema = z.enum([
+  'access',
+  'rectification',
+  'erasure',
+  'limitation',
+  'portability',
+  'opposition',
+  'human_review',
+  'question',
+  'complaint',
+]);
+
 // ============================================
 // Pagination & Filtering
 // ============================================
@@ -112,6 +124,12 @@ export const ExportRequestSchema = z.object({
 
 export const DeleteRequestSchema = z.object({
   // No body params needed, uses authenticated user context
+});
+
+export const DpoContactRequestSchema = z.object({
+  requestType: DpoContactRequestTypeSchema,
+  email: EmailSchema,
+  message: z.string().min(20, 'Message must be at least 20 characters').max(2000),
 });
 
 // ============================================

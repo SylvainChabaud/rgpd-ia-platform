@@ -10,11 +10,17 @@
  * Classification: P1 (technical tests, no sensitive data)
  * RGPD Ref: Art. 32 (mesures techniques appropriées)
  * Architecture: BOUNDARIES.md §3 (Database-level isolation)
+ *
+ * NOTE: These tests create a separate pool with testuser (NOBYPASSRLS) to verify RLS
  */
 
-import { pool } from "@/infrastructure/db/pg";
+import { Pool, PoolClient } from "pg";
 import { newId } from "@/shared/ids";
-import { PoolClient } from "pg";
+
+// Create RLS test pool with testuser (NOT devuser) to enforce RLS policies
+const rlsPool = new Pool({
+  connectionString: 'postgresql://testuser:testpass@localhost:5432/rgpd_platform',
+});
 
 /**
  * Helper: Execute query with tenant context in a transaction
@@ -25,7 +31,7 @@ async function withTenantContextInTest<T>(
   tenantId: string | null,
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
-  const client = await pool.connect();
+  const client = await rlsPool.connect();
   try {
     await client.query("BEGIN");
     if (tenantId) {
@@ -59,17 +65,17 @@ async function setupTestData() {
   await cleanup();
 
   // Create tenants (no RLS on tenants table)
-  await pool.query(
+  await rlsPool.query(
     "INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)",
     [TENANT_A_ID, "rls-test-tenant-a", "RLS Test Tenant A"]
   );
-  await pool.query(
+  await rlsPool.query(
     "INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)",
     [TENANT_B_ID, "rls-test-tenant-b", "RLS Test Tenant B"]
   );
 
   // Create consents for tenant A (with tenant context)
-  const clientA = await pool.connect();
+  const clientA = await rlsPool.connect();
   try {
     await clientA.query("BEGIN");
     await clientA.query(`SET LOCAL app.current_tenant_id = '${TENANT_A_ID}'`);
@@ -90,7 +96,7 @@ async function setupTestData() {
   }
 
   // Create consents for tenant B (with tenant context)
-  const clientB = await pool.connect();
+  const clientB = await rlsPool.connect();
   try {
     await clientB.query("BEGIN");
     await clientB.query(`SET LOCAL app.current_tenant_id = '${TENANT_B_ID}'`);
@@ -122,13 +128,13 @@ async function setupTestData() {
  */
 async function cleanup() {
   // Find all test tenants by slug pattern
-  const result = await pool.query(
+  const result = await rlsPool.query(
     "SELECT id FROM tenants WHERE slug LIKE 'rls-test%'"
   );
 
   if (result.rows.length > 0) {
     const tenantIds = result.rows.map((r) => r.id);
-    await pool.query("SELECT cleanup_test_data($1::UUID[])", [tenantIds]);
+    await rlsPool.query("SELECT cleanup_test_data($1::UUID[])", [tenantIds]);
   }
 }
 
@@ -287,11 +293,11 @@ describe("RGPD BLOCKER: RLS policies for audit_events table", () => {
     await setupTestData();
 
     // Create audit events for both tenants
-    await pool.query(
+    await rlsPool.query(
       "INSERT INTO audit_events (id, event_type, actor_id, tenant_id) VALUES ($1, $2, $3, $4)",
       [newId(), "CONSENT_GRANTED", USER_A_ID, TENANT_A_ID]
     );
-    await pool.query(
+    await rlsPool.query(
       "INSERT INTO audit_events (id, event_type, actor_id, tenant_id) VALUES ($1, $2, $3, $4)",
       [newId(), "CONSENT_GRANTED", USER_B_ID, TENANT_B_ID]
     );
@@ -299,7 +305,7 @@ describe("RGPD BLOCKER: RLS policies for audit_events table", () => {
 
   afterAll(async () => {
     // Delete audit events first (they reference tenants)
-    await pool.query("SELECT cleanup_test_data($1::UUID[])", [
+    await rlsPool.query("SELECT cleanup_test_data($1::UUID[])", [
       [TENANT_A_ID, TENANT_B_ID],
     ]);
   });
@@ -361,7 +367,7 @@ describe("RGPD BLOCKER: RLS policies for rgpd_requests table", () => {
     await setupTestData();
 
     // Create RGPD requests for tenant A (with tenant context)
-    const clientA = await pool.connect();
+    const clientA = await rlsPool.connect();
     try {
       await clientA.query("BEGIN");
       await clientA.query(`SET LOCAL app.current_tenant_id = '${TENANT_A_ID}'`);
@@ -375,7 +381,7 @@ describe("RGPD BLOCKER: RLS policies for rgpd_requests table", () => {
     }
 
     // Create RGPD requests for tenant B (with tenant context)
-    const clientB = await pool.connect();
+    const clientB = await rlsPool.connect();
     try {
       await clientB.query("BEGIN");
       await clientB.query(`SET LOCAL app.current_tenant_id = '${TENANT_B_ID}'`);
@@ -434,14 +440,14 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
 
     // Find existing platform user (required by uniq_platform_superadmin constraint)
     // There can only be ONE platform user in the system
-    const platformRes = await pool.query(
+    const platformRes = await rlsPool.query(
       `SELECT id FROM users WHERE scope = 'PLATFORM' LIMIT 1`
     );
     
     if (platformRes.rows.length === 0) {
       // Create platform user if none exists (first run only)
       PLATFORM_USER_ID = newId();
-      await pool.query(
+      await rlsPool.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
          VALUES ($1, NULL, $2, $3, $4, 'PLATFORM', 'PLATFORM_ADMIN')`,
         [PLATFORM_USER_ID, "platform-rls-test@test.com", "Platform User", "__HASH__"]
@@ -451,7 +457,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
     }
 
     // Create tenant A user (with tenant A context)
-    const clientA = await pool.connect();
+    const clientA = await rlsPool.connect();
     try {
       await clientA.query("BEGIN");
       await clientA.query(`SET LOCAL app.current_tenant_id = '${TENANT_A_ID}'`);
@@ -472,7 +478,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
     }
 
     // Create tenant B user (with tenant B context)
-    const clientB = await pool.connect();
+    const clientB = await rlsPool.connect();
     try {
       await clientB.query("BEGIN");
       await clientB.query(`SET LOCAL app.current_tenant_id = '${TENANT_B_ID}'`);
@@ -495,7 +501,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
 
   afterAll(async () => {
     // Delete test tenant users only (not platform user - it's shared)
-    await pool.query("DELETE FROM users WHERE id IN ($1, $2)", [
+    await rlsPool.query("DELETE FROM users WHERE id IN ($1, $2)", [
       TENANT_A_USER_ID,
       TENANT_B_USER_ID,
     ]);
@@ -547,5 +553,6 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
 
 // Global cleanup: close pool after ALL tests
 afterAll(async () => {
-  await pool.end();
+  await rlsPool.end();
 });
+

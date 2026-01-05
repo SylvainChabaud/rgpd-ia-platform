@@ -2,6 +2,16 @@
  * Tests for PgUserRepo
  * LOT 5.3 - API Layer
  *
+ * NOTE ON RGPD COMPLIANCE & TEST STRATEGY:
+ * These are UNIT tests for repository business logic only.
+ * RGPD protection is implemented in 3 layers:
+ * 1. Repository: Basic CRUD (tested here with devuser/BYPASSRLS)
+ * 2. Application: Use-cases validate tenant ownership (tested in usecase tests)
+ * 3. Database: RLS policies enforce isolation (tested in db.rls-policies.test.ts)
+ *
+ * This test file uses CONNECTION_STRING override to test repository logic
+ * without RLS interference. RLS is separately tested in dedicated test file.
+ *
  * Coverage goals:
  * - findByEmailHash: nominal + not found
  * - findById: nominal + not found
@@ -12,6 +22,9 @@
  * - softDeleteUserByTenant: nominal + RGPD validation
  * - hardDeleteUserByTenant: nominal + RGPD validation
  */
+
+// Override DATABASE_URL for repository unit tests (bypass RLS)
+process.env.DATABASE_URL = 'postgresql://devuser:devpass@localhost:5432/rgpd_platform';
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
@@ -170,7 +183,7 @@ describe('PgUserRepo', () => {
 
       for (let i = 1; i <= 5; i++) {
         const emailHash = await hashEmail(`user${i}@example.com`);
-        const userId = `10000000-0000-0000-0000-00000000000${i + 8}`;
+        const userId = `10000000-0000-0000-0000-0000000000${(i + 8).toString().padStart(2, '0')}`;
         await insertUserWithRLS([userId, TENANT_ID, emailHash, `User ${i}`, passwordHash, 'TENANT', 'user']);
       }
 

@@ -1,0 +1,282 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # JOB 1: Tests unitaires et lint (toujours exécutés)
+  # ============================================================================
+  test-unit:
+    name: Unit Tests & Lint
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: devuser
+          POSTGRES_PASSWORD: devpass
+          POSTGRES_DB: rgpd_platform
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://devuser:devpass@localhost:5432/rgpd_platform
+        run: npm run migrate
+
+      - name: Run unit tests (no E2E)
+        env:
+          DATABASE_URL: postgresql://devuser:devpass@localhost:5432/rgpd_platform
+          JWT_SECRET: test-jwt-secret
+          TEST_SKIP_E2E: true
+        run: npm test -- --testPathIgnorePatterns=e2e
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+
+  # ============================================================================
+  # JOB 2: Build Docker image
+  # ============================================================================
+  build-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test-unit
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # JOB 3: Deploy to Staging (branch main)
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-image
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.rgpd-platform.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to staging server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+        run: |
+          # Configure SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $STAGING_HOST >> ~/.ssh/known_hosts
+          
+          # Deploy via SSH
+          ssh $STAGING_USER@$STAGING_HOST << 'EOF'
+            cd /opt/rgpd-platform
+            git pull origin main
+            docker-compose -f docker-compose.staging.yml pull
+            docker-compose -f docker-compose.staging.yml up -d
+            docker-compose -f docker-compose.staging.yml exec -T app npm run migrate
+          EOF
+
+      - name: Run E2E tests on staging
+        env:
+          TEST_BASE_URL: https://staging.rgpd-platform.com
+          TEST_E2E_SERVER_AVAILABLE: true
+          TEST_SKIP_E2E: false
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+        run: |
+          # Wait for app to be ready
+          sleep 30
+          
+          # Run E2E tests against staging
+          npm test -- api.e2e
+
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment: ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ============================================================================
+  # JOB 4: Deploy to Production (git tags only)
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-image
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://rgpd-platform.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Backup production database
+        env:
+          PROD_DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          # Backup to S3 before deployment
+          BACKUP_FILE="backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+          PGPASSWORD=$PROD_DB_PASSWORD pg_dump -h $PROD_DB_HOST -U $PROD_DB_USER rgpd_production | gzip > $BACKUP_FILE
+          aws s3 cp $BACKUP_FILE s3://rgpd-platform-backups/pre-deploy/
+
+      - name: Deploy to production
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
+          
+          ssh $PROD_USER@$PROD_HOST << 'EOF'
+            cd /opt/rgpd-platform
+            
+            # Pull latest changes
+            git fetch --tags
+            git checkout ${{ github.ref_name }}
+            
+            # Update images
+            docker-compose pull
+            
+            # Apply migrations (with rollback capability)
+            docker-compose exec -T app npm run migrate
+            
+            # Rolling update (zero downtime)
+            docker-compose up -d --no-deps --build app
+          EOF
+
+      - name: Health check
+        run: |
+          # Wait for deployment
+          sleep 30
+          
+          # Check health endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://rgpd-platform.com/api/health)
+          if [ $response -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi
+
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ github.ref_name }}: ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          mention: 'here'
+          if_mention: failure
+
+      - name: Rollback on failure
+        if: failure()
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          ssh $PROD_USER@$PROD_HOST << 'EOF'
+            cd /opt/rgpd-platform
+            git checkout HEAD~1
+            docker-compose up -d --no-deps app
+          EOF

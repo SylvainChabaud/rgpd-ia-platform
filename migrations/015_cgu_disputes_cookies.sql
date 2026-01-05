@@ -203,7 +203,7 @@ CREATE INDEX idx_cookie_consents_user ON cookie_consents(tenant_id, user_id);
 CREATE INDEX idx_cookie_consents_anonymous ON cookie_consents(anonymous_id);
 
 -- Index pour purge consents expirés (job cron)
-CREATE INDEX idx_cookie_consents_expired ON cookie_consents(expires_at) WHERE expires_at < NOW();
+CREATE INDEX idx_cookie_consents_expired ON cookie_consents(expires_at);
 
 -- =============================================================================
 -- TABLE: uploaded_files
@@ -247,7 +247,7 @@ CREATE INDEX idx_uploaded_files_user ON uploaded_files(tenant_id, user_id);
 CREATE INDEX idx_uploaded_files_job ON uploaded_files(ai_job_id);
 
 -- Index pour purge automatique (job cron)
-CREATE INDEX idx_uploaded_files_expired ON uploaded_files(expires_at) WHERE purged_at IS NULL AND expires_at < NOW();
+CREATE INDEX idx_uploaded_files_expired ON uploaded_files(expires_at) WHERE purged_at IS NULL;
 
 -- =============================================================================
 -- ALTER TABLE: users (ajout flag data_suspended pour Art. 18)

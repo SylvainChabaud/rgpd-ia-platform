@@ -16,6 +16,8 @@ import {
   ConsentPurposeSchema,
   AiJobStatusSchema,
   RgpdRequestTypeSchema,
+  DpoContactRequestTypeSchema,
+  DpoContactRequestSchema,
   PaginationSchema,
   DateRangeSchema,
   LoginRequestSchema,
@@ -274,6 +276,22 @@ describe('API Request Schemas', () => {
         prompt: 'a'.repeat(10001),
         purpose: 'ai_processing',
       });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('DpoContactRequestSchema', () => {
+    test('accepts valid DPO contact request', () => {
+      const result = DpoContactRequestSchema.safeParse({
+        requestType: 'access',
+        email: 'user@example.com',
+        message: 'This message is long enough for validation.',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    test('rejects invalid DPO request type', () => {
+      const result = DpoContactRequestTypeSchema.safeParse('invalid');
       expect(result.success).toBe(false);
     });
   });

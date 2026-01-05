@@ -201,12 +201,13 @@ Si NON → Refuse (403 error)
 | EPIC 6 | Observabilité | 2 endpoints | 30 tests | ✅ 100% |
 | EPIC 7 | Registre audit | 1 endpoint | 0 tests | ✅ 100% |
 | EPIC 8 | PII detection | 0 endpoints | 85 tests | ✅ 100% |
-| **EPIC 9** | **Incidents** | **4 endpoints** | **60 tests** | **✅ 100%** |
+| EPIC 9 | Incidents | 4 endpoints | 60 tests | ✅ 100% |
+| **EPIC 10** | **Legal Compliance** | **11 endpoints** | **180 tests** | **✅ 100%** |
 
-**Total** : 25 fichiers, 312+ tests RGPD
+**Total** : 33 fichiers, 492+ tests RGPD
 
 **TODOs** :
-- [ ] EPIC 10-13 (backoffice, UI admin/user)
+- [ ] EPIC 11-13 (backoffice, UI admin/user)
 
 ---
 
@@ -300,7 +301,7 @@ Si NON → Refuse (403 error)
 
 | EPIC | Quoi | Audience | Status |
 |------|------|----------|--------|
-| **EPIC 10** | API Legal/Contrats (DPA, registre) | Legal/DPO | 🔴 TODO |
+| **EPIC 10** | Legal Compliance (Pages légales, CGU, Cookie, Droits Art. 18/21/22) | Legal/DPO/Users | ✅ COMPLET |
 | **EPIC 11** | Back-office Super Admin (UI) | Admin | 🔴 TODO |
 | **EPIC 12** | Back-office Tenant Admin (UI) | Client | 🔴 TODO |
 | **EPIC 13** | Interface Utilisateur (signup, consent) | End-user | 🔴 TODO |
@@ -411,5 +412,5 @@ Je vais l'expliquer simplement.
 ---
 
 **Maintenu par** : Claude Code (Sonnet 4.5)
-**Dernière mise à jour** : 2026-01-02
-**Version** : 1.0
+**Dernière mise à jour** : 2026-01-05
+**Version** : 1.1

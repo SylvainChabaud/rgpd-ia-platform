@@ -2,7 +2,9 @@ import { invokeStubProvider } from "@/ai/gateway/providers/stub";
 import { invokeOllamaProvider } from "@/ai/gateway/providers/ollama";
 import { AI_PROVIDER } from "@/ai/gateway/config";
 import type { ConsentRepo } from "@/app/ports/ConsentRepo";
+import type { UserRepo } from "@/app/ports/UserRepo";
 import { checkConsent } from "@/ai/gateway/enforcement/checkConsent";
+import { checkDataSuspension } from "@/ai/gateway/enforcement/checkDataSuspension";
 import { redactInput, restoreOutput } from "@/ai/gateway/pii-middleware";
 
 export type LlmMessage = {
@@ -32,6 +34,7 @@ export type InvokeLLMOutput = {
 
 export type InvokeLLMDependencies = {
   consentRepo?: ConsentRepo;
+  userRepo?: UserRepo;
 };
 
 /**
@@ -43,12 +46,14 @@ export type InvokeLLMDependencies = {
  * - LOT 3.0 : Provider local POC (Ollama) branché
  * - LOT 5.0 : Consent enforcement (opt-in required)
  * - LOT 8.0 : PII redaction (pseudonymization, Art. 32)
+ * - LOT 10.6 : Data suspension enforcement (Art. 18 RGPD)
  *
  * IMPORTANT :
  * - NO DIRECT LLM CALLS outside this function
  * - NO STORAGE of prompts/outputs by default
  * - Provider routing based on config (stub | ollama)
  * - Consent enforcement BEFORE provider invocation (RGPD blocker)
+ * - Data suspension check BEFORE provider invocation (RGPD blocker Art. 18)
  * - PII redaction BEFORE sending to LLM (Art. 32 Pseudonymization)
  */
 export async function invokeLLM(
@@ -62,6 +67,15 @@ export async function invokeLLM(
       input.tenantId,
       input.actorId,
       input.purpose
+    );
+  }
+
+  // LOT 10.6: Data suspension enforcement (Art. 18 RGPD)
+  if (deps?.userRepo && input.actorId) {
+    await checkDataSuspension(
+      deps.userRepo,
+      input.tenantId,
+      input.actorId
     );
   }
 

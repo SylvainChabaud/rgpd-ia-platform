@@ -1,7 +1,7 @@
 # EPIC 10 — RGPD Legal & Compliance (Backend + Documents)
 
-**Date** : 25 décembre 2025 (mis à jour 2 janvier 2026)  
-**Statut** : ❌ TODO  
+**Date** : 25 décembre 2025 (mis à jour 5 janvier 2026)  
+**Statut** : ✅ **COMPLET** (100%)  
 **Périmètre** : Backend APIs + Documents Légaux + Composants React  
 **Scope** : PLATFORM / TENANT / MEMBER  
 **RGPD Coverage** : Art. 13-14 (Information), Art. 18-22 (Droits), Art. 30 (Registre), Art. 35 (DPIA), ePrivacy (Cookies)  

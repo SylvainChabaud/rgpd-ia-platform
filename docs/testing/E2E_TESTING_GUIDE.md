@@ -1,0 +1,222 @@
+# Guide des Tests E2E (End-to-End)
+
+## ⚠️ ATTENTION : Environnements autorisés
+
+Les tests E2E modifient la base de données en créant et supprimant des données. **NE JAMAIS les exécuter en production !**
+
+### ✅ Environnements autorisés
+- **Local** : Développement sur poste de travail
+- **Staging** : Environnement de pré-production avec base de données de test
+
+### ❌ Environnements interdits
+- **Production** : Risque de corruption/suppression de données réelles
+
+---
+
+## Configuration par environnement
+
+### 🏠 Local (Développement)
+
+**.env.test** :
+```bash
+# URL du serveur Next.js local
+TEST_BASE_URL=http://localhost:3000
+
+# Autoriser les tests E2E
+TEST_E2E_SERVER_AVAILABLE=true
+TEST_SKIP_E2E=false
+
+# Base de données de développement
+DATABASE_URL=postgresql://devuser:devpass@localhost:5432/rgpd_platform
+```
+
+**Lancement** :
+```bash
+# 1. Démarrer le serveur Next.js (terminal 1)
+npm run dev
+
+# 2. Exécuter les tests E2E (terminal 2)
+npm test -- api.e2e.ai-rgpd-pipeline.test.ts
+npm test -- api.e2e.incidents.test.ts
+npm test -- api.e2e.legal-compliance.test.ts
+npm test -- api.e2e.critical-routes.test.ts
+```
+
+---
+
+### 🎭 Staging (Pré-production)
+
+**.env.staging** :
+```bash
+# URL du serveur staging
+TEST_BASE_URL=https://staging.rgpd-platform.com
+
+# Autoriser les tests E2E
+TEST_E2E_SERVER_AVAILABLE=true
+TEST_SKIP_E2E=false
+
+# Base de données staging (JAMAIS la prod !)
+DATABASE_URL=postgresql://staginguser:xxx@staging-db:5432/rgpd_staging
+```
+
+**Lancement** :
+```bash
+# Charger les variables d'environnement staging
+export $(cat .env.staging | xargs)
+
+# Exécuter les tests contre staging
+npm test -- api.e2e
+```
+
+---
+
+### 🚨 Production (BLOQUÉ)
+
+**.env.production** :
+```bash
+# ⚠️ PAS de TEST_BASE_URL nécessaire en production
+
+# BLOQUER tous les tests E2E
+TEST_SKIP_E2E=true
+
+# Base de données production (protégée)
+DATABASE_URL=postgresql://produser:xxx@prod-db:5432/rgpd_production
+```
+
+**Résultat** : Les tests E2E seront **automatiquement ignorés** grâce à `TEST_SKIP_E2E=true`.
+
+---
+
+## Variables d'environnement
+
+| Variable | Description | Local | Staging | Production |
+|----------|-------------|-------|---------|------------|
+| `TEST_BASE_URL` | URL du serveur à tester | `http://localhost:3000` | `https://staging.example.com` | ❌ Non utilisé |
+| `TEST_E2E_SERVER_AVAILABLE` | Serveur disponible ? | `true` | `true` | ❌ Inutile |
+| `TEST_SKIP_E2E` | Forcer le skip des tests | `false` | `false` | ✅ `true` |
+| `DATABASE_URL` | Connexion BDD | Local dev DB | Staging DB | ❌ Prod DB (protégée) |
+
+---
+
+## Que testent les E2E ?
+
+### 1. **api.e2e.critical-routes.test.ts** (~20 tests)
+- Sécurité : Authentication, CORS, rate limiting
+- Validation : Schémas Zod, UUIDs invalides
+- Isolation : Tenant RLS policies
+
+### 2. **api.e2e.legal-compliance.test.ts** (29 tests)
+- LOT 10 : Cookie consent, CGU, suspension RGPD
+- Art. 7, 18, 21, 22 du RGPD
+- Workflow contestations et oppositions
+
+### 3. **api.e2e.ai-rgpd-pipeline.test.ts** (27 tests)
+- EPIC 3 : AI Gateway + enforcement consentement
+- EPIC 4 : Tracking des jobs IA
+- EPIC 5 : Export (Art. 15, 20), Effacement (Art. 17)
+
+### 4. **api.e2e.incidents.test.ts** (21 tests)
+- EPIC 9 : Gestion incidents de sécurité
+- Art. 33 : Notification CNIL (72h)
+- Art. 34 : Notification utilisateurs
+
+**Total : ~97 tests E2E**
+
+---
+
+## Pipeline CI/CD recommandé
+
+```yaml
+# .github/workflows/ci.yml
+stages:
+  - name: Unit Tests
+    run: npm test -- --testPathIgnorePatterns=e2e
+    # ✅ Toujours exécutés (pas de BDD réelle)
+
+  - name: E2E Tests (Staging)
+    if: branch == 'staging'
+    env:
+      TEST_BASE_URL: https://staging.example.com
+      TEST_SKIP_E2E: false
+    run: npm test -- api.e2e
+    # ✅ Exécutés uniquement sur branche staging
+
+  - name: Deploy Production
+    if: branch == 'main'
+    env:
+      TEST_SKIP_E2E: true
+    # ❌ E2E tests bloqués en production
+```
+
+---
+
+## Dépannage
+
+### ❌ "E2E tests skipped: Set TEST_E2E_SERVER_AVAILABLE=true"
+**Cause** : Le serveur Next.js n'est pas démarré.
+
+**Solution** :
+```bash
+# Terminal 1
+npm run dev
+
+# Terminal 2 (attendre que le serveur démarre)
+npm test -- api.e2e.critical-routes.test.ts
+```
+
+### ❌ "Connection refused to localhost:3000"
+**Cause** : URL incorrecte ou serveur pas démarré.
+
+**Vérification** :
+```bash
+# Vérifier que le serveur écoute sur le bon port
+curl http://localhost:3000/api/health
+
+# Ou dans PowerShell
+Invoke-WebRequest http://localhost:3000/api/health
+```
+
+### ❌ Tests échouent avec erreurs 401/403
+**Cause** : Problème de JWT ou tenant isolation.
+
+**Debug** :
+```typescript
+// Ajouter dans le test
+console.log('Token:', userToken);
+console.log('Response:', await response.text());
+```
+
+---
+
+## Sécurité
+
+### ⚠️ Pourquoi ne pas tester en production ?
+
+Les tests E2E :
+1. **Créent des données** : Tenants, users, consents, incidents
+2. **Modifient l'état** : Révocations, suspensions, suppressions RGPD
+3. **Suppriment des données** : Via `cleanup_test_data()`
+4. **Contournent la sécurité** : Utilisent `devuser` avec `BYPASSRLS`
+
+### ✅ Protections en place
+
+1. **Variable TEST_SKIP_E2E** : Bloque automatiquement en prod
+2. **Slug de test** : Tenants créés avec suffixe `-e2e-test`
+3. **Fonction cleanup** : Supprime uniquement les données de test
+4. **User devuser** : N'existe pas en production
+
+---
+
+## Résumé des bonnes pratiques
+
+✅ **À FAIRE** :
+- Exécuter les E2E en local avant chaque commit
+- Tester contre staging avant déploiement prod
+- Vérifier que `TEST_SKIP_E2E=true` en production
+- Utiliser une BDD dédiée pour staging
+
+❌ **À NE PAS FAIRE** :
+- Exécuter les E2E contre la BDD de production
+- Oublier de démarrer le serveur Next.js avant les tests
+- Modifier `TEST_SKIP_E2E` à `false` en production
+- Partager les variables d'environnement entre local et prod

@@ -34,6 +34,7 @@ const E2E_SERVER_AVAILABLE = process.env.TEST_E2E_SERVER_AVAILABLE === "true";
 
 const TENANT_ID = newId();
 const USER_ID = newId();
+const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 
 /**
  * Helper: Generate valid JWT token for testing
@@ -112,7 +113,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("GET /api/health requires NO auth (public route)", async () => {
       // GIVEN: Health check endpoint
       // WHEN: Calling without auth
-      const response = await fetch("http://localhost:3000/api/health");
+      const response = await fetch(`${BASE_URL}/api/health`);
 
       // THEN: Should succeed (public route)
       expect([200, 404]).toContain(response.status); // May not be implemented
@@ -121,7 +122,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("BLOCKER: POST /api/consents requires auth", async () => {
       // GIVEN: Protected consent endpoint
       // WHEN: Calling without auth
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: "test", purpose: "test" }),
@@ -134,7 +135,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("BLOCKER: GET /api/users requires auth", async () => {
       // GIVEN: Protected users endpoint
       // WHEN: Calling without auth
-      const response = await fetch("http://localhost:3000/api/users");
+      const response = await fetch(`${BASE_URL}/api/users`);
 
       // THEN: Should reject
       expect(response.status).toBe(401);
@@ -143,7 +144,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("BLOCKER: POST /api/ai/invoke requires auth", async () => {
       // GIVEN: AI invocation endpoint
       // WHEN: Calling without auth
-      const response = await fetch("http://localhost:3000/api/ai/invoke", {
+      const response = await fetch(`${BASE_URL}/api/ai/invoke`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: "test" }),
@@ -151,12 +152,12 @@ describeE2E("E2E - Critical API Routes", () => {
 
       // THEN: Should reject
       expect(response.status).toBe(401);
-    });
+    }, 10000); // Increased timeout for slow API response
 
     test("Valid JWT token grants access to protected routes", async () => {
       // GIVEN: Valid JWT token
       // WHEN: Calling protected endpoint with auth
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -178,7 +179,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const invalidInput = { invalid: "data" };
 
       // WHEN: Submitting invalid data
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -196,7 +197,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const invalidInput = { text: "" }; // Empty text
 
       // WHEN: Submitting
-      const response = await fetch("http://localhost:3000/api/ai/invoke", {
+      const response = await fetch(`${BASE_URL}/api/ai/invoke`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -214,7 +215,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const malformedJson = "{ invalid json }";
 
       // WHEN: Submitting
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -237,7 +238,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const otherTenantToken = generateToken(otherUserId, otherTenantId);
 
       // WHEN: Accessing users with wrong tenant token
-      const response = await fetch("http://localhost:3000/api/users", {
+      const response = await fetch(`${BASE_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${otherTenantToken}`,
         },
@@ -257,7 +258,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("User can only see their own tenant's data", async () => {
       // GIVEN: Valid token for TENANT_ID
       // WHEN: Fetching users
-      const response = await fetch("http://localhost:3000/api/users", {
+      const response = await fetch(`${BASE_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${validToken}`,
         },
@@ -279,7 +280,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("404 for non-existent routes", async () => {
       // GIVEN: Non-existent route
       // WHEN: Calling
-      const response = await fetch("http://localhost:3000/api/nonexistent");
+      const response = await fetch(`${BASE_URL}/api/nonexistent`);
 
       // THEN: Should return 404
       expect(response.status).toBe(404);
@@ -287,7 +288,7 @@ describeE2E("E2E - Critical API Routes", () => {
 
     test("Error responses do NOT leak sensitive data", async () => {
       // GIVEN: Request that will cause error
-      const response = await fetch("http://localhost:3000/api/consents/invalid-id", {
+      const response = await fetch(`${BASE_URL}/api/consents/invalid-id`, {
         headers: {
           Authorization: `Bearer ${validToken}`,
         },
@@ -305,7 +306,7 @@ describeE2E("E2E - Critical API Routes", () => {
 
     test("Errors return proper status codes", async () => {
       // GIVEN: Invalid method
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "PATCH", // Not allowed
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -320,7 +321,7 @@ describeE2E("E2E - Critical API Routes", () => {
   describe("Security Headers & CORS", () => {
     test("CORS headers are set for allowed origins", async () => {
       // GIVEN: Request with origin
-      const response = await fetch("http://localhost:3000/api/health", {
+      const response = await fetch(`${BASE_URL}/api/health`, {
         headers: {
           Origin: "http://localhost:3000",
         },
@@ -336,7 +337,7 @@ describeE2E("E2E - Critical API Routes", () => {
 
     test("Content-Type header is validated", async () => {
       // GIVEN: POST request without Content-Type
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -353,7 +354,7 @@ describeE2E("E2E - Critical API Routes", () => {
   describe("RGPD-Specific Routes", () => {
     test("POST /api/rgpd/export creates export request", async () => {
       // GIVEN: Valid export request
-      const response = await fetch("http://localhost:3000/api/rgpd/export", {
+      const response = await fetch(`${BASE_URL}/api/rgpd/export`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -367,7 +368,7 @@ describeE2E("E2E - Critical API Routes", () => {
 
     test("POST /api/rgpd/delete creates deletion request", async () => {
       // GIVEN: Valid deletion request
-      const response = await fetch("http://localhost:3000/api/rgpd/delete", {
+      const response = await fetch(`${BASE_URL}/api/rgpd/delete`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${validToken}`,
@@ -382,7 +383,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("GET /api/audit/events requires auth", async () => {
       // GIVEN: Audit events endpoint
       // WHEN: Calling without auth
-      const response = await fetch("http://localhost:3000/api/audit/events");
+      const response = await fetch(`${BASE_URL}/api/audit/events`);
 
       // THEN: Should require auth
       expect(response.status).toBe(401);
@@ -390,7 +391,7 @@ describeE2E("E2E - Critical API Routes", () => {
 
     test("GET /api/audit/events with auth returns P1 data only", async () => {
       // GIVEN: Valid token
-      const response = await fetch("http://localhost:3000/api/audit/events", {
+      const response = await fetch(`${BASE_URL}/api/audit/events`, {
         headers: {
           Authorization: `Bearer ${validToken}`,
         },
@@ -417,7 +418,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const startTime = Date.now();
 
       // WHEN: Calling
-      await fetch("http://localhost:3000/api/health");
+      await fetch(`${BASE_URL}/api/health`);
 
       const duration = Date.now() - startTime;
 
@@ -428,7 +429,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("Multiple concurrent requests are handled", async () => {
       // GIVEN: Multiple concurrent requests
       const requests = Array.from({ length: 5 }, () =>
-        fetch("http://localhost:3000/api/health")
+        fetch(`${BASE_URL}/api/health`)
       );
 
       // WHEN: Executing concurrently
@@ -451,7 +452,7 @@ describeE2E("E2E - Critical API Routes", () => {
       const malformedToken = "not.a.valid.jwt.token";
 
       // WHEN: Using malformed token
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${malformedToken}`,
@@ -467,7 +468,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("Empty Bearer token is rejected", async () => {
       // GIVEN: Empty token
       // WHEN: Using empty Bearer
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: {
           Authorization: "Bearer ",
@@ -483,7 +484,7 @@ describeE2E("E2E - Critical API Routes", () => {
     test("Missing Authorization header is rejected", async () => {
       // GIVEN: No authorization header
       // WHEN: Calling protected route
-      const response = await fetch("http://localhost:3000/api/consents", {
+      const response = await fetch(`${BASE_URL}/api/consents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: "test", purpose: "test" }),

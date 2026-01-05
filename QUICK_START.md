@@ -2,19 +2,19 @@
 
 > **Référence rapide** : "Que dois-je faire?" → "Voilà comment"
 
-**Dernière mise à jour** : 2026-01-02
+**Dernière mise à jour** : 2026-01-03
 
 ---
 
 ## 📍 Situation actuelle du projet
 
 ```
-Status:    ✅ EPIC 1-9 COMPLÉTÉS (100%)
-           ❌ EPIC 10-13 TODO
-Lines:     ~4,500 lignes code
-Tests:     312+ tests RGPD passing
+Status:    ✅ EPIC 1-10 COMPLÉTÉS (100%)
+           ❌ EPIC 11-13 TODO
+Lines:     ~5,500 lignes code
+Tests:     492+ tests RGPD passing
 Coverage:  ~85-90%
-Version:   1.0 production-ready
+Version:   1.0 production-ready (Backend + Legal)
 ```
 
 ---
@@ -115,10 +115,14 @@ Version:   1.0 production-ready
 │   └── audit/                 # Preuves audit
 │       └── evidence.md
 │
-├── tests/                     # 312+ tests RGPD
+├── tests/                     # 492+ tests RGPD
 │   ├── rgpd.*.test.ts        # Tests conformité RGPD
+│   ├── domain.*.test.ts      # Tests domain entities
+│   ├── repository.*.test.ts  # Tests repositories
+│   ├── usecase.*.test.ts     # Tests use-cases
+│   ├── api.*.test.ts         # Tests API
+│   ├── legal.*.test.ts       # Tests pages légales (EPIC 10)
 │   ├── db.*.test.ts          # Tests isolation DB
-│   ├── http.*.test.ts        # Tests API
 │   └── ...
 │
 ├── ARCHITECTURE_GUIDE.md      # 👈 LISEZ MOI EN PREMIER

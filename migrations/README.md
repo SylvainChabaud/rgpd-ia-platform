@@ -22,6 +22,8 @@
 | **012** | `012_fix_audit_events_policy.sql` | LOT 4.0 | Fix audit_events SELECT policy |
 | **013** | `013_fix_rgpd_requests_platform_policies.sql` | LOT 5.2 | Fix rgpd_requests pour opérations platform |
 | **014** | `014_incidents.sql` | LOT 9.0 | Registre violations (Art. 33-34) + incident audit log |
+| **015** | `015_cgu_disputes_cookies.sql` | LOT 10.0-10.6 | Tables RGPD/Legal (CGU, disputes, oppositions, cookies) |
+| **016** | `016_epic10_legal_extensions.sql` | LOT 10.0-10.7 | Extensions EPIC 10 (soft delete, metadata, statuses) |
 
 ---
 
@@ -254,7 +256,7 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | **LOT 4.0** | RLS (Row-Level Security) + tenant isolation | ✅ Oui | 004-013 ✅ |
 | **EPIC 8** | Anonymisation (PII masking) | ✅ Oui | — (implémenté en app) |
 | **EPIC 9** | Registre violations (incidents) | ✅ Oui | `014_incidents.sql` ✅ |
-| **EPIC 10** | Cookies consent, DPIA tracking | ⚠️ Partiel | `015_legal_compliance.sql` |
+| **EPIC 10** | RGPD/Legal (CGU, disputes, cookies) | ✅ Oui | `015_cgu_disputes_cookies.sql` + `016_epic10_legal_extensions.sql` ✅ |
 | **EPIC 11** | Back Office Super Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 12** | Back Office Tenant Admin | ✅ Oui | — (utilise tables existantes) |
 | **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
@@ -280,20 +282,44 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 
 **Voir** : `migrations/014_incidents.sql` pour le schéma complet
 
-#### `015_legal_compliance.sql` (EPIC 10)
-```sql
--- Prévu pour LOT 10.3-10.5
--- Tracking des cookies et DPIAs
-CREATE TABLE cookie_consents (
-  id UUID PRIMARY KEY,
-  session_id TEXT NOT NULL,
-  tenant_id UUID REFERENCES tenants(id),
-  analytics BOOLEAN DEFAULT false,
-  marketing BOOLEAN DEFAULT false,
-  preferences BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-```
+#### `015_cgu_disputes_cookies.sql` (EPIC 10) ✅ IMPLÉMENTÉ
+
+**LOT** : 10.0-10.6
+**Description** : Tables pour RGPD/Legal Compliance (Art. 7, 13-14, 21-22, ePrivacy 5.3)
+
+**Tables créées** :
+- `cgu_versions` — Versioning des CGU (Art. 7)
+- `user_cgu_acceptances` — Tracking acceptation CGU utilisateurs
+- `user_disputes` — Contestations décisions IA (Art. 22)
+- `user_oppositions` — Oppositions traitements (Art. 21)
+- `cookie_consents` — Consentements cookies (ePrivacy 5.3)
+
+**Fonctionnalités clés** :
+- Tenant isolation sur toutes les tables
+- RLS policies automatiques
+- Indexes optimisés (queries par user/tenant)
+- Support anonymous_id pour cookies pré-login
+- Statuts workflow (pending, approved, resolved)
+
+**Voir** : `migrations/015_cgu_disputes_cookies.sql` pour le schéma complet
+
+#### `016_epic10_legal_extensions.sql` (EPIC 10) ✅ IMPLÉMENTÉ
+
+**LOT** : 10.0-10.7
+**Description** : Extensions des tables EPIC 10 pour tests complets
+
+**Colonnes ajoutées** :
+- `deleted_at` — Soft delete RGPD (Art. 17) sur toutes les tables
+- `acceptance_method` — Traçabilité méthode acceptation CGU
+- `metadata` — Stockage JSON flexible (disputes, oppositions)
+- `summary` — Description versions CGU
+- Statuts additionnels disputes (`under_review`, `rejected`)
+
+**Indexes créés** :
+- Queries soft delete optimisées (`WHERE deleted_at IS NULL`)
+- Support anonymous + user_id pour cookies
+
+**Voir** : `migrations/016_epic10_legal_extensions.sql` pour le détail
 
 ---
 

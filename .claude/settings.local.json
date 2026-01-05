@@ -42,7 +42,23 @@
       "Bash(npx --yes eslint:*)",
       "Bash(npm install:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(pnpm lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(node fix-tests.js:*)",
+      "Bash(node fix-tests-v2.js:*)",
+      "Bash(node fix-api-routes.js:*)",
+      "Bash(git checkout:*)",
+      "Bash(node fix-all-errors.js:*)",
+      "Bash(echo:*)",
+      "Bash(echo \"=== COUNTING TEST BLOCKS \\(describe + it\\) BY CATEGORY ===\" echo \"\" echo \"LEGAL PAGES:\" grep -h \"describe\\\\|it\\(\" tests/legal.*.test.ts)",
+      "Bash(wc -l echo \"\" echo \"DOMAIN ENTITIES:\" grep -h \"describe\\\\|it\\(\" tests/domain.cgu-acceptance.test.ts tests/domain.cgu-version.test.ts tests/domain.cookie-consent.test.ts tests/domain.data-suspension.test.ts tests/domain.user-dispute.test.ts tests/domain.user-opposition.test.ts)",
+      "Bash(wc -l echo \"\" echo \"REPOSITORIES:\" grep -h \"describe\\\\|it\\(\" tests/repository.*.test.ts)",
+      "Bash(wc -l echo \"\" echo \"USE CASES:\" grep -h \"describe\\\\|it\\(\" tests/usecase.*.test.ts)",
+      "Bash(wc -l echo \"\" echo \"API ROUTES:\" grep -h \"describe\\\\|it\\(\" tests/api.consents.cookies.test.ts tests/api.contact.dpo.test.ts tests/api.legal.cgu.test.ts tests/api.tenants.rgpd.test.ts)",
+      "Bash(wc -l echo \"\" echo \"MIDDLEWARE:\" grep -h \"describe\\\\|it\\(\" tests/middleware.check-data-suspension.test.ts)",
+      "Bash(npx next lint:*)"
     ]
   }
 }

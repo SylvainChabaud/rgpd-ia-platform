@@ -18,6 +18,10 @@ export interface User {
   role: string;
   createdAt: Date;
   deletedAt?: Date | null;
+  // EPIC 10 - Art. 18 (Droit à la limitation du traitement)
+  dataSuspended?: boolean;
+  dataSuspendedAt?: Date | null;
+  dataSuspendedReason?: string | null;
 }
 
 export interface UserRepo {
@@ -38,6 +42,15 @@ export interface UserRepo {
    * Excludes soft-deleted users
    */
   listByTenant(tenantId: string, limit?: number, offset?: number): Promise<User[]>;
+
+  /**
+   * List users with data suspension enabled (Art. 18 RGPD)
+   * Tenant-scoped for admin monitoring
+   *
+   * @param tenantId - REQUIRED tenant isolation
+   * @returns Users with data_suspended = true
+   */
+  listSuspendedByTenant(tenantId: string): Promise<User[]>;
 
   /**
    * Create user (TENANT scope)
@@ -74,4 +87,19 @@ export interface UserRepo {
    * @returns Number of rows affected (0 or 1)
    */
   hardDeleteUserByTenant(tenantId: string, userId: string): Promise<number>;
+
+  /**
+   * Update data suspension status (Art. 18 RGPD)
+   * EPIC 10 - LOT 10.6
+   *
+   * @param userId - user identifier
+   * @param suspended - true to suspend, false to unsuspend
+   * @param reason - reason for suspension (required if suspended=true)
+   * @returns Updated user
+   */
+  updateDataSuspension(
+    userId: string,
+    suspended: boolean,
+    reason?: string
+  ): Promise<User>;
 }

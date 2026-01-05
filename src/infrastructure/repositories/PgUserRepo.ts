@@ -59,6 +59,26 @@ export class PgUserRepo implements UserRepo {
     return result.rows.map(this.mapRow);
   }
 
+  async listSuspendedByTenant(tenantId: string): Promise<User[]> {
+    // BLOCKER: validate tenantId (RGPD isolation)
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for suspension list');
+    }
+
+    return await withTenantContext(pool, tenantId, async (client) => {
+      const result = await client.query(
+        `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+                data_suspended, data_suspended_at, data_suspended_reason
+         FROM users
+         WHERE tenant_id = $1 AND data_suspended = true AND deleted_at IS NULL
+         ORDER BY data_suspended_at DESC`,
+        [tenantId]
+      );
+
+      return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row));
+    });
+  }
+
   async createUser(user: Omit<User, 'createdAt' | 'deletedAt'>): Promise<void> {
     await pool.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
@@ -85,7 +105,7 @@ export class PgUserRepo implements UserRepo {
     if (setClauses.length === 0) {
       return; // No updates
     }
-
+    
     values.push(userId);
 
     await pool.query(
@@ -139,6 +159,29 @@ export class PgUserRepo implements UserRepo {
     });
   }
 
+  async updateDataSuspension(
+    userId: string,
+    suspended: boolean,
+    reason?: string
+  ): Promise<User> {
+    const result = await pool.query(
+      `UPDATE users
+       SET data_suspended = $1,
+           data_suspended_at = CASE WHEN $1 = true THEN NOW() ELSE NULL END,
+           data_suspended_reason = $2
+       WHERE id = $3 AND deleted_at IS NULL
+       RETURNING id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+                 data_suspended, data_suspended_at, data_suspended_reason`,
+      [suspended, reason || null, userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    return this.mapRowWithSuspension(result.rows[0]);
+  }
+
   private mapRow(row: Record<string, unknown>): User {
     return {
       id: row.id as string,
@@ -150,6 +193,23 @@ export class PgUserRepo implements UserRepo {
       role: row.role as string,
       createdAt: new Date(row.created_at as string | number | Date),
       deletedAt: row.deleted_at ? new Date(row.deleted_at as string | number | Date) : null,
+    };
+  }
+
+  private mapRowWithSuspension(row: Record<string, unknown>): User {
+    return {
+      id: row.id as string,
+      tenantId: row.tenant_id as string | null,
+      emailHash: row.email_hash as string,
+      displayName: row.display_name as string,
+      passwordHash: row.password_hash as string,
+      scope: row.scope as UserScope,
+      role: row.role as string,
+      createdAt: new Date(row.created_at as string | number | Date),
+      deletedAt: row.deleted_at ? new Date(row.deleted_at as string | number | Date) : null,
+      dataSuspended: row.data_suspended as boolean | undefined,
+      dataSuspendedAt: row.data_suspended_at ? new Date(row.data_suspended_at as string | number | Date) : null,
+      dataSuspendedReason: row.data_suspended_reason as string | null | undefined,
     };
   }
 }

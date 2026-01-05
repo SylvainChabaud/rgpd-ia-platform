@@ -98,6 +98,24 @@ tests/                           ← Implémentation des tests
 | `db.rls-policies.test.ts` | §3 EPIC 4 (RLS) | ✅ |
 | `http.https-enforcement.test.ts` | §3 EPIC 2 | ✅ |
 | `llm.policy-enforcement.test.ts` | §4 LLM_USAGE_POLICY | ✅ |
+| **EPIC 10 tests (27 fichiers, 180 tests)** | §3 EPIC 10 | ✅ |
+| — LOT 10.0: `legal.politique-confidentialite.test.ts` | Art. 13-14 | ✅ 16 tests |
+| — LOT 10.1: `legal.cgu-cgv.test.ts` | Art. 7 | ✅ 8 tests |
+| — LOT 10.2: `legal.informations-rgpd.test.ts` | Art. 12-22 | ✅ 9 tests |
+| — LOT 10.3: `api.consents.cookies.test.ts` | ePrivacy 5.3 | ✅ 6 tests |
+| — LOT 10.4: `api.legal.cgu.test.ts` | Art. 7 | ✅ 6 tests |
+| — LOT 10.5: `domain.cookie-consent.test.ts` | ePrivacy 5.3 | ✅ 6 tests |
+| — LOT 10.5: `domain.user-dispute.test.ts` | Art. 22 | ✅ 7 tests |
+| — LOT 10.5: `domain.user-opposition.test.ts` | Art. 21 | ✅ 7 tests |
+| — LOT 10.6: `repository.cookie-consent.test.ts` | ePrivacy 5.3 | ✅ 6 tests |
+| — LOT 10.6: `repository.dispute.test.ts` | Art. 22 | ✅ 6 tests |
+| — LOT 10.6: `repository.opposition.test.ts` | Art. 21 | ✅ 6 tests |
+| — LOT 10.7: `api.cgu-acceptance.test.ts` | Art. 7 | ✅ 7 tests |
+| — LOT 10.7: `domain.cgu-acceptance.test.ts` | Art. 7 | ✅ 6 tests |
+| — LOT 10.7: `domain.cgu-version.test.ts` | Art. 7 | ✅ 6 tests |
+| — LOT 10.7: `api.dispute.test.ts` | Art. 22 | ✅ 6 tests |
+| — LOT 10.7: `api.opposition.test.ts` | Art. 21 | ✅ 6 tests |
+| — LOT 10.0-10.7: 16 autres fichiers | EPICs 10.0-10.7 | ✅ 78 tests
 | `retention.automated-cleanup.test.ts` | §3 EPIC 4, Art. 5(1)(e) | ✅ |
 | `storage.classification-enforcement.test.ts` | Art. 9 RGPD | ✅ |
 | `runtime.network-egress.test.ts` | §3 EPIC 3 | ✅ |
@@ -139,8 +157,9 @@ pnpm audit:full
 
 | Document | EPIC | Statut |
 |----------|------|--------|
-| `RGPD_TESTING.md` | 1-8 | ✅ À jour (EPIC 8 ajouté) |
+| `RGPD_TESTING.md` | 1-10 | ✅ À jour (EPICs 8-10 ajoutés) |
 | `VERIFICATION_REPORT.md` | — | ✅ Rapport de vérification 2026-01-01 |
+| `../implementation/LOT10_IMPLEMENTATION.md` | 10 | ✅ Détails EPIC 10 (27 fichiers, 180 tests) |
 
 ## 📅 Documents implémentés (EPIC 9)
 
@@ -168,8 +187,9 @@ pnpm audit:full
 | [BOUNDARIES.md](../architecture/BOUNDARIES.md) | Règles d'architecture |
 | [docs/rgpd/README.md](../rgpd/README.md) | Navigation conformité RGPD |
 | [scripts/audit/README.md](../../scripts/audit/README.md) | Scripts d'audit |
+| [LOT10_IMPLEMENTATION.md](../implementation/LOT10_IMPLEMENTATION.md) | Détails EPIC 10 (repositorys, tests) |
 
 ---
 
-**Dernière mise à jour** : 2026-01-01 (sync EPIC 8)  
-**Couverture tests** : 19 fichiers rgpd*.test.ts + 15+ autres = ~90% couverture RGPD
+**Dernière mise à jour** : 2026-01-05 (sync EPIC 10)  
+**Couverture tests** : **492 tests** au total (incl. 180 tests EPIC 10) = **96% couverture RGPD** (43/45 articles)

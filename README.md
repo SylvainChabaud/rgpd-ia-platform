@@ -21,7 +21,7 @@ Cette plateforme permet aux entreprises d'utiliser des services LLM (OpenAI, Oll
 
 ## �️ Je suis perdu(e), par où commencer ?
 
-**Le projet est devenu gros (312+ tests, 25 LOTs, 9 EPICs).** 
+**Le projet est devenu gros (492+ tests, 33 LOTs, 10 EPICs).** 
 
 📖 **Lire d'abord** : [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) — Explique simplement :
 - **Scripts/** : Qui les utilise ? Quand ?
@@ -188,23 +188,27 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 | **Backend Core** | ✅ 100% | 252+ tests | EPICs 1-7 complets |
 | **Anonymisation** | ✅ 100% | 110 tests | EPIC 8 complet |
 | **Security & Incidents** | ✅ 100% | 60 tests | EPIC 9 complet |
-| **Couverture globale** | ⚙️ 76% | 34/45 articles | EPIC 10 requis |
+| **Legal & Compliance** | ✅ 100% | 180 tests | EPIC 10 complet |
+| **Couverture globale** | ✅ 96% | 43/45 articles | Production-ready |
 
-**Articles conformes (34/45)**
+**Articles conformes (43/45)**
 - ✅ **Art. 5** : Tous principes (minimisation, retention, intégrité) - 100%
-- ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke - 100%
+- ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke, CGU acceptance - 100%
+- ✅ **Art. 13-14** : Transparence, information (Politique confidentialité, pages légales) - 100%
 - ✅ **Art. 15-17, 19-20** : Droits accès, rectification, effacement, portabilité - 100%
+- ✅ **Art. 18** : Limitation du traitement (suspension données) - 100%
+- ✅ **Art. 21** : Droit d'opposition - 100%
+- ✅ **Art. 22** : Révision humaine décisions IA (dispute workflow) - 100%
 - ✅ **Art. 24-25** : Accountability, Privacy by Design - 100%
 - ✅ **Art. 28-30** : DPA sous-traitant, Registre traitements - 100%
 - ✅ **Art. 32** : Sécurité (RLS, chiffrement, PII masking, IP anonymization, pentest, chaos) - 100%
 - ✅ **Art. 33-34** : Notification violations (CNIL 72h, utilisateurs) - 100%
 - ✅ **Art. 35** : DPIA Gateway LLM - 100%
+- ✅ **ePrivacy 5.3** : Cookie consent banner - 100%
 
-**Articles manquants (5 - BLOQUANTS PRODUCTION)**
-- 🔴 **Art. 22** : Révision humaine décisions IA - EPIC 10.6
-- 🔴 **ePrivacy 5.3** : Cookie consent banner - EPIC 10.3
-- 🟡 **Art. 13-14** : Pages légales (templates prêts, publication manquante) - EPIC 10.0-10.2
-- 🟡 **Art. 18, 21** : Limitation, Opposition - EPIC 10.6
+**Articles restants (2 - Intégrations frontend futures)**
+- 🟢 **Art. 12** : Exercice facilité des droits (interfaces frontend EPIC 13)
+- 🟢 **Art. 23** : Restrictions légales (cas particuliers)
 
 ### Principes clés
 
