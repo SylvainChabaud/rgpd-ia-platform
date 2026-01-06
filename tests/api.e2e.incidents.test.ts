@@ -18,6 +18,8 @@
  * Skip with: TEST_SKIP_E2E=true or when server is not available
  */
 
+import type { UserScope } from '@/shared/actorScope';
+
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
@@ -45,7 +47,7 @@ function generateToken(
   return signJwt({
     userId,
     tenantId,
-    scope,
+    scope: scope as UserScope,
     role,
   });
 }
@@ -573,7 +575,7 @@ describeE2E("E2E - Incident Response (EPIC 9)", () => {
 
         // THEN: Each incident should have deadline tracking
         if (Array.isArray(incidents) && incidents.length > 0) {
-          incidents.forEach((incident: any) => {
+          incidents.forEach((incident: { createdAt?: string; detectedAt?: string }) => {
             // Should have created timestamp for deadline calculation
             expect(incident.createdAt || incident.detectedAt).toBeDefined();
           });

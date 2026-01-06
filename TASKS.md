@@ -264,6 +264,15 @@ src/app/
 - Exemple : `src/app/(backoffice)/tenants/page.tsx` → URL `/tenants`
 - Permet layouts différents sans dupliquer le code
 
+**Stack Technique Frontend** :
+- **Framework** : Next.js 16.1+ App Router (React 19 + React Compiler)
+- **Stack complet détaillé** : Voir sections "Stack technique" dans :
+  - `docs/epics/EPIC_11_Back_Office_Super_Admin.md` (section 4.1)
+  - `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (section 4.1)
+  - `docs/epics/EPIC_13_Front_User.md` (section 4.1)
+- **Bonnes pratiques** : Server Components par défaut, `'use client'` uniquement pour interactivité
+- **Référence officielle** : Context7 `/vercel/next.js/v16.1.0` pour patterns React 19
+
 ---
 
 ## 3 - Prompts standard (à copier-coller dans Claude Code)
@@ -1465,7 +1474,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 **Acceptance criteria (bloquants)**
 - Stats en temps réel
 - Filtres audit events fonctionnels
-- Graphiques lisibles (Chart.js ou Recharts)
+- Graphiques lisibles (Recharts v2 - React 19 natif)
 - Export audit CSV RGPD-safe (P1 uniquement)
 - Registre violations CRUD fonctionnel
 - Registre traitements affiché correctement (markdown → HTML)

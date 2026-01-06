@@ -530,15 +530,48 @@ Références aux EPICs backend existants :
 
 | Composant | Technologie | Justification |
 |-----------|-------------|---------------|
-| **Framework** | Next.js 14+ App Router | SSR, Server Components, cohérence EPIC 11 |
+| **Framework** | Next.js 16.1+ App Router | SSR, Server Components, React 19, cohérence EPIC 11 |
 | **Auth** | NextAuth.js v5 | Session management, intégration native |
-| **UI Library** | shadcn/ui (Radix UI + Tailwind) | Composants accessibles, cohérence EPIC 11 |
-| **Styling** | Tailwind CSS | Cohérence design system |
-| **Forms** | React Hook Form + Zod | Validation typesafe |
-| **State** | Zustand ou Context API | Léger, suffisant |
-| **Data fetching** | SWR ou TanStack Query | Cache, revalidation |
-| **Charts** | Recharts | Graphiques stats |
-| **Tables** | TanStack Table | Filtres, tri, pagination |
+| **UI Library** | shadcn/ui (Radix UI + Tailwind) | Composants accessibles, React 19 compatible, cohérence EPIC 11 |
+| **Styling** | Tailwind CSS v4 | Cohérence design system |
+| **Forms** | React Hook Form + Zod | Validation typesafe, React 19 compatible |
+| **State** | Zustand v5 | Léger, performant, React 19 natif |
+| **Data fetching** | TanStack Query v5 | Cache, revalidation, React 19 ready |
+| **Charts** | Recharts v2 | API déclarative, React 19 natif, cohérence EPIC 11 |
+| **Tables** | TanStack Table v8 | Filtres, tri, pagination, React 19 ready |
+
+### 4.1.1 Bonnes Pratiques Next.js 16 + React 19
+
+**Patterns critiques à respecter** :
+
+1. **Server Components par défaut**
+   - ✅ Tous les composants sont Server Components sauf indication `'use client'`
+   - ✅ Ajouter `'use client'` UNIQUEMENT pour : hooks (useState, useEffect), event handlers, browser APIs
+   - ❌ Ne JAMAIS mettre `'use client'` sur layouts ou pages entières
+
+2. **Séparation Server/Client**
+   - ✅ Fetch data dans Server Components → passer en props aux Client Components
+   - ✅ Props Server → Client doivent être sérialisables (pas de fonctions, classes, Dates)
+   - ✅ Utiliser Server Actions (`'use server'`) pour mutations depuis Client Components
+
+3. **React Compiler (stable en v16.1)**
+   - ✅ Activé par défaut en mode `all` (optimisation automatique)
+   - ℹ️ Mode `annotation` disponible si besoin de contrôle fin (`'use memo'`)
+
+4. **Performance & UX**
+   - ✅ Utiliser `<Suspense>` pour streaming progressif
+   - ✅ Hook `use()` pour unwrap Promises dans Client Components
+   - ✅ Dynamic imports (`next/dynamic`) pour composants lourds
+
+5. **Documentation complète**
+   - 📖 Consulter **Context7** pour patterns avancés : `/vercel/next.js/v16.1.0`
+   - 📖 Exemples officiels : [Next.js Examples](https://github.com/vercel/next.js/tree/canary/examples)
+
+**⚠️ Anti-patterns à éviter** :
+- ❌ `'use client'` sur page entière (sauf SPA pure)
+- ❌ Fetch data dans Client Components (useEffect + fetch)
+- ❌ Passer fonctions/classes en props Server → Client
+- ❌ Ignorer React Compiler warnings
 
 ### 4.2 Structure du projet (Next.js Monolithique partagé avec EPIC 11)
 

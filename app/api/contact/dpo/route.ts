@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { appendFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { createHash, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { DpoContactRequestSchema, validateBody } from '@/lib/validation';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
@@ -15,9 +15,6 @@ export async function POST(request: Request) {
 
     const requestId = randomUUID();
     const receivedAt = new Date();
-    const emailHash = createHash('sha256')
-      .update(body.email.toLowerCase())
-      .digest('hex');
 
     const record = {
       id: requestId,
