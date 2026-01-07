@@ -69,7 +69,7 @@ export default function TenantDetailsPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive">Tenant introuvable</p>
-          <Link href="/backoffice/tenants" className="mt-4 inline-block">
+          <Link href="/tenants" className="mt-4 inline-block">
             <Button variant="outline">Retour à la liste</Button>
           </Link>
         </div>
@@ -84,7 +84,7 @@ export default function TenantDetailsPage() {
     deleteTenant(undefined, {
       onSuccess: () => {
         setShowDeleteDialog(false)
-        router.push('/backoffice/tenants')
+        router.push('/tenants')
       },
     })
   }
@@ -93,7 +93,7 @@ export default function TenantDetailsPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/backoffice/tenants">
+        <Link href="/tenants">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste
@@ -112,7 +112,7 @@ export default function TenantDetailsPage() {
         <div className="flex gap-2">
           {!isDeleted && (
             <>
-              <Link href={`/backoffice/tenants/${tenantId}/edit`}>
+              <Link href={`/tenants/${tenantId}/edit`}>
                 <Button variant="outline">
                   <Edit className="mr-2 h-4 w-4" />
                   Modifier
@@ -245,16 +245,18 @@ export default function TenantDetailsPage() {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Êtes-vous sûr de vouloir supprimer le tenant <strong>{tenant.name}</strong> ?
-                      <br />
-                      <br />
-                      Cette action est <strong>irréversible</strong> et supprimera :
-                      <ul className="list-disc list-inside mt-2">
-                        <li>Tous les utilisateurs du tenant</li>
-                        <li>Toutes les données associées</li>
-                        <li>L&apos;historique complet</li>
-                      </ul>
+                    <AlertDialogDescription asChild>
+                      <div>
+                        Êtes-vous sûr de vouloir supprimer le tenant <strong>{tenant.name}</strong> ?
+                        <br />
+                        <br />
+                        Cette action est <strong>irréversible</strong> et supprimera :
+                        <ul className="list-disc list-inside mt-2">
+                          <li>Tous les utilisateurs du tenant</li>
+                          <li>Toutes les données associées</li>
+                          <li>L&apos;historique complet</li>
+                        </ul>
+                      </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

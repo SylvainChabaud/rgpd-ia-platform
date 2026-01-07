@@ -21,22 +21,22 @@ import { useTheme } from 'next-themes'
  */
 const navItems = [
   {
-    href: '/backoffice',
+    href: '/',
     label: 'Dashboard',
     icon: Home,
   },
   {
-    href: '/backoffice/tenants',
+    href: '/tenants',
     label: 'Tenants',
     icon: Building2,
   },
   {
-    href: '/backoffice/users',
+    href: '/users',
     label: 'Utilisateurs',
     icon: Users,
   },
   {
-    href: '/backoffice/audit',
+    href: '/audit',
     label: 'Audit & Monitoring',
     icon: FileText,
   },
@@ -62,7 +62,7 @@ export function Sidebar() {
 
   const handleLogout = () => {
     logout()
-    window.location.href = '/backoffice/login'
+    window.location.href = '/login'
   }
 
   return (

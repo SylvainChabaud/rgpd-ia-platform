@@ -69,6 +69,7 @@ export const GET = withLogging(
               name: tenant.name,
               slug: tenant.slug,
               createdAt: tenant.createdAt,
+              deletedAt: tenant.deletedAt || null,
             })),
           });
         } catch (error: unknown) {

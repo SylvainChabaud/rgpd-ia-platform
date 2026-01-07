@@ -86,7 +86,7 @@ export default function EditTenantPage() {
       { name: data.name }, // Only send name (slug is immutable)
       {
         onSuccess: () => {
-          router.push(`/backoffice/tenants/${tenantId}`)
+          router.push(`/tenants/${tenantId}`)
         },
       }
     )
@@ -108,7 +108,7 @@ export default function EditTenantPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive">Tenant introuvable</p>
-          <Link href="/backoffice/tenants" className="mt-4 inline-block">
+          <Link href="/tenants" className="mt-4 inline-block">
             <Button variant="outline">Retour à la liste</Button>
           </Link>
         </div>
@@ -123,7 +123,7 @@ export default function EditTenantPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href={`/backoffice/tenants/${tenantId}`}>
+        <Link href={`/tenants/${tenantId}`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour aux détails
@@ -194,7 +194,7 @@ export default function EditTenantPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/backoffice/tenants/${tenantId}`)}
+                onClick={() => router.push(`/tenants/${tenantId}`)}
                 disabled={isPending}
               >
                 Annuler

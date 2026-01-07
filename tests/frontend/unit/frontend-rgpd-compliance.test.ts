@@ -103,13 +103,13 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Token in sessionStorage (auto-cleared)
-      expect(sessionStorage.getItem('jwt_token')).toBe(token)
+      expect(sessionStorage.getItem('auth_token')).toBe(token)
 
       // Simulate browser close (sessionStorage cleared)
       sessionStorage.clear()
 
       // Token gone
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
   })
 
@@ -132,14 +132,14 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Verify data exists
-      expect(sessionStorage.getItem('jwt_token')).toBeTruthy()
+      expect(sessionStorage.getItem('auth_token')).toBeTruthy()
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
 
       // Logout
       useAuthStore.getState().logout()
 
       // ALL data cleared
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
       expect(useAuthStore.getState().token).toBeNull()
       expect(useAuthStore.getState().user).toBeNull()
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
@@ -177,7 +177,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Token in sessionStorage (CORRECT - auto-cleared)
-      expect(sessionStorage.getItem('jwt_token')).toBe(sensitiveToken)
+      expect(sessionStorage.getItem('auth_token')).toBe(sensitiveToken)
 
       // Token NOT in localStorage (VIOLATION if present)
       const allLocalStorage = JSON.stringify(localStorage)
@@ -235,7 +235,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
 
       // Session cleared (prevent session fixation attack)
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
   })
 
@@ -371,14 +371,14 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Verify data exists
-      expect(sessionStorage.getItem('jwt_token')).toBeTruthy()
+      expect(sessionStorage.getItem('auth_token')).toBeTruthy()
       expect(localStorage.getItem('auth-storage')).toBeTruthy()
 
       // Logout (simulate erasure)
       useAuthStore.getState().logout()
 
       // ALL data erased
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
 
       // User metadata removed from state (localStorage still has empty state)
       const state = useAuthStore.getState()
@@ -415,7 +415,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       })
 
-      const storedToken = sessionStorage.getItem('jwt_token')
+      const storedToken = sessionStorage.getItem('auth_token')
 
       // Valid JWT format (3 parts separated by dots)
       expect(storedToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)

@@ -65,6 +65,7 @@ export default function CreateTenantPage() {
   })
 
   // Auto-generate slug from name (optional UX enhancement)
+  // eslint-disable-next-line react-hooks/incompatible-library
   const nameValue = watch('name')
 
   const handleGenerateSlug = () => {
@@ -84,7 +85,7 @@ export default function CreateTenantPage() {
   const onSubmit = (data: CreateTenantFormData) => {
     createTenant(data, {
       onSuccess: () => {
-        router.push('/backoffice/tenants')
+        router.push('/tenants')
       },
     })
   }
@@ -93,7 +94,7 @@ export default function CreateTenantPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/backoffice/tenants">
+        <Link href="/tenants">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste

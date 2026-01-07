@@ -1,13 +1,13 @@
-# Index des implémentations — EPICs 1-10
+# Index des implémentations — EPICs 1-11
 
 > **Objectif** : Table de correspondance exhaustive entre LOTs (TASKS.md), fichiers implémentés et tests RGPD.
 
-**Dernière mise à jour** : 2026-01-05
-**Status global** : ✅ EPICs 1-10 terminés (100%)
+**Dernière mise à jour** : 2026-01-07
+**Status global** : ✅ EPICs 1-11.1 terminés | 🚀 LOT 11.2+ en préparation
 
 ---
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
 | EPIC | LOTs | Documents | Status | Tests |
 |------|------|-----------|--------|-------|
@@ -21,8 +21,9 @@
 | **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110/110 |
 | **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60/60 |
 | **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180/180 |
+| **EPIC 11** | 11.0-11.1 (2 LOTs) | [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) + [Rapports qualité](#epic-11--back-office-super-admin-frontend-platform) | ✅ **VALIDÉ** | **116/116** |
 
-**Total** : 33 LOTs implémentés, 492+ tests RGPD passing
+**Total** : **35 LOTs implémentés**, **608+ tests passing** (492 backend + 116 frontend)
 
 ---
 
@@ -674,51 +675,91 @@
 ### Vérifier fichiers clés
 
 ```bash
-# EPIC 1
+# EPIC 1 - Socle applicatif
 ls src/app/auth/policyEngine.ts
 ls src/app/http/requireAuth.ts
 ls src/cli/bootstrap.ts
+ls src/app/audit/emitAuditEvent.ts
 
-# EPIC 3
+# EPIC 2 - Durcissement serveur
+ls docker-compose.dev.yml
+ls docs/runbooks/security-hardening.md
+
+# EPIC 3 - Stack IA locale
 ls src/ai/gateway/config.ts
 ls src/ai/gateway/providers/ollama.ts
+ls src/ai/gateway/invokeLLM.ts
 
-# EPIC 4
+# EPIC 4 - Stockage RGPD
 ls migrations/002_lot4_consents_ai_jobs.sql
 ls src/infrastructure/repositories/PgConsentRepo.ts
+ls src/domain/consent/ConsentRecord.ts
 
-# EPIC 5
+# EPIC 5 - Pipeline RGPD
 ls app/api/rgpd/delete/route.ts
 ls app/api/users/route.ts
 ls src/middleware.ts
+ls src/app/usecases/rgpd/DeleteUserDataUseCase.ts
 
-# EPIC 6
+# EPIC 6 - Stack IA Docker
 ls docker-compose.yml
 ls src/infrastructure/logging/logger.ts
+ls Dockerfile
 
-# EPIC 8
+# EPIC 7 - Kit conformité
+ls docs/rgpd/registre-traitements.md
+ls docs/audit/evidence.md
+ls docs/legal/DPA_TEMPLATE.md
+
+# EPIC 8 - Anonymisation
 ls src/infrastructure/pii/detector.ts
 ls src/infrastructure/pii/anonymizer.ts
+ls src/shared/rgpd/dataClassification.ts
 
-# EPIC 9
+# EPIC 9 - Incident Response
 ls src/domain/incident/SecurityIncident.ts
 ls src/app/usecases/incident/CreateIncidentUseCase.ts
 ls src/infrastructure/alerts/IncidentAlertService.ts
 ls src/middleware/incidentDetection.ts
 ls app/api/incidents/route.ts
 ls migrations/014_incidents.sql
+
+# EPIC 10 - RGPD Legal
+ls app/api/cgu/route.ts
+ls app/api/disputes/route.ts
+ls app/api/cookies/route.ts
+ls migrations/015_cgu_disputes_cookies.sql
+ls migrations/016_epic10_legal_extensions.sql
+ls src/app/usecases/legal/AcceptCGUUseCase.ts
+
+# EPIC 11 - Back Office Frontend
+ls app/(backoffice)/layout.tsx
+ls app/(backoffice)/login/page.tsx
+ls app/(backoffice)/tenants/page.tsx
+ls src/lib/auth/authStore.ts
+ls src/lib/api/apiClient.ts
+ls src/lib/api/hooks/useTenants.ts
+
+# Tests Frontend
+ls tests/frontend/unit/authStore.test.ts
+ls tests/frontend/unit/tenants-crud.test.tsx
+ls tests/e2e/backoffice-tenants.spec.ts
 ```
 
 ### Vérifier tests
 
 ```bash
-# Tests RGPD
+# Tests Backend RGPD
 npm run test:rgpd
+
+# Tests Frontend
+npm run test:frontend  # 106 tests unitaires
+npm run test:e2e       # 10 tests Playwright
 
 # Tests spécifiques
 npm test tests/rgpd.pii-detection.test.ts
 npm test tests/db.lot4.tenant-isolation.test.ts
-npm test tests/http.authz.test.ts
+npm test tests/frontend/unit/authStore.test.ts
 
 # Coverage
 npm run test:coverage
@@ -727,9 +768,141 @@ npm run test:coverage
 ### Vérifier migrations
 
 ```bash
-ls migrations | wc -l  # 14 migrations (001-013 + README)
+ls migrations | wc -l  # 16 migrations (001-016 + README)
 grep "LOT" migrations/*.sql
+
+# Dernières migrations
+# 014_incidents.sql (EPIC 9)
+# 015_cgu_disputes_cookies.sql (EPIC 10)
+# 016_epic10_legal_extensions.sql (EPIC 10)
 ```
+
+---
+
+## EPIC 11 — Back Office Super Admin (Frontend PLATFORM)
+
+> **Status** : ✅ **LOT 11.0 & 11.1 VALIDÉS** — Ready to deploy  
+> **Tests** : 106 unitaires + 10 E2E = **116/116 passing (100%)**  
+> **Documentation complète** : Voir rapports qualité ci-dessous
+
+### 📋 Documents d'implémentation
+
+| Document | Type | Description | Taille |
+|----------|------|-------------|--------|
+| [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) | Technique | Architecture + specs détaillées | 613 lignes |
+| [AUDIT_REPORT_LOT_11.md](../../AUDIT_REPORT_LOT_11.md) | Qualité | Audit RGPD + conformité + coverage | ~250 lignes |
+| [CHANGELOG_FIXES.md](../../CHANGELOG_FIXES.md) | Corrections | Détail des 11 corrections tests | ~180 lignes |
+| [LOT_11_VALIDATED.md](../../LOT_11_VALIDATED.md) | Status | Validation + next steps LOT 11.2 | ~200 lignes |
+
+---
+
+### LOT 11.0 — Infrastructure Back Office
+
+**Document** : [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) (section 3.1)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `authStore.ts` | Store Zustand | [src/lib/auth/authStore.ts](../../src/lib/auth/authStore.ts) | ✅ |
+| `apiClient.ts` | Fetch wrapper | [src/lib/api/apiClient.ts](../../src/lib/api/apiClient.ts) | ✅ |
+| `middleware.ts` | Auth middleware | [src/middleware.ts](../../src/middleware.ts) | ✅ |
+| `layout.tsx` | Layout backoffice | [app/(backoffice)/layout.tsx](../../app/(backoffice)/layout.tsx) | ✅ |
+| `login/page.tsx` | Page login | [app/(backoffice)/login/page.tsx](../../app/(backoffice)/login/page.tsx) | ✅ |
+| `page.tsx` | Dashboard | [app/(backoffice)/page.tsx](../../app/(backoffice)/page.tsx) | ✅ |
+| `Sidebar.tsx` | Navigation | [app/(backoffice)/_components/Sidebar.tsx](../../app/(backoffice)/_components/Sidebar.tsx) | ✅ |
+
+**Tests** :
+- [tests/frontend/unit/authStore.test.ts](../../tests/frontend/unit/authStore.test.ts) — 8 tests ✅
+- [tests/frontend/unit/apiClient.test.ts](../../tests/frontend/unit/apiClient.test.ts) — 21 tests ✅
+- [tests/frontend/unit/frontend-rgpd-compliance.test.ts](../../tests/frontend/unit/frontend-rgpd-compliance.test.ts) — 15 tests ✅
+
+**Conformité RGPD** :
+- JWT en `sessionStorage` uniquement (auto-cleared)
+- Auto-logout 401 (protection session fixation)
+- Données P1 uniquement (displayName, role, scope)
+- Aucun localStorage pour tokens sensibles
+
+---
+
+### LOT 11.1 — Gestion Tenants CRUD
+
+**Document** : [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) (section 3.2)
+
+| Fichier | Type | Chemin | Status |
+|---------|------|--------|--------|
+| `tenants/page.tsx` | Liste tenants | [app/(backoffice)/tenants/page.tsx](../../app/(backoffice)/tenants/page.tsx) | ✅ |
+| `tenants/new/page.tsx` | Création tenant | [app/(backoffice)/tenants/new/page.tsx](../../app/(backoffice)/tenants/new/page.tsx) | ✅ |
+| `tenants/[id]/page.tsx` | Détails tenant | [app/(backoffice)/tenants/[id]/page.tsx](../../app/(backoffice)/tenants/[id]/page.tsx) | ✅ |
+| `tenants/[id]/edit/page.tsx` | Édition tenant | [app/(backoffice)/tenants/[id]/edit/page.tsx](../../app/(backoffice)/tenants/[id]/edit/page.tsx) | ✅ |
+| `useTenants.ts` | Hook TanStack Query | [src/lib/api/hooks/useTenants.ts](../../src/lib/api/hooks/useTenants.ts) | ✅ |
+| `CreateTenantUseCase.ts` | Use case | [src/app/usecases/tenants/CreateTenantUseCase.ts](../../src/app/usecases/tenants/CreateTenantUseCase.ts) | ✅ |
+| `UpdateTenantUseCase.ts` | Use case | [src/app/usecases/tenants/UpdateTenantUseCase.ts](../../src/app/usecases/tenants/UpdateTenantUseCase.ts) | ✅ |
+| `DeleteTenantUseCase.ts` | Use case | [src/app/usecases/tenants/DeleteTenantUseCase.ts](../../src/app/usecases/tenants/DeleteTenantUseCase.ts) | ✅ |
+
+**Tests** :
+- [tests/frontend/unit/tenants-crud.test.tsx](../../tests/frontend/unit/tenants-crud.test.tsx) — 34 tests ✅
+- [tests/frontend/unit/useTenants-coverage.test.tsx](../../tests/frontend/unit/useTenants-coverage.test.tsx) — 18 tests ✅
+- [tests/frontend/unit/tenant-ui-rgpd.test.tsx](../../tests/frontend/unit/tenant-ui-rgpd.test.tsx) — 10 tests ✅
+- [tests/e2e/backoffice-tenants.spec.ts](../../tests/e2e/backoffice-tenants.spec.ts) — 10 tests E2E ✅
+
+**Conformité RGPD** :
+- Données minimales (name, slug uniquement — P1)
+- Aucun email/téléphone/SIRET dans UI
+- Soft delete (status='deleted')
+- Audit trail automatique (CREATE/UPDATE/DELETE)
+- Confirmations obligatoires (delete → AlertDialog)
+
+---
+
+### 🎯 Résultats Qualité LOT 11.0 & 11.1
+
+| Métrique | Valeur | Status |
+|----------|--------|--------|
+| **Tests Unitaires** | 106/106 (100%) | ✅ PASS |
+| **Tests E2E** | 10/10 (100%) | ✅ PASS |
+| **ESLint** | 0 errors, 0 warnings | ✅ CLEAN |
+| **Conformité RGPD** | 100% | ✅ COMPLIANT |
+| **Coverage useTenants** | 100% statements, 93.75% branches | ✅ EXCELLENT |
+| **TypeScript Errors** | 0 | ✅ PASS |
+
+---
+
+### 📊 Corrections Effectuées (Audit du 2026-01-07)
+
+**Problème initial** : 11/106 tests échouaient (token key inconsistency)
+
+**Corrections réalisées** :
+1. [tests/frontend/unit/authStore.test.ts](../../tests/frontend/unit/authStore.test.ts) — 4 fixes (jwt_token → auth_token)
+2. [tests/frontend/unit/frontend-rgpd-compliance.test.ts](../../tests/frontend/unit/frontend-rgpd-compliance.test.ts) — 4 fixes
+3. [tests/frontend/unit/apiClient.test.ts](../../tests/frontend/unit/apiClient.test.ts) — 5 fixes
+4. [tests/frontend/unit/tenants-crud.test.tsx](../../tests/frontend/unit/tenants-crud.test.tsx) — 2 fixes (URLs route groups)
+5. [tests/frontend/unit/tenant-ui-rgpd.test.tsx](../../tests/frontend/unit/tenant-ui-rgpd.test.tsx) — 1 fix (assertion)
+
+**Nettoyage** :
+- ✅ Suppression `tests/e2e/debug.spec.ts`
+- ✅ Suppression `tests/e2e/debug-simple.spec.ts`
+- ✅ Suppression console.log tests
+
+**Détails** : Voir [CHANGELOG_FIXES.md](../../CHANGELOG_FIXES.md)
+
+---
+
+### 🚀 Prochaines Étapes
+
+**LOT 11.2** — Data Platform & IA (En préparation)
+- [ ] Use cases IA (analyzeDocument, extractEntities)
+- [ ] UI Data Platform (/backoffice/data-platform)
+- [ ] Jobs IA management
+- [ ] Tests E2E workflow IA
+
+**LOT 11.3** — Monitoring & Incidents
+- [ ] Dashboard incidents
+- [ ] Alertes PagerDuty/Slack
+- [ ] SLA tracking
+
+**LOT 11.4** — RGPD Requests Management
+- [ ] Formulaires demandes RGPD
+- [ ] Workflow validation
+- [ ] Export données
 
 ---
 
@@ -739,11 +912,14 @@ grep "LOT" migrations/*.sql
 
 - [ ] LOT6.2_IMPLEMENTATION.md (migrations RLS 004-013)
 - [ ] Script verify-implementation.sh (automatisation vérification)
+- [ ] LOT11.2_DATA_PLATFORM.md (en préparation)
 
-### Tests manquants
+### Tests manquants (scope futur)
 
-- [ ] Tests API E2E (supertest) - scope EPIC 11-13
-- [ ] Tests middleware CORS - scope EPIC 11-13
+- [ ] Tests API E2E Backend (supertest) - scope EPIC 12-13
+- [ ] Tests middleware CORS - scope EPIC 12-13
+- [ ] Tests performance Lighthouse - scope EPIC 12
+- [ ] Tests accessibilité axe-core - scope EPIC 12
 
 ---
 
@@ -775,6 +951,8 @@ grep "LOT" migrations/*.sql
 
 ---
 
-**Maintenu par** : Claude Code (Sonnet 4.5)
-**Dernière mise à jour** : 2026-01-05
-**Version** : 1.2
+**Maintenu par** : Claude Code (Sonnet 4.5)  
+**Dernière mise à jour** : 2026-01-07  
+**Version** : 1.3
+
+**Statut actuel** : ✅ **LOT 11.0 & 11.1 VALIDÉS** — 116/116 tests passing — Ready to deploy

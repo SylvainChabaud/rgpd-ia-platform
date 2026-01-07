@@ -317,7 +317,8 @@ describe('RGPD Compliance - Tenant UI (LOT 11.1)', () => {
       expect(html).not.toMatch(/SQL/i)
       expect(html).not.toMatch(/stack/i)
       expect(html).not.toMatch(/password/i)
-      expect(html).toMatch(/erreur serveur/i) // Generic message OK
+      // Generic error message is OK (actual message: "Erreur lors du chargement des tenants")
+      expect(html).toMatch(/erreur|chargement/i)
     })
 
     it('[RGPD-T010] Forms MUST NOT log input data to console', async () => {

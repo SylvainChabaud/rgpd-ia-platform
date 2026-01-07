@@ -41,7 +41,7 @@ export async function apiClient<T>(
 ): Promise<T> {
   // Get JWT token from sessionStorage (client-side only)
   const token =
-    typeof window !== 'undefined' ? sessionStorage.getItem('jwt_token') : null
+    typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null
 
   // Build headers with JWT token
   const headers: HeadersInit = {

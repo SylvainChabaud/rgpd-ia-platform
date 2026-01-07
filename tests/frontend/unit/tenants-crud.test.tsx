@@ -125,7 +125,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Button is inside a link, so we find the link by its href
       const createLink = await screen.findByRole('link', { name: /créer un tenant/i })
-      expect(createLink).toHaveAttribute('href', '/backoffice/tenants/new')
+      expect(createLink).toHaveAttribute('href', '/tenants/new')
     })
 
     it('[INT-003] should navigate to details page when clicking tenant row', async () => {
@@ -154,7 +154,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
       })
 
       const detailsLink = screen.getByRole('link', { name: /détails/i })
-      expect(detailsLink).toHaveAttribute('href', '/backoffice/tenants/tenant-1')
+      expect(detailsLink).toHaveAttribute('href', '/tenants/tenant-1')
     })
 
     it('[INT-004] should display loading state while fetching', () => {
@@ -260,7 +260,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to tenants list
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/backoffice/tenants')
+        expect(mockPush).toHaveBeenCalledWith('/tenants')
       })
     })
 
@@ -435,7 +435,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to tenants list
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/backoffice/tenants')
+        expect(mockPush).toHaveBeenCalledWith('/tenants')
       })
     })
   })
@@ -522,7 +522,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to details
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/backoffice/tenants/tenant-123')
+        expect(mockPush).toHaveBeenCalledWith('/tenants/tenant-123')
       })
     })
 

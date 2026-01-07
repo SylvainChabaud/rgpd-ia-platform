@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
       login: (token: string, user: AuthUser) => {
         // Store token in sessionStorage (cleared on browser close)
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('jwt_token', token)
+          sessionStorage.setItem('auth_token', token)
         }
         set({ token, user, isAuthenticated: true })
       },
@@ -67,7 +67,7 @@ export const useAuthStore = create<AuthState>()(
        */
       logout: () => {
         if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('jwt_token')
+          sessionStorage.removeItem('auth_token')
         }
         set({ token: null, user: null, isAuthenticated: false })
       },
@@ -78,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
        */
       checkAuth: () => {
         if (typeof window !== 'undefined') {
-          const token = sessionStorage.getItem('jwt_token')
+          const token = sessionStorage.getItem('auth_token')
           if (!token) {
             get().logout()
           } else {

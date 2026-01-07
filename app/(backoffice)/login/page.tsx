@@ -74,7 +74,7 @@ export default function LoginPage() {
       login(response.token, response.user)
 
       // Redirect to dashboard
-      router.push('/backoffice')
+      router.push('/')
     } catch {
       // RGPD-safe error message (no error logging)
       toast.error('Email ou mot de passe incorrect')

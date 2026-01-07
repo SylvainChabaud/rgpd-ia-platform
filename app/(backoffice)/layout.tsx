@@ -20,8 +20,8 @@ import { Sidebar } from './_components/Sidebar'
  * - Auth check respects session storage (auto-cleared on browser close)
  *
  * Routes:
- * - /backoffice/login - Public (login form)
- * - /backoffice/* - Protected (requires PLATFORM auth)
+ * - /login - Public (login form)
+ * - /* - Protected (requires PLATFORM auth)
  */
 export default function BackofficeLayout({
   children,
@@ -37,13 +37,13 @@ export default function BackofficeLayout({
     checkAuth()
 
     // Allow login page without auth
-    if (pathname === '/backoffice/login') {
+    if (pathname === '/login') {
       return
     }
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-      router.push('/backoffice/login')
+      router.push('/login')
       return
     }
 
@@ -55,7 +55,7 @@ export default function BackofficeLayout({
   }, [isAuthenticated, checkAuth, router, pathname, user])
 
   // Login page: no sidebar, just content
-  if (pathname === '/backoffice/login') {
+  if (pathname === '/login') {
     return <>{children}</>
   }
 

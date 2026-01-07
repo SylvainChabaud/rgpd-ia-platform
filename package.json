@@ -6,7 +6,7 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx scripts/migrate.ts",
     "purge": "tsx scripts/purge.ts",
@@ -27,7 +27,13 @@
     "test:rgpd": "jest --projects jest.config.backend.mjs --testMatch=\"**/tests/backend/**/*rgpd*.test.ts\"",
     "test:security": "jest --projects jest.config.backend.mjs --testMatch=\"**/tests/backend/unit/security/**/*.test.ts\"",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:setup": "tsx tests/e2e/setup/seed-test-data.ts",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -69,6 +75,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@swc/core": "^1.10.7",
     "@swc/jest": "^0.2.37",
     "@tailwindcss/postcss": "^4",

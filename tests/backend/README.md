@@ -1,5 +1,11 @@
 # Tests Backend - Traçabilité RGPD
 
+**Dernière mise à jour** : 2026-01-07  
+**Total tests backend** : **~492 tests** (350+ unit, 80+ integration, 97 E2E API)  
+**Status** : ✅ **100% passing**
+
+---
+
 ## Mapping Tests ↔ Articles RGPD
 
 ### Article 5 - Principes
@@ -76,8 +82,65 @@
 | `unit/domain.cookie-consent.test.ts` | Consentement |
 | `unit/api/api.consents.cookies.test.ts` | API cookies |
 
+---
+
+## Tests Frontend (Référence)
+
+> **Note** : Les tests frontend sont dans `/tests/frontend/` mais couvrent aussi des articles RGPD.
+
+| Article | Fichier Frontend | Nb Tests |
+|---------|------------------|----------|
+| Art. 25 (Privacy by design) | `frontend-rgpd-compliance.test.ts` | 15 |
+| Art. 32 (Sécurité JWT) | `authStore.test.ts` | 8 |
+| Art. 32 (API Client) | `apiClient.test.ts` | 21 |
+| Minimisation données | `tenant-ui-rgpd.test.tsx` | 10 |
+| CRUD Tenants | `tenants-crud.test.tsx` | 34 |
+| Hooks TanStack Query | `useTenants-coverage.test.tsx` | 18 |
+
+**Total Frontend** : **106 tests** (voir [../frontend/unit/](../frontend/unit/))
+
+---
+
 ## Exécution audit
 
 ```bash
+# Tests backend RGPD uniquement
 npm run test:rgpd -- --coverage
+
+# Tous les tests backend
+npm run test:backend
+
+# Tests spécifiques par article
+npm test -- integration/rgpd/rgpd.consent-enforcement.test.ts  # Art. 7
+npm test -- integration/rgpd/rgpd.deletion.test.ts             # Art. 17
+npm test -- unit/rgpd/rgpd.pii-detection.test.ts               # Art. 32
+npm test -- unit/rgpd/rgpd.incident-detection.test.ts          # Art. 33
+
+# E2E API complets
+npm test -- e2e/api/api.e2e.ai-rgpd-pipeline.test.ts
+npm test -- e2e/api/api.e2e.legal-compliance.test.ts
+npm test -- e2e/api/api.e2e.incidents.test.ts
 ```
+
+---
+
+## Statistiques
+
+| Catégorie | Tests | Articles RGPD |
+|-----------|-------|---------------|
+| Unit tests | 350+ | 5, 7, 9, 25, 32, 33 |
+| Integration tests | 80+ | 5, 6, 7, 15, 17, 20 |
+| E2E API tests | 97 | Pipeline complet |
+| **Total Backend** | **~492** | **15+ articles** |
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/testing/RGPD_TESTING.md](../../docs/testing/RGPD_TESTING.md) | Stratégie globale |
+| [docs/testing/E2E_TESTING_GUIDE.md](../../docs/testing/E2E_TESTING_GUIDE.md) | Guide E2E |
+| [../README.md](../README.md) | Vue d'ensemble tests |
+
+**Total plateforme** : **608 tests** (492 backend + 116 frontend)

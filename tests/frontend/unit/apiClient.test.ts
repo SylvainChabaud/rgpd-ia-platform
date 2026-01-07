@@ -32,7 +32,7 @@ describe('APIClient - Unit Tests', () => {
   describe('JWT Token Injection', () => {
     it('should attach JWT token from sessionStorage', async () => {
       const mockToken = 'test-jwt-token'
-      sessionStorage.setItem('jwt_token', mockToken)
+      sessionStorage.setItem('auth_token', mockToken)
 
       ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -52,7 +52,7 @@ describe('APIClient - Unit Tests', () => {
     })
 
     it('should NOT include Authorization header if no token', async () => {
-      sessionStorage.removeItem('jwt_token')
+      sessionStorage.removeItem('auth_token')
 
       ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -107,7 +107,7 @@ describe('APIClient - Unit Tests', () => {
 
       // Should auto-logout
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
 
     it('should attempt redirect to login on 401', async () => {
@@ -124,7 +124,7 @@ describe('APIClient - Unit Tests', () => {
       
       // Verify auto-logout happened (which is the critical security feature)
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
       
       // Redirect to /backoffice/login happens but cannot be tested in jsdom
       // This is covered by the auto-logout test above and E2E tests
@@ -287,7 +287,7 @@ describe('APIClient - Unit Tests', () => {
 
   describe('Custom Headers', () => {
     it('should merge custom headers with defaults', async () => {
-      sessionStorage.setItem('jwt_token', 'test-token')
+      sessionStorage.setItem('auth_token', 'test-token')
 
       ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: true,

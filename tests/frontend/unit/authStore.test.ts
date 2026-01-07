@@ -40,7 +40,7 @@ describe('AuthStore - Unit Tests', () => {
     it('should store token in sessionStorage on login', () => {
       useAuthStore.getState().login(mockToken, mockUser)
 
-      const storedToken = sessionStorage.getItem('jwt_token')
+      const storedToken = sessionStorage.getItem('auth_token')
       expect(storedToken).toBe(mockToken)
     })
 
@@ -78,11 +78,11 @@ describe('AuthStore - Unit Tests', () => {
 
       // Login first
       useAuthStore.getState().login(mockToken, mockUser)
-      expect(sessionStorage.getItem('jwt_token')).toBe(mockToken)
+      expect(sessionStorage.getItem('auth_token')).toBe(mockToken)
 
       // Logout
       useAuthStore.getState().logout()
-      expect(sessionStorage.getItem('jwt_token')).toBeNull()
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
 
     it('should reset state on logout', () => {
@@ -107,7 +107,7 @@ describe('AuthStore - Unit Tests', () => {
   describe('checkAuth Functionality', () => {
     it('should restore auth if token exists in sessionStorage', () => {
       const mockToken = 'existing-token'
-      sessionStorage.setItem('jwt_token', mockToken)
+      sessionStorage.setItem('auth_token', mockToken)
 
       useAuthStore.getState().checkAuth()
 
@@ -121,7 +121,7 @@ describe('AuthStore - Unit Tests', () => {
       useAuthStore.setState({ token: 'old-token', isAuthenticated: true })
 
       // Clear sessionStorage
-      sessionStorage.removeItem('jwt_token')
+      sessionStorage.removeItem('auth_token')
 
       // Check auth
       useAuthStore.getState().checkAuth()
@@ -169,7 +169,7 @@ describe('AuthStore - Unit Tests', () => {
       })
 
       // Token in sessionStorage (RGPD compliant - auto-cleared)
-      expect(sessionStorage.getItem('jwt_token')).toBe('test-token')
+      expect(sessionStorage.getItem('auth_token')).toBe('test-token')
 
       // Token NOT in localStorage (security violation)
       const persisted = JSON.parse(localStorage.getItem('auth-storage') || '{}')

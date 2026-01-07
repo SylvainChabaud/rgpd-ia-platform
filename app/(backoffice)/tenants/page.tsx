@@ -56,7 +56,7 @@ export default function TenantsPage() {
         <div className="text-center">
           <p className="text-destructive">Erreur lors du chargement des tenants</p>
           <p className="text-sm text-muted-foreground mt-2">
-            {error instanceof Error ? error.message : 'Erreur inconnue'}
+            Veuillez réessayer plus tard ou contacter le support.
           </p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function TenantsPage() {
             Vue cross-tenant - {tenants.length} tenant(s) affiché(s)
           </p>
         </div>
-        <Link href="/backoffice/tenants/new">
+        <Link href="/tenants/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Créer un Tenant
@@ -94,7 +94,7 @@ export default function TenantsPage() {
           {tenants.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Aucun tenant trouvé</p>
-              <Link href="/backoffice/tenants/new" className="mt-4 inline-block">
+              <Link href="/tenants/new" className="mt-4 inline-block">
                 <Button variant="outline">
                   <Plus className="mr-2 h-4 w-4" />
                   Créer le premier tenant
@@ -131,7 +131,7 @@ export default function TenantsPage() {
                         {new Date(tenant.createdAt).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/backoffice/tenants/${tenant.id}`}>
+                        <Link href={`/tenants/${tenant.id}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="mr-2 h-4 w-4" />
                             Détails

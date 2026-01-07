@@ -63,7 +63,7 @@ export async function authenticateUser(
       actorId: undefined,
       tenantId: undefined,
       metadata: {
-        reason: 'user_not_found',
+        reason: 'not_found',
         // CRITICAL: DO NOT log email or email_hash (P2 data)
       },
     });
@@ -83,7 +83,7 @@ export async function authenticateUser(
       actorId: user.id,
       tenantId: user.tenantId || undefined,
       metadata: {
-        reason: 'invalid_password',
+        reason: 'auth_failed',
       },
     });
 

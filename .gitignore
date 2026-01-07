@@ -13,6 +13,7 @@
 # testing
 /coverage
 /.swc
+/tests/e2e/.auth/
 
 # next.js
 /.next/
