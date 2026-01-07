@@ -13,6 +13,8 @@
 // ENUMS / TYPES
 // =============================================================================
 
+import { ACTOR_SCOPE } from "@/shared/actorScope";
+
 /**
  * Incident severity levels
  * Used for prioritization and alerting
@@ -156,7 +158,7 @@ export function createSecurityIncident(
     remediationActions: null,
     resolvedAt: null,
     detectedAt: new Date(),
-    detectedBy: input.detectedBy ?? "SYSTEM",
+    detectedBy: input.detectedBy ?? ACTOR_SCOPE.SYSTEM,
     sourceIp: input.sourceIp ?? null,
     createdBy: input.createdBy ?? null,
   };

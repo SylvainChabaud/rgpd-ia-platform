@@ -14,6 +14,7 @@ import {
   withTenantContext,
   withPlatformContext,
 } from "@/infrastructure/db/tenantContext";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { randomUUID } from "crypto";
 import type {
   SecurityIncident,
@@ -100,7 +101,7 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
           input.usersAffected ?? 0,
           input.recordsAffected ?? 0,
           input.riskLevel ?? "UNKNOWN",
-          input.detectedBy ?? "SYSTEM",
+          input.detectedBy ?? ACTOR_SCOPE.SYSTEM,
           input.sourceIp ?? null,
           input.createdBy ?? null,
           now,
@@ -122,7 +123,7 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
             riskLevel: input.riskLevel ?? "UNKNOWN",
           }),
           input.createdBy ?? null,
-          "SYSTEM",
+          ACTOR_SCOPE.SYSTEM,
         ]
       );
 

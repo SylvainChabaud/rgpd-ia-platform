@@ -1255,6 +1255,13 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 **Avant implémentation** : lire EPIC 10 (LOT 10.6).
 
+**Statut actuel** : ⚠️ **PARTIELLEMENT IMPLÉMENTÉ** (backend admin OK, routes user manquantes)
+- ✅ Backend Admin : Routes GET existantes pour lister suspensions/oppositions/contestations (tenant admin)
+- ❌ Routes User : `POST /api/rgpd/oppose`, `POST /api/rgpd/suspend`, `POST /api/rgpd/contest` **NON IMPLÉMENTÉES**
+- ℹ️ **2 tests skipped** : `tests/api.e2e.legal-compliance.test.ts` (lignes 499, 542)
+  - Raison : Route POST user pour oppositions non implémentée (workflow admin obligatoire actuellement)
+  - TODO : Implémenter dans **EPIC 13/LOT 13.4** (My Data - Droits complémentaires)
+
 **Objectif** : implémenter droits RGPD manquants (limitation, opposition, révision humaine).
 
 **Artefacts attendus**
@@ -1783,21 +1790,38 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 ## LOT 13.4 — Mes Données RGPD (Export + Effacement)
 
-**EPIC couverts** : EPIC 13, EPIC 5 (RGPD)
-**Durée estimée** : 4 jours
+**EPIC couverts** : EPIC 13, EPIC 5 (RGPD), EPIC 10 (LOT 10.6 - Droits complémentaires)
+**Durée estimée** : 6 jours (ajout Art. 18/21/22)
 
-**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 5 (export/effacement).
+**Avant implémentation** : lire EPIC 13 (`docs/epics/EPIC_13_Front_User.md`) + EPIC 5 (export/effacement) + EPIC 10/LOT 10.6 (droits complémentaires).
 
-**Objectif** : exercer ses droits RGPD (Art. 15, 17, 20).
+**Objectif** : exercer ses droits RGPD (Art. 15, 17, 18, 20, 21, 22).
+
+**⚠️ PRÉREQUIS BACKEND** :
+- ✅ API Export/Effacement (EPIC 5) : Implémentées
+- ❌ API Droits complémentaires (EPIC 10/LOT 10.6) : **À IMPLÉMENTER**
+  - `POST /api/rgpd/suspend` (Art. 18 - Suspendre mes données)
+  - `POST /api/rgpd/unsuspend` (Art. 18 - Réactiver mes données)
+  - `POST /api/rgpd/oppose` (Art. 21 - Opposition traitement)
+  - `POST /api/rgpd/contest` (Art. 22 - Contester décision IA)
+  - `GET /api/rgpd/oppositions` (Lister mes oppositions)
+  - `GET /api/rgpd/contests` (Lister mes contestations)
+- 📝 **Référence** : 2 tests skippés dans `tests/api.e2e.legal-compliance.test.ts` (lignes 499, 542)
+- 📖 **Spécifications** : Voir `docs/epics/EPIC_13_Front_User.md` section 1.4.2
 
 **Artefacts attendus**
 - Page mes données RGPD
-- Section Export données (bouton "Exporter mes données")
-- Liste exports disponibles (TTL 7j, downloads restants)
-- Download bundle chiffré (avec password)
-- Section Supprimer compte (bouton "Supprimer mon compte")
-- Confirmation double (popup + email)
-- Information soft delete (30 jours rétention)
+- **Section Export données** (bouton "Exporter mes données")
+  - Liste exports disponibles (TTL 7j, downloads restants)
+  - Download bundle chiffré (avec password)
+- **Section Supprimer compte** (bouton "Supprimer mon compte")
+  - Confirmation double (popup + email)
+  - Information soft delete (30 jours rétention)
+- **Section Droits complémentaires** (Art. 18/21/22) **← NOUVEAU**
+  - Bouton "Suspendre mes données" (Art. 18)
+  - Formulaire "Opposition traitement" (Art. 21)
+  - Bouton "Contester décision IA" (Art. 22)
+  - Historique oppositions/contestations avec statut
 
 **Acceptance criteria (bloquants)**
 - Export fonctionnel (bundle chiffré reçu)
@@ -1806,11 +1830,19 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Effacement fonctionnel (soft delete immédiat)
 - Confirmation obligatoire (éviter erreurs)
 - Information claire (rétention 30j)
+- **Suspension données fonctionnelle** (POST /api/rgpd/suspend)
+- **Opposition traitement fonctionnelle** (formulaire + POST /api/rgpd/oppose)
+- **Contestation IA fonctionnelle** (upload pièce jointe + POST /api/rgpd/contest)
+- **Historiques oppositions/contestations affichés**
 
 **Tests obligatoires**
 - Export données E2E
 - Download export E2E
 - Supprimer compte E2E (soft delete vérifié)
+- **Suspendre/Réactiver données E2E** (Art. 18)
+- **Opposition traitement E2E** (Art. 21)
+- **Contestation décision IA E2E** (Art. 22)
+- **Tests skippés activés** : `tests/api.e2e.legal-compliance.test.ts` → retirer `.skip()`
 
 ---
 

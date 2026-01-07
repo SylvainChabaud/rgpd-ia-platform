@@ -16,6 +16,7 @@
 
 import type { SecurityIncident, IncidentSeverity } from "@/domain/incident";
 import type { AlertService, Alert } from "@/app/ports/AlertService";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { logEvent, logError } from "@/shared/logger";
 
 // =============================================================================
@@ -179,7 +180,7 @@ export class IncidentAlertService {
         metadata: {
           incidentId: incident.id,
           type: incident.type,
-          tenantId: incident.tenantId || "PLATFORM",
+          tenantId: incident.tenantId || ACTOR_SCOPE.PLATFORM,
         },
         timestamp: new Date(),
       };
@@ -244,7 +245,7 @@ export class IncidentAlertService {
             type: incident.type,
             description: incident.description,
             users_affected: incident.usersAffected,
-            tenant_id: incident.tenantId || "PLATFORM",
+            tenant_id: incident.tenantId || ACTOR_SCOPE.PLATFORM,
           },
         },
         links: this.config.dashboardUrl

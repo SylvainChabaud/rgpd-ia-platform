@@ -22,6 +22,7 @@ import {
 import type { SecurityIncidentRepo } from "@/domain/incident";
 import type { IncidentAlertService } from "@/infrastructure/alerts/IncidentAlertService";
 import { logEvent } from "@/shared/logger";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 // =============================================================================
 // TYPES
@@ -133,7 +134,7 @@ export async function createIncident(
     type: incident.type,
     cnilRequired,
     usersRequired,
-    actorId: input.actorId ?? "SYSTEM",
+    actorId: input.actorId ?? ACTOR_SCOPE.SYSTEM,
   });
 
   logEvent("incident.created", {

@@ -20,6 +20,7 @@
 import type { CreateIncidentInput } from "./CreateIncidentUseCase";
 import type { IncidentType, IncidentSeverity } from "@/domain/incident";
 import { logEvent } from "@/shared/logger";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 // =============================================================================
 // TYPES
@@ -152,7 +153,7 @@ function evaluateBruteForce(event: BruteForceEvent): CreateIncidentInput | null 
     description: `${event.attemptCount} failed login attempts in ${event.timeWindowMinutes} minutes from IP ${event.sourceIp}. ${event.email ? `Target: ${event.email}` : ""}`,
     tenantId: event.tenantId ?? null,
     riskLevel: "LOW", // Brute force blocked = low risk
-    detectedBy: "SYSTEM",
+    detectedBy: ACTOR_SCOPE.SYSTEM,
     sourceIp: event.sourceIp,
     usersAffected: event.userId ? 1 : 0,
   };
@@ -176,7 +177,7 @@ function evaluateCrossTenant(event: CrossTenantEvent): CreateIncidentInput {
     tenantId: event.targetTenantId, // Affected tenant
     dataCategories: ["P1", "P2"], // Assume metadata + auth data at risk
     riskLevel: "HIGH", // Cross-tenant = always high risk
-    detectedBy: "SYSTEM",
+    detectedBy: ACTOR_SCOPE.SYSTEM,
     sourceIp: event.sourceIp,
     usersAffected: 0, // Unknown at detection time
   };
@@ -203,7 +204,7 @@ function evaluateMassExport(event: MassExportEvent): CreateIncidentInput | null 
     tenantId: event.tenantId,
     recordsAffected: event.recordCount,
     riskLevel: "MEDIUM", // Suspicious but may be legitimate
-    detectedBy: "SYSTEM",
+    detectedBy: ACTOR_SCOPE.SYSTEM,
     sourceIp: event.sourceIp ?? null,
     usersAffected: 1,
     actorId: event.userId,

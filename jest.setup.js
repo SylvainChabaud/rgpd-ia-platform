@@ -3,8 +3,9 @@
  * Load .env.test before running tests
  */
 
-import { config } from "dotenv";
-import { resolve } from "path";
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { config } = require("dotenv");
+const { resolve } = require("path");
 
 // Load .env.test for test environment
 config({ path: resolve(__dirname, ".env.test") });

@@ -58,7 +58,8 @@
       "Bash(wc -l echo \"\" echo \"USE CASES:\" grep -h \"describe\\\\|it\\(\" tests/usecase.*.test.ts)",
       "Bash(wc -l echo \"\" echo \"API ROUTES:\" grep -h \"describe\\\\|it\\(\" tests/api.consents.cookies.test.ts tests/api.contact.dpo.test.ts tests/api.legal.cgu.test.ts tests/api.tenants.rgpd.test.ts)",
       "Bash(wc -l echo \"\" echo \"MIDDLEWARE:\" grep -h \"describe\\\\|it\\(\" tests/middleware.check-data-suspension.test.ts)",
-      "Bash(npx next lint:*)"
+      "Bash(npx next lint:*)",
+      "Bash(npx shadcn@latest add alert-dialog:*)"
     ]
   }
 }
