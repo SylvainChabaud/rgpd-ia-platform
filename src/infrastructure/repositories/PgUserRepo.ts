@@ -16,7 +16,8 @@ import type { UserScope } from '@/shared/actorScope';
 export class PgUserRepo implements UserRepo {
   async findByEmailHash(emailHash: string): Promise<User | null> {
     const result = await pool.query(
-      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at
+      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+              data_suspended, data_suspended_at, data_suspended_reason
        FROM users
        WHERE email_hash = $1 AND deleted_at IS NULL
        LIMIT 1`,
@@ -27,12 +28,13 @@ export class PgUserRepo implements UserRepo {
       return null;
     }
 
-    return this.mapRow(result.rows[0]);
+    return this.mapRowWithSuspension(result.rows[0]);
   }
 
   async findById(userId: string): Promise<User | null> {
     const result = await pool.query(
-      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at
+      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+              data_suspended, data_suspended_at, data_suspended_reason
        FROM users
        WHERE id = $1 AND deleted_at IS NULL
        LIMIT 1`,
@@ -43,12 +45,13 @@ export class PgUserRepo implements UserRepo {
       return null;
     }
 
-    return this.mapRow(result.rows[0]);
+    return this.mapRowWithSuspension(result.rows[0]);
   }
 
   async listByTenant(tenantId: string, limit: number = 20, offset: number = 0): Promise<User[]> {
     const result = await pool.query(
-      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at
+      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+              data_suspended, data_suspended_at, data_suspended_reason
        FROM users
        WHERE tenant_id = $1 AND deleted_at IS NULL
        ORDER BY created_at DESC
@@ -56,7 +59,7 @@ export class PgUserRepo implements UserRepo {
       [tenantId, limit, offset]
     );
 
-    return result.rows.map(this.mapRow);
+    return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row));
   }
 
   async listAll(limit: number = 20, offset: number = 0): Promise<User[]> {
@@ -194,6 +197,42 @@ export class PgUserRepo implements UserRepo {
     }
 
     return this.mapRowWithSuspension(result.rows[0]);
+  }
+
+  async listFiltered({ limit = 20, offset = 0, tenantId, role, status }: {
+    limit?: number
+    offset?: number
+    tenantId?: string
+    role?: string
+    status?: 'active' | 'suspended'
+  }): Promise<User[]> {
+    const where: string[] = ['deleted_at IS NULL']
+    const values: unknown[] = []
+    let idx = 1
+    if (tenantId) {
+      where.push(`tenant_id = $${idx++}`)
+      values.push(tenantId)
+    }
+    if (role) {
+      where.push(`role = $${idx++}`)
+      values.push(role)
+    }
+    if (status === 'active') {
+      where.push(`(data_suspended IS NULL OR data_suspended = false)`)
+    }
+    if (status === 'suspended') {
+      where.push(`data_suspended = true`)
+    }
+    const sql = `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+      data_suspended, data_suspended_at, data_suspended_reason
+      FROM users
+      WHERE ${where.join(' AND ')}
+      ORDER BY created_at DESC
+      LIMIT $${idx++} OFFSET $${idx++}`
+    values.push(limit)
+    values.push(offset)
+    const result = await pool.query(sql, values)
+    return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row))
   }
 
   private mapRow(row: Record<string, unknown>): User {

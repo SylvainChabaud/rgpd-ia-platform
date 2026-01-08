@@ -1,5 +1,7 @@
 'use client'
 
+import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -43,6 +45,12 @@ import { useState } from 'react'
  * - All actions logged in audit trail (backend)
  * - Suspend/Delete require confirmation
  */
+
+const ButtonWrapper = () => <Button variant="outline" disabled>
+  <Edit className="mr-2 h-4 w-4" />
+  Modifier
+</Button>
+
 export default function UserDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -84,6 +92,8 @@ export default function UserDetailsPage() {
   const tenants = tenantsData?.tenants || []
   const tenant = tenants.find((t) => t.id === user.tenantId)
   const isSuspended = !!user.dataSuspended
+  const isSuperAdmin = user.role === ACTOR_ROLE.SUPERADMIN && user.scope === ACTOR_SCOPE.PLATFORM
+  // const isPlatformAdmin = user.role === ACTOR_ROLE.ADMIN && user.scope === ACTOR_SCOPE.PLATFORM
 
   const handleDelete = () => {
     deleteUser(undefined, {
@@ -93,6 +103,8 @@ export default function UserDetailsPage() {
       },
     })
   }
+
+
 
   return (
     <div className="space-y-6">
@@ -123,17 +135,20 @@ export default function UserDetailsPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Link href={`/users/${userId}/edit`}>
-            <Button variant="outline">
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
-            </Button>
-          </Link>
+          {isSuperAdmin ? (
+            <span>
+              <ButtonWrapper />
+            </span>
+          ) : (
+            <Link href={`/users/${userId}/edit`}>
+              <ButtonWrapper />
+            </Link>
+          )}
           {!isSuspended ? (
             <Button
               variant="outline"
               onClick={() => suspend()}
-              disabled={isSuspending}
+              disabled={isSuspending || isSuperAdmin}
             >
               <Pause className="mr-2 h-4 w-4" />
               {isSuspending ? 'Suspension...' : 'Suspendre'}
@@ -142,7 +157,7 @@ export default function UserDetailsPage() {
             <Button
               variant="outline"
               onClick={() => reactivate()}
-              disabled={isReactivating}
+              disabled={isReactivating || isSuperAdmin}
             >
               <Play className="mr-2 h-4 w-4" />
               {isReactivating ? 'Réactivation...' : 'Réactiver'}
@@ -197,7 +212,7 @@ export default function UserDetailsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Rôle</p>
-              <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
+              <Badge variant={user.role === ACTOR_ROLE.ADMIN ? 'default' : 'secondary'}>
                 {user.role}
               </Badge>
             </div>
@@ -245,7 +260,7 @@ export default function UserDetailsPage() {
             </div>
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">
+                <Button variant="destructive" disabled={isSuperAdmin}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Supprimer
                 </Button>

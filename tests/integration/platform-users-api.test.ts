@@ -14,7 +14,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { setupTestEnvironment, teardownTestEnvironment, TestContext } from '../helpers/integration-test-helper'
-import { ACTOR_SCOPE } from '@/shared/actorScope'
 
 let testContext: TestContext
 
@@ -92,7 +91,7 @@ describe('Platform Users API - GET /api/platform/users', () => {
     expect(data.users).toBeDefined()
 
     // All users should belong to the filtered tenant
-    data.users.forEach((user: any) => {
+    data.users.forEach((user: { tenantId: string }) => {
       expect(user.tenantId).toBe(testContext.testTenantId)
     })
   })
@@ -112,7 +111,7 @@ describe('Platform Users API - GET /api/platform/users', () => {
     expect(data.users).toBeDefined()
 
     // All users should have ADMIN role
-    data.users.forEach((user: any) => {
+    data.users.forEach((user: { role: string }) => {
       expect(user.role).toBe('ADMIN')
     })
   })
@@ -266,7 +265,7 @@ describe('RGPD Compliance - Data Classification', () => {
     const allUsers = data.users
 
     // Verify NO email in any user object
-    allUsers.forEach((user: any) => {
+    allUsers.forEach((user: Record<string, unknown>) => {
       expect(user.email).toBeUndefined()
       expect(user.emailHash).toBeUndefined()
       expect(user.password).toBeUndefined()

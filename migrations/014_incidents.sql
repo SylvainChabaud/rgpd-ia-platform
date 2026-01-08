@@ -106,13 +106,13 @@ CREATE INDEX idx_security_incidents_cnil_pending ON security_incidents(detected_
 
 ALTER TABLE security_incidents ENABLE ROW LEVEL SECURITY;
 
--- SUPER_ADMIN peut voir tous les incidents (platform-wide)
+-- SUPERADMIN peut voir tous les incidents (platform-wide)
 CREATE POLICY security_incidents_superadmin_all ON security_incidents
     FOR ALL
     TO PUBLIC
     USING (
-        -- SUPER_ADMIN voit tout
-        current_setting('app.current_user_role', true) = 'SUPER_ADMIN'
+        -- SUPERADMIN voit tout
+        current_setting('app.current_user_role', true) = 'SUPERADMIN'
     );
 
 -- DPO peut voir tous les incidents (platform-wide) - lecture seule pour CRUD via use case
@@ -174,7 +174,7 @@ ALTER TABLE incident_audit_log ENABLE ROW LEVEL SECURITY;
 CREATE POLICY incident_audit_log_superadmin ON incident_audit_log
     FOR ALL
     TO PUBLIC
-    USING (current_setting('app.current_user_role', true) = 'SUPER_ADMIN');
+    USING (current_setting('app.current_user_role', true) = 'SUPERADMIN');
 
 CREATE POLICY incident_audit_log_dpo ON incident_audit_log
     FOR SELECT

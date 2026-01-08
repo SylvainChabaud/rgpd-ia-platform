@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 import { maskEmail } from '@/lib/utils/maskEmail'
 import { createUserSchema, updateUserSchema, bulkSuspendSchema, bulkReactivateSchema } from '@/lib/validation/userSchemas'
 
@@ -23,7 +24,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john.doe@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'SecurePass123!@#',
       }
 
@@ -36,7 +37,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'invalid-email',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'SecurePass123!@#',
       }
 
@@ -49,7 +50,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'short',
       }
 
@@ -62,7 +63,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'securepass123!@#',
       }
 

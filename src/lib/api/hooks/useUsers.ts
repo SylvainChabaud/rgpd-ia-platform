@@ -73,12 +73,23 @@ export function useListUsers(params?: PaginationParams & {
 
 /**
  * Get user by ID
+ * 
+ * SMART ENDPOINT SELECTION:
+ * - PLATFORM admin → /api/platform/users/:id (cross-tenant)
+ * - TENANT admin → /api/users/:id (tenant-scoped)
  */
 export function useUserById(id: string) {
+  const user = useAuthStore((state) => state.user)
+  
   return useQuery({
     queryKey: ['users', id],
-    queryFn: () => apiClient<{ user: User }>(`/users/${id}`),
-    enabled: !!id,
+    queryFn: () => {
+      const endpoint = user?.scope === ACTOR_SCOPE.PLATFORM
+        ? `/platform/users/${id}`
+        : `/users/${id}`
+      return apiClient<{ user: User }>(endpoint)
+    },
+    enabled: !!id && !!user,
   })
 }
 
@@ -119,16 +130,25 @@ export function useCreateUser() {
 
 /**
  * Update user (displayName, role)
+ * 
+ * SMART ENDPOINT SELECTION:
+ * - PLATFORM admin → /api/platform/users/:id (cross-tenant)
+ * - TENANT admin → /api/users/:id (tenant-scoped)
  */
 export function useUpdateUser(id: string) {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
 
   return useMutation({
-    mutationFn: (data: UpdateUserInput) =>
-      apiClient<{ user: User }>(`/users/${id}`, {
+    mutationFn: (data: UpdateUserInput) => {
+      const endpoint = user?.scope === ACTOR_SCOPE.PLATFORM
+        ? `/platform/users/${id}`
+        : `/users/${id}`
+      return apiClient<{ user: User }>(endpoint, {
         method: 'PATCH',
         body: JSON.stringify(data),
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', id] })
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -142,15 +162,24 @@ export function useUpdateUser(id: string) {
 
 /**
  * Suspend user (Art. 18 RGPD - Data suspension)
+ * 
+ * SMART ENDPOINT SELECTION:
+ * - PLATFORM admin → /api/platform/users/:id/suspend (cross-tenant)
+ * - TENANT admin → /api/users/:id/suspend (tenant-scoped)
  */
 export function useSuspendUser(id: string) {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
 
   return useMutation({
-    mutationFn: () =>
-      apiClient<{ message: string }>(`/users/${id}/suspend`, {
+    mutationFn: () => {
+      const endpoint = user?.scope === ACTOR_SCOPE.PLATFORM
+        ? `/platform/users/${id}/suspend`
+        : `/users/${id}/suspend`
+      return apiClient<{ message: string }>(endpoint, {
         method: 'PATCH',
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', id] })
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -164,15 +193,24 @@ export function useSuspendUser(id: string) {
 
 /**
  * Reactivate suspended user
+ * 
+ * SMART ENDPOINT SELECTION:
+ * - PLATFORM admin → /api/platform/users/:id/reactivate (cross-tenant)
+ * - TENANT admin → /api/users/:id/reactivate (tenant-scoped)
  */
 export function useReactivateUser(id: string) {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
 
   return useMutation({
-    mutationFn: () =>
-      apiClient<{ message: string }>(`/users/${id}/reactivate`, {
+    mutationFn: () => {
+      const endpoint = user?.scope === ACTOR_SCOPE.PLATFORM
+        ? `/platform/users/${id}/reactivate`
+        : `/users/${id}/reactivate`
+      return apiClient<{ message: string }>(endpoint, {
         method: 'PATCH',
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', id] })
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -186,15 +224,24 @@ export function useReactivateUser(id: string) {
 
 /**
  * Delete user (soft delete)
+ * 
+ * SMART ENDPOINT SELECTION:
+ * - PLATFORM admin → /api/platform/users/:id (cross-tenant)
+ * - TENANT admin → /api/users/:id (tenant-scoped)
  */
 export function useDeleteUser(id: string) {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
 
   return useMutation({
-    mutationFn: () =>
-      apiClient<{ message: string }>(`/users/${id}`, {
+    mutationFn: () => {
+      const endpoint = user?.scope === ACTOR_SCOPE.PLATFORM
+        ? `/platform/users/${id}`
+        : `/users/${id}`
+      return apiClient<{ message: string }>(endpoint, {
         method: 'DELETE',
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('Utilisateur supprimé')
@@ -240,7 +287,7 @@ export function useBulkReactivateUsers() {
 
   return useMutation({
     mutationFn: (data: { userIds: string[] }) =>
-      apiClient<{ message: string; count: number }>('/rgpd/bulk-unsuspend', {
+      apiClient<{ message: string; count: number }>('/rgpd/bulk-reactivate', {
         method: 'POST',
         body: JSON.stringify(data),
       }),

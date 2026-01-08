@@ -44,7 +44,11 @@ function formatMessagesToPrompt(messages?: LlmMessage[]): string {
 
   return messages
     .map((msg) => {
-      const role = msg.role === "assistant" ? "Assistant" : msg.role === "user" ? "User" : "System";
+      const role = msg.role === "assistant"
+        ? "Assistant"
+        : msg.role === "user"
+        ? "User"
+        : "System";
       return `${role}: ${msg.content}`;
     })
     .join("\n\n");

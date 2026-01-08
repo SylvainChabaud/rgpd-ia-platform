@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 import { authenticateRequest } from '@/app/middleware/auth';
 import { requirePermission } from '@/app/middleware/rbac';
 import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
@@ -25,7 +26,7 @@ export async function GET(
     const hasPermission = requirePermission(
       authResult.user,
       ['rgpd:contests:read'],
-      { allowedRoles: ['TENANT_ADMIN', 'SUPER_ADMIN', 'SUPERADMIN'] }
+      { allowedRoles: [ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.SUPERADMIN] }
     );
 
     if (!hasPermission) {
@@ -36,7 +37,7 @@ export async function GET(
     }
 
     if (
-      authResult.user.role === 'TENANT_ADMIN' &&
+      authResult.user.role === ACTOR_ROLE.TENANT_ADMIN &&
       authResult.user.tenantId !== tenantId
     ) {
       return NextResponse.json(

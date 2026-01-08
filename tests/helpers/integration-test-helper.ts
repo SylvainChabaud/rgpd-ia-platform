@@ -83,7 +83,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
  * Teardown test environment
  * Currently no cleanup needed (tests use existing data)
  */
-export async function teardownTestEnvironment(context: TestContext): Promise<void> {
+export async function teardownTestEnvironment(_context: TestContext): Promise<void> {
   // No cleanup needed - tests read existing data
   // Future: Clean up test users created during tests
 }

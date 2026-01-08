@@ -69,7 +69,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npx playwright test:*)",
       "Bash(curl:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

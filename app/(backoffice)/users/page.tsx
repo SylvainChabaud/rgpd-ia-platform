@@ -1,6 +1,8 @@
-'use client'
 
-import { useState } from 'react'
+'use client'
+import { ACTOR_ROLE } from '@/shared/actorRole'
+
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useListUsers, useListTenants } from '@/lib/api/hooks/useUsers'
 import { useBulkSuspendUsers, useBulkReactivateUsers } from '@/lib/api/hooks/useUsers'
@@ -57,13 +59,15 @@ export default function UsersPage() {
 
   const limit = 100
 
-  const { data, isLoading, error } = useListUsers({
+  const userListParams = useMemo(() => ({
     limit,
     offset: page * limit,
     tenantId: tenantFilter || undefined,
     role: roleFilter || undefined,
     status: statusFilter as 'active' | 'suspended' | undefined,
-  })
+  }), [limit, page, tenantFilter, roleFilter, statusFilter])
+
+  const { data, isLoading, error } = useListUsers(userListParams)
 
   const { data: tenantsData } = useListTenants({ limit: 100 })
   const bulkSuspend = useBulkSuspendUsers()
@@ -320,7 +324,7 @@ export default function UsersPage() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
+                            variant={user.role === ACTOR_ROLE.ADMIN ? 'default' : 'secondary'}
                           >
                             {user.role}
                           </Badge>

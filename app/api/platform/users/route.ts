@@ -66,17 +66,28 @@ export const GET = withLogging(
             return NextResponse.json(validationError({}), { status: 400 });
           }
 
-          // Fetch ALL users (cross-tenant for PLATFORM admin)
+          // Extra filters
+          const tenantId = searchParams.get('tenantId') || undefined;
+          const role = searchParams.get('role') || undefined;
+          const status = searchParams.get('status') as 'active' | 'suspended' | undefined;
+
+          // Fetch filtered users
           const userRepo = new PgUserRepo();
-          const users = await userRepo.listAll(
-            query.limit,
-            query.offset
-          );
+          const users = await userRepo.listFiltered({
+            limit: query.limit,
+            offset: query.offset,
+            tenantId,
+            role,
+            status,
+          });
 
           logger.info({
             actorId: context.userId,
             count: users.length,
-          }, 'Platform admin listed all users');
+            tenantId,
+            role,
+            status,
+          }, 'Platform admin listed filtered users');
 
           // RGPD-safe: Do not expose email_hash or password_hash
           // Return P1 data only

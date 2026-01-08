@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useGlobalStats } from '@/lib/api/hooks/useAudit'
 import { Building2, Users, Activity } from 'lucide-react'
@@ -87,14 +88,14 @@ export default function DashboardPage() {
               <h3 className="font-semibold">Gestion</h3>
               <ul className="space-y-1 text-sm">
                 <li>
-                  <a href="/backoffice/tenants" className="text-primary hover:underline">
+                  <Link href="/tenants" className="text-primary hover:underline">
                     → Gérer les tenants
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/backoffice/users" className="text-primary hover:underline">
+                  <Link href="/users" className="text-primary hover:underline">
                     → Gérer les utilisateurs
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -103,19 +104,19 @@ export default function DashboardPage() {
               <h3 className="font-semibold">Conformité RGPD</h3>
               <ul className="space-y-1 text-sm">
                 <li>
-                  <a href="/backoffice/audit" className="text-primary hover:underline">
+                  <Link href="/backoffice/audit" className="text-primary hover:underline">
                     → Audit trail
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/backoffice/audit/violations" className="text-primary hover:underline">
+                  <Link href="/backoffice/audit/violations" className="text-primary hover:underline">
                     → Registre des violations
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/backoffice/audit/registre" className="text-primary hover:underline">
+                  <Link href="/backoffice/audit/registre" className="text-primary hover:underline">
                     → Registre des traitements
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
