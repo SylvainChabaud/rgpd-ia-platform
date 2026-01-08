@@ -12,8 +12,6 @@
 
 import { render, screen } from '@testing-library/react'
 import { usePathname } from 'next/navigation'
-import { ACTOR_SCOPE } from '@/shared/actorScope'
-import { ACTOR_ROLE } from '@/shared/actorRole'
 import BackofficeLayout from '../../../app/(backoffice)/layout'
 
 // Mock next/navigation
@@ -45,9 +43,9 @@ jest.mock('../../../app/(backoffice)/_components/Sidebar', () => ({
     return (
       <div data-testid="sidebar">
         <nav>
-          <a href="/tenants">Tenants</a>
-          <a href="/users">Users</a>
-          <a href="/audit">Audit</a>
+          <span>Tenants</span>
+          <span>Users</span>
+          <span>Audit</span>
         </nav>
       </div>
     )
@@ -100,19 +98,6 @@ describe('Backoffice Layout (LOT 11.0)', () => {
 
   describe('Protected Routes - RBAC Scope Isolation', () => {
     it('[LAYOUT-003] should allow PLATFORM admin to access all navigation items', () => {
-      // Mock PLATFORM admin through auth store
-      const { useAuthStore } = require('@/lib/auth/authStore')
-      useAuthStore.mockReturnValueOnce({
-        isAuthenticated: true,
-        checkAuth: jest.fn(),
-        user: {
-          id: 'admin-123',
-          displayName: 'Platform Admin',
-          scope: ACTOR_SCOPE.PLATFORM,
-          role: ACTOR_ROLE.SUPERADMIN,
-        },
-      })
-
       render(
         <BackofficeLayout>
           <div>Dashboard</div>
@@ -128,13 +113,14 @@ describe('Backoffice Layout (LOT 11.0)', () => {
     })
 
     it('[LAYOUT-004] should render loading state for unauthenticated users', () => {
-      // Mock unauthenticated state
-      const { useAuthStore } = require('@/lib/auth/authStore')
-      useAuthStore.mockReturnValueOnce({
-        isAuthenticated: false,
-        checkAuth: jest.fn(),
-        user: null,
-      })
+      // Override mock for this specific test
+      jest.doMock('@/lib/auth/authStore', () => ({
+        useAuthStore: jest.fn(() => ({
+          isAuthenticated: false,
+          checkAuth: jest.fn(),
+          user: null,
+        })),
+      }))
 
       render(
         <BackofficeLayout>

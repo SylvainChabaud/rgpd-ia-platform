@@ -60,7 +60,7 @@ function checkPlatformScope(request: NextRequest): {
     }
 
     return { allowed: true }
-  } catch (error) {
+  } catch {
     return {
       allowed: false,
       status: 401,
