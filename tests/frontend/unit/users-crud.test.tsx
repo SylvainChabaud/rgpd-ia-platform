@@ -76,7 +76,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'SecurePass1234',
       }
 
@@ -92,7 +92,7 @@ describe('Users CRUD - Business Logic', () => {
     it('should validate correct user update data', () => {
       const validData = {
         displayName: 'John Doe Updated',
-        role: 'MEMBER' as const,
+        role: ACTOR_ROLE.MEMBER,
       }
 
       const result = updateUserSchema.safeParse(validData)
@@ -110,7 +110,7 @@ describe('Users CRUD - Business Logic', () => {
 
     it('should allow updating only role', () => {
       const validData = {
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
       }
 
       const result = updateUserSchema.safeParse(validData)
@@ -243,7 +243,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'ADMIN' as const,
+        role: ACTOR_ROLE.ADMIN,
         password: 'SecurePass123!@#',
       }
 
@@ -256,7 +256,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'member@example.com',
         displayName: 'Member User',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: 'MEMBER' as const,
+        role: ACTOR_ROLE.MEMBER,
         password: 'SecurePass123!@#',
       }
 
@@ -269,7 +269,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         tenantId: 'invalid-uuid',
-        role: 'MEMBER' as const,
+        role: ACTOR_ROLE.MEMBER,
         password: 'SecurePass123!@#',
       }
 

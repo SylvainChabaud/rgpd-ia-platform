@@ -162,7 +162,7 @@ describe('useTenants - Coverage Branches', () => {
     })
 
     // Trigger mutation
-    result.current.mutate()
+    result.current.mutate({ reason: 'Test suspension reason' })
 
     // Wait for error
     await waitFor(() => expect(result.current.isError).toBe(true))
@@ -181,7 +181,7 @@ describe('useTenants - Coverage Branches', () => {
     })
 
     // Trigger mutation
-    result.current.mutate()
+    result.current.mutate({ reason: 'Test suspension reason' })
 
     // Wait for error
     await waitFor(() => expect(result.current.isError).toBe(true))
@@ -328,7 +328,7 @@ describe('useTenants - Coverage Branches', () => {
     })
 
     // Trigger mutation
-    result.current.mutate()
+    result.current.mutate({ reason: 'Test suspension reason' })
 
     // Wait for success
     await waitFor(() => expect(result.current.isSuccess).toBe(true))

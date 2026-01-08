@@ -61,6 +61,10 @@ export const GET = withLogging(
               name: result.tenant.name,
               slug: result.tenant.slug,
               createdAt: result.tenant.createdAt,
+              deletedAt: result.tenant.deletedAt,
+              suspendedAt: result.tenant.suspendedAt,
+              suspensionReason: result.tenant.suspensionReason,
+              suspendedBy: result.tenant.suspendedBy,
             },
           });
         } catch (error: unknown) {

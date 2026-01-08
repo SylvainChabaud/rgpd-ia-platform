@@ -8,10 +8,14 @@
 export interface TestContext {
   platformAdminToken: string
   platformAdminEmail: string
+  platformAdminPassword: string
   tenantAdminToken: string
   tenantAdminEmail: string
+  tenantAdminPassword: string
   testTenantId: string
   testTenantName: string
+  testTenantUserEmail: string
+  testTenantUserPassword: string
 }
 
 /**
@@ -69,13 +73,21 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   const testTenantId = tenantLoginData.user.tenantId
   const testTenantName = 'Test Tenant'
 
+  // Test tenant user credentials (for login blocking tests)
+  const testTenantUserEmail = tenantAdminEmail // Reuse tenant admin for simplicity
+  const testTenantUserPassword = tenantAdminPassword
+
   return {
     platformAdminToken,
     platformAdminEmail,
+    platformAdminPassword,
     tenantAdminToken,
     tenantAdminEmail,
+    tenantAdminPassword,
     testTenantId,
     testTenantName,
+    testTenantUserEmail,
+    testTenantUserPassword,
   }
 }
 

@@ -65,8 +65,8 @@ export class PgTenantRepo implements TenantRepo {
   async findById(tenantId: string): Promise<Tenant | null> {
     const hasDeletedAt = await this.hasDeletedAtColumn();
     const selectClause = hasDeletedAt
-      ? "SELECT id, slug, name, created_at, deleted_at"
-      : "SELECT id, slug, name, created_at, NULL as deleted_at";
+      ? "SELECT id, slug, name, created_at, deleted_at, suspended_at, suspension_reason, suspended_by"
+      : "SELECT id, slug, name, created_at, NULL as deleted_at, NULL as suspended_at, NULL as suspension_reason, NULL as suspended_by";
     const whereClause = hasDeletedAt
       ? "WHERE id = $1 AND deleted_at IS NULL"
       : "WHERE id = $1";
@@ -86,11 +86,18 @@ export class PgTenantRepo implements TenantRepo {
     return this.mapRow(res.rows[0]);
   }
 
+  /**
+   * Alias for findById (used by use cases)
+   */
+  async getById(tenantId: string): Promise<Tenant | null> {
+    return this.findById(tenantId);
+  }
+
   async listAll(limit: number = 20, offset: number = 0): Promise<Tenant[]> {
     const hasDeletedAt = await this.hasDeletedAtColumn();
     const selectClause = hasDeletedAt
-      ? "SELECT id, slug, name, created_at, deleted_at"
-      : "SELECT id, slug, name, created_at, NULL as deleted_at";
+      ? "SELECT id, slug, name, created_at, deleted_at, suspended_at, suspension_reason, suspended_by"
+      : "SELECT id, slug, name, created_at, NULL as deleted_at, NULL as suspended_at, NULL as suspension_reason, NULL as suspended_by";
     const whereClause = hasDeletedAt ? "WHERE deleted_at IS NULL" : "";
 
     const res = await pool.query(
@@ -156,6 +163,36 @@ export class PgTenantRepo implements TenantRepo {
     );
   }
 
+  /**
+   * Suspend tenant (LOT 11.0 - US 11.4)
+   * Bloque tous les users du tenant
+   */
+  async suspend(tenantId: string, data: { reason: string; suspendedBy: string }): Promise<void> {
+    await pool.query(
+      `UPDATE tenants
+       SET suspended_at = now(),
+           suspension_reason = $2,
+           suspended_by = $3
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NULL`,
+      [tenantId, data.reason, data.suspendedBy]
+    );
+  }
+
+  /**
+   * Unsuspend tenant (réactivation)
+   * Restaure l'accès pour tous les users du tenant
+   */
+  async unsuspend(tenantId: string): Promise<void> {
+    await pool.query(
+      `UPDATE tenants
+       SET suspended_at = NULL,
+           suspension_reason = NULL,
+           suspended_by = NULL
+       WHERE id = $1 AND deleted_at IS NULL AND suspended_at IS NOT NULL`,
+      [tenantId]
+    );
+  }
+
   private mapRow(row: Record<string, unknown>): Tenant {
     return {
       id: row.id as string,
@@ -163,6 +200,9 @@ export class PgTenantRepo implements TenantRepo {
       name: row.name as string,
       createdAt: new Date(row.created_at as string | number | Date),
       deletedAt: row.deleted_at ? new Date(row.deleted_at as string | number | Date) : null,
+      suspendedAt: row.suspended_at ? new Date(row.suspended_at as string | number | Date) : null,
+      suspensionReason: (row.suspension_reason as string) || null,
+      suspendedBy: (row.suspended_by as string) || null,
     };
   }
 }

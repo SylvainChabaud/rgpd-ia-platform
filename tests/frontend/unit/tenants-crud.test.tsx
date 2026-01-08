@@ -362,14 +362,17 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
       expect(screen.getByRole('button', { name: /suspendre/i })).toBeInTheDocument()
     })
 
-    it('[INT-013] should show reactivate button for deleted tenant', async () => {
+    it('[INT-013] should show reactivate button for suspended tenant', async () => {
       const mockTenant = {
         tenant: {
           id: 'tenant-123',
           name: 'Acme Corp',
           slug: 'acme-corp',
           createdAt: '2024-01-15T10:00:00Z',
-          deletedAt: '2024-03-20T16:00:00Z',
+          deletedAt: null,
+          suspendedAt: '2024-03-20T16:00:00Z',
+          suspensionReason: 'Impayé',
+          suspendedBy: 'admin-123',
         },
       }
 
@@ -383,8 +386,16 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
         expect(screen.getByRole('button', { name: /réactiver/i })).toBeInTheDocument()
       })
 
-      // Edit button should be hidden
+      // Edit button should be hidden for suspended tenant
       expect(screen.queryByRole('link', { name: /modifier/i })).not.toBeInTheDocument()
+
+      // Suspend button should be hidden for suspended tenant
+      expect(screen.queryByRole('button', { name: /suspendre/i })).not.toBeInTheDocument()
+
+      // Should show suspension badge
+      expect(screen.getByText('Tenant Suspendu')).toBeInTheDocument()
+      expect(screen.getByText(/Raison:/i)).toBeInTheDocument()
+      expect(screen.getByText('Impayé')).toBeInTheDocument()
     })
 
     it('[INT-014] should handle delete action with confirmation', async () => {

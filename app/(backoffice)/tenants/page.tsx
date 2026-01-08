@@ -123,8 +123,11 @@ export default function TenantsPage() {
                         </code>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={tenant.deletedAt ? 'destructive' : 'default'}>
-                          {tenant.deletedAt ? 'Supprimé' : 'Actif'}
+                        <Badge
+                          variant={tenant.deletedAt ? 'destructive' : 'default'}
+                          className={tenant.suspendedAt && !tenant.deletedAt ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                        >
+                          {tenant.deletedAt ? 'Supprimé' : tenant.suspendedAt ? 'Suspendu' : 'Actif'}
                         </Badge>
                       </TableCell>
                       <TableCell>

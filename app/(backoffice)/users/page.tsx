@@ -330,11 +330,17 @@ export default function UsersPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={user.dataSuspended ? 'destructive' : 'default'}
-                          >
-                            {user.dataSuspended ? 'Suspendu' : 'Actif'}
-                          </Badge>
+                          {tenant?.suspendedAt ? (
+                            <Badge className="bg-orange-600 hover:bg-orange-700">
+                              Bloqué (Tenant suspendu)
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant={user.dataSuspended ? 'destructive' : 'default'}
+                            >
+                              {user.dataSuspended ? 'Suspendu' : 'Actif'}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           {new Date(user.createdAt).toLocaleDateString('fr-FR')}

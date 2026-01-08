@@ -70,6 +70,9 @@ export const GET = withLogging(
               slug: tenant.slug,
               createdAt: tenant.createdAt,
               deletedAt: tenant.deletedAt || null,
+              suspendedAt: tenant.suspendedAt || null,
+              suspensionReason: tenant.suspensionReason || null,
+              suspendedBy: tenant.suspendedBy || null,
             })),
           });
         } catch (error: unknown) {

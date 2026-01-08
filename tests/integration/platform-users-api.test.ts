@@ -14,6 +14,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { setupTestEnvironment, teardownTestEnvironment, TestContext } from '../helpers/integration-test-helper'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 
 let testContext: TestContext
 
@@ -112,7 +113,7 @@ describe('Platform Users API - GET /api/platform/users', () => {
 
     // All users should have ADMIN role
     data.users.forEach((user: { role: string }) => {
-      expect(user.role).toBe('ADMIN')
+      expect(user.role).toBe(ACTOR_ROLE.ADMIN)
     })
   })
 
@@ -135,7 +136,7 @@ describe('Platform Users API - POST /api/platform/users', () => {
       email: `test-${Date.now()}@example.com`,
       displayName: 'Test User Integration',
       tenantId: testContext.testTenantId,
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'SecurePass123!@#',
     }
 
@@ -165,7 +166,7 @@ describe('Platform Users API - POST /api/platform/users', () => {
       email: `tenant-test-${Date.now()}@example.com`,
       displayName: 'Tenant Test User',
       tenantId: testContext.testTenantId,
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'SecurePass123!@#',
     }
 
@@ -186,7 +187,7 @@ describe('Platform Users API - POST /api/platform/users', () => {
       email: testContext.platformAdminEmail, // Email already exists
       displayName: 'Duplicate Test',
       tenantId: testContext.testTenantId,
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'SecurePass123!@#',
     }
 
@@ -210,7 +211,7 @@ describe('Platform Users API - POST /api/platform/users', () => {
       email: `weak-${Date.now()}@example.com`,
       displayName: 'Weak Password Test',
       tenantId: testContext.testTenantId,
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'weak', // Too short, no uppercase, no digit, no special
     }
 
@@ -234,7 +235,7 @@ describe('Platform Users API - POST /api/platform/users', () => {
       email: `invalid-${Date.now()}@example.com`,
       displayName: 'Invalid Tenant Test',
       tenantId: 'not-a-uuid', // Invalid UUID
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'SecurePass123!@#',
     }
 
@@ -282,7 +283,7 @@ describe('RGPD Compliance - Data Classification', () => {
       email: `rgpd-test-${Date.now()}@example.com`,
       displayName: 'RGPD Test User',
       tenantId: testContext.testTenantId,
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: 'SecurePass123!@#',
     }
 

@@ -19,6 +19,7 @@ import { validationError, internalError } from '@/lib/errorResponse';
 import { signJwt } from '@/lib/jwt';
 import { authenticateUser } from '@/app/usecases/auth/authenticateUser';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
+import { PgTenantRepo } from '@/infrastructure/repositories/PgTenantRepo';
 import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHasher';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { ZodError } from 'zod';
@@ -32,6 +33,7 @@ export const POST = withLogging(
 
         // Dependencies
         const userRepo = new PgUserRepo();
+        const tenantRepo = new PgTenantRepo();
         const passwordHasher = new Sha256PasswordHasher();
         const auditWriter = new PgAuditEventWriter();
 
@@ -40,6 +42,7 @@ export const POST = withLogging(
           userRepo,
           passwordHasher,
           auditWriter,
+          tenantRepo,
           {
             email: body.email,
             password: body.password,
@@ -73,11 +76,27 @@ export const POST = withLogging(
           );
         }
 
-        if (error instanceof Error && error.message === 'Invalid credentials') {
-          return NextResponse.json(
-            { error: 'Authentication failed', message: 'Invalid credentials' },
-            { status: 401 }
-          );
+        if (error instanceof Error) {
+          if (error.message === 'Invalid credentials') {
+            return NextResponse.json(
+              { error: 'Authentication failed', message: 'Invalid credentials' },
+              { status: 401 }
+            );
+          }
+
+          if (error.message === 'Account suspended') {
+            return NextResponse.json(
+              { error: 'Account suspended', message: 'Your account has been suspended. Please contact support.' },
+              { status: 403 }
+            );
+          }
+
+          if (error.message === 'Tenant suspended') {
+            return NextResponse.json(
+              { error: 'Tenant suspended', message: 'Your organization account has been suspended. Please contact support.' },
+              { status: 403 }
+            );
+          }
         }
 
         // Internal error (don't expose details)

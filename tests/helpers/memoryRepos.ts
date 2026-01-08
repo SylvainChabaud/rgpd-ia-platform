@@ -57,7 +57,14 @@ export class MemTenantRepo implements TenantRepo {
       name: tenant.name,
       createdAt: new Date(),
       deletedAt: null,
+      suspendedAt: null,
+      suspensionReason: null,
+      suspendedBy: null,
     };
+  }
+
+  async getById(tenantId: string): Promise<Tenant | null> {
+    return this.findById(tenantId);
   }
 
   async listAll(limit: number = 20, offset: number = 0): Promise<Tenant[]> {
@@ -69,6 +76,9 @@ export class MemTenantRepo implements TenantRepo {
         name: t.name,
         createdAt: new Date(),
         deletedAt: null,
+        suspendedAt: null,
+        suspensionReason: null,
+        suspendedBy: null,
       }));
   }
 
@@ -89,6 +99,14 @@ export class MemTenantRepo implements TenantRepo {
         break;
       }
     }
+  }
+
+  async suspend(_tenantId: string, _data: { reason: string; suspendedBy: string }): Promise<void> {
+    // Memory implementation: stub (not used in tests currently)
+  }
+
+  async unsuspend(_tenantId: string): Promise<void> {
+    // Memory implementation: stub (not used in tests currently)
   }
 }
 

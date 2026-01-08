@@ -17,6 +17,9 @@ export interface Tenant {
   slug: string
   createdAt: string
   deletedAt?: string | null
+  suspendedAt?: string | null
+  suspensionReason?: string | null
+  suspendedBy?: string | null
 }
 
 /**

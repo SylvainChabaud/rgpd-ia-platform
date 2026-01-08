@@ -16,6 +16,7 @@
 
 import { createHash } from 'crypto';
 import type { UserRepo } from '@/app/ports/UserRepo';
+import type { TenantRepo } from '@/app/ports/TenantRepo';
 import type { PasswordHasher } from '@/app/ports/PasswordHasher';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
@@ -39,11 +40,18 @@ export type AuthenticateUserOutput = {
  * Authenticate user by email and password
  * Returns user context for JWT generation
  * Throws error if authentication fails
+ *
+ * SECURITY CHECKS:
+ * - User exists
+ * - Password is valid
+ * - User is not suspended (dataSuspended)
+ * - Tenant is not suspended (tenant.suspendedAt) - LOT 11.0
  */
 export async function authenticateUser(
   userRepo: UserRepo,
   passwordHasher: PasswordHasher,
   auditWriter: AuditEventWriter,
+  tenantRepo: TenantRepo,
   input: AuthenticateUserInput
 ): Promise<AuthenticateUserOutput> {
   const { email, password } = input;
@@ -71,7 +79,43 @@ export async function authenticateUser(
     throw new Error('Invalid credentials');
   }
 
-  // Step 3: Verify password
+  // Step 3: Check if user is suspended (data suspension)
+  if (user.dataSuspended) {
+    await emitAuditEvent(auditWriter, {
+      id: randomUUID(),
+      eventName: 'auth.login.failed',
+      actorScope: user.scope,
+      actorId: user.id,
+      tenantId: user.tenantId || undefined,
+      metadata: {
+        reason: 'user_suspended',
+      },
+    });
+
+    throw new Error('Account suspended');
+  }
+
+  // Step 4: Check if tenant is suspended (LOT 11.0)
+  if (user.tenantId) {
+    const tenant = await tenantRepo.getById(user.tenantId);
+    if (tenant && tenant.suspendedAt) {
+      await emitAuditEvent(auditWriter, {
+        id: randomUUID(),
+        eventName: 'auth.login.failed',
+        actorScope: user.scope,
+        actorId: user.id,
+        tenantId: user.tenantId,
+        metadata: {
+          reason: 'tenant_suspended',
+          suspensionReason: tenant.suspensionReason || 'unknown',
+        },
+      });
+
+      throw new Error('Tenant suspended');
+    }
+  }
+
+  // Step 5: Verify password
   const isValidPassword = await passwordHasher.verify(password, user.passwordHash);
 
   if (!isValidPassword) {
@@ -90,7 +134,7 @@ export async function authenticateUser(
     throw new Error('Invalid credentials');
   }
 
-  // Step 4: Emit audit event (successful login)
+  // Step 6: Emit audit event (successful login)
   await emitAuditEvent(auditWriter, {
     id: randomUUID(),
     eventName: 'auth.login.success',
@@ -100,7 +144,7 @@ export async function authenticateUser(
     metadata: {},
   });
 
-  // Step 5: Return user context for JWT
+  // Step 7: Return user context for JWT
   return {
     userId: user.id,
     tenantId: user.tenantId,

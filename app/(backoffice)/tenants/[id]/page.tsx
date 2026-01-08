@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ArrowLeft, Edit, Pause, Play, Trash2, Users, Activity } from 'lucide-react'
 import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 /**
  * Tenant Details Page - PLATFORM Admin
@@ -46,6 +48,8 @@ export default function TenantDetailsPage() {
   const tenantId = params.id as string
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showSuspendDialog, setShowSuspendDialog] = useState(false)
+  const [suspendReason, setSuspendReason] = useState('')
 
   const { data: tenantData, isLoading, error } = useTenantById(tenantId)
   const { data: stats, isLoading: statsLoading } = useTenantStats(tenantId)
@@ -79,12 +83,25 @@ export default function TenantDetailsPage() {
 
   const tenant = tenantData.tenant
   const isDeleted = !!tenant.deletedAt
+  const isSuspended = !!tenant.suspendedAt
 
   const handleDelete = () => {
     deleteTenant(undefined, {
       onSuccess: () => {
         setShowDeleteDialog(false)
         router.push('/tenants')
+      },
+    })
+  }
+
+  const handleSuspend = () => {
+    if (!suspendReason || suspendReason.length < 3) {
+      return
+    }
+    suspend({ reason: suspendReason }, {
+      onSuccess: () => {
+        setShowSuspendDialog(false)
+        setSuspendReason('')
       },
     })
   }
@@ -110,7 +127,7 @@ export default function TenantDetailsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          {!isDeleted && (
+          {!isDeleted && !isSuspended && (
             <>
               <Link href={`/tenants/${tenantId}/edit`}>
                 <Button variant="outline">
@@ -118,17 +135,55 @@ export default function TenantDetailsPage() {
                   Modifier
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                onClick={() => suspend()}
-                disabled={isSuspending}
-              >
-                <Pause className="mr-2 h-4 w-4" />
-                {isSuspending ? 'Suspension...' : 'Suspendre'}
-              </Button>
+              <AlertDialog open={showSuspendDialog} onOpenChange={setShowSuspendDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline">
+                    <Pause className="mr-2 h-4 w-4" />
+                    Suspendre
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Suspendre le tenant</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-4">
+                        <p>
+                          Cette action bloquera tous les utilisateurs du tenant <strong>{tenant.name}</strong>.
+                        </p>
+                        <div className="space-y-2">
+                          <Label htmlFor="suspend-reason">
+                            Raison de la suspension <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="suspend-reason"
+                            placeholder="Ex: Impayé, non conforme, fraude..."
+                            value={suspendReason}
+                            onChange={(e) => setSuspendReason(e.target.value)}
+                            maxLength={500}
+                            disabled={isSuspending}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Minimum 3 caractères (requis pour conformité RGPD)
+                          </p>
+                        </div>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isSuspending}>Annuler</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleSuspend}
+                      disabled={isSuspending || !suspendReason || suspendReason.length < 3}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      {isSuspending ? 'Suspension...' : 'Suspendre le tenant'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           )}
-          {isDeleted && (
+          {isSuspended && !isDeleted && (
             <Button
               variant="outline"
               onClick={() => reactivate()}
@@ -141,7 +196,26 @@ export default function TenantDetailsPage() {
         </div>
       </div>
 
-      {/* Status Badge */}
+      {/* Status Badges */}
+      {isSuspended && !isDeleted && (
+        <Card className="border-orange-500">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-orange-600 hover:bg-orange-700">Tenant Suspendu</Badge>
+                <p className="text-sm text-muted-foreground">
+                  Suspendu le {new Date(tenant.suspendedAt!).toLocaleString('fr-FR')}
+                </p>
+              </div>
+              {tenant.suspensionReason && (
+                <p className="text-sm">
+                  <span className="font-medium">Raison:</span> {tenant.suspensionReason}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {isDeleted && (
         <Card className="border-destructive">
           <CardContent className="pt-6">
@@ -176,8 +250,11 @@ export default function TenantDetailsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <Badge variant={isDeleted ? 'destructive' : 'default'}>
-                {isDeleted ? 'Supprimé' : 'Actif'}
+              <Badge
+                variant={isDeleted ? 'destructive' : 'default'}
+                className={isSuspended ? 'bg-orange-600 hover:bg-orange-700' : ''}
+              >
+                {isDeleted ? 'Supprimé' : isSuspended ? 'Suspendu' : 'Actif'}
               </Badge>
             </div>
           </div>

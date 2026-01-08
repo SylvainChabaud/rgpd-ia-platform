@@ -23,6 +23,7 @@ import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
 import { signJwt } from "@/lib/jwt";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import { DEFAULT_E2E_FETCH_TIMEOUT_MS, warmRoutes } from "./e2e-utils";
 
 // Check if E2E tests should be skipped
 const SKIP_E2E = process.env.TEST_SKIP_E2E === "true";
@@ -31,6 +32,8 @@ const E2E_SERVER_AVAILABLE = process.env.TEST_E2E_SERVER_AVAILABLE === "true";
 const TENANT_ID = newId();
 const USER_ID = newId();
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+
+jest.setTimeout(DEFAULT_E2E_FETCH_TIMEOUT_MS + 5000);
 
 /**
  * Helper: Generate valid JWT token for testing
@@ -90,6 +93,19 @@ beforeAll(async () => {
   
   await cleanup();
   await setupTestData();
+
+  if (!SKIP_E2E && E2E_SERVER_AVAILABLE) {
+    await warmRoutes(BASE_URL, [
+      {
+        path: "/api/ai/invoke",
+        init: {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        },
+      },
+    ]);
+  }
 });
 
 afterAll(async () => {

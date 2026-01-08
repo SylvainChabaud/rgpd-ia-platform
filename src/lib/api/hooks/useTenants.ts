@@ -122,14 +122,16 @@ export function useUpdateTenant(id: string) {
 /**
  * Suspend tenant
  * Blocks all user logins and AI operations
+ * Requires a reason (RGPD compliance - traçabilité)
  */
 export function useSuspendTenant(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (data: { reason: string }) =>
       apiClient<{ message: string }>(`/tenants/${id}/suspend`, {
         method: 'POST',
+        body: JSON.stringify(data),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants', id] })

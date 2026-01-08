@@ -59,7 +59,7 @@ async function seedTestData() {
     if (existingPlatform.rows.length === 0) {
       await pool.query(`
         INSERT INTO users (email_hash, display_name, password_hash, scope, role, tenant_id)
-        VALUES ($1, 'Admin Platform', $2, 'PLATFORM', 'SUPER_ADMIN', NULL)
+        VALUES ($1, 'Admin Platform', $2, 'PLATFORM', 'SUPERADMIN', NULL)
       `, [platformEmailHash, TEST_PASSWORD_HASH])
       console.log('✅ PLATFORM admin created: admin@platform.local')
     } else {
