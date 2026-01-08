@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../apiClient'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/lib/auth/authStore'
+import { ACTOR_SCOPE } from '@/shared/actorScope'
 import type {
   User,
   CreateUserInput,
@@ -18,6 +20,10 @@ import type {
  * - NO email displayed (P2 data) - only displayName (P1)
  * - Cross-tenant access for PLATFORM admin only
  * - Toast notifications RGPD-safe
+ *
+ * Smart endpoint selection:
+ * - PLATFORM scope → /api/platform/users (cross-tenant)
+ * - TENANT scope → /api/users (tenant-scoped)
  */
 
 // ============================================
@@ -25,23 +31,43 @@ import type {
 // ============================================
 
 /**
- * List all users (cross-tenant for PLATFORM admin)
+ * List users with smart endpoint selection
+ *
+ * Automatically detects user scope and calls the appropriate endpoint:
+ * - PLATFORM admin → /api/platform/users (cross-tenant access)
+ * - TENANT admin → /api/users (tenant-scoped access)
+ *
+ * @param params - Pagination + filtres (tenantId, role, status)
  */
-export function useListUsers(params?: PaginationParams & { tenantId?: string; role?: string }) {
+export function useListUsers(params?: PaginationParams & {
+  tenantId?: string
+  role?: string
+  status?: 'active' | 'suspended'
+}) {
+  // Get current user scope to determine which endpoint to use
+  const user = useAuthStore((state) => state.user)
+  const isPlatformAdmin = user?.scope === ACTOR_SCOPE.PLATFORM
+
   return useQuery({
-    queryKey: ['users', params],
+    queryKey: ['users', params, isPlatformAdmin],
     queryFn: () => {
       const queryParams = new URLSearchParams()
       if (params?.limit) queryParams.append('limit', String(params.limit))
       if (params?.offset) queryParams.append('offset', String(params.offset))
       if (params?.tenantId) queryParams.append('tenantId', params.tenantId)
       if (params?.role) queryParams.append('role', params.role)
+      if (params?.status) queryParams.append('status', params.status)
 
       const queryString = queryParams.toString()
-      const endpoint = queryString ? `/users?${queryString}` : '/users'
+
+      // Smart endpoint selection based on user scope
+      const baseEndpoint = isPlatformAdmin ? '/platform/users' : '/users'
+      const endpoint = queryString ? `${baseEndpoint}?${queryString}` : baseEndpoint
 
       return apiClient<ListUsersResponse>(endpoint)
     },
+    // Only enable query if user is loaded (avoid calling with null scope)
+    enabled: !!user,
   })
 }
 
@@ -61,17 +87,26 @@ export function useUserById(id: string) {
 // ============================================
 
 /**
- * Create new user (tenant admin)
+ * Create new user with smart endpoint selection
+ *
+ * - PLATFORM admin → POST /api/platform/users (can create in any tenant)
+ * - TENANT admin → POST /api/users (creates in their own tenant)
  */
 export function useCreateUser() {
   const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
+  const isPlatformAdmin = user?.scope === ACTOR_SCOPE.PLATFORM
 
   return useMutation({
-    mutationFn: (data: CreateUserInput) =>
-      apiClient<{ userId: string }>(`/tenants/${data.tenantId}/users`, {
+    mutationFn: (data: CreateUserInput) => {
+      // Smart endpoint selection
+      const endpoint = isPlatformAdmin ? '/platform/users' : '/users'
+
+      return apiClient<{ userId: string }>(endpoint, {
         method: 'POST',
         body: JSON.stringify(data),
-      }),
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('Utilisateur créé avec succès')
@@ -169,3 +204,58 @@ export function useDeleteUser(id: string) {
     },
   })
 }
+
+// ============================================
+// Bulk Operations (NEW for LOT 11.2)
+// ============================================
+
+/**
+ * Bulk suspend multiple users
+ * Allows Super Admin to suspend multiple users at once
+ */
+export function useBulkSuspendUsers() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { userIds: string[]; reason: string }) =>
+      apiClient<{ message: string; count: number }>('/rgpd/bulk-suspend', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      toast.success(`${data.count} utilisateur(s) suspendu(s)`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la suspension multiple')
+    },
+  })
+}
+
+/**
+ * Bulk reactivate multiple users
+ */
+export function useBulkReactivateUsers() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { userIds: string[] }) =>
+      apiClient<{ message: string; count: number }>('/rgpd/bulk-unsuspend', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      toast.success(`${data.count} utilisateur(s) réactivé(s)`)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la réactivation multiple')
+    },
+  })
+}
+
+// ============================================
+// Helper - Re-export useListTenants for dropdown
+// ============================================
+
+export { useListTenants } from './useTenants'

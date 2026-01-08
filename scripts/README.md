@@ -14,6 +14,10 @@ scripts/
 ├── bench-llm.ts            # Benchmark performance LLM
 ├── check-rls.ts            # Diagnostic RLS configuration
 ├── check-user-role.ts      # Vérification rôle DB user
+├── dev-start.ps1           # 🚀 Démarrage environnement dev (Windows)
+├── dev-stop.ps1            # 🛑 Arrêt environnement dev (Windows)
+├── dev-reset.ps1           # 🔄 Reset complet (suppression données)
+├── update-test-credentials.ps1  # 🔑 Mise à jour identifiants test
 ├── audit/                  # Scripts d'audit RGPD (voir audit/README.md)
 │   ├── collect-evidence.ts
 │   ├── generate-audit-report.ts
@@ -28,6 +32,110 @@ scripts/
     ├── security-check.sh
     └── README.md
 ```
+
+---
+
+### `dev-start.ps1` — Démarrage environnement de développement (Windows)
+
+**Description** : Script PowerShell pour démarrer l'environnement de développement local.
+
+**Commande** :
+```powershell
+.\scripts\dev-start.ps1
+```
+
+**Actions effectuées** :
+1. Nettoyage des conteneurs existants
+2. Démarrage PostgreSQL dans Docker (port 5432)
+3. Attente que PostgreSQL soit prêt (5 secondes)
+4. Exécution des migrations (`npm run migrate`)
+5. Création des utilisateurs de test (`npm run test:e2e:setup`)
+6. Démarrage Next.js dev server (`npm run dev`)
+
+**Utilisateurs créés** :
+- **Super Admin** : `admin@platform.local` / `AdminPass123!`
+- **Tenant Admin** : `admin@tenant1.local` / `AdminPass123!`
+
+**Quand l'utiliser** :
+| Situation | Action |
+|-----------|--------|
+| Première installation | ✅ Obligatoire |
+| Après `git pull` (nouvelles migrations) | ✅ Recommandé |
+| Démarrage quotidien | ✅ Recommandé |
+
+**Prérequis** :
+- Docker Desktop installé et démarré
+- PowerShell 5.1+ ou PowerShell Core 7+
+- Port 3000 et 5432 disponibles
+
+---
+
+### `dev-stop.ps1` — Arrêt environnement de développement
+
+**Description** : Arrête proprement l'environnement de développement.
+
+**Commande** :
+```powershell
+.\scripts\dev-stop.ps1
+```
+
+**Actions effectuées** :
+1. Arrêt Next.js (processus node)
+2. Arrêt PostgreSQL (conteneur Docker)
+3. Suppression du conteneur (données conservées dans volume)
+
+**Note** : Les données PostgreSQL sont **conservées** dans le volume `rgpd-postgres-data`.
+
+---
+
+### `dev-reset.ps1` — Reset complet (⚠️ DESTRUCTIF)
+
+**Description** : Supprime toutes les données et réinitialise l'environnement.
+
+**Commande** :
+```powershell
+.\scripts\dev-reset.ps1
+```
+
+**⚠️ ATTENTION** : Ce script nécessite confirmation (`OUI`) et **SUPPRIME** :
+- Toutes les données PostgreSQL (volume Docker)
+- Le cache Next.js (dossier `.next`)
+- Tous les conteneurs et processus
+
+**Quand l'utiliser** :
+| Situation | Action |
+|-----------|--------|
+| Reset base de données corrompue | ✅ |
+| Problèmes de migrations | ✅ |
+| Tests avec base vierge | ✅ |
+| Quotidien | ❌ **NON** |
+
+---
+
+### `update-test-credentials.ps1` — Mise à jour identifiants de test
+
+**Description** : Script interactif pour changer les identifiants de test E2E.
+
+**Commande** :
+```powershell
+.\scripts\update-test-credentials.ps1
+```
+
+**Actions effectuées** :
+1. Demande nouveaux identifiants (email, password)
+2. Met à jour `tests/e2e/setup/seed-test-data.ts`
+3. Propose de reseed la base de données
+
+**Quand l'utiliser** :
+| Situation | Action |
+|-----------|--------|
+| Personnaliser identifiants dev | ✅ |
+| Sécuriser environnement partagé | ✅ |
+| Tests avec credentials spécifiques | ✅ |
+
+**Défauts** :
+- Super Admin : `admin@platform.local` / `AdminPass123!`
+- Tenant Admin : `admin@tenant1.local` / `AdminPass123!`
 
 ---
 
@@ -218,6 +326,10 @@ Scripts pour démarrer, arrêter et vérifier la stack Docker.
 | `migrate` | ✅ | ✅ | ✅ | ❌ |
 | `purge` | ✅ | ✅ | ✅ | ❌ |
 | `bench-llm` | ✅ | — | — | ❌ |
+| `dev-start.ps1` | ✅ | — | — | ❌ |
+| `dev-stop.ps1` | ✅ | — | — | ❌ |
+| `dev-reset.ps1` | ✅ | — | — | ❌ |
+| `update-test-credentials.ps1` | ✅ | — | — | ❌ |
 | `audit/*` | ✅ | ✅ | ✅ | ❌ |
 | `docker/*` | ✅ | ✅ | ✅ | ❌ |
 

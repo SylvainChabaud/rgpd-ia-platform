@@ -21,9 +21,9 @@
 | **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110/110 |
 | **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60/60 |
 | **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180/180 |
-| **EPIC 11** | 11.0-11.1 (2 LOTs) | [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) + [Rapports qualité](#epic-11--back-office-super-admin-frontend-platform) | ✅ **VALIDÉ** | **116/116** |
+| **EPIC 11** | 11.0-11.2 (3 LOTs) | [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) + [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md) + [Rapports qualité](#epic-11--back-office-super-admin-frontend-platform) | ✅ **VALIDÉ** | **160/160** |
 
-**Total** : **35 LOTs implémentés**, **608+ tests passing** (492 backend + 116 frontend)
+**Total** : **36 LOTs implémentés**, **652+ tests passing** (492 backend + 160 frontend)
 
 ---
 
@@ -899,6 +899,21 @@ grep "LOT" migrations/*.sql
 - [ ] Alertes PagerDuty/Slack
 - [ ] SLA tracking
 
+**LOT 11.2** — Gestion Users Plateforme ✅ **COMPLET**
+- [x] Liste users cross-tenant + filtres + pagination
+- [x] Création user (dropdown tenant + password generator)
+- [x] Édition user (displayName + role)
+- [x] Détails user (P1 data + actions contextuelles)
+- [x] Bulk suspend/reactivate (confirmations obligatoires)
+- [x] Email masqué `m***@e***` RGPD-safe
+- Tests : **44 tests** (39 unitaires + 5 E2E)
+- Document : [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md)
+
+**LOT 11.3** — Audit & Monitoring Dashboard
+- [ ] Dashboard audit (visualisation événements)
+- [ ] Registre violations RGPD
+- [ ] Monitoring temps réel
+
 **LOT 11.4** — RGPD Requests Management
 - [ ] Formulaires demandes RGPD
 - [ ] Workflow validation
@@ -910,9 +925,7 @@ grep "LOT" migrations/*.sql
 
 ### Documentation manquante
 
-- [ ] LOT6.2_IMPLEMENTATION.md (migrations RLS 004-013)
 - [ ] Script verify-implementation.sh (automatisation vérification)
-- [ ] LOT11.2_DATA_PLATFORM.md (en préparation)
 
 ### Tests manquants (scope futur)
 

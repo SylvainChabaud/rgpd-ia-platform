@@ -64,7 +64,12 @@
       "Bash(pnpm test:frontend:*)",
       "Bash(npm run test:frontend:*)",
       "Bash(npm run test:coverage:*)",
-      "Bash(npx playwright install chromium --with-deps)"
+      "Bash(npx playwright install chromium --with-deps)",
+      "Bash(test:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(curl:*)",
+      "Bash(printf:*)"
     ]
   }
 }

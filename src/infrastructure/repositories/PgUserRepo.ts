@@ -59,6 +59,20 @@ export class PgUserRepo implements UserRepo {
     return result.rows.map(this.mapRow);
   }
 
+  async listAll(limit: number = 20, offset: number = 0): Promise<User[]> {
+    const result = await pool.query(
+      `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+              data_suspended, data_suspended_at, data_suspended_reason
+       FROM users
+       WHERE deleted_at IS NULL
+       ORDER BY created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row));
+  }
+
   async listSuspendedByTenant(tenantId: string): Promise<User[]> {
     // BLOCKER: validate tenantId (RGPD isolation)
     if (!tenantId) {

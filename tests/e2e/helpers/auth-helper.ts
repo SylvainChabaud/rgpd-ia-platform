@@ -22,43 +22,31 @@ export const TEST_USERS = {
 }
 
 /**
- * Login helper with increased timeout and retries
+ * Login helper - matches pattern from backoffice-auth.spec.ts
  */
 export async function loginAsPlatformAdmin(page: Page): Promise<void> {
-  try {
-    // Navigate to login page
-    await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 30000 })
+  // Navigate to login
+  await page.goto('/login')
 
-    // Wait for form to be loaded AND hydrated (React)
-    await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 15000 })
-    await page.waitForSelector('button[type="submit"]:not([disabled])', { state: 'visible', timeout: 15000 })
+  // Fill login form
+  await page.fill('input[type="email"]', TEST_USERS.PLATFORM_ADMIN.email)
+  await page.fill('input[type="password"]', TEST_USERS.PLATFORM_ADMIN.password)
 
-    // Small delay to ensure React hydration is complete
-    await page.waitForTimeout(500)
+  // Submit
+  await page.click('button[type="submit"]')
 
-    // Fill login form
-    await page.fill('input[type="email"]', TEST_USERS.PLATFORM_ADMIN.email)
-    await page.fill('input[type="password"]', TEST_USERS.PLATFORM_ADMIN.password)
+  // Wait for navigation with increased timeout
+  await page.waitForURL('/', { timeout: 30000, waitUntil: 'domcontentloaded' })
 
-    // Submit
-    await page.click('button[type="submit"]')
+  // Assertions
+  expect(page.url()).toBe('http://localhost:3000/')
 
-    // Wait for navigation
-    await page.waitForURL('/', { timeout: 30000, waitUntil: 'domcontentloaded' })
+  // Sidebar visible (PLATFORM scope)
+  await expect(page.locator('nav')).toBeVisible()
 
-    // Wait for sidebar to confirm auth success
-    await page.waitForSelector('nav', { timeout: 15000 })
-
-    // Verify JWT is present
-    const token = await page.evaluate(() => sessionStorage.getItem('auth_token'))
-    expect(token).toBeTruthy()
-
-  } catch (error) {
-    console.error('❌ Login failed:', error)
-    // Take a screenshot for debugging
-    await page.screenshot({ path: `test-results/login-failure-${Date.now()}.png` })
-    throw error
-  }
+  // JWT présent dans sessionStorage
+  const token = await page.evaluate(() => sessionStorage.getItem('auth_token'))
+  expect(token).toBeTruthy()
 }
 
 /**

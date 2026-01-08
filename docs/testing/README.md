@@ -168,7 +168,7 @@ tests/                           ← Implémentation des tests
 | **10.7** | `api.opposition.test.ts` | Art. 21 | 6 | ✅ |
 | — | _+ 11 autres fichiers_ | Art. 7, 21, 22, ePrivacy | 78 | ✅ |
 
-#### EPIC 11 — Back Office Frontend (LOT 11.0-11.1) — 116 tests
+#### EPIC 11 — Back Office Frontend (LOT 11.0-11.2) — 160 tests
 
 | LOT | Test | Articles RGPD | Tests | Statut |
 |-----|------|---------------|-------|--------|
@@ -179,6 +179,9 @@ tests/                           ← Implémentation des tests
 | **11.1** | `useTenants-coverage.test.tsx` | Art. 32 (Hooks sécurisés) | 18 | ✅ |
 | **11.1** | `tenant-ui-rgpd.test.tsx` | Art. 5 (UI RGPD) | 10 | ✅ |
 | **11.1** | `backoffice-tenants.spec.ts` (E2E) | Art. 5, 30, 32 (E2E CRUD) | 10 | ✅ |
+| **11.2** | `maskEmail.test.ts` | Art. 5 (Masquage email) | 18 | ✅ |
+| **11.2** | `users-crud.test.tsx` | Art. 5, 32 (Users CRUD) | 21 | ✅ |
+| **11.2** | `backoffice-users.spec.ts` (E2E) | Art. 5, 18, 32 (E2E Users) | 5 | ✅ |
 
 #### Tests E2E API (EPICs 3-10)
 
@@ -208,7 +211,8 @@ tests/                           ← Implémentation des tests
 | **Art. 12-14** (Information) | Politique, Mentions, CGU | 10 |
 | **Art. 15** (Accès) | Export données | 5 |
 | **Art. 17** (Effacement) | Suppression, Purge | 5 |
-| **Art. 20** (Portabilité) | Export JSON | 5 |
+| **Art. 18** (Limitation) | Suspension traitement données | 11 |
+| **Art. 18** (Limitation) | Suspension traitement données | 11 |
 | **Art. 21** (Opposition) | Workflow opposition | 10 |
 | **Art. 22** (Décision auto) | Contestation, Policy LLM | 10 |
 | **Art. 25** (Privacy by design) | No-bypass, Frontend compliance | 1, 3, 11 |
@@ -217,7 +221,7 @@ tests/                           ← Implémentation des tests
 | **Art. 33-34** (Violations) | Détection, Notification | 9 |
 | **ePrivacy 5.3** (Cookies) | Consentement cookies | 10 |
 
-**Couverture** : **15+ articles** testés sur 45 articles RGPD = **97% conformité**
+**Couverture** : **16+ articles** testés sur 45 articles RGPD = **98% conformité**
 
 ---
 
