@@ -79,65 +79,70 @@ export const GET = withLogging(
 );
 
 /**
+ * Update tenant handler (shared by PUT and PATCH)
+ */
+const updateTenantHandler = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  try {
+    const context = requireContext(req);
+    const { id: tenantId } = await params;
+
+    if (!tenantId) {
+      return NextResponse.json(notFoundError('Tenant'), { status: 404 });
+    }
+
+    // Validate request body
+    const body = await validateBody(req, UpdateTenantSchema);
+
+    // Update tenant
+    await updateTenant(
+      {
+        tenantId,
+        name: body.name,
+        actorId: context.userId,
+      },
+      {
+        tenantRepo: new PgTenantRepo(),
+        auditEventWriter: new PgAuditEventWriter(),
+      }
+    );
+
+    logger.info({
+      tenantId,
+      actorId: context.userId,
+    }, 'Tenant updated');
+
+    return NextResponse.json({
+      tenant: {
+        id: tenantId,
+        name: body.name,
+      },
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error({ error: errorMessage }, 'Update /api/tenants/:id error');
+
+    if (error instanceof ZodError) {
+      return NextResponse.json(validationError(error.issues), { status: 400 });
+    }
+
+    if (errorMessage.includes('not found')) {
+      return NextResponse.json(notFoundError('Tenant'), { status: 404 });
+    }
+
+    return NextResponse.json(internalError(), { status: 500 });
+  }
+};
+
+/**
  * PUT /api/tenants/:id - Update tenant (PLATFORM admin only)
  */
-export const PUT = withLogging(
-  withAuth(
-    withPlatformAdmin(
-      async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-        try {
-          const context = requireContext(req);
-          const { id: tenantId } = await params;
+export const PUT = withLogging(withAuth(withPlatformAdmin(updateTenantHandler)));
 
-          if (!tenantId) {
-            return NextResponse.json(notFoundError('Tenant'), { status: 404 });
-          }
-
-          // Validate request body
-          const body = await validateBody(req, UpdateTenantSchema);
-
-          // Update tenant
-          await updateTenant(
-            {
-              tenantId,
-              name: body.name,
-              actorId: context.userId,
-            },
-            {
-              tenantRepo: new PgTenantRepo(),
-              auditEventWriter: new PgAuditEventWriter(),
-            }
-          );
-
-          logger.info({
-            tenantId,
-            actorId: context.userId,
-          }, 'Tenant updated');
-
-          return NextResponse.json({
-            tenant: {
-              id: tenantId,
-              name: body.name,
-            },
-          });
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logger.error({ error: errorMessage }, 'PUT /api/tenants/:id error');
-
-          if (error instanceof ZodError) {
-            return NextResponse.json(validationError(error.issues), { status: 400 });
-          }
-
-          if (errorMessage.includes('not found')) {
-            return NextResponse.json(notFoundError('Tenant'), { status: 404 });
-          }
-
-          return NextResponse.json(internalError(), { status: 500 });
-        }
-      }
-    )
-  )
-);
+/**
+ * PATCH /api/tenants/:id - Update tenant (PLATFORM admin only)
+ * Alias for PUT to support both HTTP methods
+ */
+export const PATCH = withLogging(withAuth(withPlatformAdmin(updateTenantHandler)));
 
 /**
  * DELETE /api/tenants/:id - Soft delete tenant (PLATFORM admin only)
