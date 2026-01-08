@@ -46,7 +46,7 @@ import { useState } from 'react'
  * - Suspend/Delete require confirmation
  */
 
-const ButtonWrapper = () => <Button variant="outline" disabled>
+const ButtonWrapper = () => <Button variant="outline">
   <Edit className="mr-2 h-4 w-4" />
   Modifier
 </Button>
