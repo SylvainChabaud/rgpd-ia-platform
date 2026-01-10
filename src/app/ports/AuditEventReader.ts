@@ -20,6 +20,8 @@ export interface AuditEventRecord {
 export interface ListAuditEventsFilters {
   tenantId?: string; // Filter by tenant (for TENANT admin)
   eventType?: string; // Filter by event type
+  startDate?: string; // Filter by start date (ISO datetime)
+  endDate?: string; // Filter by end date (ISO datetime)
   limit?: number;
   offset?: number;
 }

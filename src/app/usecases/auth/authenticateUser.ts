@@ -14,7 +14,6 @@
  * - Failed attempts logged (audit trail)
  */
 
-import { createHash } from 'crypto';
 import type { UserRepo } from '@/app/ports/UserRepo';
 import type { TenantRepo } from '@/app/ports/TenantRepo';
 import type { PasswordHasher } from '@/app/ports/PasswordHasher';
@@ -22,6 +21,7 @@ import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
 import { randomUUID } from 'crypto';
 import { ACTOR_SCOPE, type UserScope } from '@/shared/actorScope';
+import { hashEmail } from '@/shared/ids';
 
 export type AuthenticateUserInput = {
   email: string;
@@ -152,12 +152,4 @@ export async function authenticateUser(
     role: user.role,
     displayName: user.displayName,
   };
-}
-
-/**
- * Hash email for storage and lookup
- * IMPORTANT: Must match hashing used during user creation
- */
-function hashEmail(email: string): string {
-  return createHash('sha256').update(email.toLowerCase().trim()).digest('hex');
 }

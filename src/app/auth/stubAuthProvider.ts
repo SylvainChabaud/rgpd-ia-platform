@@ -8,6 +8,7 @@
  */
 
 import { ACTOR_SCOPE, type ActorScope } from "@/shared/actorScope";
+import { verifyJwt } from "@/lib/jwt";
 
 export interface AuthenticatedActor {
   actorId: string;
@@ -56,9 +57,24 @@ export class StubAuthProvider implements AuthProvider {
   }
 
   async validateAuth(token: string): Promise<AuthenticatedActor | null> {
-    // STUB: Simple map lookup
-    const actor = this.validTokens.get(token);
-    return actor ?? null;
+    // Try JWT validation first (real auth from login)
+    try {
+      const payload = verifyJwt(token);
+      return {
+        actorId: payload.userId,
+        actorScope: payload.scope as ActorScope,
+        tenantId: payload.tenantId || undefined,
+        roles: [payload.role],
+      };
+    } catch {
+      // JWT validation failed, fallback to stub tokens (for tests)
+      const actor = this.validTokens.get(token);
+      if (actor) {
+        return actor;
+      }
+    }
+
+    return null;
   }
 
   /**

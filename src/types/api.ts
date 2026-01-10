@@ -51,6 +51,48 @@ export interface AuditEvent {
 }
 
 /**
+ * Global Platform Statistics (P1 aggregates only)
+ * LOT 11.3 - Dashboard
+ */
+export interface GlobalStats {
+  stats: {
+    tenants: {
+      active: number
+      suspended: number
+      total: number
+    }
+    users: {
+      active: number
+      suspended: number
+      total: number
+    }
+    aiJobs: {
+      success: number
+      failed: number
+      total: number
+      month: string
+    }
+    rgpd: {
+      exports: {
+        pending: number
+        completed: number
+        total: number
+      }
+      deletions: {
+        pending: number
+        completed: number
+        total: number
+      }
+    }
+    incidents: {
+      unresolved: number
+      resolved: number
+      total: number
+    }
+  }
+}
+
+/**
  * Global stats (P1 aggregated data)
  */
 export interface GlobalStats {

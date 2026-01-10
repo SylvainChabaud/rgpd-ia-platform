@@ -126,8 +126,9 @@ export function withTenantAdmin<T extends NextHandler>(
       );
     }
 
-    // Check if role contains 'ADMIN' (flexible matching)
-    if (!ctx.role.includes('ADMIN')) {
+    // Check if role contains 'ADMIN' (flexible matching for TENANT_ADMIN, SUPERADMIN, etc.)
+    // This allows both TENANT_ADMIN and legacy 'admin' to pass
+    if (!ctx.role.includes('ADMIN') && ctx.role !== 'admin') {
       return NextResponse.json(
         forbiddenError('Tenant admin access required'),
         { status: 403 }

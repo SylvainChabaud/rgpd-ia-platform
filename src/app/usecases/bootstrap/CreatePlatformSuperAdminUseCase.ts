@@ -17,6 +17,7 @@ import { ACTOR_SCOPE } from "@/shared/actorScope";
 const InputSchema = z.object({
   email: z.email(),
   displayName: z.string().min(1).max(120),
+  password: z.string().min(8).optional(), // Optional password for development
 });
 
 export class CreatePlatformSuperAdminUseCase {
@@ -33,7 +34,7 @@ export class CreatePlatformSuperAdminUseCase {
         parsed.error.issues.map((i) => i.message).join(", ")
       );
     }
-    const { email, displayName } = parsed.data;
+    const { email, displayName, password } = parsed.data;
 
     // Non-replayable bootstrap
     if (await this.bootstrapState.isBootstrapped()) {
@@ -46,7 +47,15 @@ export class CreatePlatformSuperAdminUseCase {
     const id = newId();
     const emailHash = hashEmail(email);
     const ctx = systemContext();
-    const passwordHash = DISABLED_PASSWORD_HASH;
+
+    // If password provided (development), hash it; otherwise disable login (production)
+    let passwordHash = DISABLED_PASSWORD_HASH;
+    if (password) {
+      // Use SHA256 hasher (same as authenticateUser)
+      const { Sha256PasswordHasher } = await import("@/infrastructure/security/Sha256PasswordHasher");
+      const hasher = new Sha256PasswordHasher();
+      passwordHash = await hasher.hash(password);
+    }
 
     await this.platformUsers.createSuperAdmin({
       id,

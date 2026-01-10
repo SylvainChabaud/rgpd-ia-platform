@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { stubAuthProvider } from '@/app/auth/stubAuthProvider';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 export interface AuthResult {
   authenticated: boolean;
@@ -47,7 +48,7 @@ export async function authenticateRequest(
       id: actor.actorId,
       tenantId: actor.tenantId || null,
       scope: actor.actorScope,
-      role: actor.roles[0] || 'USER', // Take first role for compatibility
+      role: actor.roles[0] || ACTOR_ROLE.MEMBER, // Take first role, default to MEMBER
     },
   };
 }

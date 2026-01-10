@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 
 /**
  * Validation schemas for User management (LOT 11.2)
@@ -64,11 +65,13 @@ export const tenantIdSchema = z
 
 /**
  * Role validation schema
- * Only ADMIN and MEMBER roles allowed for tenant users
+ * Only TENANT_ADMIN and MEMBER roles allowed for tenant users
+ *
+ * Note: Uses constants from ACTOR_ROLE for consistency
  */
 export const roleSchema = z
-  .enum(['ADMIN', 'MEMBER'], {
-    message: 'Rôle invalide (ADMIN ou MEMBER)',
+  .enum([ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.MEMBER], {
+    message: 'Rôle invalide (TENANT_ADMIN ou MEMBER)',
   })
 
 // ============================================
@@ -82,7 +85,7 @@ export const roleSchema = z
  * - email: Unique per tenant (validated backend)
  * - displayName: User's full name
  * - tenantId: Tenant association
- * - role: ADMIN or MEMBER
+ * - role: TENANT_ADMIN or MEMBER
  * - password: Strong password (12+ chars)
  */
 export const createUserSchema = z.object({
@@ -104,7 +107,7 @@ export type CreateUserFormData = z.infer<typeof createUserSchema>
  *
  * Editable fields:
  * - displayName: User's full name (optional)
- * - role: ADMIN or MEMBER (optional)
+ * - role: TENANT_ADMIN or MEMBER (optional)
  *
  * NOT editable:
  * - email: Immutable (SHA-256 hash unique constraint)

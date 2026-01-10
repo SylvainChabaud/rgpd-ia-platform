@@ -22,7 +22,14 @@ const InputSchema = z.object({
   password: z.string().min(8).optional(), // Optional password for development
 });
 
-export class CreateTenantAdminUseCase {
+/**
+ * Use Case: Create Tenant User (regular user, not admin)
+ * For bootstrap/development purposes only
+ *
+ * Creates a regular tenant user (TENANT_USER role)
+ * Used by CLI bootstrap to populate development environment
+ */
+export class CreateTenantUserUseCase {
   constructor(
     private readonly tenants: TenantRepo,
     private readonly tenantUsers: TenantUserRepo,
@@ -33,8 +40,8 @@ export class CreateTenantAdminUseCase {
   async execute(
     ctx: RequestContext,
     raw: unknown
-  ): Promise<{ tenantAdminId: string; tenantId: string }> {
-    // Check permission via policy engine (LOT 1.2 compliance)
+  ): Promise<{ tenantUserId: string; tenantId: string }> {
+    // Check permission via policy engine (reuse tenant-admin:create policy for bootstrap)
     const decision = await this.policy.check(ctx, "tenant-admin:create");
     if (!decision.allowed) {
       throw new ForbiddenError(decision.reason ?? "Permission denied");
@@ -65,7 +72,8 @@ export class CreateTenantAdminUseCase {
       passwordHash = await hasher.hash(password);
     }
 
-    await this.tenantUsers.createTenantAdmin({
+    // Create regular tenant user (not admin)
+    await this.tenantUsers.createTenantUser({
       id,
       tenantId: tenant.id,
       emailHash,
@@ -75,7 +83,7 @@ export class CreateTenantAdminUseCase {
 
     await emitAuditEvent(this.audit, {
       id: newId(),
-      eventName: "tenant.admin.created",
+      eventName: "tenant.user.created",
       actorScope: ctx.actorScope,
       actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: tenant.id,
@@ -83,13 +91,13 @@ export class CreateTenantAdminUseCase {
       metadata: { displayNameLength: displayName.length },
     });
 
-    logEvent("tenant.admin.created", undefined, {
+    logEvent("tenant.user.created", undefined, {
       actorScope: ctx.actorScope,
       actorId: ctx.actorScope === ACTOR_SCOPE.SYSTEM ? undefined : ctx.actorId,
       tenantId: tenant.id,
       targetId: id,
     });
 
-    return { tenantAdminId: id, tenantId: tenant.id };
+    return { tenantUserId: id, tenantId: tenant.id };
   }
 }

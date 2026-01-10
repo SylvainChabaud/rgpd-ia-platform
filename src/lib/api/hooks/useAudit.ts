@@ -50,6 +50,10 @@ export function useListAuditEvents(
 
       return apiClient<ListAuditEventsResponse>(endpoint)
     },
+    // Fresh data on audit pages (30s cache)
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   })
 }
 
@@ -60,8 +64,12 @@ export function useGlobalStats() {
   return useQuery({
     queryKey: ['stats', 'global'],
     queryFn: () => apiClient<GlobalStats>('/stats/global'),
-    // Refresh every 5 minutes
-    staleTime: 5 * 60 * 1000,
+    // Refresh every 30 seconds (admin dashboard needs fresh data)
+    staleTime: 30 * 1000,
+    // Refetch when window regains focus
+    refetchOnWindowFocus: true,
+    // Refetch on mount (when navigating to dashboard)
+    refetchOnMount: true,
   })
 }
 
@@ -77,7 +85,49 @@ export function useAuditStats() {
         eventsByType: Array<{ type: string; count: number }>
         eventsOverTime: Array<{ date: string; count: number }>
       }>('/audit/stats'),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  })
+}
+
+/**
+ * Get AI jobs stats (time series for charts)
+ */
+export function useAIJobsStats(days: number = 30) {
+  return useQuery({
+    queryKey: ['stats', 'ai-jobs', days],
+    queryFn: () =>
+      apiClient<{
+        stats: Array<{ date: string; success: number; failed: number; total: number }>
+        days: number
+      }>(`/stats/ai-jobs?days=${days}`),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  })
+}
+
+/**
+ * Get RGPD stats (time series for charts)
+ */
+export function useRGPDStats(days: number = 30) {
+  return useQuery({
+    queryKey: ['stats', 'rgpd', days],
+    queryFn: () =>
+      apiClient<{
+        stats: {
+          exports: Array<{ date: string; count: number }>
+          deletions: Array<{ date: string; count: number }>
+          contests: Array<{ date: string; count: number }>
+          oppositions: Array<{ date: string; count: number }>
+          suspensions: Array<{ date: string; count: number }>
+        }
+        days: number
+      }>(`/stats/rgpd?days=${days}`),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   })
 }
 

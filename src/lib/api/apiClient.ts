@@ -61,7 +61,7 @@ export async function apiClient<T>(
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         useAuthStore.getState().logout()
-        window.location.href = '/backoffice/login'
+        window.location.href = '/login'
       }
       throw new ApiError(401, 'Non authentifié')
     }
