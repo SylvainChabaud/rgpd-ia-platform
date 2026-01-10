@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRBAC, withPlatformAdmin, withTenantAdmin } from '@/middleware/rbac';
 import type { RequestContext } from '@/lib/requestContext';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 /**
  * Helper to create an authenticated request with user context
@@ -30,7 +31,7 @@ describe('withRBAC middleware', () => {
 
   test('rejects request without user context', async () => {
     const req = new NextRequest('http://localhost/api/test');
-    const wrappedHandler = withRBAC(['admin'])(mockHandler);
+    const wrappedHandler = withRBAC([ACTOR_ROLE.TENANT_ADMIN])(mockHandler);
 
     const response = await wrappedHandler(req);
     const data = await response.json();
@@ -45,9 +46,9 @@ describe('withRBAC middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     });
-    const wrappedHandler = withRBAC(['admin'], true)(mockHandler);
+    const wrappedHandler = withRBAC([ACTOR_ROLE.TENANT_ADMIN], true)(mockHandler);
 
     const response = await wrappedHandler(req);
     const data = await response.json();
@@ -62,9 +63,9 @@ describe('withRBAC middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     });
-    const wrappedHandler = withRBAC(['admin', 'manager'])(mockHandler);
+    const wrappedHandler = withRBAC([ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.DPO])(mockHandler);
 
     const response = await wrappedHandler(req);
     const data = await response.json();
@@ -79,9 +80,9 @@ describe('withRBAC middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     });
-    const wrappedHandler = withRBAC(['admin', 'manager'])(mockHandler);
+    const wrappedHandler = withRBAC([ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.DPO])(mockHandler);
 
     const response = await wrappedHandler(req);
 
@@ -94,9 +95,9 @@ describe('withRBAC middleware', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     });
-    const wrappedHandler = withRBAC(['PLATFORM_ADMIN'], true)(mockHandler);
+    const wrappedHandler = withRBAC([ACTOR_ROLE.SUPERADMIN], true)(mockHandler);
 
     const response = await wrappedHandler(req);
 
@@ -131,7 +132,7 @@ describe('withPlatformAdmin middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     });
     const wrappedHandler = withPlatformAdmin(mockHandler);
 
@@ -148,7 +149,7 @@ describe('withPlatformAdmin middleware', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     });
     const wrappedHandler = withPlatformAdmin(mockHandler);
 
@@ -185,7 +186,7 @@ describe('withTenantAdmin middleware', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     });
     const wrappedHandler = withTenantAdmin(mockHandler);
 
@@ -202,7 +203,7 @@ describe('withTenantAdmin middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     });
     const wrappedHandler = withTenantAdmin(mockHandler);
 
@@ -219,7 +220,7 @@ describe('withTenantAdmin middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'TENANT_ADMIN',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     });
     const wrappedHandler = withTenantAdmin(mockHandler);
 
@@ -234,7 +235,7 @@ describe('withTenantAdmin middleware', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'SUPER_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     });
     const wrappedHandler = withTenantAdmin(mockHandler);
 

@@ -25,6 +25,7 @@ import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
 import { signJwt } from "@/lib/jwt";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 import { DEFAULT_E2E_FETCH_TIMEOUT_MS, warmRoutes } from "./e2e-utils";
 
 // Check if E2E tests should be skipped
@@ -44,7 +45,7 @@ jest.setTimeout(DEFAULT_E2E_FETCH_TIMEOUT_MS + 5000);
 function generateToken(
   userId: string,
   tenantId: string,
-  role: string = "USER",
+  role: string = ACTOR_ROLE.MEMBER,
   scope: string = ACTOR_SCOPE.TENANT
 ): string {
   return signJwt({
@@ -70,15 +71,15 @@ async function setupTestData() {
   await withTenantContext(pool, TENANT_ID, async (client) => {
     await client.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-       VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
-      [USER_ID, TENANT_ID, "user@incidents.com", "Incidents User", "$2a$10$hash"]
+       VALUES ($1, $2, $3, $4, $5, 'TENANT', $6)`,
+      [USER_ID, TENANT_ID, "user@incidents.com", "Incidents User", "$2a$10$hash", ACTOR_ROLE.MEMBER]
     );
 
     // Create admin user
     await client.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-       VALUES ($1, $2, $3, $4, $5, 'TENANT', 'ADMIN')`,
-      [ADMIN_ID, TENANT_ID, "admin@incidents.com", "Incidents Admin", "$2a$10$hash"]
+       VALUES ($1, $2, $3, $4, $5, 'TENANT', $6)`,
+      [ADMIN_ID, TENANT_ID, "admin@incidents.com", "Incidents Admin", "$2a$10$hash", ACTOR_ROLE.TENANT_ADMIN]
     );
   });
 }
@@ -120,9 +121,9 @@ afterAll(async () => {
 const describeE2E = (SKIP_E2E || !E2E_SERVER_AVAILABLE) ? describe.skip : describe;
 
 describeE2E("E2E - Incident Response (EPIC 9)", () => {
-  const adminToken = generateToken(ADMIN_ID, TENANT_ID, "ADMIN");
-  const userToken = generateToken(USER_ID, TENANT_ID, "USER");
-  const platformToken = generateToken(newId(), TENANT_ID, "SUPERADMIN", ACTOR_SCOPE.PLATFORM);
+  const adminToken = generateToken(ADMIN_ID, TENANT_ID, ACTOR_ROLE.TENANT_ADMIN);
+  const userToken = generateToken(USER_ID, TENANT_ID, ACTOR_ROLE.MEMBER);
+  const platformToken = generateToken(newId(), TENANT_ID, ACTOR_ROLE.SUPERADMIN, ACTOR_SCOPE.PLATFORM);
 
   describe("EPIC 9.0 - Incident Creation & Registry", () => {
     test("POST /api/incidents creates security incident", async () => {

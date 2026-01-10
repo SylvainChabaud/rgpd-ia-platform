@@ -7,6 +7,7 @@ import { describe, it, expect } from '@jest/globals';
 import type { UserRepo } from '@/app/ports/UserRepo';
 import { checkDataSuspension, DataSuspensionError } from '@/ai/gateway/enforcement/checkDataSuspension';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 describe('Middleware: checkDataSuspension', () => {
   it('allows processing for non-suspended user', async () => {
@@ -18,7 +19,7 @@ describe('Middleware: checkDataSuspension', () => {
         displayName: 'User',
         passwordHash: 'pwd',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'USER',
+        role: ACTOR_ROLE.MEMBER,
         createdAt: new Date(),
         deletedAt: null,
         dataSuspended: false,
@@ -41,7 +42,7 @@ describe('Middleware: checkDataSuspension', () => {
         displayName: 'User',
         passwordHash: 'pwd',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'USER',
+        role: ACTOR_ROLE.MEMBER,
         createdAt: new Date(),
         deletedAt: null,
         dataSuspended: true,

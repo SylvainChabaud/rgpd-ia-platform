@@ -113,7 +113,7 @@ describe('Platform Users API - GET /api/platform/users', () => {
 
     // All users should have ADMIN role
     data.users.forEach((user: { role: string }) => {
-      expect(user.role).toBe(ACTOR_ROLE.ADMIN)
+      expect(user.role).toBe(ACTOR_ROLE.TENANT_ADMIN)
     })
   })
 

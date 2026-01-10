@@ -24,7 +24,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john.doe@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'SecurePass123!@#',
       }
 
@@ -37,7 +37,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'invalid-email',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'SecurePass123!@#',
       }
 
@@ -50,7 +50,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'short',
       }
 
@@ -63,7 +63,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'securepass123!@#',
       }
 
@@ -76,7 +76,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'john@example.com',
         displayName: 'John Doe',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'SecurePass1234',
       }
 
@@ -110,7 +110,7 @@ describe('Users CRUD - Business Logic', () => {
 
     it('should allow updating only role', () => {
       const validData = {
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
       }
 
       const result = updateUserSchema.safeParse(validData)
@@ -243,7 +243,7 @@ describe('Users CRUD - Business Logic', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         tenantId: '550e8400-e29b-41d4-a716-446655440000',
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         password: 'SecurePass123!@#',
       }
 

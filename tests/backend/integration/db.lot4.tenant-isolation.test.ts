@@ -300,7 +300,7 @@ describe("LOT 4.0 BLOCKER: DB-level tenant isolation (raw SQL)", () => {
     await expect(
       pool.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-         VALUES ($1, NULL, $2, $3, $4, 'TENANT', 'TENANT_USER')`,
+         VALUES ($1, NULL, $2, $3, $4, 'TENANT', 'MEMBER')`,
         [tenantUserId, "test@test.com", "Test User", "hash"]
       )
     ).rejects.toThrow(); // violates chk_users_tenant_scope

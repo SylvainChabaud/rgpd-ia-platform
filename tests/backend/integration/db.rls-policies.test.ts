@@ -463,7 +463,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
       await clientA.query(`SET LOCAL app.current_tenant_id = '${TENANT_A_ID}'`);
       await clientA.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'TENANT_USER')`,
+         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
         [
           TENANT_A_USER_ID,
           TENANT_A_ID,
@@ -484,7 +484,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
       await clientB.query(`SET LOCAL app.current_tenant_id = '${TENANT_B_ID}'`);
       await clientB.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'TENANT_USER')`,
+         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
         [
           TENANT_B_USER_ID,
           TENANT_B_ID,
@@ -530,7 +530,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
       await expect(
         client.query(
           `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'TENANT_USER')`,
+           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
           [newId(), TENANT_B_ID, "attack@test.com", "Attack User", "__HASH__"]
         )
       ).rejects.toThrow(/new row violates row-level security policy/i);

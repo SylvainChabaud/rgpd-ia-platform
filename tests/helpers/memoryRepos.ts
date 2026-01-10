@@ -119,6 +119,14 @@ export class MemTenantUserRepo implements TenantUserRepo {
     passwordHash: string;
   }> = [];
 
+  readonly users: Array<{
+    id: string;
+    tenantId: string;
+    emailHash: string;
+    displayName: string;
+    passwordHash: string;
+  }> = [];
+
   async createTenantAdmin(input: {
     id: string;
     tenantId: string;
@@ -127,6 +135,16 @@ export class MemTenantUserRepo implements TenantUserRepo {
     passwordHash: string;
   }): Promise<void> {
     this.admins.push({ ...input });
+  }
+
+  async createTenantUser(input: {
+    id: string;
+    tenantId: string;
+    emailHash: string;
+    displayName: string;
+    passwordHash: string;
+  }): Promise<void> {
+    this.users.push({ ...input });
   }
 }
 

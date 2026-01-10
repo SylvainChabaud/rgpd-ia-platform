@@ -24,6 +24,7 @@ import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { newId } from "@/shared/ids";
 import { signJwt } from "@/lib/jwt";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 import { DEFAULT_E2E_FETCH_TIMEOUT_MS, warmRoutes } from "./e2e-utils";
 
 // Check if E2E tests should be skipped
@@ -45,7 +46,7 @@ jest.setTimeout(DEFAULT_E2E_FETCH_TIMEOUT_MS + 5000);
 function generateToken(
   userId: string,
   tenantId: string,
-  role: string = "USER"
+  role: string = ACTOR_ROLE.MEMBER
 ): string {
   return signJwt({
     userId,
@@ -70,8 +71,8 @@ async function setupTestData() {
   await withTenantContext(pool, TENANT_ID, async (client) => {
     await client.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-       VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
-      [USER_ID, TENANT_ID, "test@e2e.com", "E2E Test User", "$2a$10$hash"]
+       VALUES ($1, $2, $3, $4, $5, 'TENANT', $6)`,
+      [USER_ID, TENANT_ID, "test@e2e.com", "E2E Test User", "$2a$10$hash", ACTOR_ROLE.MEMBER]
     );
   });
 }
