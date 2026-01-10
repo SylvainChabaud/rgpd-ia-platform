@@ -172,7 +172,7 @@ export default function UsersPage() {
           <CardTitle>Filtres</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Tenant Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Tenant</label>
@@ -199,8 +199,10 @@ export default function UsersPage() {
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">Tous les rôles</option>
-                <option value="ADMIN">Admin</option>
-                <option value="MEMBER">Membre</option>
+                <option value={ACTOR_ROLE.SUPERADMIN}>Super Admin</option>
+                <option value={ACTOR_ROLE.TENANT_ADMIN}>Administrateur</option>
+                <option value={ACTOR_ROLE.MEMBER}>Membre</option>
+                <option value={ACTOR_ROLE.DPO}>DPO</option>
               </select>
             </div>
 
@@ -216,6 +218,22 @@ export default function UsersPage() {
                 <option value="active">Actif</option>
                 <option value="suspended">Suspendu</option>
               </select>
+            </div>
+
+            {/* Reset Filters Button */}
+            <div className="flex items-end">
+              <Button
+                onClick={() => {
+                  setTenantFilter('')
+                  setRoleFilter('')
+                  setStatusFilter('')
+                  setPage(0)
+                }}
+                variant="outline"
+                className="w-full md:w-auto"
+              >
+                Réinitialiser les filtres
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -323,11 +341,24 @@ export default function UsersPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={user.role === ACTOR_ROLE.ADMIN ? 'default' : 'secondary'}
-                          >
-                            {user.role}
-                          </Badge>
+                          {/* Badge avec couleur différente par rôle */}
+                          {user.role === ACTOR_ROLE.SUPERADMIN ? (
+                            <Badge className="bg-purple-600 hover:bg-purple-700 text-white">
+                              🔐 {user.role}
+                            </Badge>
+                          ) : user.role === ACTOR_ROLE.TENANT_ADMIN ? (
+                            <Badge variant="default">
+                              {user.role}
+                            </Badge>
+                          ) : user.role === ACTOR_ROLE.DPO ? (
+                            <Badge className="bg-blue-600 hover:bg-blue-700 text-white">
+                              {user.role}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              {user.role}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           {tenant?.suspendedAt ? (

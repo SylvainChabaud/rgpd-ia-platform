@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useRouter } from 'next/navigation'
 import { useUserById, useUpdateUser } from '@/lib/api/hooks/useUsers'
 import { updateUserSchema, type UpdateUserFormData } from '@/lib/validation/userSchemas'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 import { maskEmail } from '@/lib/utils/maskEmail'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +49,7 @@ export default function EditUserPage() {
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
       displayName: '',
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
     },
   })
 
@@ -57,7 +58,7 @@ export default function EditUserPage() {
     if (userData?.user) {
       reset({
         displayName: userData.user.displayName,
-        role: userData.user.role as 'ADMIN' | 'MEMBER',
+        role: userData.user.role as typeof ACTOR_ROLE.TENANT_ADMIN | typeof ACTOR_ROLE.MEMBER,
       })
     }
   }, [userData, reset])
@@ -178,14 +179,14 @@ export default function EditUserPage() {
                 disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="MEMBER">Membre</option>
-                <option value="ADMIN">Admin</option>
+                <option value={ACTOR_ROLE.MEMBER}>Membre</option>
+                <option value={ACTOR_ROLE.TENANT_ADMIN}>Administrateur</option>
               </select>
               {errors.role && (
                 <p className="text-sm text-destructive">{errors.role.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                <strong>Admin:</strong> Gestion tenant | <strong>Membre:</strong> Utilisation services
+                <strong>Administrateur:</strong> Gestion complète du tenant | <strong>Membre:</strong> Utilisation des services
               </p>
             </div>
 

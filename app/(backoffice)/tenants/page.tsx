@@ -32,6 +32,7 @@ import { Plus, Eye } from 'lucide-react'
  */
 export default function TenantsPage() {
   const [page, setPage] = useState(0)
+  const [statusFilter, setStatusFilter] = useState<string>('')
   const limit = 20
 
   const { data, isLoading, error } = useListTenants({
@@ -63,8 +64,23 @@ export default function TenantsPage() {
     )
   }
 
-  const tenants = data?.tenants || []
-  const hasNextPage = tenants.length === limit
+  const allTenants = data?.tenants || []
+
+  // Apply client-side filtering
+  const tenants = allTenants.filter((tenant) => {
+    if (statusFilter === 'active') {
+      return !tenant.suspendedAt && !tenant.deletedAt
+    }
+    if (statusFilter === 'suspended') {
+      return tenant.suspendedAt && !tenant.deletedAt
+    }
+    if (statusFilter === 'deleted') {
+      return tenant.deletedAt
+    }
+    return true // 'all' or no filter
+  })
+
+  const hasNextPage = allTenants.length === limit
   const hasPreviousPage = page > 0
 
   return (
@@ -84,6 +100,45 @@ export default function TenantsPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtres</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Statut</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="">Tous les statuts</option>
+                <option value="active">Actif</option>
+                <option value="suspended">Suspendu</option>
+                <option value="deleted">Supprimé</option>
+              </select>
+            </div>
+
+            {/* Reset Filters Button */}
+            <div className="flex items-end">
+              <Button
+                onClick={() => {
+                  setStatusFilter('')
+                  setPage(0)
+                }}
+                variant="outline"
+                className="w-full md:w-auto"
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tenants Table */}
       <Card>

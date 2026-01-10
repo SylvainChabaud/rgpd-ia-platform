@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useCreateUser, useListTenants } from '@/lib/api/hooks/useUsers'
 import { createUserSchema, type CreateUserFormData } from '@/lib/validation/userSchemas'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -21,7 +22,7 @@ import Link from 'next/link'
  * - Tenant dropdown (cross-tenant selection)
  * - Email validation (unique per tenant - backend check)
  * - Password strength validation + generator
- * - Role selection (ADMIN/MEMBER)
+ * - Role selection (TENANT_ADMIN/MEMBER)
  * - Success → redirect to users list
  * - Error handling with RGPD-safe messages
  *
@@ -51,7 +52,7 @@ export default function CreateUserPage() {
       email: '',
       displayName: '',
       tenantId: '',
-      role: 'MEMBER',
+      role: ACTOR_ROLE.MEMBER,
       password: '',
     },
   })
@@ -241,14 +242,14 @@ export default function CreateUserPage() {
                   disabled={isPending}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <option value="MEMBER">Membre</option>
-                  <option value="ADMIN">Admin</option>
+                  <option value={ACTOR_ROLE.MEMBER}>Membre</option>
+                  <option value={ACTOR_ROLE.TENANT_ADMIN}>Administrateur</option>
                 </select>
                 {errors.role && (
                   <p className="text-sm text-destructive">{errors.role.message}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  <strong>Admin:</strong> Gestion tenant | <strong>Membre:</strong> Utilisation services
+                  <strong>Administrateur:</strong> Gestion complète du tenant | <strong>Membre:</strong> Utilisation des services
                 </p>
               </div>
 

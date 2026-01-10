@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     // RBAC: Only SUPER_ADMIN or DPO can access
     const hasPermission = requirePermission(user, ['registre:read'], {
-      allowedRoles: ['SUPER_ADMIN', 'DPO'],
+      allowedRoles: ['SUPERADMIN', 'DPO'],
     });
 
     if (!hasPermission) {
@@ -46,8 +46,11 @@ export async function GET(request: NextRequest) {
     const filePath = join(process.cwd(), 'docs', 'rgpd', 'registre-traitements.md');
     const markdown = await readFile(filePath, 'utf-8');
 
-    // Parse markdown to HTML
-    const html = await marked(markdown);
+    // Parse markdown to HTML with GitHub Flavored Markdown enabled
+    const html = await marked(markdown, {
+      breaks: false,  // Don't convert single \n to <br> (use proper paragraph breaks)
+      gfm: true,      // GitHub Flavored Markdown (tables, strikethrough, etc.)
+    });
 
     // Extract metadata
     const lastModifiedMatch = markdown.match(/Dernière mise à jour[:\s]+([0-9-]+)/);

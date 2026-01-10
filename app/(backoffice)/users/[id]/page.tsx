@@ -212,7 +212,7 @@ export default function UserDetailsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Rôle</p>
-              <Badge variant={user.role === ACTOR_ROLE.ADMIN ? 'default' : 'secondary'}>
+              <Badge variant={user.role === ACTOR_ROLE.TENANT_ADMIN ? 'default' : 'secondary'}>
                 {user.role}
               </Badge>
             </div>

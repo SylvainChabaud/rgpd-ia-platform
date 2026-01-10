@@ -3,7 +3,7 @@
  *
  * RGPD: Art. 35 (DPIA Gateway LLM)
  * Classification: P0 (document interne confidentiel)
- * Access: SUPER_ADMIN, DPO uniquement
+ * Access: SUPERADMIN, DPO uniquement
  *
  * LOT 10.5 — DPIA Gateway LLM
  */
@@ -13,31 +13,27 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { marked } from 'marked';
 import { authenticateRequest } from '@/app/middleware/auth';
-import { requirePermission } from '@/app/middleware/rbac';
 import { emitAuditEvent } from '@/infrastructure/audit/auditService';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 export async function GET(request: NextRequest) {
   try {
-    // Authentication & Authorization
+    // Authentication
     const authResult = await authenticateRequest(request);
-    if (!authResult.authenticated) {
+
+    if (!authResult.authenticated || !authResult.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { user } = authResult;
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // RBAC: Only SUPERADMIN or DPO can access
+    const allowedRoles = [ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO];
+    const isAuthorized = allowedRoles.includes(user.role as (typeof allowedRoles)[number]);
 
-    // RBAC: Only SUPER_ADMIN or DPO can access
-    const hasPermission = requirePermission(user, ['dpia:read'], {
-      allowedRoles: ['SUPER_ADMIN', 'DPO'],
-    });
-
-    if (!hasPermission) {
+    if (!isAuthorized) {
       return NextResponse.json(
-        { error: 'Forbidden: Only SUPER_ADMIN or DPO can access DPIA' },
+        { error: 'Forbidden: Only SUPERADMIN or DPO can access DPIA' },
         { status: 403 }
       );
     }
@@ -70,7 +66,7 @@ export async function GET(request: NextRequest) {
     await emitAuditEvent({
       eventType: 'docs.dpia.accessed',
       actorId: user.id,
-      tenantId: user.tenantId || null,
+      tenantId: user.tenantId,
       metadata: {
         accessedAt: new Date().toISOString(),
         riskLevel: response.riskLevel,

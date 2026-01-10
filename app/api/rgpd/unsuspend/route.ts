@@ -3,6 +3,7 @@ import { toErrorResponse } from '@/app/http/errorResponse';
 import { unsuspendUserData } from '@/app/usecases/suspension/unsuspendUserData';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 /**
  * POST /api/rgpd/unsuspend - Unsuspend user data processing
@@ -49,7 +50,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
 
     // Vérifier que user peut unsuspend ses propres données ou est admin
     const isOwnData = actor.actorId === body.userId;
-    const isAdmin = actor.roles[0] === 'TENANT_ADMIN' || actor.roles[0] === 'SUPER_ADMIN';
+    const isAdmin = actor.roles[0] === ACTOR_ROLE.TENANT_ADMIN || actor.roles[0] === ACTOR_ROLE.SUPERADMIN;
 
     if (!isOwnData && !isAdmin) {
       return new Response(

@@ -4,6 +4,7 @@ import { suspendUserData } from '@/app/usecases/suspension/suspendUserData';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
 import type { SuspensionReason } from '@/domain/rgpd/DataSuspension';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 /**
  * POST /api/rgpd/suspend - Suspend user data processing
@@ -52,7 +53,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
 
     // Vérifier que user peut suspendre ses propres données ou est admin
     const isOwnData = actor.actorId === body.userId;
-    const isAdmin = actor.roles[0] === 'TENANT_ADMIN' || actor.roles[0] === 'SUPER_ADMIN';
+    const isAdmin = actor.roles[0] === ACTOR_ROLE.TENANT_ADMIN || actor.roles[0] === ACTOR_ROLE.SUPERADMIN;
 
     if (!isOwnData && !isAdmin) {
       return new Response(
