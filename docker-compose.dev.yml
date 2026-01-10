@@ -12,7 +12,8 @@ services:
       POSTGRES_DB: ${DB_NAME:-rgpd_platform}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      # Migrations applied via 'npm run migrate', not auto-mounted
+      # - ./migrations:/docker-entrypoint-initdb.d:ro
     networks:
       - rgpd_internal
     healthcheck:
