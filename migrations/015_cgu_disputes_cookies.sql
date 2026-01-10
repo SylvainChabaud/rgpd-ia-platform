@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS cgu_versions (
 );
 
 -- Index pour version active
-CREATE INDEX idx_cgu_versions_active ON cgu_versions(effective_date DESC) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_cgu_versions_active ON cgu_versions(effective_date DESC) WHERE is_active = TRUE;
 
 -- =============================================================================
 -- TABLE: user_cgu_acceptances
@@ -65,10 +65,10 @@ CREATE TABLE IF NOT EXISTS user_cgu_acceptances (
 );
 
 -- Index pour recherche par user
-CREATE INDEX idx_user_cgu_acceptances_user ON user_cgu_acceptances(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_user_cgu_acceptances_user ON user_cgu_acceptances(tenant_id, user_id);
 
 -- Index pour recherche par version CGU
-CREATE INDEX idx_user_cgu_acceptances_version ON user_cgu_acceptances(cgu_version_id);
+CREATE INDEX IF NOT EXISTS idx_user_cgu_acceptances_version ON user_cgu_acceptances(cgu_version_id);
 
 -- =============================================================================
 -- TABLE: user_disputes
@@ -111,13 +111,13 @@ CREATE TABLE IF NOT EXISTS user_disputes (
 );
 
 -- Index pour recherche disputes user
-CREATE INDEX idx_user_disputes_user ON user_disputes(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_user_disputes_user ON user_disputes(tenant_id, user_id);
 
 -- Index pour recherche disputes tenant (Tenant Admin dashboard)
-CREATE INDEX idx_user_disputes_tenant ON user_disputes(tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_user_disputes_tenant ON user_disputes(tenant_id, status);
 
 -- Index pour disputes pending (alertes admin)
-CREATE INDEX idx_user_disputes_pending ON user_disputes(created_at DESC) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_user_disputes_pending ON user_disputes(created_at DESC) WHERE status = 'pending';
 
 -- =============================================================================
 -- TABLE: user_oppositions
@@ -152,13 +152,13 @@ CREATE TABLE IF NOT EXISTS user_oppositions (
 );
 
 -- Index isolation tenant
-CREATE INDEX idx_user_oppositions_tenant ON user_oppositions(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_user_oppositions_tenant ON user_oppositions(tenant_id, user_id);
 
 -- Index admin dashboard (tickets pending)
-CREATE INDEX idx_user_oppositions_pending ON user_oppositions(tenant_id, status) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_user_oppositions_pending ON user_oppositions(tenant_id, status) WHERE status = 'pending';
 
 -- Index purge job (tickets résolus)
-CREATE INDEX idx_user_oppositions_resolved ON user_oppositions(resolved_at) WHERE resolved_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_oppositions_resolved ON user_oppositions(resolved_at) WHERE resolved_at IS NOT NULL;
 
 -- =============================================================================
 -- TABLE: cookie_consents
@@ -197,13 +197,13 @@ CREATE TABLE IF NOT EXISTS cookie_consents (
 );
 
 -- Index pour recherche par user
-CREATE INDEX idx_cookie_consents_user ON cookie_consents(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_cookie_consents_user ON cookie_consents(tenant_id, user_id);
 
 -- Index pour recherche par anonymous_id (visitors)
-CREATE INDEX idx_cookie_consents_anonymous ON cookie_consents(anonymous_id);
+CREATE INDEX IF NOT EXISTS idx_cookie_consents_anonymous ON cookie_consents(anonymous_id);
 
 -- Index pour purge consents expirés (job cron)
-CREATE INDEX idx_cookie_consents_expired ON cookie_consents(expires_at);
+CREATE INDEX IF NOT EXISTS idx_cookie_consents_expired ON cookie_consents(expires_at);
 
 -- =============================================================================
 -- TABLE: uploaded_files
@@ -241,13 +241,13 @@ CREATE TABLE IF NOT EXISTS uploaded_files (
 );
 
 -- Index pour recherche par user
-CREATE INDEX idx_uploaded_files_user ON uploaded_files(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_uploaded_files_user ON uploaded_files(tenant_id, user_id);
 
 -- Index pour recherche par job IA
-CREATE INDEX idx_uploaded_files_job ON uploaded_files(ai_job_id);
+CREATE INDEX IF NOT EXISTS idx_uploaded_files_job ON uploaded_files(ai_job_id);
 
 -- Index pour purge automatique (job cron)
-CREATE INDEX idx_uploaded_files_expired ON uploaded_files(expires_at) WHERE purged_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_uploaded_files_expired ON uploaded_files(expires_at) WHERE purged_at IS NULL;
 
 -- =============================================================================
 -- ALTER TABLE: users (ajout flag data_suspended pour Art. 18)
@@ -260,7 +260,7 @@ ALTER TABLE users
     ADD COLUMN IF NOT EXISTS data_suspended_reason TEXT;
 
 -- Index pour recherche users suspendus (monitoring admin)
-CREATE INDEX idx_users_suspended ON users(tenant_id) WHERE data_suspended = TRUE;
+CREATE INDEX IF NOT EXISTS idx_users_suspended ON users(tenant_id) WHERE data_suspended = TRUE;
 
 -- =============================================================================
 -- MARK MIGRATION AS APPLIED

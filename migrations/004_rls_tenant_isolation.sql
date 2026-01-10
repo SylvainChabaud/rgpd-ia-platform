@@ -33,23 +33,23 @@ ALTER TABLE users FORCE ROW LEVEL SECURITY;
 -- RLS POLICIES: CONSENTS
 -- =========================
 
--- Policy: tenant can only SELECT their own consents
+DROP POLICY IF EXISTS consents_tenant_select ON consents;
 CREATE POLICY consents_tenant_select ON consents
   FOR SELECT
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
--- Policy: tenant can only INSERT into their own scope
+DROP POLICY IF EXISTS consents_tenant_insert ON consents;
 CREATE POLICY consents_tenant_insert ON consents
   FOR INSERT
   WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
--- Policy: tenant can only UPDATE their own consents
+DROP POLICY IF EXISTS consents_tenant_update ON consents;
 CREATE POLICY consents_tenant_update ON consents
   FOR UPDATE
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID)
   WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
--- Policy: tenant can only DELETE their own consents
+DROP POLICY IF EXISTS consents_tenant_delete ON consents;
 CREATE POLICY consents_tenant_delete ON consents
   FOR DELETE
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
@@ -58,19 +58,23 @@ CREATE POLICY consents_tenant_delete ON consents
 -- RLS POLICIES: AI_JOBS
 -- =========================
 
+DROP POLICY IF EXISTS ai_jobs_tenant_select ON ai_jobs;
 CREATE POLICY ai_jobs_tenant_select ON ai_jobs
   FOR SELECT
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
+DROP POLICY IF EXISTS ai_jobs_tenant_insert ON ai_jobs;
 CREATE POLICY ai_jobs_tenant_insert ON ai_jobs
   FOR INSERT
   WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
+DROP POLICY IF EXISTS ai_jobs_tenant_update ON ai_jobs;
 CREATE POLICY ai_jobs_tenant_update ON ai_jobs
   FOR UPDATE
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID)
   WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
+DROP POLICY IF EXISTS ai_jobs_tenant_delete ON ai_jobs;
 CREATE POLICY ai_jobs_tenant_delete ON ai_jobs
   FOR DELETE
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
@@ -81,6 +85,7 @@ CREATE POLICY ai_jobs_tenant_delete ON ai_jobs
 
 -- Audit events: read-only for tenants, write-only for platform
 -- Tenants can only SELECT their own audit events
+DROP POLICY IF EXISTS audit_events_tenant_select ON audit_events;
 CREATE POLICY audit_events_tenant_select ON audit_events
   FOR SELECT
   USING (
@@ -89,6 +94,7 @@ CREATE POLICY audit_events_tenant_select ON audit_events
   );
 
 -- Only platform scope can INSERT audit events (no tenant restriction)
+DROP POLICY IF EXISTS audit_events_platform_insert ON audit_events;
 CREATE POLICY audit_events_platform_insert ON audit_events
   FOR INSERT
   WITH CHECK (true);  -- No restriction on INSERT (logging must always work)
@@ -99,14 +105,17 @@ CREATE POLICY audit_events_platform_insert ON audit_events
 -- RLS POLICIES: RGPD_REQUESTS
 -- =========================
 
+DROP POLICY IF EXISTS rgpd_requests_tenant_select ON rgpd_requests;
 CREATE POLICY rgpd_requests_tenant_select ON rgpd_requests
   FOR SELECT
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
+DROP POLICY IF EXISTS rgpd_requests_tenant_insert ON rgpd_requests;
 CREATE POLICY rgpd_requests_tenant_insert ON rgpd_requests
   FOR INSERT
   WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID);
 
+DROP POLICY IF EXISTS rgpd_requests_tenant_update ON rgpd_requests;
 CREATE POLICY rgpd_requests_tenant_update ON rgpd_requests
   FOR UPDATE
   USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID)
@@ -118,6 +127,7 @@ CREATE POLICY rgpd_requests_tenant_update ON rgpd_requests
 
 -- Platform users: always accessible (no RLS restriction)
 -- Tenant users: isolated by tenant_id
+DROP POLICY IF EXISTS users_tenant_select ON users;
 CREATE POLICY users_tenant_select ON users
   FOR SELECT
   USING (
@@ -125,6 +135,7 @@ CREATE POLICY users_tenant_select ON users
     OR tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID
   );
 
+DROP POLICY IF EXISTS users_tenant_insert ON users;
 CREATE POLICY users_tenant_insert ON users
   FOR INSERT
   WITH CHECK (
@@ -132,6 +143,7 @@ CREATE POLICY users_tenant_insert ON users
     OR tenant_id = current_setting('app.current_tenant_id', TRUE)::UUID
   );
 
+DROP POLICY IF EXISTS users_tenant_update ON users;
 CREATE POLICY users_tenant_update ON users
   FOR UPDATE
   USING (

@@ -16,10 +16,38 @@ import type {
 import { pool } from '@/infrastructure/db/pg';
 
 export class PgAuditEventReader implements AuditEventReader {
+  /**
+   * Lazy purge of audit events older than 12 months (CNIL/RGPD compliance)
+   *
+   * Executed on every read operation to ensure automatic retention policy
+   * without requiring external CRON jobs or scheduled tasks.
+   *
+   * RGPD Compliance:
+   * - Art. 5.1.e: Storage limitation (12 months retention)
+   * - CNIL Recommendation: 6-12 months for audit logs
+   * - Art. 32: Security and traceability requirements
+   */
+  private async purgeLazyOldEvents(): Promise<void> {
+    try {
+      await pool.query(`
+        DELETE FROM audit_events
+        WHERE created_at < NOW() - INTERVAL '12 months'
+      `);
+    } catch (error) {
+      // Non-blocking: log error but continue with query
+      console.error('Lazy purge of old audit events failed:', error);
+    }
+  }
+
   async list(filters: ListAuditEventsFilters): Promise<AuditEventRecord[]> {
+    // Lazy purge before reading (RGPD retention compliance)
+    await this.purgeLazyOldEvents();
+
     const {
       tenantId,
       eventType,
+      startDate,
+      endDate,
       limit = 100,
       offset = 0,
     } = filters;
@@ -38,6 +66,18 @@ export class PgAuditEventReader implements AuditEventReader {
     if (eventType) {
       whereClauses.push(`event_type = $${paramIndex++}`);
       values.push(eventType);
+    }
+
+    // Filter by start date
+    if (startDate) {
+      whereClauses.push(`created_at >= $${paramIndex++}`);
+      values.push(startDate);
+    }
+
+    // Filter by end date
+    if (endDate) {
+      whereClauses.push(`created_at <= $${paramIndex++}`);
+      values.push(endDate);
     }
 
     const whereClause = whereClauses.length > 0
@@ -66,6 +106,9 @@ export class PgAuditEventReader implements AuditEventReader {
   }
 
   async findByUser(tenantId: string, userId: string, limit = 1000): Promise<AuditEventRecord[]> {
+    // Lazy purge before reading (RGPD retention compliance)
+    await this.purgeLazyOldEvents();
+
     // BLOCKER: validate tenantId is provided (RGPD isolation)
     if (!tenantId) {
       throw new Error('RGPD VIOLATION: tenantId required for audit event queries');

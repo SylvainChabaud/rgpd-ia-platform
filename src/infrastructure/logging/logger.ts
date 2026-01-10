@@ -82,6 +82,10 @@ function redactSensitiveData(obj: unknown): unknown {
 
 /**
  * Create Pino logger instance
+ *
+ * Development: Logs to console (pino-pretty) + file (logs/app.log)
+ * Production: TODO - Integrate with Loki/Elasticsearch/CloudWatch
+ *              Current: Logs to stdout only (captured by container runtime)
  */
 export const logger = pino({
   level: LOG_LEVEL,
@@ -92,11 +96,17 @@ export const logger = pino({
     censor: '[REDACTED]',
   },
 
-  // Production: JSON structured logs
-  // Development: pretty-printed logs
+  // Production: JSON structured logs (stdout only - TODO: Loki/Elasticsearch)
+  // Development: pretty console + file
   ...(NODE_ENV === 'production'
     ? {
         // Production configuration
+        // TODO (LOT 11.3 - Production): Replace stdout with Loki/Elasticsearch
+        // Options:
+        // 1. Grafana Loki: HTTP push API via pino-loki transport
+        // 2. Elasticsearch: Bulk API via pino-elasticsearch
+        // 3. AWS CloudWatch: pino-cloudwatch transport
+        // 4. Keep stdout + centralized log collector (Promtail, Fluentd, Vector)
         formatters: {
           level(label) {
             return { level: label };
@@ -106,13 +116,35 @@ export const logger = pino({
       }
     : {
         // Development configuration
+        // Multi-stream: console (pretty) + file (JSON)
         transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss',
-            ignore: 'pid,hostname',
-          },
+          targets: [
+            // Console output (pretty)
+            {
+              target: 'pino-pretty',
+              level: LOG_LEVEL,
+              options: {
+                colorize: true,
+                translateTime: 'HH:MM:ss',
+                ignore: 'pid,hostname',
+              },
+            },
+            // File output (JSON, for /api/logs endpoint)
+            // Rotation: daily, max 30 days retention (RGPD compliance)
+            {
+              target: 'pino-roll',
+              level: LOG_LEVEL,
+              options: {
+                file: 'logs/app.log',
+                frequency: 'daily', // Rotate every day at midnight
+                size: '10m', // Max 10MB per file (backup limit)
+                mkdir: true, // Create logs/ directory if not exists
+                // RGPD: Keep max 30 days (DATA_CLASSIFICATION.md §5)
+                // Note: pino-roll doesn't auto-delete old files
+                // Use: npm run purge:logs (manual) or cron job for cleanup
+              },
+            },
+          ],
         },
       }),
 

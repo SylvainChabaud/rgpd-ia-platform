@@ -14,8 +14,17 @@ BEGIN;
 -- CREATE TESTUSER ROLE (non-superuser)
 -- =========================
 
--- Drop existing testuser if it exists
-DROP ROLE IF EXISTS testuser;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'testuser') THEN
+  -- Réattribue tout ce qui appartient à testuser à devuser
+  EXECUTE 'REASSIGN OWNED BY testuser TO devuser';
+  EXECUTE 'DROP OWNED BY testuser';
+  REVOKE ALL PRIVILEGES ON SCHEMA public FROM testuser;
+  REVOKE ALL PRIVILEGES ON DATABASE rgpd_platform FROM testuser;
+  DROP ROLE testuser;
+  END IF;
+END$$;
 
 -- Create testuser with limited privileges
 CREATE ROLE testuser WITH

@@ -15,7 +15,7 @@ BEGIN;
 -- Registre des incidents de sécurité et violations de données (Art. 33.5)
 -- =============================================================================
 
-CREATE TABLE security_incidents (
+CREATE TABLE IF NOT EXISTS security_incidents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Tenant scope (NULL = incident platform-wide, ex: infrastructure)
@@ -82,22 +82,22 @@ CREATE TABLE security_incidents (
 -- =============================================================================
 
 -- Recherche par date détection (timeline incidents)
-CREATE INDEX idx_security_incidents_detected_at ON security_incidents(detected_at DESC);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_detected_at ON security_incidents(detected_at DESC);
 
 -- Filtrage par sévérité (dashboard)
-CREATE INDEX idx_security_incidents_severity ON security_incidents(severity);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_severity ON security_incidents(severity);
 
 -- Filtrage par type (analyse)
-CREATE INDEX idx_security_incidents_type ON security_incidents(type);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_type ON security_incidents(type);
 
 -- Filtrage par tenant (isolation)
-CREATE INDEX idx_security_incidents_tenant ON security_incidents(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_security_incidents_tenant ON security_incidents(tenant_id);
 
 -- Incidents non résolus
-CREATE INDEX idx_security_incidents_unresolved ON security_incidents(resolved_at) WHERE resolved_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_security_incidents_unresolved ON security_incidents(resolved_at) WHERE resolved_at IS NULL;
 
 -- Incidents à risque élevé non notifiés CNIL (alerte 72h)
-CREATE INDEX idx_security_incidents_cnil_pending ON security_incidents(detected_at) 
+CREATE INDEX IF NOT EXISTS idx_security_incidents_cnil_pending ON security_incidents(detected_at)
     WHERE risk_level = 'HIGH' AND cnil_notified = FALSE;
 
 -- =============================================================================
@@ -107,6 +107,7 @@ CREATE INDEX idx_security_incidents_cnil_pending ON security_incidents(detected_
 ALTER TABLE security_incidents ENABLE ROW LEVEL SECURITY;
 
 -- SUPERADMIN peut voir tous les incidents (platform-wide)
+DROP POLICY IF EXISTS security_incidents_superadmin_all ON security_incidents;
 CREATE POLICY security_incidents_superadmin_all ON security_incidents
     FOR ALL
     TO PUBLIC
@@ -116,6 +117,7 @@ CREATE POLICY security_incidents_superadmin_all ON security_incidents
     );
 
 -- DPO peut voir tous les incidents (platform-wide) - lecture seule pour CRUD via use case
+DROP POLICY IF EXISTS security_incidents_dpo_select ON security_incidents;
 CREATE POLICY security_incidents_dpo_select ON security_incidents
     FOR SELECT
     TO PUBLIC
@@ -124,6 +126,7 @@ CREATE POLICY security_incidents_dpo_select ON security_incidents
     );
 
 -- TENANT_ADMIN peut voir incidents de son tenant uniquement
+DROP POLICY IF EXISTS security_incidents_tenant_admin ON security_incidents;
 CREATE POLICY security_incidents_tenant_admin ON security_incidents
     FOR SELECT
     TO PUBLIC
@@ -144,6 +147,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_security_incidents_updated_at ON security_incidents;
 CREATE TRIGGER trigger_security_incidents_updated_at
     BEFORE UPDATE ON security_incidents
     FOR EACH ROW
@@ -154,7 +158,7 @@ CREATE TRIGGER trigger_security_incidents_updated_at
 -- Historique modifications incidents (traçabilité Art. 33.5)
 -- =============================================================================
 
-CREATE TABLE incident_audit_log (
+CREATE TABLE IF NOT EXISTS incident_audit_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     incident_id UUID NOT NULL REFERENCES security_incidents(id) ON DELETE CASCADE,
     action TEXT NOT NULL CHECK (action IN ('CREATED', 'UPDATED', 'CNIL_NOTIFIED', 'USERS_NOTIFIED', 'RESOLVED')),
@@ -165,17 +169,19 @@ CREATE TABLE incident_audit_log (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_incident_audit_log_incident ON incident_audit_log(incident_id);
-CREATE INDEX idx_incident_audit_log_created ON incident_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_incident_audit_log_incident ON incident_audit_log(incident_id);
+CREATE INDEX IF NOT EXISTS idx_incident_audit_log_created ON incident_audit_log(created_at DESC);
 
 -- RLS pour audit log (même règles que incidents)
 ALTER TABLE incident_audit_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS incident_audit_log_superadmin ON incident_audit_log;
 CREATE POLICY incident_audit_log_superadmin ON incident_audit_log
     FOR ALL
     TO PUBLIC
     USING (current_setting('app.current_user_role', true) = 'SUPERADMIN');
 
+DROP POLICY IF EXISTS incident_audit_log_dpo ON incident_audit_log;
 CREATE POLICY incident_audit_log_dpo ON incident_audit_log
     FOR SELECT
     TO PUBLIC

@@ -24,6 +24,8 @@
 | **014** | `014_incidents.sql` | LOT 9.0 | Registre violations (Art. 33-34) + incident audit log |
 | **015** | `015_cgu_disputes_cookies.sql` | LOT 10.0-10.6 | Tables RGPD/Legal (CGU, disputes, oppositions, cookies) |
 | **016** | `016_epic10_legal_extensions.sql` | LOT 10.0-10.7 | Extensions EPIC 10 (soft delete, metadata, statuses) |
+| **017** | `017_tenant_suspension.sql` | LOT 11.4 | Système de suspension tenant (Art. 18) |
+| **018** | `018_normalize_user_roles.sql` | LOT 11.2 | Normalisation des rôles utilisateurs + contrainte CHECK |
 
 ---
 
@@ -320,6 +322,45 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 - Support anonymous + user_id pour cookies
 
 **Voir** : `migrations/016_epic10_legal_extensions.sql` pour le détail
+
+#### `017_tenant_suspension.sql` (EPIC 11) ✅ IMPLÉMENTÉ
+
+**LOT** : 11.4
+**Description** : Système de suspension tenant (Art. 18 RGPD - Limitation du traitement)
+
+**Colonne ajoutée** :
+- `suspended_at` — Timestamp de suspension du tenant (NULL = actif)
+
+**Fonctionnalités clés** :
+- Suspension totale du tenant (tous les utilisateurs)
+- Middleware de vérification automatique
+- Empêche toute opération sur un tenant suspendu
+- Réversible (unsuspend)
+
+**Voir** : `migrations/017_tenant_suspension.sql` pour le schéma complet
+
+#### `018_normalize_user_roles.sql` (LOT 11.2) ✅ IMPLÉMENTÉ
+
+**LOT** : 11.2
+**Description** : Normalisation des rôles utilisateurs pour cohérence bootstrap/UI/backend
+
+**Problème résolu** :
+- Incohérence entre `ADMIN`/`TENANT_ADMIN` et `USER`/`MEMBER`/`TENANT_USER`
+- Valeurs hardcodées dans repositories
+- Absence de contrainte CHECK sur la colonne `role`
+
+**Actions effectuées** :
+- Migration automatique : `ADMIN` → `TENANT_ADMIN`, `USER` → `MEMBER`, `TENANT_USER` → `MEMBER`
+- Ajout contrainte CHECK : `role IN ('SUPERADMIN', 'TENANT_ADMIN', 'MEMBER', 'DPO')`
+- Documentation de la colonne `users.role`
+
+**Rôles normalisés** :
+- `SUPERADMIN` — Admin plateforme (scope: PLATFORM)
+- `TENANT_ADMIN` — Admin tenant (scope: TENANT)
+- `MEMBER` — Membre tenant (scope: TENANT)
+- `DPO` — Data Protection Officer (scope: TENANT)
+
+**Voir** : `migrations/018_normalize_user_roles.sql` pour les détails
 
 ---
 

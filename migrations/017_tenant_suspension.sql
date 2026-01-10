@@ -20,7 +20,16 @@ ADD COLUMN IF NOT EXISTS suspension_reason TEXT NULL;
 ALTER TABLE tenants
 ADD COLUMN IF NOT EXISTS suspended_by UUID NULL REFERENCES users(id);
 
--- Contrainte : si suspendu, raison obligatoire
+-- Supprime la contrainte si elle existe déjà (idempotence)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_suspension_reason' AND conrelid = 'tenants'::regclass
+  ) THEN
+    ALTER TABLE tenants DROP CONSTRAINT check_suspension_reason;
+  END IF;
+END$$;
+
 ALTER TABLE tenants
 ADD CONSTRAINT check_suspension_reason
 CHECK (

@@ -66,6 +66,7 @@ CREATE POLICY users_tenant_update ON users
 
 -- DELETE: Tenants can ONLY delete own TENANT users
 -- Platform users can ONLY be deleted WITHOUT tenant context
+DROP POLICY IF EXISTS users_tenant_delete ON users;
 CREATE POLICY users_tenant_delete ON users
   FOR DELETE
   USING (

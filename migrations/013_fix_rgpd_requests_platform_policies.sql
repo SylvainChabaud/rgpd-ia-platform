@@ -26,6 +26,7 @@ DROP POLICY IF EXISTS rgpd_requests_platform_update ON rgpd_requests;
 -- =========================
 
 -- SELECT: Tenant sees own requests, Platform sees all
+DROP POLICY IF EXISTS rgpd_requests_select ON rgpd_requests;
 CREATE POLICY rgpd_requests_select ON rgpd_requests
   FOR SELECT
   USING (
@@ -37,11 +38,13 @@ CREATE POLICY rgpd_requests_select ON rgpd_requests
   );
 
 -- INSERT: Only with tenant context (users create their own requests)
+DROP POLICY IF EXISTS rgpd_requests_insert ON rgpd_requests;
 CREATE POLICY rgpd_requests_insert ON rgpd_requests
   FOR INSERT
   WITH CHECK (tenant_id = current_tenant_id());
 
 -- UPDATE: Tenant updates own requests, Platform can update any (for status changes)
+DROP POLICY IF EXISTS rgpd_requests_update ON rgpd_requests;
 CREATE POLICY rgpd_requests_update ON rgpd_requests
   FOR UPDATE
   USING (
@@ -60,6 +63,7 @@ CREATE POLICY rgpd_requests_update ON rgpd_requests
   );
 
 -- DELETE: Only with tenant context (cascade delete via cleanup_test_data)
+DROP POLICY IF EXISTS rgpd_requests_delete ON rgpd_requests;
 CREATE POLICY rgpd_requests_delete ON rgpd_requests
   FOR DELETE
   USING (

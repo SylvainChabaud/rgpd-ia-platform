@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS rgpd_requests (
 -- BOOTSTRAP LOCK
 -- =========================
 CREATE TABLE IF NOT EXISTS bootstrap_state (
-  id BOOLEAN PRIMARY KEY DEFAULT TRUE,
+  id TEXT PRIMARY KEY,
   initialized_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

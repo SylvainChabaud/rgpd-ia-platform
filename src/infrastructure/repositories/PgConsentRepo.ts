@@ -102,7 +102,7 @@ export class PgConsentRepo implements ConsentRepo {
       const res: QueryResult<ConsentRow> = await client.query(
         `SELECT id, tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at
          FROM consents
-         WHERE tenant_id = $1 AND user_id = $2
+         WHERE tenant_id = $1 AND user_id = $2 AND deleted_at IS NULL
          ORDER BY created_at DESC`,
         [tenantId, userId]
       );

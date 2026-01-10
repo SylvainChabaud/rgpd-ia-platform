@@ -290,7 +290,7 @@ export class PgCguRepo implements CguRepo {
         `SELECT id, tenant_id, user_id, cgu_version_id, accepted_at,
                 ip_address, user_agent, acceptance_method
          FROM user_cgu_acceptances
-         WHERE tenant_id = $1 AND user_id = $2
+         WHERE tenant_id = $1 AND user_id = $2 AND deleted_at IS NULL
          ORDER BY accepted_at DESC`,
         [tenantId, userId]
       );
