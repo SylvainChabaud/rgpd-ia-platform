@@ -9,6 +9,7 @@ import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
 import { suspendUserData } from '@/app/usecases/suspension/suspendUserData';
 import type { SuspensionReason } from '@/domain/rgpd/DataSuspension';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 function createUser(overrides: Partial<User> = {}): User {
   return {
@@ -18,7 +19,7 @@ function createUser(overrides: Partial<User> = {}): User {
     displayName: 'User One',
     passwordHash: 'pwd',
     scope: ACTOR_SCOPE.TENANT,
-    role: 'USER',
+    role: ACTOR_ROLE.MEMBER,
     createdAt: new Date(),
     deletedAt: null,
     dataSuspended: false,

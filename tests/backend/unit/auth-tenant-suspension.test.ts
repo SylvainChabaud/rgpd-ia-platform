@@ -13,6 +13,7 @@ import type { TenantRepo } from '@/app/ports/TenantRepo'
 import type { PasswordHasher } from '@/app/ports/PasswordHasher'
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { ACTOR_ROLE } from '@/shared/actorRole'
 
 describe('Authentication with Tenant Suspension', () => {
   let mockUserRepo: jest.Mocked<UserRepo>
@@ -49,7 +50,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,
@@ -110,7 +111,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,
@@ -148,7 +149,7 @@ describe('Authentication with Tenant Suspension', () => {
         userId: 'user-123',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         displayName: 'John Doe',
       })
 
@@ -215,7 +216,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: true, // User suspended
         createdAt: new Date(),
         deletedAt: null,
@@ -260,7 +261,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'nonexistent-tenant',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,
@@ -287,7 +288,7 @@ describe('Authentication with Tenant Suspension', () => {
         userId: 'user-123',
         tenantId: 'nonexistent-tenant',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         displayName: 'John Doe',
       })
     })
@@ -303,7 +304,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,
@@ -356,7 +357,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,
@@ -409,7 +410,7 @@ describe('Authentication with Tenant Suspension', () => {
         displayName: 'John Doe',
         tenantId: 'tenant-456',
         scope: ACTOR_SCOPE.TENANT,
-        role: 'MEMBER',
+        role: ACTOR_ROLE.MEMBER,
         dataSuspended: false,
         createdAt: new Date(),
         deletedAt: null,

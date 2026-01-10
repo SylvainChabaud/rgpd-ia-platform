@@ -16,6 +16,7 @@ import {
   type RequestContext,
 } from '@/lib/requestContext';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 describe('extractContext', () => {
   test('returns null when no user attached', () => {
@@ -29,7 +30,7 @@ describe('extractContext', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
 
     const context = extractContext(req);
@@ -37,7 +38,7 @@ describe('extractContext', () => {
     expect(context?.userId).toBe('user-1');
     expect(context?.tenantId).toBe('tenant-1');
     expect(context?.scope).toBe(ACTOR_SCOPE.TENANT);
-    expect(context?.role).toBe('admin');
+    expect(context?.role).toBe(ACTOR_ROLE.TENANT_ADMIN);
   });
 
   test('returns null tenantId when not provided', () => {
@@ -46,7 +47,7 @@ describe('extractContext', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     };
 
     const context = extractContext(req);
@@ -61,7 +62,7 @@ describe('requireContext', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
 
     const context = requireContext(req);
@@ -80,7 +81,7 @@ describe('isPlatformAdmin', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     };
     expect(isPlatformAdmin(context)).toBe(true);
   });
@@ -90,7 +91,7 @@ describe('isPlatformAdmin', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
     expect(isPlatformAdmin(context)).toBe(false);
   });
@@ -102,9 +103,9 @@ describe('hasRole', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
-    expect(hasRole(context, 'admin')).toBe(true);
+    expect(hasRole(context, ACTOR_ROLE.TENANT_ADMIN)).toBe(true);
   });
 
   test('returns false when user does not have matching role', () => {
@@ -112,9 +113,9 @@ describe('hasRole', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     };
-    expect(hasRole(context, 'admin')).toBe(false);
+    expect(hasRole(context, ACTOR_ROLE.TENANT_ADMIN)).toBe(false);
   });
 
   test('returns true when role matches one in array', () => {
@@ -122,9 +123,9 @@ describe('hasRole', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
-    expect(hasRole(context, ['admin', 'manager'])).toBe(true);
+    expect(hasRole(context, [ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.DPO])).toBe(true);
   });
 
   test('returns false when role does not match any in array', () => {
@@ -132,9 +133,9 @@ describe('hasRole', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     };
-    expect(hasRole(context, ['admin', 'manager'])).toBe(false);
+    expect(hasRole(context, [ACTOR_ROLE.TENANT_ADMIN, ACTOR_ROLE.DPO])).toBe(false);
   });
 });
 
@@ -144,7 +145,7 @@ describe('isTenantMember', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     };
     expect(isTenantMember(context, 'tenant-1')).toBe(true);
   });
@@ -154,7 +155,7 @@ describe('isTenantMember', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     };
     expect(isTenantMember(context, 'tenant-2')).toBe(false);
   });
@@ -164,7 +165,7 @@ describe('isTenantMember', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     };
     expect(isTenantMember(context, 'tenant-1')).toBe(false);
   });
@@ -176,7 +177,7 @@ describe('isTenantAdmin', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'admin',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
     expect(isTenantAdmin(context)).toBe(true);
   });
@@ -186,7 +187,7 @@ describe('isTenantAdmin', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'TENANT_ADMIN',
+      role: ACTOR_ROLE.TENANT_ADMIN,
     };
     expect(isTenantAdmin(context)).toBe(true);
   });
@@ -196,7 +197,7 @@ describe('isTenantAdmin', () => {
       userId: 'user-1',
       tenantId: 'tenant-1',
       scope: ACTOR_SCOPE.TENANT,
-      role: 'user',
+      role: ACTOR_ROLE.MEMBER,
     };
     expect(isTenantAdmin(context)).toBe(false);
   });
@@ -206,7 +207,7 @@ describe('isTenantAdmin', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: ACTOR_ROLE.SUPERADMIN,
     };
     expect(isTenantAdmin(context)).toBe(false);
   });

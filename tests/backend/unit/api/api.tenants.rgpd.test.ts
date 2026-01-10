@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { stubAuthProvider } from '@/app/auth/stubAuthProvider';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 const mockListSuspendedByTenant = jest.fn();
 const mockFindOppositionsByTenant = jest.fn();
@@ -96,7 +97,7 @@ describe('API: /api/tenants/:id/rgpd/*', () => {
       actorId: 'user-1',
       actorScope: ACTOR_SCOPE.TENANT,
       tenantId,
-      roles: ['USER'],
+      roles: [ACTOR_ROLE.MEMBER],
     });
 
     const request = new NextRequest('http://localhost/api/tenants/id/rgpd/suspensions', {

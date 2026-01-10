@@ -8,6 +8,7 @@ import type { User, UserRepo } from '@/app/ports/UserRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
 import { unsuspendUserData } from '@/app/usecases/suspension/unsuspendUserData';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 function createUser(overrides: Partial<User> = {}): User {
   return {
@@ -17,7 +18,7 @@ function createUser(overrides: Partial<User> = {}): User {
     displayName: 'User One',
     passwordHash: 'pwd',
     scope: ACTOR_SCOPE.TENANT,
-    role: 'USER',
+    role: ACTOR_ROLE.MEMBER,
     createdAt: new Date(),
     deletedAt: null,
     dataSuspended: true,

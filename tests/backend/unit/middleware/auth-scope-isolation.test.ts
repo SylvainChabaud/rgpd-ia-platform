@@ -125,7 +125,7 @@ describe('Auth Middleware - Scope Isolation (LOT 11.0)', () => {
       const mockPayload = {
         userId: 'tenant-admin-789',
         scope: ACTOR_SCOPE.TENANT,
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         tenantId: 'tenant-123',
       }
 
@@ -292,7 +292,7 @@ describe('Auth Middleware - Scope Isolation (LOT 11.0)', () => {
       const tenantAPayload = {
         userId: 'user-tenant-a',
         scope: ACTOR_SCOPE.TENANT,
-        role: ACTOR_ROLE.ADMIN,
+        role: ACTOR_ROLE.TENANT_ADMIN,
         tenantId: 'tenant-a',
       }
 

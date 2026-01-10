@@ -10,6 +10,7 @@
 
 import { signJwt, verifyJwt, generateJwtSecret } from "@/lib/jwt";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 
 describe("JWT Token Management", () => {
   // Store original env
@@ -33,7 +34,7 @@ describe("JWT Token Management", () => {
         userId: "user-123",
         tenantId: "tenant-456",
         scope: ACTOR_SCOPE.TENANT,
-        role: "USER",
+        role: ACTOR_ROLE.MEMBER,
       };
 
       const token = signJwt(payload);
@@ -47,7 +48,7 @@ describe("JWT Token Management", () => {
         userId: "platform-admin-1",
         tenantId: null,
         scope: ACTOR_SCOPE.PLATFORM,
-        role: "SUPER_ADMIN",
+        role: ACTOR_ROLE.SUPERADMIN,
       };
 
       const token = signJwt(payload);
@@ -64,7 +65,7 @@ describe("JWT Token Management", () => {
         userId: "user-123",
         tenantId: "tenant-456",
         scope: ACTOR_SCOPE.TENANT,
-        role: "USER",
+        role: ACTOR_ROLE.MEMBER,
       };
 
       const token = signJwt(payload);
@@ -89,7 +90,7 @@ describe("JWT Token Management", () => {
         userId: "user-123",
         tenantId: "tenant-456",
         scope: ACTOR_SCOPE.TENANT,
-        role: "USER",
+        role: ACTOR_ROLE.MEMBER,
       };
 
       const token = signJwt(payload);
@@ -106,7 +107,7 @@ describe("JWT Token Management", () => {
         userId: "user-123",
         tenantId: "tenant-456",
         scope: ACTOR_SCOPE.TENANT,
-        role: "USER",
+        role: ACTOR_ROLE.MEMBER,
       };
 
       const token = signJwt(payload);
@@ -163,7 +164,7 @@ describe("JWT Token Management", () => {
             userId: "test",
             tenantId: "test",
             scope: ACTOR_SCOPE.TENANT,
-            role: "USER",
+            role: ACTOR_ROLE.MEMBER,
           })
         ).toThrow("JWT_SECRET environment variable not configured");
       } finally {
