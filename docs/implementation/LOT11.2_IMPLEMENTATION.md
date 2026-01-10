@@ -931,12 +931,13 @@ npx playwright test tests/e2e/backoffice-users.spec.ts
 
 ### 11.3 LOT 11.3 - Audit & Monitoring Dashboard
 
-**Périmètre**:
-- Pages: `/backoffice/audit/*` (dashboard, violations, registre)
-- Hook: `useAudit.ts` complet
-- Intégration EPIC 9 (Registre violations)
-- Intégration EPIC 10 (DPIA + Registre traitements)
-- Durée estimée: 4 jours
+**Status**: COMPLET (voir `LOT11.3_IMPLEMENTATION.md`)
+
+**Implémenté**:
+- Pages: `/dashboard`, `/audit/*` (events, logs, violations, registry, dpia)
+- APIs: stats, audit, logs, incidents (15 endpoints)
+- Tests: 198 unit tests, 92.16% coverage
+- Date: 2026-01-11
 
 ### 11.4 Amélioration Continue
 
