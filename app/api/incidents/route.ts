@@ -31,6 +31,7 @@ import {
   type IncidentAlertConfig,
 } from "@/infrastructure/alerts/IncidentAlertService";
 import { createEmailAlertService } from "@/infrastructure/alerts/AlertService";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 
 // =============================================================================
 // VALIDATION SCHEMAS
@@ -120,11 +121,11 @@ function getAlertConfig(): IncidentAlertConfig {
 /**
  * GET /api/incidents - List all incidents
  *
- * Access: SUPER_ADMIN, DPO
+ * Access: SUPERADMIN, DPO
  */
 export const GET = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);
@@ -214,12 +215,12 @@ export const GET = withLogging(
 /**
  * POST /api/incidents - Create new incident
  *
- * Access: SUPER_ADMIN, DPO (manual creation)
+ * Access: SUPERADMIN, DPO (manual creation)
  * Note: System can also create via internal use case
  */
 export const POST = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);

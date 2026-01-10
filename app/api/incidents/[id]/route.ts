@@ -25,6 +25,7 @@ import {
 import { z, ZodError } from "zod";
 import { PgSecurityIncidentRepo } from "@/infrastructure/repositories/PgSecurityIncidentRepo";
 import { logEvent } from "@/shared/logger";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 
 // =============================================================================
 // VALIDATION SCHEMAS
@@ -90,7 +91,7 @@ interface RouteParams {
  */
 export const GET = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest, { params }: RouteParams) => {
         try {
           const context = requireContext(req);
@@ -176,7 +177,7 @@ export const GET = withLogging(
  */
 export const PATCH = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest, { params }: RouteParams) => {
         try {
           const context = requireContext(req);

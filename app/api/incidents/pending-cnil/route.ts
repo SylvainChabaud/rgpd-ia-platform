@@ -23,6 +23,7 @@ import {
   isCnilDeadlineApproaching,
   isCnilDeadlineOverdue,
 } from "@/domain/incident";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 
 /**
  * GET /api/incidents/pending-cnil - List incidents pending CNIL notification
@@ -36,7 +37,7 @@ import {
  */
 export const GET = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);

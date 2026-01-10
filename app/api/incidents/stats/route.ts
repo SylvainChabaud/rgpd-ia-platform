@@ -17,6 +17,7 @@ import { requireContext } from "@/lib/requestContext";
 import { logger } from "@/infrastructure/logging/logger";
 import { internalError } from "@/lib/errorResponse";
 import { PgSecurityIncidentRepo } from "@/infrastructure/repositories/PgSecurityIncidentRepo";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 
 /**
  * GET /api/incidents/stats - Get incident statistics
@@ -31,7 +32,7 @@ import { PgSecurityIncidentRepo } from "@/infrastructure/repositories/PgSecurity
  */
 export const GET = withLogging(
   withAuth(
-    withRBAC(["SUPER_ADMIN", "DPO"])(
+    withRBAC([ACTOR_ROLE.SUPERADMIN, ACTOR_ROLE.DPO])(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);
