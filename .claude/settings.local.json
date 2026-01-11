@@ -70,7 +70,8 @@
       "Bash(npx playwright test:*)",
       "Bash(curl:*)",
       "Bash(printf:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

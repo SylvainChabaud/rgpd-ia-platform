@@ -201,14 +201,14 @@ Aucun lot n’est acceptable si :
 
 ### 2.2 Architecture Frontend
 
-**Architecture DÉCIDÉE** : **Next.js monolithique (BACK + FRONT dans le même projet)**
+**Architecture DÉCIDÉE** : **Next.js monolithique avec route groups séparés et préfixes URL visibles**
 
-Utilisation de **Next.js App Router avec route groups** pour isoler les différents frontends dans un seul projet.
+Utilisation de **Next.js App Router avec route groups séparés** pour isoler les différents frontends dans un seul projet. Chaque interface a un **préfixe URL visible** pour éviter les collisions.
 
 **Structure cible** :
 ```
-src/app/
-├── api/                    # ✅ Backend API (Route Handlers)
+app/
+├── api/                        # ✅ Backend API (Route Handlers)
 │   ├── auth/
 │   ├── tenants/
 │   ├── users/
@@ -217,33 +217,52 @@ src/app/
 │   ├── rgpd/
 │   └── audit/
 │
-├── (backoffice)/          # ✅ Frontend Back Office (route group)
-│   ├── layout.tsx         # Layout Back Office
-│   ├── page.tsx           # Dashboard Super Admin
-│   ├── tenants/           # Gestion Tenants (LOT 11.1)
-│   ├── users/             # Gestion Users Plateforme (LOT 11.2)
-│   ├── audit/             # Audit & Monitoring (LOT 11.3)
-│   └── (tenant)/          # Sous-groupe Tenant Admin (EPIC 12)
-│       ├── dashboard/     # Dashboard Tenant (LOT 12.0)
-│       ├── users/         # Users Tenant (LOT 12.1)
-│       ├── consents/      # Consentements (LOT 12.2)
-│       └── rgpd/          # RGPD Requests (LOT 12.3)
+├── (platform-admin)/           # ✅ Route group Super Admin (EPIC 11)
+│   ├── layout.tsx              # Layout Super Admin (PlatformSidebar)
+│   └── admin/                  # ⬅️ Préfixe URL visible /admin/
+│       ├── page.tsx            # Dashboard → /admin
+│       ├── dashboard/          # Dashboard → /admin/dashboard
+│       ├── tenants/            # Gestion Tenants → /admin/tenants
+│       ├── users/              # Users Plateforme → /admin/users
+│       └── audit/              # Audit & Monitoring → /admin/audit
 │
-├── (frontend)/            # ✅ Frontend User (route group)
-│   ├── layout.tsx         # Layout User + Cookie Banner
-│   ├── page.tsx           # Home
-│   ├── ai-tools/          # AI Tools (LOT 13.1)
-│   ├── history/           # Historique AI Jobs (LOT 13.2)
-│   ├── consents/          # Mes Consentements (LOT 13.3)
-│   └── my-data/           # Mes Données RGPD (LOT 13.4)
+├── (tenant-admin)/             # ✅ Route group Tenant Admin (EPIC 12)
+│   ├── layout.tsx              # Layout Tenant Admin (TenantSidebar)
+│   └── portal/                 # ⬅️ Préfixe URL visible /portal/
+│       ├── page.tsx            # Dashboard → /portal
+│       ├── dashboard/          # Dashboard → /portal/dashboard
+│       ├── users/              # Users Tenant → /portal/users
+│       ├── consents/           # Consentements → /portal/consents
+│       └── rgpd/               # RGPD Requests → /portal/rgpd
 │
-├── (legal)/               # ✅ Pages légales publiques (route group SSG)
-│   ├── privacy-policy/    # Politique Confidentialité (LOT 10.0)
-│   ├── terms-of-service/  # CGU (LOT 10.1)
-│   └── rgpd-info/         # Informations RGPD (LOT 10.2)
+├── (frontend)/                 # ✅ Route group End User (EPIC 13)
+│   ├── layout.tsx              # Layout User + Cookie Banner
+│   └── app/                    # ⬅️ Préfixe URL visible /app/
+│       ├── page.tsx            # Home → /app
+│       ├── ai-tools/           # AI Tools → /app/ai-tools
+│       ├── history/            # Historique → /app/history
+│       ├── consents/           # Mes Consentements → /app/consents
+│       └── my-data/            # Mes Données RGPD → /app/my-data
 │
-└── middleware.ts          # ✅ Middleware global (tenant, auth, RGPD)
+├── (legal)/                    # ✅ Pages légales publiques (SSG)
+│   ├── privacy-policy/         # Politique Confidentialité
+│   ├── terms-of-service/       # CGU
+│   └── rgpd-info/              # Informations RGPD
+│
+├── login/                      # ⬅️ Login partagé → /login
+│   └── page.tsx                # Redirection scope-based après auth
+│
+└── middleware.ts               # ✅ Middleware global (auth, scope, RGPD)
 ```
+
+**URLs par Interface** :
+| Interface | Scope | Préfixe URL | Exemple |
+|-----------|-------|-------------|---------|
+| Super Admin (EPIC 11) | PLATFORM | `/admin/` | `/admin/tenants`, `/admin/users` |
+| Tenant Admin (EPIC 12) | TENANT | `/portal/` | `/portal/users`, `/portal/consents` |
+| End User (EPIC 13) | MEMBER | `/app/` | `/app/ai-tools`, `/app/my-data` |
+| Login (partagé) | - | `/login` | Redirection après auth selon scope |
+| Pages légales | Public | `/` | `/privacy-policy`, `/terms-of-service` |
 
 **Avantages RGPD de cette architecture** :
 - ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
@@ -252,16 +271,17 @@ src/app/
 - ✅ **Secrets centralisés** : Un seul `.env`, gestion simplifiée
 - ✅ **Audit trail unifié** : Une seule DB, logs cohérents
 - ✅ **Isolation tenant stricte** : Middleware vérifie sur toutes routes
+- ✅ **Séparation claire** : Pas de collision URL entre les 3 interfaces
 
 **Frontières RGPD respectées** (cf. [BOUNDARIES.md](docs/architecture/BOUNDARIES.md)) :
-- Frontend (`(backoffice)`, `(frontend)`, `(legal)`) appelle **uniquement** `/api/*`
+- Frontend (`(platform-admin)`, `(tenant-admin)`, `(frontend)`, `(legal)`) appelle **uniquement** `/api/*`
 - Backend (`api/*`) valide, applique RGPD, appelle Gateway LLM
 - Gateway LLM (`src/ai/gateway/*`) accessible **uniquement** côté serveur
 - Aucun bypass possible (imports directs interdits côté client)
 
 **Route Groups Next.js** :
 - `(nom)` : Dossier organisationnel, **pas d'impact sur l'URL**
-- Exemple : `src/app/(backoffice)/tenants/page.tsx` → URL `/tenants`
+- Exemple : `app/(platform-admin)/admin/tenants/page.tsx` → URL `/admin/tenants`
 - Permet layouts différents sans dupliquer le code
 
 **Stack Technique Frontend** :

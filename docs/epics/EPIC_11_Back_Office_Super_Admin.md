@@ -12,28 +12,54 @@
 
 ### 0.1 Next.js monolithique (BACK + FRONT)
 
-**Architecture retenue** : **Next.js monolithique avec route groups**
+**Architecture retenue** : **Next.js monolithique avec route groups séparés**
 
-L'interface Back Office Super Admin sera développée dans le **même projet Next.js** que le backend API, en utilisant les **route groups** Next.js App Router.
+L'interface Back Office Super Admin sera développée dans le **même projet Next.js** que le backend API, mais dans un **route group dédié** avec un **préfixe URL visible** pour éviter les collisions avec le Tenant Admin (EPIC 12).
 
-**Structure** :
+**Structure cible** :
 ```
-src/app/
-├── api/                    # Backend API (déjà existant)
-├── (backoffice)/          # Frontend Back Office (LOT 11.0-11.3)
-│   ├── layout.tsx
-│   ├── page.tsx
-│   ├── tenants/
-│   ├── users/
-│   └── audit/
-└── middleware.ts          # Middleware global (tenant, auth, RGPD)
+app/
+├── api/                        # Backend API (déjà existant)
+│
+├── (platform-admin)/           # ⬅️ Route group Super Admin (EPIC 11)
+│   ├── layout.tsx              # Layout Super Admin (Sidebar Platform)
+│   └── admin/                  # ⬅️ Préfixe URL visible /admin/
+│       ├── page.tsx            # Dashboard → /admin
+│       ├── dashboard/          # Dashboard → /admin/dashboard
+│       ├── tenants/            # Gestion tenants → /admin/tenants
+│       ├── users/              # Users plateforme → /admin/users
+│       └── audit/              # Audit trail → /admin/audit
+│
+├── (tenant-admin)/             # Route group Tenant Admin (EPIC 12)
+│   ├── layout.tsx              # Layout Tenant Admin (Sidebar Tenant)
+│   └── portal/                 # Préfixe URL visible /portal/
+│       └── ...                 # Voir EPIC 12
+│
+├── (frontend)/                 # Route group End User (EPIC 13)
+│   └── ...                     # Voir EPIC 13
+│
+├── (legal)/                    # Pages légales publiques
+│   └── ...
+│
+├── login/                      # ⬅️ Login partagé à la racine → /login
+│   └── page.tsx                # Redirection scope-based après auth
+│
+└── middleware.ts               # Middleware global (auth, scope, RGPD)
 ```
+
+**URLs Super Admin (EPIC 11)** :
+- `/login` → Page login partagée
+- `/admin` ou `/admin/dashboard` → Dashboard Super Admin
+- `/admin/tenants` → Gestion tenants
+- `/admin/users` → Gestion users plateforme
+- `/admin/audit` → Audit trail
 
 **Avantages RGPD** :
-- ✅ Pas de CORS (même origin, sécurité maximale)
-- ✅ Gateway LLM inaccessible depuis le frontend
-- ✅ Middleware centralisé (auth, tenant, audit)
-- ✅ Secrets centralisés (un seul `.env`)
+- ✅ **Pas de CORS** (même origin, sécurité maximale)
+- ✅ **Gateway LLM inaccessible** depuis le frontend
+- ✅ **Middleware centralisé** (auth, tenant, audit)
+- ✅ **Secrets centralisés** (un seul `.env`)
+- ✅ **Séparation claire** Super Admin vs Tenant Admin (pas de collision URL)
 
 **Référence** : Voir [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
@@ -424,13 +450,13 @@ Références aux EPICs backend existants :
 - ❌ Passer fonctions/classes en props Server → Client
 - ❌ Ignorer React Compiler warnings
 
-### 4.2 Structure du projet (Next.js Monolithique)
+### 4.2 Structure du projet (Next.js Monolithique avec Route Groups Séparés)
 
-**Architecture DÉCIDÉE** : Next.js monolithique (BACK + FRONT dans le même projet) — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
+**Architecture DÉCIDÉE** : Next.js monolithique avec **route groups séparés** et **préfixes URL visibles** — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
 ```
-src/app/
-├── api/                       # Backend API (Route Handlers) - EPIC 1-7
+app/
+├── api/                           # Backend API (Route Handlers) - EPIC 1-7
 │   ├── auth/
 │   ├── tenants/
 │   ├── users/
@@ -439,68 +465,92 @@ src/app/
 │   ├── rgpd/
 │   └── audit/
 │
-├── (backoffice)/              # Frontend Back Office (route group)
-│   ├── layout.tsx             # Layout Back Office (sidebar, header)
-│   ├── page.tsx               # Dashboard Super Admin (LOT 11.0)
-│   ├── tenants/               # Gestion Tenants (LOT 11.1)
-│   │   ├── page.tsx           # Liste tenants
-│   │   ├── new/page.tsx       # Créer tenant
-│   │   └── [id]/page.tsx      # Détails tenant
-│   ├── users/                 # Gestion Users Plateforme (LOT 11.2)
-│   │   ├── page.tsx           # Liste users
-│   │   └── [id]/page.tsx      # Détails user
-│   ├── audit/                 # Audit & Monitoring (LOT 11.3)
-│   │   ├── page.tsx           # Audit events
-│   │   ├── violations/page.tsx # Registre violations (LOT 9.0)
-│   │   ├── registry/page.tsx  # Registre traitements (LOT 10.4)
-│   │   └── dpia/page.tsx      # DPIA Gateway LLM (LOT 10.5)
-│   ├── logs/page.tsx          # Logs système
-│   └── (tenant)/              # Sous-groupe Tenant Admin (EPIC 12)
-│       ├── dashboard/page.tsx # Dashboard Tenant (LOT 12.0)
-│       ├── users/             # Users Tenant (LOT 12.1)
-│       ├── consents/          # Consentements (LOT 12.2)
-│       └── rgpd/              # RGPD Requests (LOT 12.3)
+├── (platform-admin)/              # ⬅️ Route group Super Admin (EPIC 11)
+│   ├── layout.tsx                 # Layout Super Admin (PlatformSidebar)
+│   └── admin/                     # ⬅️ Préfixe URL visible /admin/
+│       ├── page.tsx               # Dashboard → /admin
+│       ├── dashboard/page.tsx     # Dashboard → /admin/dashboard
+│       ├── tenants/               # Gestion Tenants (LOT 11.1)
+│       │   ├── page.tsx           # Liste tenants → /admin/tenants
+│       │   ├── new/page.tsx       # Créer tenant → /admin/tenants/new
+│       │   └── [id]/page.tsx      # Détails tenant → /admin/tenants/:id
+│       ├── users/                 # Gestion Users Plateforme (LOT 11.2)
+│       │   ├── page.tsx           # Liste users → /admin/users
+│       │   ├── new/page.tsx       # Créer user → /admin/users/new
+│       │   └── [id]/page.tsx      # Détails user → /admin/users/:id
+│       ├── audit/                 # Audit & Monitoring (LOT 11.3)
+│       │   ├── page.tsx           # Audit events → /admin/audit
+│       │   ├── violations/page.tsx # Registre violations → /admin/audit/violations
+│       │   ├── registry/page.tsx  # Registre traitements → /admin/audit/registry
+│       │   └── dpia/page.tsx      # DPIA Gateway LLM → /admin/audit/dpia
+│       └── logs/page.tsx          # Logs système → /admin/logs
 │
-├── (frontend)/                # Frontend User (route group) - EPIC 13
-│   └── ...                    # Voir EPIC 13
+├── (tenant-admin)/                # Route group Tenant Admin (EPIC 12)
+│   ├── layout.tsx                 # Layout Tenant Admin (TenantSidebar)
+│   └── portal/                    # Préfixe URL visible /portal/
+│       └── ...                    # Voir EPIC 12
 │
-├── (legal)/                   # Pages légales publiques (route group SSG)
+├── (frontend)/                    # Route group End User (EPIC 13)
+│   ├── layout.tsx                 # Layout User + Cookie Banner
+│   └── app/                       # Préfixe URL visible /app/ (ou racine /)
+│       └── ...                    # Voir EPIC 13
+│
+├── (legal)/                       # Pages légales publiques (SSG)
 │   ├── privacy-policy/page.tsx
 │   ├── terms-of-service/page.tsx
 │   └── rgpd-info/page.tsx
 │
-└── middleware.ts              # Middleware global (tenant, auth, RGPD)
+├── login/                         # ⬅️ Login partagé → /login
+│   └── page.tsx                   # Redirection scope-based après auth
+│
+└── middleware.ts                  # Middleware global (auth, scope, RGPD)
 
 src/
 ├── components/
-│   ├── ui/                    # shadcn components (partagés)
-│   ├── backoffice/            # Components Back Office (EPIC 11-12)
+│   ├── ui/                        # shadcn components (partagés)
+│   ├── platform-admin/            # ⬅️ Components Super Admin (EPIC 11)
+│   │   ├── PlatformSidebar.tsx
 │   │   ├── forms/
 │   │   ├── tables/
 │   │   └── charts/
-│   └── frontend/              # Components Front User (EPIC 13)
+│   ├── tenant-admin/              # Components Tenant Admin (EPIC 12)
+│   │   ├── TenantSidebar.tsx
+│   │   └── ...
+│   └── frontend/                  # Components End User (EPIC 13)
 ├── lib/
-│   ├── api.ts                 # API client (fetch wrapper)
-│   ├── auth.ts                # NextAuth config
+│   ├── api.ts                     # API client (fetch wrapper)
+│   ├── auth.ts                    # NextAuth config
 │   └── utils.ts
-└── domain/                    # Types/logique métier partagés
+└── domain/                        # Types/logique métier partagés
 ```
+
+**URLs Super Admin (EPIC 11)** :
+| Page | URL |
+|------|-----|
+| Login (partagé) | `/login` |
+| Dashboard | `/admin` ou `/admin/dashboard` |
+| Liste tenants | `/admin/tenants` |
+| Détail tenant | `/admin/tenants/:id` |
+| Liste users | `/admin/users` |
+| Audit trail | `/admin/audit` |
+| Logs système | `/admin/logs` |
 
 **Avantages RGPD de cette architecture** (cf. TASKS.md section 2.2) :
 - ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
 - ✅ **Gateway LLM inaccessible** : Imports côté serveur uniquement
 - ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
 - ✅ **Secrets centralisés** : Un seul `.env`, gestion simplifiée
+- ✅ **Séparation claire** : Pas de collision URL entre Super Admin (`/admin/`) et Tenant Admin (`/portal/`)
 
 ### 4.3 Composants principaux
 
 #### Layout PLATFORM (Super Admin)
 ```tsx
-// app/(platform)/layout.tsx
-export default function PlatformLayout({ children }) {
+// app/(platform-admin)/layout.tsx
+export default function PlatformAdminLayout({ children }) {
   return (
     <div className="flex h-screen">
-      <Sidebar role="PLATFORM" />
+      <PlatformSidebar />
       <main className="flex-1 overflow-y-auto">
         <TopBar />
         {children}
@@ -510,16 +560,16 @@ export default function PlatformLayout({ children }) {
 }
 ```
 
-#### Sidebar Navigation
+#### Sidebar Navigation (Super Admin)
 ```tsx
-// components/Sidebar.tsx
+// components/platform-admin/PlatformSidebar.tsx
 const PLATFORM_ROUTES = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/tenants', label: 'Tenants', icon: Building },
-  { href: '/users', label: 'Users', icon: Users },
-  { href: '/audit', label: 'Audit', icon: FileText },
-  { href: '/logs', label: 'Logs', icon: Terminal },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/tenants', label: 'Tenants', icon: Building },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/audit', label: 'Audit', icon: FileText },
+  { href: '/admin/logs', label: 'Logs', icon: Terminal },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 ```
 

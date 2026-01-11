@@ -103,7 +103,7 @@ Après le setup, vous pouvez vous connecter avec:
 | Champ | Valeur |
 |-------|--------|
 | **Email** | `admin@platform.local` |
-| **Password** | `Admin123!` |
+| **Password** | `Admin1234` |
 | **Rôle** | SUPER_ADMIN |
 | **Scope** | PLATFORM |
 | **Permissions** | Gestion tenants, users, monitoring global |
@@ -113,7 +113,7 @@ Après le setup, vous pouvez vous connecter avec:
 | Champ | Valeur |
 |-------|--------|
 | **Email** | `admin@acme.local` |
-| **Password** | `Admin123!` |
+| **Password** | `Admin1234` |
 | **Rôle** | TENANT_ADMIN |
 | **Scope** | TENANT |
 | **Tenant** | Acme Corp (slug: `acme`) |
@@ -128,11 +128,11 @@ Vous pouvez personnaliser les credentials de test dans le fichier `.env`:
 ```bash
 # Test Credentials (For E2E tests and local development)
 TEST_PLATFORM_ADMIN_EMAIL=admin@platform.local
-TEST_PLATFORM_ADMIN_PASSWORD=Admin123!
+TEST_PLATFORM_ADMIN_PASSWORD=Admin1234
 TEST_PLATFORM_ADMIN_NAME=Platform Administrator
 
 TEST_TENANT_ADMIN_EMAIL=admin@acme.local
-TEST_TENANT_ADMIN_PASSWORD=Admin123!
+TEST_TENANT_ADMIN_PASSWORD=Admin1234
 TEST_TENANT_ADMIN_NAME=Tenant Administrator
 
 TEST_TENANT_NAME=Acme Corp
@@ -345,7 +345,7 @@ Password: devpass
 
 ### En développement
 
-- Les credentials par défaut (`Admin123!`) sont **UNIQUEMENT pour le développement local**
+- Les credentials par défaut (`Admin1234`) sont **UNIQUEMENT pour le développement local**
 - Ne jamais commiter le fichier `.env` (déjà dans `.gitignore`)
 - Le salt de test est fixe pour la reproductibilité des tests
 

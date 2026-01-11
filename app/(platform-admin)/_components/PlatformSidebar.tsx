@@ -17,33 +17,34 @@ import { Home, Users, Building2, FileText, LogOut, Moon, Sun } from 'lucide-reac
 import { useTheme } from 'next-themes'
 
 /**
- * Navigation items for Super Admin
+ * Navigation items for Super Admin (Platform scope)
+ * All routes prefixed with /admin/
  */
 const navItems = [
   {
-    href: '/dashboard',
+    href: '/admin/dashboard',
     label: 'Dashboard',
     icon: Home,
   },
   {
-    href: '/tenants',
+    href: '/admin/tenants',
     label: 'Tenants',
     icon: Building2,
   },
   {
-    href: '/users',
+    href: '/admin/users',
     label: 'Utilisateurs',
     icon: Users,
   },
   {
-    href: '/audit',
+    href: '/admin/audit',
     label: 'Audit & Monitoring',
     icon: FileText,
   },
 ]
 
 /**
- * Sidebar Navigation Component
+ * Platform Sidebar Navigation Component
  *
  * RGPD Compliance:
  * - Only displayName shown (P1 data) - NO email
@@ -51,11 +52,11 @@ const navItems = [
  * - No sensitive data in UI
  *
  * Features:
- * - Active route highlighting
+ * - Active route highlighting with /admin/ prefix
  * - User menu with logout
  * - Theme toggle (dark/light mode)
  */
-export function Sidebar() {
+export function PlatformSidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
   const { theme, setTheme } = useTheme()
@@ -77,7 +78,7 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 p-4">
         {navItems.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link key={item.href} href={item.href}>
               <Button

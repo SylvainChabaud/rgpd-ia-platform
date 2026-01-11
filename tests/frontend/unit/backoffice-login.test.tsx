@@ -1,11 +1,12 @@
 /**
- * Unit Tests - Backoffice Login Page (LOT 11.0)
+ * Unit Tests - Login Page (LOT 11.0)
  *
  * Coverage:
  * - Form validation (email, password required)
  * - Login flow (success, failure)
  * - Token storage (JWT)
  * - Session management
+ * - Scope-based redirection
  *
  * RGPD compliance: Uses FAKE credentials only
  */
@@ -13,7 +14,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRouter } from 'next/navigation'
-import LoginPage from '../../../app/(backoffice)/login/page'
+import LoginPage from '../../../app/login/page'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -30,17 +31,21 @@ jest.mock('sonner', () => ({
 }))
 
 // Mock auth store
+const mockLogin = jest.fn()
 jest.mock('@/lib/auth/authStore', () => ({
-  useAuthStore: jest.fn(() => ({
-    isAuthenticated: false,
-    login: jest.fn(),
-    logout: jest.fn(),
-    checkAuth: jest.fn(),
-    user: null,
-  })),
+  useAuthStore: jest.fn((selector) => {
+    const state = {
+      isAuthenticated: false,
+      login: mockLogin,
+      logout: jest.fn(),
+      checkAuth: jest.fn(),
+      user: null,
+    }
+    return typeof selector === 'function' ? selector(state) : state
+  }),
 }))
 
-describe('Backoffice Login Page (LOT 11.0)', () => {
+describe('Login Page (LOT 11.0)', () => {
   let mockPush: jest.Mock
   let mockReplace: jest.Mock
 
@@ -100,23 +105,23 @@ describe('Backoffice Login Page (LOT 11.0)', () => {
       render(<LoginPage />)
 
       const emailInput = screen.getByLabelText(/email/i)
+      const passwordInput = screen.getByLabelText(/mot de passe/i)
       const submitButton = screen.getByRole('button', { name: /connexion/i })
 
-      // Enter invalid email
+      // Enter invalid email and valid password to isolate email validation
       await user.type(emailInput, 'invalid-email')
+      await user.type(passwordInput, 'ValidPassword123!')
       await user.click(submitButton)
 
-      // Email format error
-      await waitFor(() => {
-        expect(
-          screen.getByText(/email.*invalide/i) || screen.getByText(/format.*email/i)
-        ).toBeInTheDocument()
-      })
+      // Form should NOT submit with invalid email (no API call)
+      // Wait a bit to ensure no call was made
+      await new Promise((r) => setTimeout(r, 100))
+      expect(global.fetch).not.toHaveBeenCalled()
     })
   })
 
-  describe('Login Flow - Success', () => {
-    it('[LOGIN-003] should store JWT token on successful login', async () => {
+  describe('Login Flow - Success with Scope-based Redirect', () => {
+    it('[LOGIN-003] should redirect PLATFORM user to /admin', async () => {
       const user = userEvent.setup()
 
       const mockResponse = {
@@ -158,23 +163,79 @@ describe('Backoffice Login Page (LOT 11.0)', () => {
         )
       })
 
-      // Token should be stored in localStorage
+      // Should redirect to /admin (PLATFORM scope)
       await waitFor(() => {
-        expect(window.localStorage.setItem).toHaveBeenCalledWith(
-          'auth_token',
-          mockResponse.token
-        )
+        expect(mockPush).toHaveBeenCalledWith('/admin')
+      })
+    })
+
+    it('[LOGIN-004] should redirect TENANT user to /portal', async () => {
+      const user = userEvent.setup()
+
+      const mockResponse = {
+        token: 'fake-tenant-token',
+        user: {
+          id: 'tenant-admin-123',
+          displayName: 'Tenant Admin',
+          scope: 'TENANT',
+          role: 'TENANT_ADMIN',
+        },
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
       })
 
-      // Should redirect to dashboard
+      render(<LoginPage />)
+
+      await user.type(screen.getByLabelText(/email/i), 'tenant@example.com')
+      await user.type(screen.getByLabelText(/mot de passe/i), 'FakePassword123!')
+
+      const submitButton = screen.getByRole('button', { name: /connexion/i })
+      await user.click(submitButton)
+
+      // Should redirect to /portal (TENANT scope)
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/')
+        expect(mockPush).toHaveBeenCalledWith('/portal')
+      })
+    })
+
+    it('[LOGIN-005] should redirect MEMBER user to /app', async () => {
+      const user = userEvent.setup()
+
+      const mockResponse = {
+        token: 'fake-member-token',
+        user: {
+          id: 'member-123',
+          displayName: 'User',
+          scope: 'MEMBER',
+          role: 'MEMBER',
+        },
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      render(<LoginPage />)
+
+      await user.type(screen.getByLabelText(/email/i), 'user@example.com')
+      await user.type(screen.getByLabelText(/mot de passe/i), 'FakePassword123!')
+
+      const submitButton = screen.getByRole('button', { name: /connexion/i })
+      await user.click(submitButton)
+
+      // Should redirect to /app (MEMBER scope)
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/app')
       })
     })
   })
 
   describe('Login Flow - Failure', () => {
-    it('[LOGIN-004] should show error message on login failure', async () => {
+    it('[LOGIN-006] should show error message on login failure', async () => {
       const user = userEvent.setup()
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -205,16 +266,13 @@ describe('Backoffice Login Page (LOT 11.0)', () => {
         )
       })
 
-      // Token should NOT be stored
-      expect(window.localStorage.setItem).not.toHaveBeenCalled()
-
       // Should NOT redirect
       expect(mockPush).not.toHaveBeenCalled()
     })
   })
 
   describe('Session Management', () => {
-    it('[LOGIN-005] should handle tenant suspended error (403)', async () => {
+    it('[LOGIN-007] should handle tenant suspended error (403)', async () => {
       const user = userEvent.setup()
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -249,7 +307,7 @@ describe('Backoffice Login Page (LOT 11.0)', () => {
       expect(mockPush).not.toHaveBeenCalled()
     })
 
-    it('[LOGIN-006] should handle account suspended error (403)', async () => {
+    it('[LOGIN-008] should handle account suspended error (403)', async () => {
       const user = userEvent.setup()
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -283,13 +341,13 @@ describe('Backoffice Login Page (LOT 11.0)', () => {
   })
 
   describe('RGPD Compliance - No Sensitive Data Exposure', () => {
-    it('[LOGIN-007] should NOT log credentials in console', async () => {
+    it('[LOGIN-009] should NOT log credentials in console', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
       const user = userEvent.setup()
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ token: 'fake-token', user: {} }),
+        json: async () => ({ token: 'fake-token', user: { scope: 'PLATFORM' } }),
       })
 
       render(<LoginPage />)

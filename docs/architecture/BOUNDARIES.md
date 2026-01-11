@@ -44,8 +44,8 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 ### Rôle autorisé
 - Affichage des données
 - Interaction utilisateur
-- Gestion d’état UI
-- Déclenchement d’actions via API
+- Gestion d'état UI
+- Déclenchement d'actions via API
 
 ### Interdictions absolues
 - ❌ Appel direct à un modèle IA
@@ -54,8 +54,40 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 - ❌ Implémentation de logique RGPD
 
 ### Données autorisées
-- Données déjà filtrées et validées par l’API
+- Données déjà filtrées et validées par l'API
 - Identifiants techniques (IDs, tokens opaques)
+
+### Architecture des routes et authentification (DÉCISION VALIDÉE)
+
+**Principe de sécurité** : Login unique avec redirection scope-based (Security by Design)
+
+```
+/           → Redirect vers /login (pas de page d'accueil publique)
+/login      → Login unifié → redirection automatique selon scope
+/admin/*    → Super Admin (scope PLATFORM) - URL non exposée publiquement
+/portal/*   → Tenant Admin (scope TENANT) - URL non exposée publiquement
+/app/*      → End User (scope MEMBER) - Interface principale
+```
+
+**Règles de sécurité** :
+
+| Règle | Justification |
+|-------|---------------|
+| **Pas de page d'accueil avec choix d'interface** | Évite l'exposition de l'architecture (surface d'attaque) |
+| **Login unique `/login`** | Point d'entrée centralisé, redirection intelligente post-auth |
+| **URLs backoffice non liées publiquement** | `/admin` et `/portal` connus uniquement des utilisateurs autorisés |
+| **Redirection scope-based automatique** | Après login → interface correspondant au scope JWT |
+| **Pas de hint sur existence d'autres interfaces** | Principe du moindre privilège, security by obscurity |
+
+**Conformité standards SaaS B2B** :
+- ✅ Salesforce, HubSpot, Datadog utilisent cette approche
+- ✅ Backoffice admin jamais exposé sur landing page
+- ✅ URLs admin communiquées en interne uniquement (documentation, bookmarks)
+
+**Anti-patterns interdits** :
+- ❌ Page d'accueil avec boutons "Super Admin | Tenant Admin | Utilisateur"
+- ❌ Liens vers `/admin` depuis pages publiques
+- ❌ Menu de navigation exposant toutes les interfaces
 
 ---
 

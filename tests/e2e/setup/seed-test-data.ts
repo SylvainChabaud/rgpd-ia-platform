@@ -16,11 +16,11 @@ config()
 
 // Get test credentials from .env (with fallback to defaults)
 const TEST_PLATFORM_ADMIN_EMAIL = process.env.TEST_PLATFORM_ADMIN_EMAIL || 'admin@platform.local'
-const TEST_PLATFORM_ADMIN_PASSWORD = process.env.TEST_PLATFORM_ADMIN_PASSWORD || 'Admin123!'
+const TEST_PLATFORM_ADMIN_PASSWORD = process.env.TEST_PLATFORM_ADMIN_PASSWORD || 'Admin1234'
 const TEST_PLATFORM_ADMIN_NAME = process.env.TEST_PLATFORM_ADMIN_NAME || 'Platform Administrator'
 
 const TEST_TENANT_ADMIN_EMAIL = process.env.TEST_TENANT_ADMIN_EMAIL || 'admin@tenant1.local'
-const TEST_TENANT_ADMIN_PASSWORD = process.env.TEST_TENANT_ADMIN_PASSWORD || 'Admin123!'
+const TEST_TENANT_ADMIN_PASSWORD = process.env.TEST_TENANT_ADMIN_PASSWORD || 'Admin1234'
 const TEST_TENANT_ADMIN_NAME = process.env.TEST_TENANT_ADMIN_NAME || 'Tenant Administrator'
 
 const TEST_PASSWORD_SALT = process.env.TEST_PASSWORD_SALT || 'testsalt1234567890abcdef'

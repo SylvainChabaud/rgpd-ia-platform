@@ -12,10 +12,10 @@
 
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import TenantsListPage from '../../../app/(backoffice)/tenants/page'
-import CreateTenantPage from '../../../app/(backoffice)/tenants/new/page'
-import TenantDetailsPage from '../../../app/(backoffice)/tenants/[id]/page'
-import EditTenantPage from '../../../app/(backoffice)/tenants/[id]/edit/page'
+import TenantsListPage from '../../../app/(platform-admin)/admin/tenants/page'
+import CreateTenantPage from '../../../app/(platform-admin)/admin/tenants/new/page'
+import TenantDetailsPage from '../../../app/(platform-admin)/admin/tenants/[id]/page'
+import EditTenantPage from '../../../app/(platform-admin)/admin/tenants/[id]/edit/page'
 import type { Tenant } from '@/types/api'
 
 // Mock next/navigation
@@ -25,7 +25,7 @@ jest.mock('next/navigation', () => ({
     back: jest.fn(),
   })),
   useParams: jest.fn(() => ({ id: 'tenant-123' })),
-  usePathname: jest.fn(() => '/backoffice/tenants'),
+  usePathname: jest.fn(() => '/admin/tenants'),
 }))
 
 // Mock toast

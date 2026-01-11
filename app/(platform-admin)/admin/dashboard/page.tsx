@@ -185,19 +185,19 @@ export default function DashboardPage() {
           <CardContent>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/tenants" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/tenants" className="flex items-center gap-2 text-primary hover:underline">
                   <Building2 className="h-4 w-4" />
                   Gérer les tenants
                 </Link>
               </li>
               <li>
-                <Link href="/users" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/users" className="flex items-center gap-2 text-primary hover:underline">
                   <Users className="h-4 w-4" />
                   Gérer les utilisateurs
                 </Link>
               </li>
               <li>
-                <Link href="/audit/logs" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/audit/logs" className="flex items-center gap-2 text-primary hover:underline">
                   <FileText className="h-4 w-4" />
                   Logs système
                 </Link>
@@ -214,25 +214,25 @@ export default function DashboardPage() {
           <CardContent>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/audit" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/audit" className="flex items-center gap-2 text-primary hover:underline">
                   <FileText className="h-4 w-4" />
                   Audit trail (événements)
                 </Link>
               </li>
               <li>
-                <Link href="/audit/violations" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/audit/violations" className="flex items-center gap-2 text-primary hover:underline">
                   <AlertCircle className="h-4 w-4" />
                   Registre des violations (Art. 33)
                 </Link>
               </li>
               <li>
-                <Link href="/audit/registry" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/audit/registry" className="flex items-center gap-2 text-primary hover:underline">
                   <FileText className="h-4 w-4" />
                   Registre des traitements (Art. 30)
                 </Link>
               </li>
               <li>
-                <Link href="/audit/dpia" className="flex items-center gap-2 text-primary hover:underline">
+                <Link href="/admin/audit/dpia" className="flex items-center gap-2 text-primary hover:underline">
                   <CheckCircle className="h-4 w-4" />
                   DPIA Gateway LLM (Art. 35)
                 </Link>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
               {stats.incidents.unresolved > 0 && (
                 <li>
                   <Link
-                    href="/audit/violations"
+                    href="/admin/audit/violations"
                     className="text-yellow-600 dark:text-yellow-400 hover:underline"
                   >
                     ⚠️ {stats.incidents.unresolved} incident(s) de sécurité non résolu(s)
@@ -266,7 +266,7 @@ export default function DashboardPage() {
               {stats.tenants.suspended > 0 && (
                 <li>
                   <Link
-                    href="/tenants"
+                    href="/admin/tenants"
                     className="text-yellow-600 dark:text-yellow-400 hover:underline"
                   >
                     ⚠️ {stats.tenants.suspended} tenant(s) suspendu(s)

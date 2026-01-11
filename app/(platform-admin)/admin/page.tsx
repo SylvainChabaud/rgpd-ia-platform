@@ -7,5 +7,5 @@ import { redirect } from 'next/navigation'
 
 export default function BackofficeRootPage() {
   // Redirect to enhanced dashboard
-  redirect('/dashboard')
+  redirect('/admin/dashboard')
 }

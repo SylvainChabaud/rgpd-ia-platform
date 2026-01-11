@@ -12,39 +12,59 @@
 
 ### 0.1 Next.js monolithique (BACK + FRONT)
 
-**Architecture retenue** : **Next.js monolithique avec route groups**
+**Architecture retenue** : **Next.js monolithique avec route groups séparés**
 
-L'interface Back Office Tenant Admin sera développée dans le **même projet Next.js** que le backend API, en utilisant les **route groups** Next.js App Router.
+L'interface Back Office Tenant Admin sera développée dans le **même projet Next.js** que le backend API, mais dans un **route group dédié** avec un **préfixe URL visible** pour éviter les collisions avec le Super Admin (EPIC 11).
 
-**Structure** :
+**Structure cible** :
 ```
-src/app/
-├── api/                    # Backend API (déjà existant)
-├── (backoffice)/          # Frontend Back Office
-│   ├── layout.tsx         # Layout global Back Office
-│   ├── page.tsx           # Dashboard Super Admin (LOT 11.0)
-│   ├── tenants/           # Gestion tenants (LOT 11.1)
-│   ├── users/             # Gestion users cross-tenant (LOT 11.2)
-│   ├── audit/             # Logs audit (LOT 11.3)
-│   └── (tenant)/          # 🎯 Sous-groupe Tenant Admin (LOT 12.0-12.3)
-│       ├── dashboard/     # Dashboard Tenant
-│       ├── users/         # Gestion users du tenant
-│       ├── consents/      # Gestion consentements
-│       └── rgpd/          # Demandes RGPD
-└── middleware.ts          # Middleware global (tenant, auth, RGPD)
+app/
+├── api/                        # Backend API (déjà existant)
+│
+├── (platform-admin)/           # Route group Super Admin (EPIC 11)
+│   ├── layout.tsx              # Layout Super Admin (PlatformSidebar)
+│   └── admin/                  # Préfixe URL visible /admin/
+│       └── ...                 # Voir EPIC 11
+│
+├── (tenant-admin)/             # ⬅️ Route group Tenant Admin (EPIC 12)
+│   ├── layout.tsx              # Layout Tenant Admin (TenantSidebar)
+│   └── portal/                 # ⬅️ Préfixe URL visible /portal/
+│       ├── page.tsx            # Dashboard → /portal
+│       ├── dashboard/          # Dashboard → /portal/dashboard
+│       ├── users/              # Gestion users tenant → /portal/users
+│       ├── consents/           # Consentements → /portal/consents
+│       └── rgpd/               # RGPD requests → /portal/rgpd
+│
+├── (frontend)/                 # Route group End User (EPIC 13)
+│   └── ...                     # Voir EPIC 13
+│
+├── (legal)/                    # Pages légales publiques
+│   └── ...
+│
+├── login/                      # ⬅️ Login partagé à la racine → /login
+│   └── page.tsx                # Redirection scope-based après auth
+│
+└── middleware.ts               # Middleware global (auth, scope, RGPD)
 ```
+
+**URLs Tenant Admin (EPIC 12)** :
+- `/login` → Page login partagée
+- `/portal` ou `/portal/dashboard` → Dashboard Tenant
+- `/portal/users` → Gestion users du tenant
+- `/portal/consents` → Gestion consentements
+- `/portal/rgpd` → Demandes RGPD
 
 **Fonctionnement route groups** :
-- `(backoffice)/` est un route group → **pas d'URL `/backoffice`**
-- `(tenant)/` est un sous-route group → **pas d'URL `/tenant`**
-- URL finale : `/dashboard`, `/users`, `/consents`, `/rgpd`
-- Organisation logique du code (Super Admin vs Tenant Admin séparés)
+- `(tenant-admin)/` est un route group → **pas d'URL `/tenant-admin`**
+- `portal/` est un dossier réel → **préfixe URL visible `/portal/`**
+- Organisation logique du code (Super Admin `/admin/` vs Tenant Admin `/portal/` séparés)
 
 **Avantages RGPD** :
 - ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
 - ✅ **Gateway LLM inaccessible** : Imports Gateway LLM côté serveur uniquement (pas de bypass client)
 - ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
 - ✅ **Secrets centralisés** : Un seul `.env` (pas de duplication clés API)
+- ✅ **Séparation claire** : Pas de collision URL entre Super Admin (`/admin/`) et Tenant Admin (`/portal/`)
 
 ### 0.2 Référence
 
@@ -213,8 +233,8 @@ Références aux EPICs backend existants :
 ### 3.1 User Stories
 
 #### US 12.1 : Authentification Tenant Admin
-**En tant que** Tenant Admin  
-**Je veux** me connecter au Back Office de mon entreprise  
+**En tant que** Tenant Admin
+**Je veux** me connecter au Back Office de mon entreprise
 **Afin de** gérer mes utilisateurs et suivre l'activité IA
 
 **Acceptance Criteria** :
@@ -224,6 +244,10 @@ Références aux EPICs backend existants :
   - scope TENANT → Dashboard Tenant Admin (EPIC 12)
 - [ ] Logout fonctionnel
 - [ ] 2FA optionnel
+
+**TODO (identifié lors de l'implémentation EPIC 11)** :
+- [ ] Page "Accès non autorisé" au lieu de redirection silencieuse quand un SUPER_ADMIN tente d'accéder à `/portal` (amélioration UX)
+- [ ] Option : Page login dédiée `/portal/login` (si séparation souhaitée)
 
 ---
 
@@ -573,67 +597,93 @@ Références aux EPICs backend existants :
 - ❌ Passer fonctions/classes en props Server → Client
 - ❌ Ignorer React Compiler warnings
 
-### 4.2 Structure du projet (Next.js Monolithique partagé avec EPIC 11)
+### 4.2 Structure du projet (Next.js Monolithique avec Route Groups Séparés)
 
-**Architecture DÉCIDÉE** : Next.js monolithique (BACK + FRONT dans le même projet) — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
+**Architecture DÉCIDÉE** : Next.js monolithique avec **route groups séparés** et **préfixes URL visibles** — cf. [TASKS.md section 2.2](../../TASKS.md#22-architecture-frontend)
 
 ```
-src/app/
-├── api/                       # Backend API (déjà existant)
+app/
+├── api/                           # Backend API (déjà existant)
 │
-├── (backoffice)/              # Frontend Back Office
-│   ├── layout.tsx             # Layout global Back Office
-│   ├── page.tsx               # Dashboard Super Admin (EPIC 11)
-│   ├── tenants/               # Gestion tenants (EPIC 11 - LOT 11.1)
-│   ├── users/                 # Gestion users cross-tenant (EPIC 11 - LOT 11.2)
-│   ├── audit/                 # Logs audit (EPIC 11 - LOT 11.3)
-│   └── (tenant)/              # 🎯 Sous-groupe Tenant Admin (EPIC 12)
-│       ├── dashboard/page.tsx # Dashboard Tenant (LOT 12.0)
-│       ├── users/             # Users Tenant (LOT 12.1)
-│       │   ├── page.tsx       # Liste users tenant
-│       │   ├── new/page.tsx   # Créer user
-│       │   └── [id]/page.tsx  # Détails user
-│       ├── consents/          # Consentements (LOT 12.2)
-│       │   ├── purposes/page.tsx  # Liste purposes
-│       │   ├── matrix/page.tsx    # Matrice consentements
-│       │   └── [userId]/page.tsx  # Historique user
-│       └── rgpd/              # RGPD Requests (LOT 12.3)
-│           ├── exports/page.tsx   # Demandes export
-│           └── deletions/page.tsx # Demandes effacement
+├── (platform-admin)/              # Route group Super Admin (EPIC 11)
+│   ├── layout.tsx                 # Layout Super Admin (PlatformSidebar)
+│   └── admin/                     # Préfixe URL visible /admin/
+│       └── ...                    # Voir EPIC 11
 │
-├── (frontend)/                # Frontend User (EPIC 13)
-│   └── ...                    # Voir EPIC 13
+├── (tenant-admin)/                # ⬅️ Route group Tenant Admin (EPIC 12)
+│   ├── layout.tsx                 # Layout Tenant Admin (TenantSidebar)
+│   └── portal/                    # ⬅️ Préfixe URL visible /portal/
+│       ├── page.tsx               # Dashboard → /portal
+│       ├── dashboard/page.tsx     # Dashboard → /portal/dashboard
+│       ├── users/                 # Users Tenant (LOT 12.1)
+│       │   ├── page.tsx           # Liste users → /portal/users
+│       │   ├── new/page.tsx       # Créer user → /portal/users/new
+│       │   └── [id]/page.tsx      # Détails user → /portal/users/:id
+│       ├── consents/              # Consentements (LOT 12.2)
+│       │   ├── page.tsx           # Vue globale → /portal/consents
+│       │   ├── purposes/page.tsx  # Liste purposes → /portal/consents/purposes
+│       │   ├── matrix/page.tsx    # Matrice → /portal/consents/matrix
+│       │   └── [userId]/page.tsx  # Historique user → /portal/consents/:userId
+│       └── rgpd/                  # RGPD Requests (LOT 12.3)
+│           ├── page.tsx           # Vue globale → /portal/rgpd
+│           ├── exports/page.tsx   # Demandes export → /portal/rgpd/exports
+│           └── deletions/page.tsx # Demandes effacement → /portal/rgpd/deletions
 │
-├── (legal)/                   # Pages légales publiques (EPIC 10)
-│   └── ...                    # Voir EPIC 10
+├── (frontend)/                    # Route group End User (EPIC 13)
+│   ├── layout.tsx                 # Layout User + Cookie Banner
+│   └── app/                       # Préfixe URL visible /app/ (ou racine /)
+│       └── ...                    # Voir EPIC 13
 │
-└── middleware.ts              # Middleware global (tenant, auth, RGPD)
+├── (legal)/                       # Pages légales publiques (SSG)
+│   ├── privacy-policy/page.tsx
+│   ├── terms-of-service/page.tsx
+│   └── rgpd-info/page.tsx
+│
+├── login/                         # ⬅️ Login partagé → /login
+│   └── page.tsx                   # Redirection scope-based après auth
+│
+└── middleware.ts                  # Middleware global (auth, scope, RGPD)
 
 src/
 ├── components/
-│   ├── ui/                    # shadcn components (partagés)
-│   ├── backoffice/            # Components Back Office (EPIC 11-12)
-│   │   ├── platform/          # Components Super Admin (EPIC 11)
-│   │   └── tenant/            # Components Tenant Admin (EPIC 12)
-│   └── shared/                # Components partagés (tables, charts)
+│   ├── ui/                        # shadcn components (partagés)
+│   ├── platform-admin/            # Components Super Admin (EPIC 11)
+│   │   └── PlatformSidebar.tsx
+│   ├── tenant-admin/              # ⬅️ Components Tenant Admin (EPIC 12)
+│   │   ├── TenantSidebar.tsx
+│   │   ├── UserTable.tsx
+│   │   ├── ConsentMatrix.tsx
+│   │   └── ...
+│   └── shared/                    # Components partagés (tables, charts)
 ├── lib/
-│   ├── api.ts                 # API client (fetch wrapper)
-│   ├── auth.ts                # NextAuth config
+│   ├── api.ts                     # API client (fetch wrapper)
+│   ├── auth.ts                    # NextAuth config
 │   └── utils.ts
-└── middleware.ts              # Auth + scope validation
+└── middleware.ts                  # Auth + scope validation
 ```
 
+**URLs Tenant Admin (EPIC 12)** :
+| Page | URL |
+|------|-----|
+| Login (partagé) | `/login` |
+| Dashboard | `/portal` ou `/portal/dashboard` |
+| Liste users tenant | `/portal/users` |
+| Détail user | `/portal/users/:id` |
+| Consentements | `/portal/consents` |
+| Matrice consentements | `/portal/consents/matrix` |
+| Demandes RGPD | `/portal/rgpd` |
+
 **Fonctionnement route groups** :
-- `(backoffice)/` est un route group → **pas d'URL `/backoffice`**
-- `(tenant)/` est un sous-route group → **pas d'URL `/tenant`**
-- URL finale : `/dashboard`, `/users`, `/consents`, `/rgpd`
-- Organisation logique du code (Super Admin vs Tenant Admin séparés)
+- `(tenant-admin)/` est un route group → **pas d'URL `/tenant-admin`**
+- `portal/` est un dossier réel → **préfixe URL visible `/portal/`**
+- Organisation logique du code (Super Admin `/admin/` vs Tenant Admin `/portal/` séparés)
 
 **Avantages RGPD** (cf. TASKS.md section 2.2) :
 - ✅ **Pas de CORS** : Frontend et API sur même origin (sécurité maximale)
 - ✅ **Gateway LLM inaccessible** : Imports Gateway LLM côté serveur uniquement (pas de bypass client)
 - ✅ **Middleware centralisé** : Résolution tenant, auth, permissions, audit trail
 - ✅ **Secrets centralisés** : Un seul `.env` (pas de duplication clés API)
+- ✅ **Séparation claire** : Pas de collision URL entre Super Admin (`/admin/`) et Tenant Admin (`/portal/`)
 
 ### 4.3 Middleware Isolation Tenant (Critique RGPD)
 
@@ -645,10 +695,11 @@ import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
+  const pathname = request.nextUrl.pathname;
 
   // Routes publiques (login, pages légales)
-  const publicPaths = ['/login', '/legal'];
-  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+  const publicPaths = ['/login', '/privacy-policy', '/terms-of-service', '/rgpd-info'];
+  if (publicPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
     return NextResponse.next();
   }
 
@@ -657,13 +708,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Routes Back Office Tenant Admin (scope TENANT) - route group (backoffice)/(tenant)/
-  const tenantAdminPaths = ['/dashboard', '/users', '/consents', '/rgpd'];
-  const isTenantRoute = tenantAdminPaths.some(path => 
-    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
-  );
-  
-  if (isTenantRoute && token.scope === 'TENANT') {
+  // ============================================
+  // Routes Tenant Admin (scope TENANT) - /portal/*
+  // ============================================
+  if (pathname.startsWith('/portal')) {
+    if (token.scope !== 'TENANT') {
+      return NextResponse.json(
+        { error: 'Forbidden: TENANT scope required' },
+        { status: 403 }
+      );
+    }
+
     // BLOCKER: Extraction tenantId depuis JWT
     const tenantId = token.tenantId as string;
     if (!tenantId) {
@@ -684,19 +739,30 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Routes Super Admin (scope PLATFORM) - route group (backoffice)/
-  const platformPaths = ['/tenants', '/audit', '/logs'];
-  const isPlatformRoute = platformPaths.some(path => 
-    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
-  );
-  
-  if (isPlatformRoute) {
+  // ============================================
+  // Routes Super Admin (scope PLATFORM) - /admin/*
+  // ============================================
+  if (pathname.startsWith('/admin')) {
     if (token.scope !== 'PLATFORM') {
       return NextResponse.json(
         { error: 'Forbidden: PLATFORM scope required' },
         { status: 403 }
       );
     }
+    return NextResponse.next();
+  }
+
+  // ============================================
+  // Routes End User (scope MEMBER) - /app/*
+  // ============================================
+  if (pathname.startsWith('/app')) {
+    if (token.scope !== 'MEMBER') {
+      return NextResponse.json(
+        { error: 'Forbidden: MEMBER scope required' },
+        { status: 403 }
+      );
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();

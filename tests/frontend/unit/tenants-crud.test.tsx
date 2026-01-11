@@ -16,16 +16,16 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import TenantsListPage from '../../../app/(backoffice)/tenants/page'
-import CreateTenantPage from '../../../app/(backoffice)/tenants/new/page'
-import TenantDetailsPage from '../../../app/(backoffice)/tenants/[id]/page'
-import EditTenantPage from '../../../app/(backoffice)/tenants/[id]/edit/page'
+import TenantsListPage from '../../../app/(platform-admin)/admin/tenants/page'
+import CreateTenantPage from '../../../app/(platform-admin)/admin/tenants/new/page'
+import TenantDetailsPage from '../../../app/(platform-admin)/admin/tenants/[id]/page'
+import EditTenantPage from '../../../app/(platform-admin)/admin/tenants/[id]/edit/page'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useParams: jest.fn(),
-  usePathname: jest.fn(() => '/backoffice/tenants'),
+  usePathname: jest.fn(() => '/admin/tenants'),
 }))
 
 // Mock toast

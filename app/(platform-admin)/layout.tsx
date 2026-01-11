@@ -1,29 +1,28 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
-import { Sidebar } from './_components/Sidebar'
+import { PlatformSidebar } from './_components/PlatformSidebar'
 
 /**
- * Back Office Layout - Protected Routes
+ * Platform Admin Layout - Super Admin Routes (/admin/*)
  *
  * Security:
- * - Checks authentication on mount
- * - Redirects to login if not authenticated
- * - Checks PLATFORM scope (redirects TENANT users)
- * - Restores session from sessionStorage
+ * - Requires PLATFORM scope
+ * - Redirects to /login if not authenticated
+ * - Redirects TENANT users to /portal
+ * - Redirects MEMBER users to /app
  *
  * RGPD Compliance:
  * - No sensitive data in layout
  * - Auth check respects session storage (auto-cleared on browser close)
  *
  * Routes:
- * - /login - Public (login form)
- * - /* - Protected (requires PLATFORM auth)
+ * - /admin/* - Protected (requires PLATFORM auth)
  */
-export default function BackofficeLayout({
+export default function PlatformAdminLayout({
   children,
 }: {
   children: React.ReactNode
@@ -31,15 +30,18 @@ export default function BackofficeLayout({
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated, checkAuth, user } = useAuthStore()
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Restore session from sessionStorage
     checkAuth()
+    // Allow state to settle before checking auth
+    setIsLoading(false)
+  }, [checkAuth])
 
-    // Allow login page without auth
-    if (pathname === '/login') {
-      return
-    }
+  useEffect(() => {
+    // Don't redirect while still loading
+    if (isLoading) return
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
@@ -47,20 +49,20 @@ export default function BackofficeLayout({
       return
     }
 
-    // Check PLATFORM scope
-    if (user?.scope !== ACTOR_SCOPE.PLATFORM) {
-      // Redirect TENANT users to their tenant interface (EPIC 12)
-      router.push('/')
+    // Check PLATFORM scope - redirect other scopes to their interfaces
+    if (user?.scope === ACTOR_SCOPE.TENANT) {
+      router.push('/portal')
+      return
     }
-  }, [isAuthenticated, checkAuth, router, pathname, user])
 
-  // Login page: no sidebar, just content
-  if (pathname === '/login') {
-    return <>{children}</>
-  }
+    if (user?.scope !== ACTOR_SCOPE.PLATFORM) {
+      router.push('/login')
+      return
+    }
+  }, [isLoading, isAuthenticated, router, pathname, user])
 
-  // Protected pages: show loading while checking auth
-  if (!isAuthenticated) {
+  // Show loading while checking auth
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -74,7 +76,7 @@ export default function BackofficeLayout({
   // Protected pages: sidebar + content
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <PlatformSidebar />
       <main className="flex-1 overflow-y-auto p-6">
         {children}
       </main>
