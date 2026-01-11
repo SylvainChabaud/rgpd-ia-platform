@@ -92,23 +92,97 @@ export interface GlobalStats {
   }
 }
 
-/**
- * Global stats (P1 aggregated data)
- */
-export interface GlobalStats {
-  totalTenants: number
-  totalUsers: number
-  activeJobs: number
-  totalEvents: number
-}
 
 /**
  * Tenant stats (P1 aggregated data)
+ * LOT 12.0 - Dashboard Tenant Admin
  */
 export interface TenantStats {
   usersCount: number
   aiJobsCount: number
   storageUsed: number
+}
+
+/**
+ * Tenant Dashboard Stats (P1 aggregated data)
+ * LOT 12.0 - Dashboard Tenant Admin
+ *
+ * RGPD: Aggregates only, no individual records
+ */
+export interface TenantDashboardStats {
+  users: {
+    active: number
+    suspended: number
+    total: number
+  }
+  aiJobs: {
+    success: number
+    failed: number
+    total: number
+    month: string // YYYY-MM format
+  }
+  consents: {
+    granted: number
+    revoked: number
+    pending: number
+  }
+  rgpd: {
+    exports: {
+      pending: number
+      completed: number
+    }
+    deletions: {
+      pending: number
+      completed: number
+    }
+  }
+}
+
+/**
+ * Tenant Stats API Response
+ * LOT 12.0
+ */
+export interface TenantStatsResponse {
+  stats: TenantDashboardStats
+  tenantName: string // P1 data - organization name (not personal data)
+}
+
+/**
+ * Activity Event for Tenant Dashboard (P1 data only)
+ * LOT 12.0 - Dashboard Tenant Admin
+ *
+ * RGPD: Event types and IDs only, no content
+ */
+export interface ActivityEvent {
+  id: string
+  type: string
+  actorId: string | null
+  targetId: string | null
+  createdAt: string
+  metadata?: Record<string, string | number | boolean | null>
+}
+
+/**
+ * Tenant Activity API Response
+ * LOT 12.0
+ */
+export interface TenantActivityResponse {
+  events: ActivityEvent[]
+  total: number
+}
+
+/**
+ * Tenant AI Jobs Stats (time series)
+ * LOT 12.0 - Dashboard charts
+ */
+export interface TenantAIJobsStatsResponse {
+  stats: Array<{
+    date: string
+    success: number
+    failed: number
+    total: number
+  }>
+  days: number
 }
 
 // ============================================

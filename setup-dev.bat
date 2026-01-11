@@ -168,7 +168,7 @@ REM Étape 1: Nettoyage Docker
 REM ============================================================================
 
 if "%SKIP_CLEAN%"=="false" (
-    echo [96m[Étape 1/15][0m Nettoyage de l'environnement Docker...
+    echo [96m[Étape 1/16][0m Nettoyage de l'environnement Docker...
     echo.
 
     echo [90m  Arrêt des services Docker...[0m
@@ -183,7 +183,7 @@ if "%SKIP_CLEAN%"=="false" (
     echo [92m✓[0m Docker nettoyé
     echo.
 ) else (
-    echo [96m[Étape 1/15][0m [93m⊘[0m  Nettoyage Docker ignoré (--skip-clean)
+    echo [96m[Étape 1/16][0m [93m⊘[0m  Nettoyage Docker ignoré (--skip-clean)
     echo.
 )
 
@@ -191,7 +191,7 @@ REM ============================================================================
 REM Étape 2: Démarrage PostgreSQL
 REM ============================================================================
 
-echo [96m[Étape 2/15][0m Démarrage de PostgreSQL...
+echo [96m[Étape 2/16][0m Démarrage de PostgreSQL...
 echo.
 
 docker-compose -f %COMPOSE_FILE% up -d %DB_SERVICE%
@@ -209,7 +209,7 @@ REM ============================================================================
 REM Étape 3: Attente de la disponibilité PostgreSQL
 REM ============================================================================
 
-echo [96m[Étape 3/15][0m Attente de la disponibilité de PostgreSQL...
+echo [96m[Étape 3/16][0m Attente de la disponibilité de PostgreSQL...
 echo.
 
 set MAX_RETRIES=30
@@ -239,7 +239,7 @@ REM ============================================================================
 REM Étape 4: Exécution des migrations SQL
 REM ============================================================================
 
-echo [96m[Étape 4/15][0m Exécution des migrations SQL...
+echo [96m[Étape 4/16][0m Exécution des migrations SQL...
 echo.
 
 call npm run migrate
@@ -257,7 +257,7 @@ REM ============================================================================
 REM Étape 5: Seed des données de développement (violations RGPD)
 REM ============================================================================
 
-echo [96m[Étape 5/15][0m Seed des violations RGPD de simulation...
+echo [96m[Étape 5/16][0m Seed des violations RGPD de simulation...
 echo.
 
 REM Exécuter le seed SQL via stdin pour éviter problèmes de montage de volumes
@@ -274,7 +274,7 @@ REM ============================================================================
 REM Étape 6: Création du Super Admin
 REM ============================================================================
 
-echo [96m[Étape 6/15][0m Création du Super Admin...
+echo [96m[Étape 6/16][0m Création du Super Admin...
 echo.
 
 REM Note: BOOTSTRAP_MODE doit être à true dans .env pour que cette commande fonctionne
@@ -293,7 +293,7 @@ REM ============================================================================
 REM Étape 6: Création du tenant
 REM ============================================================================
 
-echo [96m[Étape 7/15][0m Création du tenant "%TENANT1_NAME%"...
+echo [96m[Étape 7/16][0m Création du tenant "%TENANT1_NAME%"...
 echo.
 
 call npm run bootstrap:tenant -- --name "%TENANT1_NAME%" --slug %TENANT1_SLUG%
@@ -311,7 +311,7 @@ REM ============================================================================
 REM Étape 7: Création du Tenant Admin
 REM ============================================================================
 
-echo [96m[Étape 8/15][0m Création du Tenant Admin...
+echo [96m[Étape 8/16][0m Création du Tenant Admin...
 echo.
 
 call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_ADMIN_EMAIL% --displayName "%TENANT1_ADMIN_NAME%" --password %TENANT1_ADMIN_PASSWORD%
@@ -329,7 +329,7 @@ REM ============================================================================
 REM Étape 8: Création des utilisateurs Tenant 1 (Acme Corp)
 REM ============================================================================
 
-echo [96m[Étape 9/15][0m Création des utilisateurs pour "%TENANT1_NAME%"...
+echo [96m[Étape 9/16][0m Création des utilisateurs pour "%TENANT1_NAME%"...
 echo.
 
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER1_EMAIL% --displayName "%TENANT1_USER1_NAME%" --password %TENANT1_USER1_PASSWORD%
@@ -348,7 +348,7 @@ REM ============================================================================
 REM Étape 9: Création du Tenant 2 (TechCorp)
 REM ============================================================================
 
-echo [96m[Étape 10/15][0m Création du tenant "%TENANT2_NAME%"...
+echo [96m[Étape 10/16][0m Création du tenant "%TENANT2_NAME%"...
 echo.
 
 call npm run bootstrap:tenant -- --name "%TENANT2_NAME%" --slug %TENANT2_SLUG%
@@ -361,7 +361,7 @@ REM ============================================================================
 REM Étape 10: Création du Tenant Admin pour TechCorp
 REM ============================================================================
 
-echo [96m[Étape 11/15][0m Création du Tenant Admin pour %TENANT2_NAME%...
+echo [96m[Étape 11/16][0m Création du Tenant Admin pour %TENANT2_NAME%...
 echo.
 
 call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_ADMIN_EMAIL% --displayName "%TENANT2_ADMIN_NAME%" --password %TENANT2_ADMIN_PASSWORD%
@@ -374,7 +374,7 @@ REM ============================================================================
 REM Étape 11: Création des utilisateurs Tenant 2 (TechCorp)
 REM ============================================================================
 
-echo [96m[Étape 12/15][0m Création des utilisateurs pour %TENANT2_NAME%...
+echo [96m[Étape 12/16][0m Création des utilisateurs pour %TENANT2_NAME%...
 echo.
 
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER1_EMAIL% --displayName "%TENANT2_USER1_NAME%" --password %TENANT2_USER1_PASSWORD%
@@ -390,7 +390,7 @@ REM ============================================================================
 REM Étape 12: Création du Tenant 3 (GlobalServices)
 REM ============================================================================
 
-echo [96m[Étape 13/15][0m Création du tenant "%TENANT3_NAME%"...
+echo [96m[Étape 13/16][0m Création du tenant "%TENANT3_NAME%"...
 echo.
 
 call npm run bootstrap:tenant -- --name "%TENANT3_NAME%" --slug %TENANT3_SLUG%
@@ -403,7 +403,7 @@ REM ============================================================================
 REM Étape 13: Création du Tenant Admin pour GlobalServices
 REM ============================================================================
 
-echo [96m[Étape 14/15][0m Création du Tenant Admin pour %TENANT3_NAME%...
+echo [96m[Étape 14/16][0m Création du Tenant Admin pour %TENANT3_NAME%...
 echo.
 
 call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_ADMIN_EMAIL% --displayName "%TENANT3_ADMIN_NAME%" --password %TENANT3_ADMIN_PASSWORD%
@@ -416,7 +416,7 @@ REM ============================================================================
 REM Étape 14: Création des utilisateurs Tenant 3 (GlobalServices)
 REM ============================================================================
 
-echo [96m[Étape 15/15][0m Création des utilisateurs pour %TENANT3_NAME%...
+echo [96m[Étape 15/16][0m Création des utilisateurs pour %TENANT3_NAME%...
 echo.
 
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER1_EMAIL% --displayName "%TENANT3_USER1_NAME%" --password %TENANT3_USER1_PASSWORD%
@@ -429,6 +429,23 @@ call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENAN
 if errorlevel 1 goto :user_error
 
 echo [92m✓[0m 3 utilisateurs créés pour %TENANT3_NAME%
+echo.
+
+REM ============================================================================
+REM Étape 16: Seed des données dashboard (consents, ai_jobs, rgpd_requests, audit_events)
+REM ============================================================================
+
+echo [96m[Étape 16/16][0m Seed des données dashboard...
+echo.
+
+REM Exécuter le seed SQL via stdin pour éviter problèmes de montage de volumes
+type migrations\seeds\dev-dashboard-data.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
+
+if errorlevel 1 (
+    echo [93m⚠[0m  Échec du seed des données dashboard (non bloquant)
+) else (
+    echo [92m✓[0m Données dashboard créées (consents, ai_jobs, rgpd_requests, audit_events)
+)
 echo.
 
 REM ============================================================================

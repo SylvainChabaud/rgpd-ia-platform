@@ -4,9 +4,11 @@ import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { TenantSidebar } from './_components/TenantSidebar'
 
 /**
  * Tenant Admin Layout - Tenant Routes (/portal/*)
+ * LOT 12.0 - Dashboard Tenant Admin
  *
  * Security:
  * - Requires TENANT scope
@@ -21,9 +23,6 @@ import { ACTOR_SCOPE } from '@/shared/actorScope'
  *
  * Routes:
  * - /portal/* - Protected (requires TENANT auth)
- *
- * Note: This is a placeholder layout for EPIC 12 implementation.
- * The TenantSidebar component will be created in LOT 12.0.
  */
 export default function TenantAdminLayout({
   children,
@@ -68,21 +67,9 @@ export default function TenantAdminLayout({
     )
   }
 
-  // Placeholder layout - TenantSidebar will be added in EPIC 12
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* TenantSidebar will be added in LOT 12.0 */}
-      <aside className="flex h-screen w-64 flex-col border-r bg-muted/40">
-        <div className="border-b p-6">
-          <h1 className="text-xl font-bold">RGPD Platform</h1>
-          <p className="text-sm text-muted-foreground">Tenant Admin</p>
-        </div>
-        <div className="flex-1 p-4">
-          <p className="text-sm text-muted-foreground">
-            Interface Tenant Admin - EPIC 12
-          </p>
-        </div>
-      </aside>
+      <TenantSidebar />
       <main className="flex-1 overflow-y-auto p-6">
         {children}
       </main>

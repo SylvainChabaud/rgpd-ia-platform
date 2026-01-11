@@ -136,10 +136,22 @@ async function seedTestData() {
       console.warn('⚠️  Failed to seed security incidents (non-blocking):', error)
     }
 
+    // 6. Seed dashboard data (consents, ai_jobs, rgpd_requests, audit_events)
+    console.log('📊 Seeding dashboard data...')
+    const dashboardSeedPath = join(__dirname, '../../../migrations/seeds/dev-dashboard-data.sql')
+    const dashboardSeedSQL = readFileSync(dashboardSeedPath, 'utf-8')
+
+    try {
+      await pool.query(dashboardSeedSQL)
+      console.log('✅ Dashboard data seeded (consents, ai_jobs, rgpd_requests, audit_events)')
+    } catch (error) {
+      console.warn('⚠️  Failed to seed dashboard data (non-blocking):', error)
+    }
+
     console.log('✅ Test data seeded successfully!')
     console.log('\n📝 Test credentials:')
-    console.log('   PLATFORM Admin: admin@platform.local / AdminPass123!')
-    console.log('   TENANT Admin:   admin@tenant1.local / AdminPass123!')
+    console.log('   PLATFORM Admin: admin@platform.local / Admin1234')
+    console.log('   TENANT Admin:   admin@tenant1.local / Admin1234')
 
   } catch (error) {
     console.error('❌ Error seeding test data:', error)
