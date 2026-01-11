@@ -1,8 +1,8 @@
 /**
  * Users Endpoints (Tenant-scoped)
- * LOT 5.3 - API Layer
+ * LOT 5.3 - API Layer (Enhanced in LOT 12.1)
  *
- * GET /api/users - List users in tenant
+ * GET /api/users - List users in tenant (with filters)
  * POST /api/users - Create user in tenant
  *
  * RGPD compliance:
@@ -22,11 +22,33 @@ import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHa
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, validationError, conflictError } from '@/lib/errorResponse';
-import { validateBody, CreateUserSchema, PaginationSchema, validateQuery } from '@/lib/validation';
-import { ZodError } from 'zod';
+import { validateBody, CreateUserSchema } from '@/lib/validation';
+import { ZodError, z } from 'zod';
 
 /**
- * GET /api/users - List users in tenant
+ * Extended pagination schema with filters for LOT 12.1
+ */
+const ListUsersQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(100).default(50),
+  offset: z.coerce.number().min(0).default(0),
+  role: z.string().optional(),
+  status: z.enum(['active', 'suspended']).optional(),
+  search: z.string().max(100).optional(),
+  sortBy: z.enum(['name', 'createdAt', 'role']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+/**
+ * GET /api/users - List users in tenant (with filters)
+ *
+ * Query params:
+ * - limit: number (default: 50, max: 100)
+ * - offset: number (default: 0)
+ * - role: string (filter by role: admin, member)
+ * - status: 'active' | 'suspended' (filter by suspension status)
+ * - search: string (search in displayName)
+ * - sortBy: 'name' | 'createdAt' | 'role' (default: createdAt)
+ * - sortOrder: 'asc' | 'desc' (default: desc)
  */
 export const GET = withLogging(
   withAuth(
@@ -35,11 +57,19 @@ export const GET = withLogging(
         try {
           const context = requireContext(req);
 
-          // Parse query params
+          // Parse query params with extended schema
           const searchParams = req.nextUrl.searchParams;
-          let query;
+          let query: z.infer<typeof ListUsersQuerySchema>;
           try {
-            query = validateQuery(searchParams, PaginationSchema);
+            query = ListUsersQuerySchema.parse({
+              limit: searchParams.get('limit') || undefined,
+              offset: searchParams.get('offset') || undefined,
+              role: searchParams.get('role') || undefined,
+              status: searchParams.get('status') || undefined,
+              search: searchParams.get('search') || undefined,
+              sortBy: searchParams.get('sortBy') || undefined,
+              sortOrder: searchParams.get('sortOrder') || undefined,
+            });
           } catch (error: unknown) {
             if (error instanceof ZodError) {
               return NextResponse.json(validationError(error.issues), { status: 400 });
@@ -47,17 +77,31 @@ export const GET = withLogging(
             return NextResponse.json(validationError({}), { status: 400 });
           }
 
-          // Fetch users
+          // Fetch users with filters
           const userRepo = new PgUserRepo();
-          const users = await userRepo.listByTenant(
-            context.tenantId!,
-            query.limit,
-            query.offset
-          );
+          const users = await userRepo.listFilteredByTenant({
+            tenantId: context.tenantId!,
+            limit: query.limit,
+            offset: query.offset,
+            role: query.role,
+            status: query.status,
+            search: query.search,
+            sortBy: query.sortBy,
+            sortOrder: query.sortOrder,
+          });
+
+          // Get total count for pagination
+          const total = await userRepo.countByTenant({
+            tenantId: context.tenantId!,
+            role: query.role,
+            status: query.status,
+            search: query.search,
+          });
 
           logger.info({
             tenantId: context.tenantId,
             count: users.length,
+            filters: { role: query.role, status: query.status, search: query.search ? '[REDACTED]' : undefined },
           }, 'Users listed');
 
           // RGPD-safe: Do not expose email_hash or password_hash
@@ -66,8 +110,16 @@ export const GET = withLogging(
               id: user.id,
               displayName: user.displayName,
               role: user.role,
-              createdAt: user.createdAt,
+              scope: user.scope,
+              createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+              dataSuspended: user.dataSuspended || false,
+              dataSuspendedAt: user.dataSuspendedAt instanceof Date
+                ? user.dataSuspendedAt.toISOString()
+                : (user.dataSuspendedAt || null),
             })),
+            total,
+            limit: query.limit,
+            offset: query.offset,
           });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

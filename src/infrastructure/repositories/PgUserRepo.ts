@@ -235,6 +235,120 @@ export class PgUserRepo implements UserRepo {
     return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row))
   }
 
+  /**
+   * List users by tenant with extended filters (LOT 12.1)
+   */
+  async listFilteredByTenant({
+    tenantId,
+    limit = 50,
+    offset = 0,
+    role,
+    status,
+    search,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  }: {
+    tenantId: string
+    limit?: number
+    offset?: number
+    role?: string
+    status?: 'active' | 'suspended'
+    search?: string
+    sortBy?: 'name' | 'createdAt' | 'role'
+    sortOrder?: 'asc' | 'desc'
+  }): Promise<User[]> {
+    // BLOCKER: validate tenantId (RGPD isolation)
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for user list');
+    }
+
+    const where: string[] = ['tenant_id = $1', 'deleted_at IS NULL']
+    const values: unknown[] = [tenantId]
+    let idx = 2
+
+    if (role) {
+      where.push(`role = $${idx++}`)
+      values.push(role)
+    }
+
+    if (status === 'active') {
+      where.push(`(data_suspended IS NULL OR data_suspended = false)`)
+    } else if (status === 'suspended') {
+      where.push(`data_suspended = true`)
+    }
+
+    if (search) {
+      where.push(`display_name ILIKE $${idx++}`)
+      values.push(`%${search}%`)
+    }
+
+    // Map sortBy to actual column names
+    const sortColumn = {
+      name: 'display_name',
+      createdAt: 'created_at',
+      role: 'role',
+    }[sortBy] || 'created_at'
+
+    const order = sortOrder === 'asc' ? 'ASC' : 'DESC'
+
+    const sql = `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
+      data_suspended, data_suspended_at, data_suspended_reason
+      FROM users
+      WHERE ${where.join(' AND ')}
+      ORDER BY ${sortColumn} ${order}
+      LIMIT $${idx++} OFFSET $${idx++}`
+
+    values.push(limit)
+    values.push(offset)
+
+    const result = await pool.query(sql, values)
+    return result.rows.map((row: Record<string, unknown>) => this.mapRowWithSuspension(row))
+  }
+
+  /**
+   * Count users by tenant with filters (LOT 12.1)
+   */
+  async countByTenant({
+    tenantId,
+    role,
+    status,
+    search,
+  }: {
+    tenantId: string
+    role?: string
+    status?: 'active' | 'suspended'
+    search?: string
+  }): Promise<number> {
+    // BLOCKER: validate tenantId (RGPD isolation)
+    if (!tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required for user count');
+    }
+
+    const where: string[] = ['tenant_id = $1', 'deleted_at IS NULL']
+    const values: unknown[] = [tenantId]
+    let idx = 2
+
+    if (role) {
+      where.push(`role = $${idx++}`)
+      values.push(role)
+    }
+
+    if (status === 'active') {
+      where.push(`(data_suspended IS NULL OR data_suspended = false)`)
+    } else if (status === 'suspended') {
+      where.push(`data_suspended = true`)
+    }
+
+    if (search) {
+      where.push(`display_name ILIKE $${idx++}`)
+      values.push(`%${search}%`)
+    }
+
+    const sql = `SELECT COUNT(*) as total FROM users WHERE ${where.join(' AND ')}`
+    const result = await pool.query(sql, values)
+    return parseInt(result.rows[0]?.total || '0', 10)
+  }
+
   private mapRow(row: Record<string, unknown>): User {
     return {
       id: row.id as string,

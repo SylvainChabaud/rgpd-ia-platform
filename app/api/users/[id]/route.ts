@@ -72,6 +72,8 @@ export const GET = withLogging(
               role: user.role,
               tenantId: user.tenantId,
               createdAt: user.createdAt,
+              dataSuspended: user.dataSuspended,
+              dataSuspendedAt: user.dataSuspendedAt?.toISOString() || null,
             },
           });
         } catch (error: unknown) {
