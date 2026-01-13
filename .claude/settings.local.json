@@ -71,7 +71,20 @@
       "Bash(curl:*)",
       "Bash(printf:*)",
       "Bash(taskkill:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(docker exec:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx next build --no-turbopack)",
+      "Bash(PGPASSWORD=devpass psql:*)",
+      "Bash(docker ps:*)",
+      "Bash(set \"DATABASE_URL=postgresql://rgpd_user:rgpd_password@localhost:5432/rgpd_platform\")",
+      "Read(//c/**)",
+      "Bash(powershell:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: synchronize documentation with code reality \\(LOTs 1-12\\)\n\nBased on exhaustive code analysis:\n- Migrations: 23 SQL files \\(001-023\\) + 3 seeds\n- Tests: 191 files \\(720+ tests\\)\n- API routes: 65 endpoints\n- Use-cases: 32 files\n\nIMPLEMENTATION_INDEX.md:\n- Fix API routes count: 78 → 65\n- Fix test files count: 190 → 191\n- Fix migrations LOT attribution: 004-012 = LOT 4.0 \\(not 6.2\\)\n- Add EPIC 12 detailed section \\(LOT 12.0-12.2\\)\n\nRGPD_MATRICE_CONFORMITE.md:\n- Update scope: EPICs 1-11 → EPICs 1-12\n- Add EPIC 9, 10, 11, 12 to synthesis table\n- Fix total tests: 252+ → 720+ \\(191 files\\)\n\nmigrations/README.md:\n- Fix EPIC 11/12 migration references\n- Fix migration 017 LOT: 11.4 → 11.0\n- Fix migration 018 LOT: 11.2 → 11.0\n\ntests/README.md:\n- Update total tests: 670 → 720+\n- Add EPIC 12 to coverage table \\(~50 tests\\)\n\nOther docs:\n- ARCHITECTURE_GUIDE.md: update date, migrations 001-023\n- QUICK_START.md: fix test files count\n- PLATEFORME_VISION_MACRO.md: update EPIC 12 status\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(lot-12.2\\): add purposes and templates migrations\n\nMigrations for consent management system:\n- 019_purposes.sql: purposes table \\(AI processing purposes\\)\n- 020_purpose_templates.sql: system purpose templates\n- 021_additional_purpose_templates.sql: additional templates\n- 022_critical_purpose_templates.sql: critical templates \\(health, legal\\)\n- 023_professional_purpose_templates.sql: professional templates\n\nSeeds:\n- dev-purposes-consents.sql: demo data for development\n\nRGPD Articles covered:\n- Art. 6 \\(Legal basis for processing\\)\n- Art. 7 \\(Conditions for consent\\)\n- Art. 13-14 \\(Information to be provided\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(lot-12.2\\): add purposes backend infrastructure\n\nPorts \\(interfaces\\):\n- PurposeRepo.ts: purpose CRUD operations\n- PurposeTemplateRepo.ts: template retrieval\n\nRepositories \\(PostgreSQL implementations\\):\n- PgPurposeRepo.ts: purposes with tenant isolation\n- PgPurposeTemplateRepo.ts: system templates\n\nServices:\n- CustomPurposeValidator.ts: RGPD-compliant purpose validation\n\nFrontend hooks \\(React Query\\):\n- useConsents.ts: consent matrix operations\n- usePurposeTemplates.ts: template management\n\nConstants:\n- rgpd.ts: RGPD-related constants\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
