@@ -243,7 +243,7 @@ describe('POST /api/users/:id/suspend', () => {
         expect.objectContaining({
           eventName: 'user.suspended',
           targetId: TEST_USER_ID,
-          actorScope: 'TENANT',
+          actorScope: ACTOR_SCOPE.TENANT,
           tenantId: TEST_TENANT_ID,
         })
       );

@@ -215,7 +215,7 @@ describe('POST /api/users/:id/reactivate', () => {
         expect.objectContaining({
           eventName: 'user.reactivated',
           targetId: TEST_USER_ID,
-          actorScope: 'TENANT',
+          actorScope: ACTOR_SCOPE.TENANT,
           tenantId: TEST_TENANT_ID,
         })
       );

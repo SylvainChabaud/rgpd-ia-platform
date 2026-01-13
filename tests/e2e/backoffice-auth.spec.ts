@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { ACTOR_SCOPE } from '@/shared/actorScope'
 
 /**
  * E2E Tests - LOT 11.0 (Back Office Auth Flow)
@@ -21,14 +22,14 @@ const PLATFORM_ADMIN = {
   email: 'admin@platform.local',
   password: 'AdminPass123!',
   displayName: 'Admin Platform',
-  scope: 'PLATFORM',
+  scope: ACTOR_SCOPE.PLATFORM,
 }
 
 const TENANT_ADMIN = {
   email: 'admin@tenant1.local',
   password: 'TenantPass123!',
   displayName: 'Admin Tenant',
-  scope: 'TENANT',
+  scope: ACTOR_SCOPE.TENANT,
 }
 
 test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
@@ -161,11 +162,11 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
       localStorage.clear()
     })
 
-    // Try accessing protected routes (only test existing pages)
+    // Try accessing protected routes (LOT 11.0-11.3 implemented)
     const protectedRoutes = [
       '/',
-      // '/tenants', // Not implemented yet (LOT 11.1)
-      // '/audit',   // Not implemented yet (LOT 11.3)
+      '/tenants',  // LOT 11.1 ✅
+      '/audit',    // LOT 11.3 ✅
     ]
 
     for (const route of protectedRoutes) {

@@ -11,7 +11,7 @@ import { randomUUID } from 'crypto';
  * Tests tenant management including:
  * - CRUD operations
  * - Soft delete support (RGPD Art. 17)
- * - Suspension system (LOT 11.4)
+ * - Suspension system (LOT 11.1)
  * - Pagination
  */
 describe('PgTenantRepo', () => {

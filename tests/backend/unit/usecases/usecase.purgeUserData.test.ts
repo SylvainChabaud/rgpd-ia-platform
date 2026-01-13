@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { purgeUserData } from '@/app/usecases/rgpd/purgeUserData';
 import type { RgpdRequestRepo } from '@/app/ports/RgpdRequestRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
@@ -106,7 +107,7 @@ describe('purgeUserData', () => {
       expect.objectContaining({
         eventName: 'rgpd.deletion.completed',
         tenantId: 'tenant-1',
-        actorScope: 'PLATFORM',
+        actorScope: ACTOR_SCOPE.PLATFORM,
         actorId: 'system',
       })
     );
@@ -372,7 +373,7 @@ describe('purgeUserData', () => {
     expect(mockAuditWriter.write).toHaveBeenCalledWith(
       expect.objectContaining({
         eventName: 'rgpd.deletion.completed',
-        actorScope: 'PLATFORM',
+        actorScope: ACTOR_SCOPE.PLATFORM,
         actorId: 'system',
         tenantId: 'tenant-1',
         metadata: expect.objectContaining({

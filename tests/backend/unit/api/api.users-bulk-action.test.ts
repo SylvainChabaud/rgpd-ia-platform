@@ -297,7 +297,7 @@ describe('POST /api/users/bulk-action', () => {
       expect(mockAuditWrite).toHaveBeenCalledWith(
         expect.objectContaining({
           eventName: 'user.suspended',
-          actorScope: 'TENANT',
+          actorScope: ACTOR_SCOPE.TENANT,
           tenantId: TEST_TENANT_ID,
         })
       );

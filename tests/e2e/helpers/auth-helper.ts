@@ -1,23 +1,24 @@
 /**
  * E2E Auth Helper
- * 
+ *
  * Provides reusable authentication functions for E2E tests
  */
 
 import { Page, expect } from '@playwright/test'
+import { ACTOR_SCOPE } from '@/shared/actorScope'
 
 export const TEST_USERS = {
   PLATFORM_ADMIN: {
     email: 'admin@platform.local',
     password: 'AdminPass123!',
     displayName: 'Admin Platform',
-    scope: 'PLATFORM',
+    scope: ACTOR_SCOPE.PLATFORM,
   },
   TENANT_ADMIN: {
     email: 'admin@tenant1.local',
     password: 'TenantPass123!',
     displayName: 'Admin Tenant',
-    scope: 'TENANT',
+    scope: ACTOR_SCOPE.TENANT,
   },
 }
 
