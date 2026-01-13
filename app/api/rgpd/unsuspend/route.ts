@@ -4,6 +4,7 @@ import { unsuspendUserData } from '@/app/usecases/suspension/unsuspendUserData';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
 import { ACTOR_ROLE } from '@/shared/actorRole';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 /**
  * POST /api/rgpd/unsuspend - Unsuspend user data processing
@@ -40,7 +41,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
     // Tenant context required
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: 'Tenant context required' }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { 'content-type': 'application/json' },

@@ -56,11 +56,13 @@ export const GET = withLogging(
 
           // Fetch stats in parallel
           const [jobsResult, consentsResult, auditResult] = await Promise.all([
-            // AI Jobs count by status
+            // AI Jobs count by status (all statuses for accurate breakdown)
             pool.query(
               `SELECT
                 COUNT(*) FILTER (WHERE status = 'COMPLETED') as success,
                 COUNT(*) FILTER (WHERE status = 'FAILED') as failed,
+                COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+                COUNT(*) FILTER (WHERE status = 'RUNNING') as running,
                 COUNT(*) as total
                FROM ai_jobs
                WHERE tenant_id = $1 AND user_id = $2`,
@@ -89,6 +91,8 @@ export const GET = withLogging(
             jobs: {
               success: parseInt(jobsResult.rows[0]?.success || '0', 10),
               failed: parseInt(jobsResult.rows[0]?.failed || '0', 10),
+              pending: parseInt(jobsResult.rows[0]?.pending || '0', 10),
+              running: parseInt(jobsResult.rows[0]?.running || '0', 10),
               total: parseInt(jobsResult.rows[0]?.total || '0', 10),
             },
             consents: {

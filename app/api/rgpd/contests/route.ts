@@ -2,6 +2,7 @@ import { requireAuth } from '@/app/http/requireAuth';
 import { toErrorResponse } from '@/app/http/errorResponse';
 import { listDisputes } from '@/app/usecases/dispute/listDisputes';
 import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 /**
  * GET /api/rgpd/contests - List user disputes
@@ -20,7 +21,7 @@ export const GET = requireAuth(async ({ actor }) => {
     // Tenant context required
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: 'Tenant context required' }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { 'content-type': 'application/json' },

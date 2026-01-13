@@ -61,14 +61,16 @@ export const GET = withLogging(
             FROM tenants
           `),
 
-          // Total users (active vs suspended/deleted, excluding users from suspended tenants)
+          // Total users (active vs suspended, excluding soft-deleted users)
+          // Note: deleted users are excluded from both counts to match listFiltered behavior
           pool.query(`
             SELECT
-              COUNT(*) FILTER (WHERE u.deleted_at IS NULL AND u.data_suspended = false AND (u.tenant_id IS NULL OR t.suspended_at IS NULL)) as active,
-              COUNT(*) FILTER (WHERE u.deleted_at IS NOT NULL OR u.data_suspended = true OR (u.tenant_id IS NOT NULL AND t.suspended_at IS NOT NULL)) as suspended,
+              COUNT(*) FILTER (WHERE u.data_suspended = false AND (u.tenant_id IS NULL OR t.suspended_at IS NULL)) as active,
+              COUNT(*) FILTER (WHERE u.data_suspended = true OR (u.tenant_id IS NOT NULL AND t.suspended_at IS NOT NULL)) as suspended,
               COUNT(*) as total
             FROM users u
             LEFT JOIN tenants t ON u.tenant_id = t.id
+            WHERE u.deleted_at IS NULL
           `),
 
           // AI jobs (this month, success vs failed)

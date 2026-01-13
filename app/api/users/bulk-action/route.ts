@@ -21,6 +21,7 @@ import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, validationError } from '@/lib/errorResponse';
 import { z } from 'zod';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 /**
  * Bulk action schema
@@ -106,7 +107,7 @@ export const POST = withLogging(
                 await auditWriter.write({
                   id: crypto.randomUUID(),
                   eventName: 'user.suspended',
-                  actorScope: 'TENANT',
+                  actorScope: ACTOR_SCOPE.TENANT,
                   actorId: context.userId,
                   tenantId: context.tenantId!,
                   targetId: userId,
@@ -116,7 +117,7 @@ export const POST = withLogging(
                 await auditWriter.write({
                   id: crypto.randomUUID(),
                   eventName: 'user.reactivated',
-                  actorScope: 'TENANT',
+                  actorScope: ACTOR_SCOPE.TENANT,
                   actorId: context.userId,
                   tenantId: context.tenantId!,
                   targetId: userId,

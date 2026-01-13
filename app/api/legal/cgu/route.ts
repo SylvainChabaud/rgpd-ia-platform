@@ -7,6 +7,7 @@ import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
 import { randomUUID } from 'crypto';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { toPublicCguAcceptance } from '@/domain/legal/CguAcceptance';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 export const runtime = 'nodejs';
 
@@ -67,7 +68,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
 
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: 'Tenant context required' }),
+        JSON.stringify(tenantContextRequiredError()),
         { status: 403, headers: { 'content-type': 'application/json' } }
       );
     }

@@ -2,6 +2,7 @@ import { requireAuth } from "@/app/http/requireAuth";
 import { toErrorResponse } from "@/app/http/errorResponse";
 import { downloadExport } from "@/app/usecases/rgpd/downloadExport";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
+import { tenantContextRequiredError } from "@/lib/errorResponse";
 
 /**
  * POST /api/rgpd/export/download - Download encrypted RGPD export
@@ -38,7 +39,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
     // IMPORTANT: Require tenant context
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: "Tenant context required" }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { "content-type": "application/json" },

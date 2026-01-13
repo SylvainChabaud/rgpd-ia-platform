@@ -3,6 +3,7 @@ import { stubAuthProvider } from '@/app/auth/stubAuthProvider';
 import { resolveDispute } from '@/app/usecases/dispute/resolveDispute';
 import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 /**
  * PATCH /api/rgpd/contests/:id - Resolve dispute (admin only)
@@ -54,7 +55,7 @@ export async function PATCH(
     // Tenant context required
     if (!actor.tenantId) {
       return NextResponse.json(
-        { error: 'Tenant context required' },
+        tenantContextRequiredError(),
         { status: 403 }
       );
     }

@@ -4,6 +4,7 @@ import { submitOpposition } from '@/app/usecases/opposition/submitOpposition';
 import { PgOppositionRepo } from '@/infrastructure/repositories/PgOppositionRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
 import type { TreatmentType } from '@/domain/legal/UserOpposition';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 /**
  * POST /api/rgpd/oppose - Submit user opposition to data processing
@@ -41,7 +42,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
     // Tenant context required
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: 'Tenant context required' }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { 'content-type': 'application/json' },

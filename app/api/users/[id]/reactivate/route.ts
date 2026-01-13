@@ -19,6 +19,7 @@ import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, notFoundError, forbiddenError } from '@/lib/errorResponse';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 /**
  * POST /api/users/:id/reactivate - Reactivate suspended user
@@ -74,7 +75,7 @@ export const POST = withLogging(
           await auditWriter.write({
             id: crypto.randomUUID(),
             eventName: 'user.reactivated',
-            actorScope: 'TENANT',
+            actorScope: ACTOR_SCOPE.TENANT,
             actorId: context.userId,
             tenantId: context.tenantId!,
             targetId: userId,

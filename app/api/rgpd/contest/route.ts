@@ -3,6 +3,7 @@ import { toErrorResponse } from '@/app/http/errorResponse';
 import { submitDispute } from '@/app/usecases/dispute/submitDispute';
 import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
 import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
+import { tenantContextRequiredError } from '@/lib/errorResponse';
 
 /**
  * POST /api/rgpd/contest - Submit dispute on automated AI decision
@@ -42,7 +43,7 @@ export const POST = requireAuth(async ({ request, actor }) => {
     // Tenant context required
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: 'Tenant context required' }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { 'content-type': 'application/json' },

@@ -21,6 +21,7 @@ import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, notFoundError, forbiddenError, validationError } from '@/lib/errorResponse';
 import { z } from 'zod';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
 
 /**
  * Suspend reason schema
@@ -96,7 +97,7 @@ export const POST = withLogging(
           await auditWriter.write({
             id: crypto.randomUUID(),
             eventName: 'user.suspended',
-            actorScope: 'TENANT',
+            actorScope: ACTOR_SCOPE.TENANT,
             actorId: context.userId,
             tenantId: context.tenantId!,
             targetId: userId,

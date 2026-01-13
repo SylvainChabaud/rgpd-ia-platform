@@ -6,6 +6,7 @@ import { PgUserRepo } from "@/infrastructure/repositories/PgUserRepo";
 import { PgConsentRepo } from "@/infrastructure/repositories/PgConsentRepo";
 import { PgAiJobRepo } from "@/infrastructure/repositories/PgAiJobRepo";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
+import { tenantContextRequiredError } from "@/lib/errorResponse";
 
 /**
  * DELETE /api/rgpd/user - Request user data deletion (RGPD Art. 17)
@@ -46,7 +47,7 @@ export const DELETE = requireAuth(async ({ request, actor }) => {
     // IMPORTANT: Require tenant context
     if (!actor.tenantId) {
       return new Response(
-        JSON.stringify({ error: "Tenant context required" }),
+        JSON.stringify(tenantContextRequiredError()),
         {
           status: 403,
           headers: { "content-type": "application/json" },

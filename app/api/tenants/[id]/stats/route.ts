@@ -87,6 +87,7 @@ export const GET = withLogging(
           consentsResult,
           rgpdExportsResult,
           rgpdDeletionsResult,
+          storageResult,
         ] = await Promise.all([
           // Users stats (tenant-scoped)
           pool.query(
@@ -152,6 +153,32 @@ export const GET = withLogging(
             `,
             [tenantId]
           ),
+
+          // Storage usage (tenant-scoped) - estimate based on row counts and avg row size
+          // PostgreSQL pg_total_relation_size would require superuser, so we estimate
+          pool.query(
+            `
+            SELECT
+              COALESCE(SUM(storage_bytes), 0) as total_bytes
+            FROM (
+              -- AI Jobs: ~500 bytes per row (metadata, no prompt/output stored per RGPD)
+              SELECT COUNT(*) * 500 as storage_bytes FROM ai_jobs WHERE tenant_id = $1
+              UNION ALL
+              -- Consents: ~200 bytes per row
+              SELECT COUNT(*) * 200 as storage_bytes FROM consents WHERE tenant_id = $2
+              UNION ALL
+              -- Users: ~300 bytes per row (hashed data only)
+              SELECT COUNT(*) * 300 as storage_bytes FROM users WHERE tenant_id = $3
+              UNION ALL
+              -- RGPD Requests: ~400 bytes per row
+              SELECT COUNT(*) * 400 as storage_bytes FROM rgpd_requests WHERE tenant_id = $4
+              UNION ALL
+              -- Audit events: ~250 bytes per row
+              SELECT COUNT(*) * 250 as storage_bytes FROM audit_events WHERE tenant_id = $5
+            ) as storage_calc
+            `,
+            [tenantId, tenantId, tenantId, tenantId, tenantId]
+          ),
         ]);
 
         const stats: TenantDashboardStats = {
@@ -180,6 +207,9 @@ export const GET = withLogging(
               pending: parseInt(rgpdDeletionsResult.rows[0]?.pending || '0'),
               completed: parseInt(rgpdDeletionsResult.rows[0]?.completed || '0'),
             },
+          },
+          storage: {
+            usedBytes: parseInt(storageResult.rows[0]?.total_bytes || '0'),
           },
         };
 
