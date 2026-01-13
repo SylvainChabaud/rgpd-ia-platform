@@ -1,7 +1,7 @@
 # 🎯 Vision Macro : La Plateforme RGPD-IA expliquée simplement
 
 > **Document de référence** : Vue d'ensemble complète de la plateforme pour tous les acteurs
-> **Date** : 25 décembre 2025
+> **Date** : 13 janvier 2026
 > **Audience** : Développeurs, Product Owners, Stakeholders
 
 ---
@@ -515,13 +515,14 @@ npm run test:lot4     # Tests LOT 4 uniquement
 ✅ EPIC 5 : Pipeline RGPD (Droits des personnes)
 ✅ EPIC 6 : Stack IA Docker RGPD-ready (industrialisation)
 ✅ EPIC 7 : Kit conformité & audit RGPD
+✅ EPIC 8 : Anonymisation & Pseudonymisation (Backend)
+✅ EPIC 9 : Incident Response & Security Hardening (Backend)
+✅ EPIC 10 : RGPD Legal & Compliance (Backend + Docs)
+✅ EPIC 11 : Back Office Super Admin (Frontend PLATFORM)
 
-🚧 EPIC 8 : Anonymisation & Pseudonymisation (Backend)
-🚧 EPIC 9 : Incident Response & Security Hardening (Backend)
-🚧 EPIC 10 : RGPD Legal & Compliance (Frontend + Docs)
-🚧 EPIC 11 : Back Office Super Admin (Frontend PLATFORM)
-🚧 EPIC 12 : Back Office Tenant Admin (Frontend TENANT)
+🟡 EPIC 12 : Back Office Tenant Admin (Frontend TENANT) — EN COURS (LOT 12.0-12.2 ✅)
 🚧 EPIC 13 : Front User (Frontend utilisateur final)
+🚧 EPIC 14 : Sécurité & Gouvernance RGPD Plateforme
 ```
 
 ---
@@ -541,9 +542,9 @@ npm run test:lot4     # Tests LOT 4 uniquement
 - Tests : Validation RGPD automatique
 
 **Prochaines étapes** :
-- EPIC 8-9 : Backend RGPD 100% (Anonymisation, Incident Response)
-- EPIC 10 : Documents légaux RGPD (Politique confidentialité, CGU, DPIA)
-- EPIC 11-13 : Interfaces web (Back Office + Front User)
+- EPIC 12 : Back Office Tenant Admin (LOT 12.0-12.2 ✅, LOT 12.3-12.4 en cours)
+- EPIC 13 : Front User (interface utilisateur final)
+- EPIC 14 : Sécurité & Gouvernance RGPD Plateforme (monitoring, escalades)
 
 ---
 

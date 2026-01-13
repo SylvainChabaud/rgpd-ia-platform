@@ -24,8 +24,13 @@
 | **014** | `014_incidents.sql` | LOT 9.0 | Registre violations (Art. 33-34) + incident audit log |
 | **015** | `015_cgu_disputes_cookies.sql` | LOT 10.0-10.6 | Tables RGPD/Legal (CGU, disputes, oppositions, cookies) |
 | **016** | `016_epic10_legal_extensions.sql` | LOT 10.0-10.7 | Extensions EPIC 10 (soft delete, metadata, statuses) |
-| **017** | `017_tenant_suspension.sql` | LOT 11.4 | Système de suspension tenant (Art. 18) |
-| **018** | `018_normalize_user_roles.sql` | LOT 11.2 | Normalisation des rôles utilisateurs + contrainte CHECK |
+| **017** | `017_tenant_suspension.sql` | LOT 11.0 | Système de suspension tenant (Art. 18) |
+| **018** | `018_normalize_user_roles.sql` | LOT 11.0 | Normalisation des rôles utilisateurs + contrainte CHECK |
+| **019** | `019_purposes.sql` | LOT 12.2 | Table purposes (finalités IA) |
+| **020** | `020_purpose_templates.sql` | LOT 12.2 | Templates système de purposes |
+| **021** | `021_additional_purpose_templates.sql` | LOT 12.2 | Templates additionnels |
+| **022** | `022_critical_purpose_templates.sql` | LOT 12.2 | Templates critiques (santé, juridique) |
+| **023** | `023_professional_purpose_templates.sql` | LOT 12.2 | Templates professionnels |
 
 ---
 
@@ -259,8 +264,8 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | **EPIC 8** | Anonymisation (PII masking) | ✅ Oui | — (implémenté en app) |
 | **EPIC 9** | Registre violations (incidents) | ✅ Oui | `014_incidents.sql` ✅ |
 | **EPIC 10** | RGPD/Legal (CGU, disputes, cookies) | ✅ Oui | `015_cgu_disputes_cookies.sql` + `016_epic10_legal_extensions.sql` ✅ |
-| **EPIC 11** | Back Office Super Admin | ✅ Oui | — (utilise tables existantes) |
-| **EPIC 12** | Back Office Tenant Admin | ✅ Oui | — (utilise tables existantes) |
+| **EPIC 11** | Back Office Super Admin | ✅ Oui | `017_tenant_suspension.sql` + `018_normalize_user_roles.sql` ✅ |
+| **EPIC 12** | Back Office Tenant Admin | ✅ Oui | `019-023_purposes*.sql` ✅ |
 | **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
 
 ### Migrations futures prévues
@@ -325,7 +330,7 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 
 #### `017_tenant_suspension.sql` (EPIC 11) ✅ IMPLÉMENTÉ
 
-**LOT** : 11.4
+**LOT** : 11.0
 **Description** : Système de suspension tenant (Art. 18 RGPD - Limitation du traitement)
 
 **Colonne ajoutée** :

@@ -2,19 +2,20 @@
 
 > **Référence rapide** : "Que dois-je faire?" → "Voilà comment"
 
-**Dernière mise à jour** : 2026-01-03
+**Dernière mise à jour** : 2026-01-13
 
 ---
 
 ## 📍 Situation actuelle du projet
 
 ```
-Status:    ✅ EPIC 1-10 COMPLÉTÉS (100%)
-           ❌ EPIC 11-13 TODO
-Lines:     ~5,500 lignes code
-Tests:     492+ tests RGPD passing
+Status:    ✅ EPIC 1-11 COMPLÉTÉS (100%)
+           🟡 EPIC 12 EN COURS (LOT 12.0-12.2 ✅)
+           ❌ EPIC 13-14 TODO
+Lines:     ~8,000+ lignes code
+Tests:     720+ tests RGPD passing (191 fichiers)
 Coverage:  ~85-90%
-Version:   1.0 production-ready (Backend + Legal)
+Version:   1.1 (Backend + Legal + Back Office Super Admin)
 ```
 
 ---

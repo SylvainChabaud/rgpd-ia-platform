@@ -1,9 +1,9 @@
-# Index des implémentations — EPICs 1-11
+# Index des implémentations — EPICs 1-12
 
 > **Objectif** : Table de correspondance exhaustive entre LOTs (TASKS.md), fichiers implémentés et tests RGPD.
 
-**Dernière mise à jour** : 2026-01-07
-**Status global** : ✅ EPICs 1-11.1 terminés | 🚀 LOT 11.2+ en préparation
+**Dernière mise à jour** : 2026-01-13
+**Status global** : ✅ EPICs 1-11 TERMINÉS | 🟡 EPIC 12 EN COURS (LOT 12.0-12.2 ✅, LOT 12.3-12.4 ❌)
 
 ---
 
@@ -11,19 +11,26 @@
 
 | EPIC | LOTs | Documents | Status | Tests |
 |------|------|-----------|--------|-------|
-| **EPIC 1** | 1.0-1.5 (6 LOTs) | [LOT1_IMPLEMENTATION.md](LOT1_IMPLEMENTATION.md) | ✅ 100% | 42/42 |
+| **EPIC 1** | 1.0-1.5 (6 LOTs) | [LOT1_IMPLEMENTATION.md](LOT1_IMPLEMENTATION.md) | ✅ 100% | 42 |
 | **EPIC 2** | 2.0-2.1 (2 LOTs) | [LOT2_IMPLEMENTATION.md](LOT2_IMPLEMENTATION.md) | ✅ 100% | - |
-| **EPIC 3** | 3.0 (1 LOT) | [LOT3_IMPLEMENTATION.md](LOT3_IMPLEMENTATION.md) | ✅ 100% | 5/5 |
-| **EPIC 4** | 4.0-4.1 (2 LOTs) | [LOT4.0](LOT4.0_IMPLEMENTATION.md), [LOT4.1](LOT4.1_IMPLEMENTATION.md) | ✅ 100% | 23/23 |
-| **EPIC 5** | 5.0-5.3 (4 LOTs) | [LOT5.0](LOT5.0_IMPLEMENTATION.md), [LOT5.1](LOT5.1_IMPLEMENTATION.md), [LOT5.2](LOT5.2_IMPLEMENTATION.md), [LOT5.3](LOT5.3_IMPLEMENTATION.md) | ✅ 100% | 72/72 |
-| **EPIC 6** | 6.0-6.1 (2 LOTs) | [LOT6.0](LOT6.0_IMPLEMENTATION.md), [LOT6.1](LOT6.1_IMPLEMENTATION.md) | ✅ 100% | - |
+| **EPIC 3** | 3.0 (1 LOT) | [LOT3_IMPLEMENTATION.md](LOT3_IMPLEMENTATION.md) | ✅ 100% | 5 |
+| **EPIC 4** | 4.0-4.1 (2 LOTs) | [LOT4.0_IMPLEMENTATION.md](LOT4.0_IMPLEMENTATION.md), [LOT4.1_IMPLEMENTATION.md](LOT4.1_IMPLEMENTATION.md) | ✅ 100% | 23 |
+| **EPIC 5** | 5.0-5.3 (4 LOTs) | [LOT5.0_IMPLEMENTATION.md](LOT5.0_IMPLEMENTATION.md), [LOT5.1_IMPLEMENTATION.md](LOT5.1_IMPLEMENTATION.md), [LOT5.2_IMPLEMENTATION.md](LOT5.2_IMPLEMENTATION.md), [LOT5.3_IMPLEMENTATION.md](LOT5.3_IMPLEMENTATION.md) | ✅ 100% | 72 |
+| **EPIC 6** | 6.0-6.1 (2 LOTs) + RLS | [LOT6.0_IMPLEMENTATION.md](LOT6.0_IMPLEMENTATION.md), [LOT6.1_IMPLEMENTATION.md](LOT6.1_IMPLEMENTATION.md), [LOT6.2_IMPLEMENTATION.md](LOT6.2_IMPLEMENTATION.md) (RLS doc) | ✅ 100% | 13 |
 | **EPIC 7** | 7.0-7.1 (2 LOTs) | [LOT7_IMPLEMENTATION.md](LOT7_IMPLEMENTATION.md) | ✅ 100% | - |
-| **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110/110 |
-| **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60/60 |
-| **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180/180 |
-| **EPIC 11** | 11.0-11.2 (3 LOTs) | [LOT11_IMPLEMENTATION.md](LOT11_IMPLEMENTATION.md) + [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md) + [Rapports qualité](#epic-11--back-office-super-admin-frontend-platform) | ✅ **VALIDÉ** | **160/160** |
+| **EPIC 8** | 8.0-8.2 (3 LOTs) | [LOT8_IMPLEMENTATION.md](LOT8_IMPLEMENTATION.md) | ✅ 100% | 110 |
+| **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60 |
+| **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180 |
+| **EPIC 11** | 11.0-11.3 (4 LOTs) | [LOT11.0-11.1_IMPLEMENTATION.md](LOT11.0-11.1_IMPLEMENTATION.md), [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md), [LOT11.3_IMPLEMENTATION.md](LOT11.3_IMPLEMENTATION.md) | ✅ **VALIDÉ** | 139 |
+| **EPIC 12** | 12.0-12.2 (3/5 LOTs) | [LOT12.0_IMPLEMENTATION.md](LOT12.0_IMPLEMENTATION.md), [LOT12.1_IMPLEMENTATION.md](LOT12.1_IMPLEMENTATION.md), [LOT12.2_IMPLEMENTATION.md](LOT12.2_IMPLEMENTATION.md) | 🟡 **EN COURS** | ~50 |
 
-**Total** : **36 LOTs implémentés**, **652+ tests passing** (492 backend + 160 frontend)
+**Total** : **40 LOTs implémentés** (37 EPICs 1-11 + 3 EPIC 12), **720+ tests** (191 fichiers)
+
+> **Source** : Code source analysé le 2026-01-13
+> - **Migrations** : 23 fichiers SQL (001-023) + 3 seeds
+> - **Routes API** : 65 endpoints
+> - **Use-cases** : 32 fichiers
+> - **Tests** : 191 fichiers (123 backend/unit, 35 backend/integration, 4 backend/e2e, 17 frontend/unit, 9 e2e, 1 rgpd, 2 integration racine)
 
 ---
 
@@ -315,6 +322,28 @@
 
 ---
 
+### LOT 6.2 — Row-Level Security (RLS) Documentation
+
+> **Note** : LOT 6.2 est une documentation d'extension. Les migrations RLS sont officiellement associées à LOT 4.0.
+
+**Document** : [LOT6.2_IMPLEMENTATION.md](LOT6.2_IMPLEMENTATION.md)
+
+| Fichier | Type | Chemin | LOT officiel | Status |
+|---------|------|--------|--------------|--------|
+| `004_rls_tenant_isolation.sql` | Migration | [migrations/004_rls_tenant_isolation.sql](../../migrations/004_rls_tenant_isolation.sql) | LOT 4.0 | ✅ |
+| `005_force_rls.sql` | Migration | [migrations/005_force_rls.sql](../../migrations/005_force_rls.sql) | LOT 4.0 | ✅ |
+| `006_fix_rls_policies.sql` | Migration | [migrations/006_fix_rls_policies.sql](../../migrations/006_fix_rls_policies.sql) | LOT 4.0 | ✅ |
+| `007_fix_strict_rls.sql` | Migration | [migrations/007_fix_strict_rls.sql](../../migrations/007_fix_strict_rls.sql) | LOT 4.0 | ✅ |
+| `008_create_testuser_role.sql` | Migration | [migrations/008_create_testuser_role.sql](../../migrations/008_create_testuser_role.sql) | LOT 4.0 | ✅ |
+| `009_fix_current_tenant_id_function.sql` | Migration | [migrations/009_fix_current_tenant_id_function.sql](../../migrations/009_fix_current_tenant_id_function.sql) | LOT 4.0 | ✅ |
+| `010_create_cleanup_function.sql` | Migration | [migrations/010_create_cleanup_function.sql](../../migrations/010_create_cleanup_function.sql) | LOT 4.0 | ✅ |
+| `011_fix_users_platform_policies.sql` | Migration | [migrations/011_fix_users_platform_policies.sql](../../migrations/011_fix_users_platform_policies.sql) | LOT 4.0 | ✅ |
+| `012_fix_audit_events_policy.sql` | Migration | [migrations/012_fix_audit_events_policy.sql](../../migrations/012_fix_audit_events_policy.sql) | LOT 4.0 | ✅ |
+
+**Tests** : [tests/db.lot4.tenant-isolation.test.ts](../../tests/db.lot4.tenant-isolation.test.ts) (13 tests)
+
+---
+
 ## EPIC 7 — Kit conformité & audit
 
 ### LOT 7.0 — Dossier audit CNIL-ready
@@ -480,21 +509,28 @@
 | 001_init.sql | 1.5 | Schéma initial (tenants, users, audit_events) | ✅ |
 | 002_lot4_consents_ai_jobs.sql | 4.0 | Consents (P2) + ai_jobs (P1) | ✅ |
 | 003_rgpd_deletion.sql | 5.2 | Soft delete (deleted_at) | ✅ |
-| 004_rls_tenant_isolation.sql | 6.2 | Row-Level Security tenant isolation | ✅ |
-| 005_force_rls.sql | 6.2 | Force RLS on tables | ✅ |
-| 006_fix_rls_policies.sql | 6.2 | Fix RLS policies (tenant check) | ✅ |
-| 007_fix_strict_rls.sql | 6.2 | Strict RLS enforcement | ✅ |
-| 008_create_testuser_role.sql | 6.2 | Test user role (tests) | ✅ |
-| 009_fix_current_tenant_id_function.sql | 6.2 | Fix current_tenant_id() function | ✅ |
-| 010_create_cleanup_function.sql | 6.2 | Cleanup function (tests) | ✅ |
-| 011_fix_users_platform_policies.sql | 6.2 | Fix PLATFORM users RLS | ✅ |
-| 012_fix_audit_events_policy.sql | 6.2 | Fix audit_events RLS | ✅ |
-| 013_fix_rgpd_requests_platform_policies.sql | 6.2 | Fix rgpd_requests RLS | ✅ |
+| 004_rls_tenant_isolation.sql | 4.0 | Row-Level Security tenant isolation | ✅ |
+| 005_force_rls.sql | 4.0 | Force RLS on tables | ✅ |
+| 006_fix_rls_policies.sql | 4.0 | Fix RLS policies (tenant check) | ✅ |
+| 007_fix_strict_rls.sql | 4.0 | Strict RLS enforcement | ✅ |
+| 008_create_testuser_role.sql | 4.0 | Test user role (tests) | ✅ |
+| 009_fix_current_tenant_id_function.sql | 4.0 | Fix current_tenant_id() function | ✅ |
+| 010_create_cleanup_function.sql | 4.0 | Cleanup function (tests) | ✅ |
+| 011_fix_users_platform_policies.sql | 4.0 | Fix PLATFORM users RLS | ✅ |
+| 012_fix_audit_events_policy.sql | 4.0 | Fix audit_events RLS | ✅ |
+| 013_fix_rgpd_requests_platform_policies.sql | 5.2 | Fix rgpd_requests RLS | ✅ |
 | 014_incidents.sql | 9.0 | Table security_incidents + audit (Art. 33-34) | ✅ |
 | 015_cgu_disputes_cookies.sql | 10.0-10.6 | Tables CGU, disputes, oppositions, cookies | ✅ |
-| 016_add_lot10_missing_columns.sql | 10.0-10.6 | Colonnes manquantes LOT 10 (metadata, soft delete) | ✅ |
+| 016_epic10_legal_extensions.sql | 10.0-10.6 | Extensions légales LOT 10 | ✅ |
+| 017_tenant_suspension.sql | 11.0 | Suspension tenant (Super Admin) | ✅ |
+| 018_normalize_user_roles.sql | 11.0 | Normalisation rôles (SUPERADMIN, TENANT_ADMIN, MEMBER, DPO) | ✅ |
+| 019_purposes.sql | 12.2 | Table purposes (finalités IA) | ✅ |
+| 020_purpose_templates.sql | 12.2 | Templates système de purposes | ✅ |
+| 021_additional_purpose_templates.sql | 12.2 | Templates additionnels | ✅ |
+| 022_critical_purpose_templates.sql | 12.2 | Templates critiques (santé, juridique) | ✅ |
+| 023_professional_purpose_templates.sql | 12.2 | Templates professionnels | ✅ |
 
-> **Note** : Migrations 004-013 font partie de LOT 6.2. Migration 014 fait partie de LOT 9.0. Migrations 015-016 font partie de EPIC 10.
+> **Note** : Migrations 004-012 font partie de LOT 4.0 (RLS). Migration 013 fait partie de LOT 5.2. Migration 014 fait partie de LOT 9.0. Migrations 015-016 font partie de EPIC 10. Migrations 017-018 font partie de EPIC 11. Migrations 019-023 font partie de LOT 12.2.
 
 ---
 
@@ -909,15 +945,114 @@ grep "LOT" migrations/*.sql
 - Tests : **44 tests** (39 unitaires + 5 E2E)
 - Document : [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md)
 
-**LOT 11.3** — Audit & Monitoring Dashboard
-- [ ] Dashboard audit (visualisation événements)
-- [ ] Registre violations RGPD
-- [ ] Monitoring temps réel
+**LOT 11.3** — Audit & Monitoring Dashboard ✅
+- [x] Dashboard audit (visualisation événements)
+- [x] Registre violations RGPD
+- [x] Monitoring temps réel
 
-**LOT 11.4** — RGPD Requests Management
-- [ ] Formulaires demandes RGPD
-- [ ] Workflow validation
-- [ ] Export données
+> **Note** : EPIC 11 est terminé (LOT 11.0-11.3). Les fonctionnalités de protection plateforme (escalades, monitoring conformité) sont dans **EPIC 14**.
+
+---
+
+## EPIC 12 — Back-Office Tenant Admin 🟡
+
+> **Statut** : 3/5 LOTs terminés (12.0, 12.1, 12.2 ✅ | 12.3, 12.4 ❌ TODO)
+> **Dépendances** : EPIC 11 (terminé)
+
+### LOT 12.0 — Dashboard Tenant + Activity Feed ✅ **TERMINÉ**
+
+**Fichiers implémentés** :
+- `app/(tenant-admin)/portal/page.tsx` — Dashboard principal tenant
+- `app/(tenant-admin)/portal/layout.tsx` — Layout avec sidebar
+- `app/(tenant-admin)/_components/TenantSidebar.tsx` — Navigation tenant
+- `app/api/tenants/[id]/stats/route.ts` — API stats tenant
+
+**Fonctionnalités** :
+- [x] Dashboard tenant avec métriques (users, jobs, consents)
+- [x] Activity feed temps réel
+- [x] Navigation sidebar contextuelle
+- [x] Stats API par tenant
+
+**Tests** : ~15 tests
+**Document** : [LOT12.0_IMPLEMENTATION.md](LOT12.0_IMPLEMENTATION.md)
+
+---
+
+### LOT 12.1 — Gestion Users Tenant (CRUD) ✅ **TERMINÉ**
+
+**Fichiers implémentés** :
+- `app/(tenant-admin)/portal/users/page.tsx` — Liste users tenant
+- `app/(tenant-admin)/portal/users/[id]/page.tsx` — Détails user
+- `app/api/users/[id]/route.ts` — CRUD user
+- `app/api/users/[id]/suspend/route.ts` — Suspension user
+- `app/api/users/[id]/reactivate/route.ts` — Réactivation user
+- `src/lib/api/hooks/useTenantUsers.ts` — Hook React Query
+
+**Fonctionnalités** :
+- [x] Liste users avec filtres et pagination
+- [x] Création/édition user tenant
+- [x] Suspension/réactivation user
+- [x] Affichage RGPD-safe (email masqué)
+
+**Tests** : ~20 tests
+**Document** : [LOT12.1_IMPLEMENTATION.md](LOT12.1_IMPLEMENTATION.md)
+
+---
+
+### LOT 12.2 — Gestion Consentements (Purposes + Matrix) ✅ **TERMINÉ**
+
+**Migrations** (5 fichiers) :
+- `migrations/019_purposes.sql` — Table purposes (finalités IA)
+- `migrations/020_purpose_templates.sql` — Templates système
+- `migrations/021_additional_purpose_templates.sql` — Templates additionnels
+- `migrations/022_critical_purpose_templates.sql` — Templates critiques (santé, juridique)
+- `migrations/023_professional_purpose_templates.sql` — Templates professionnels
+
+**Fichiers implémentés** :
+- `app/(tenant-admin)/portal/consents/page.tsx` — Dashboard consentements
+- `app/(tenant-admin)/portal/consents/matrix/page.tsx` — Matrice user×purpose
+- `app/(tenant-admin)/portal/consents/history/page.tsx` — Historique
+- `app/(tenant-admin)/portal/consents/purposes/page.tsx` — Gestion purposes
+- `app/api/consents/matrix/route.ts` — API matrice
+- `app/api/consents/history/route.ts` — API historique
+- `app/api/consents/export/route.ts` — Export CSV/JSON
+- `app/api/purposes/route.ts` — CRUD purposes
+- `src/infrastructure/repositories/PgPurposeRepo.ts` — Repository purposes
+- `src/infrastructure/repositories/PgPurposeTemplateRepo.ts` — Repository templates
+- `src/app/ports/PurposeRepo.ts` — Port purposes
+- `src/app/ports/PurposeTemplateRepo.ts` — Port templates
+
+**Fonctionnalités** :
+- [x] Matrice visuelle user×purpose
+- [x] Historique des consentements avec timeline
+- [x] Templates de purposes (système + custom)
+- [x] Export CSV/JSON des consentements
+- [x] Gestion CRUD purposes par tenant
+
+**Tests** : ~25 tests (api.consents-matrix, api.consents-history, api.consents-export, api.purposes, api.purpose-templates)
+**Document** : [LOT12.2_IMPLEMENTATION.md](LOT12.2_IMPLEMENTATION.md)
+
+---
+
+### LOT 12.3 — RGPD Management ❌ **TODO**
+
+**Scope prévu** :
+- [ ] Dashboard demandes RGPD (export, suppression, opposition)
+- [ ] Workflow validation demandes
+- [ ] Automatisation réponses RGPD
+- [ ] Traçabilité complète
+
+---
+
+### LOT 12.4 — Fonctionnalités DPO ❌ **TODO**
+
+**Scope prévu** :
+- [ ] Vue consolidée conformité tenant
+- [ ] Alertes proactives
+- [ ] Rapports périodiques
+- [ ] Interface DPO dédiée
+
+> **Note** : EPIC 12 LOTs 12.3-12.4 sont planifiés. Les fonctionnalités de protection avancées (escalades, monitoring conformité cross-tenant) sont dans **EPIC 14**.
 
 ---
 
@@ -964,8 +1099,8 @@ grep "LOT" migrations/*.sql
 
 ---
 
-**Maintenu par** : Claude Code (Sonnet 4.5)  
-**Dernière mise à jour** : 2026-01-07  
+**Maintenu par** : Claude Code
+**Dernière mise à jour** : 2026-01-13  
 **Version** : 1.3
 
-**Statut actuel** : ✅ **LOT 11.0 & 11.1 VALIDÉS** — 116/116 tests passing — Ready to deploy
+**Statut actuel** : ✅ **EPICs 1-11 VALIDÉS** — 670 tests passing — Production-ready backend

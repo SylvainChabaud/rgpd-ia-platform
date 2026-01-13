@@ -2,7 +2,7 @@
 
 > **Objectif** : Comprendre simplement qui fait quoi, quand et pourquoi.
 
-**Dernière mise à jour** : 2026-01-02
+**Dernière mise à jour** : 2026-01-13
 
 ---
 
@@ -56,8 +56,9 @@ Au démarrage du serveur :
 - `002_lot4_consents_ai_jobs.sql` — Ajoute tables consents, ai_jobs
 - `003_rgpd_deletion.sql` — Ajoute colonne deleted_at pour soft-delete
 - `014_incidents.sql` — Ajoute table security_incidents (EPIC 9)
+- `019-023_purposes*.sql` — Ajoute tables purposes + templates (LOT 12.2)
 
-**État actuel** : ✅ Toutes les migrations (001-014) sont terminées et exécutées
+**État actuel** : ✅ Toutes les migrations (001-023) sont terminées et exécutées
 
 **TODOs** : ❌ Aucun TODO ici, c'est complet
 
@@ -297,14 +298,15 @@ Si NON → Refuse (403 error)
 | **Runbooks EPIC 1-9** | Tous opérationnels | 100% |
 | **Conformité RGPD** | Art. 5, 31, 32, 33, 34 | 100% |
 
-### ❌ TODO (EPIC 10-13)
+### Frontends (EPIC 11-14)
 
 | EPIC | Quoi | Audience | Status |
 |------|------|----------|--------|
 | **EPIC 10** | Legal Compliance (Pages légales, CGU, Cookie, Droits Art. 18/21/22) | Legal/DPO/Users | ✅ COMPLET |
-| **EPIC 11** | Back-office Super Admin (UI) | Admin | 🔴 TODO |
-| **EPIC 12** | Back-office Tenant Admin (UI) | Client | 🔴 TODO |
+| **EPIC 11** | Back-office Super Admin (UI) | Admin | ✅ COMPLET |
+| **EPIC 12** | Back-office Tenant Admin (UI) | Client | 🟡 EN COURS |
 | **EPIC 13** | Interface Utilisateur (signup, consent) | End-user | 🔴 TODO |
+| **EPIC 14** | Sécurité & Gouvernance RGPD Plateforme | Admin | 🔴 TODO |
 
 ---
 
@@ -342,8 +344,9 @@ Si NON → Refuse (403 error)
 ### Q5: "Y a-t-il des TODOs non documentés?"
 
 **Réponse simple** :
-- ✅ EPIC 1-9 = 0 TODOs (complètement terminé)
-- ❌ EPIC 10-13 = Entièrement TODO (interfaces admin/user)
+- ✅ EPIC 1-11 = Terminés (Backend + Back Office Super Admin)
+- 🟡 EPIC 12 = En cours (Back Office Tenant Admin - LOT 12.0-12.2 ✅)
+- ❌ EPIC 13-14 = TODO (Front User + Gouvernance RGPD)
 - 📝 Voir [TASKS.md](TASKS.md) pour détails complets
 
 ---

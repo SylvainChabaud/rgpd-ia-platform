@@ -261,16 +261,16 @@ Besoin de vérifier un article spécifique ? Consultez :
 | **Art. 5** | Principes | RGPD_MATRICE_CONFORMITE.md (section 1) | ✅ 100% |
 | **Art. 6-7** | Consentements | RGPD_MATRICE_CONFORMITE.md (section 2) | ✅ 100% |
 | **Art. 15-17, 20** | Droits accès/export/delete | RGPD_MATRICE_CONFORMITE.md (section 3) | ✅ 100% |
-| **Art. 18, 21, 22** | Limitation/Opposition/IA | RGPD_MATRICE_CONFORMITE.md (section 3) | ❌ 0% |
+| **Art. 18, 21, 22** | Limitation/Opposition/IA | RGPD_MATRICE_CONFORMITE.md (section 3) | ✅ 100% |
 | **Art. 24-25** | Responsabilité + Privacy by Design | RGPD_MATRICE_CONFORMITE.md (section 4) | ✅ 100% |
 | **Art. 28** | Sous-traitant (DPA) | RGPD_MATRICE_CONFORMITE.md (section 4) | ✅ 100% |
 | **Art. 30** | Registre traitements | registre-traitements.md | ✅ 100% |
 | **Art. 32** | Sécurité | RGPD_MATRICE_CONFORMITE.md (section 6) | ✅ 100% |
-| **Art. 33-34** | Violations CNIL | docs/runbooks/incident.md + docs/implementation/LOT9.md | ✅ 100% |
+| **Art. 33-34** | Violations CNIL | docs/runbooks/incident.md + EPIC 9 | ✅ 100% |
 | **Art. 35** | DPIA | dpia.md | ✅ 100% |
-| **Cookies** | Directive ePrivacy | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ❌ 0% |
-| **Art. 1-99** | Vue exhaustive | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ⚙️ 70% |
-| **Front vs Back** | Cohérence implémentation | RGPD_MATRICE_CONFORMITE.md (Annexe B) | ⚙️ 75% |
+| **Cookies** | Directive ePrivacy | RGPD_MATRICE_CONFORMITE.md (Chapitre X) | ✅ 100% |
+| **Art. 1-99** | Vue exhaustive | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ✅ ~95% |
+| **Front vs Back** | Cohérence implémentation | RGPD_MATRICE_CONFORMITE.md (Annexe B) | ✅ 100% |
 
 ---
 
