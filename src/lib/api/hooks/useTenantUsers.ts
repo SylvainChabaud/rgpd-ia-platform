@@ -5,6 +5,7 @@ import { apiClient } from '../apiClient'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/auth/authStore'
 import type { User, CreateUserInput, UpdateUserInput } from '@/types/api'
+import type { UserDataStatus } from '@/app/ports/UserRepo'
 
 /**
  * TanStack Query hooks for Tenant User Management
@@ -25,7 +26,7 @@ export interface TenantUsersParams {
   limit?: number
   offset?: number
   role?: string
-  status?: 'active' | 'suspended'
+  status?: UserDataStatus
   search?: string
   sortBy?: 'name' | 'createdAt' | 'role'
   sortOrder?: 'asc' | 'desc'
@@ -42,6 +43,8 @@ export interface UserStats {
   jobs: {
     success: number
     failed: number
+    pending: number
+    running: number
     total: number
   }
   consents: {
@@ -152,7 +155,7 @@ export function useUserStats(userId: string | null | undefined) {
     queryKey: ['tenant-users', userId, 'stats'],
     queryFn: () => apiClient<{ stats: UserStats }>(`/users/${userId}/stats`),
     enabled: !!userId,
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 30 * 1000, // 30 seconds - aligned with other queries
   })
 }
 

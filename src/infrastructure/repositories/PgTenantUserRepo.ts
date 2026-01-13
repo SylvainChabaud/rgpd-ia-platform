@@ -1,6 +1,7 @@
 import type { TenantUserRepo } from "@/app/ports/TenantUserRepo";
 import { pool } from "@/infrastructure/db/pg";
 import { ACTOR_ROLE } from "@/shared/actorRole";
+import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 export class PgTenantUserRepo implements TenantUserRepo {
   async createTenantAdmin(input: {
@@ -14,7 +15,7 @@ export class PgTenantUserRepo implements TenantUserRepo {
     // Isolation enforced at use-case layer (CreateTenantAdminUseCase)
     // TODO EPIC4: add DB constraint CHECK (scope='TENANT' => tenant_id IS NOT NULL)
     await pool.query(
-      "INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'TENANT',$6)",
+      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'${ACTOR_SCOPE.TENANT}',$6)`,
       [
         input.id,
         input.tenantId,
@@ -37,7 +38,7 @@ export class PgTenantUserRepo implements TenantUserRepo {
     // CRITICAL RGPD: tenant_id is stored but not validated at DB layer
     // Isolation enforced at use-case layer (CreateTenantUserUseCase)
     await pool.query(
-      "INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'TENANT',$6)",
+      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'${ACTOR_SCOPE.TENANT}',$6)`,
       [
         input.id,
         input.tenantId,

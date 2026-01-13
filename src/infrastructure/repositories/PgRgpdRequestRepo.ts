@@ -17,6 +17,7 @@ import type {
   CreateRgpdRequestInput,
 } from "@/app/ports/RgpdRequestRepo";
 import type { RgpdRequest } from "@/domain/rgpd/DeletionRequest";
+import { RGPD_REQUEST_TYPE, RGPD_REQUEST_STATUS } from "@/domain/rgpd/DeletionRequest";
 
 export class PgRgpdRequestRepo implements RgpdRequestRepo {
   async create(
@@ -102,11 +103,12 @@ export class PgRgpdRequestRepo implements RgpdRequestRepo {
       `SELECT id, tenant_id, user_id, type, status, created_at,
               scheduled_purge_at, completed_at
        FROM rgpd_requests
-       WHERE type = 'DELETE'
-         AND status = 'PENDING'
+       WHERE type = $1
+         AND status = $2
          AND scheduled_purge_at IS NOT NULL
          AND scheduled_purge_at <= NOW()
-       ORDER BY scheduled_purge_at ASC`
+       ORDER BY scheduled_purge_at ASC`,
+      [RGPD_REQUEST_TYPE.DELETE, RGPD_REQUEST_STATUS.PENDING]
     );
 
     return res.rows.map((row) => ({
@@ -153,11 +155,11 @@ export class PgRgpdRequestRepo implements RgpdRequestRepo {
          FROM rgpd_requests
          WHERE tenant_id = $1
            AND user_id = $2
-           AND type = 'DELETE'
-           AND status IN ('PENDING', 'COMPLETED')
+           AND type = $3
+           AND status IN ($4, $5)
          ORDER BY created_at DESC
          LIMIT 1`,
-        [tenantId, userId]
+        [tenantId, userId, RGPD_REQUEST_TYPE.DELETE, RGPD_REQUEST_STATUS.PENDING, RGPD_REQUEST_STATUS.COMPLETED]
       );
 
       if (res.rows.length === 0) return null;

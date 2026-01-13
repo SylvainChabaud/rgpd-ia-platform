@@ -14,7 +14,7 @@
 import { scanLogLines, parseLogFile } from "@/infrastructure/pii/scanner";
 import type { PiiScanResult } from "@/infrastructure/pii/scanner";
 import type { AlertService } from "@/app/ports/AlertService";
-import { createAlert } from "@/app/ports/AlertService";
+import { createAlert, ALERT_SEVERITY } from "@/app/ports/AlertService";
 import { logEvent, logError } from "@/shared/logger";
 
 /**
@@ -102,14 +102,14 @@ async function sendPIILeakAlert(
   scanResult: PiiScanResult
 ): Promise<void> {
   // Group leaks by severity
-  const criticalLeaks = scanResult.leaks.filter((l) => l.severity === "critical");
-  const warningLeaks = scanResult.leaks.filter((l) => l.severity === "warning");
-  const infoLeaks = scanResult.leaks.filter((l) => l.severity === "info");
+  const criticalLeaks = scanResult.leaks.filter((l) => l.severity === ALERT_SEVERITY.CRITICAL);
+  const warningLeaks = scanResult.leaks.filter((l) => l.severity === ALERT_SEVERITY.WARNING);
+  const infoLeaks = scanResult.leaks.filter((l) => l.severity === ALERT_SEVERITY.INFO);
 
   // Send critical alert if any critical leaks
   if (criticalLeaks.length > 0) {
     const alert = createAlert(
-      "critical",
+      ALERT_SEVERITY.CRITICAL,
       "CRITICAL: PII Leak Detected in Logs",
       `Detected ${criticalLeaks.length} critical PII leak(s) in application logs.\n\n` +
         `This is a RGPD compliance violation (Art. 32 Security).\n\n` +
@@ -128,7 +128,7 @@ async function sendPIILeakAlert(
   } else if (warningLeaks.length > 0) {
     // Send warning alert if any warning leaks
     const alert = createAlert(
-      "warning",
+      ALERT_SEVERITY.WARNING,
       "WARNING: PII Leak Detected in Logs",
       `Detected ${warningLeaks.length} PII leak(s) in application logs.\n\n` +
         `This may indicate a RGPD compliance issue.\n\n` +
@@ -146,7 +146,7 @@ async function sendPIILeakAlert(
   } else if (infoLeaks.length > 0) {
     // Send info alert
     const alert = createAlert(
-      "info",
+      ALERT_SEVERITY.INFO,
       "INFO: PII Detected in Logs",
       `Detected ${infoLeaks.length} low-severity PII instance(s) in logs.\n\n` +
         `Total leaks: ${scanResult.leakCount}\n` +

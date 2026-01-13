@@ -19,46 +19,69 @@ import { ACTOR_SCOPE } from "@/shared/actorScope";
  * Incident severity levels
  * Used for prioritization and alerting
  */
-export type IncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export const INCIDENT_SEVERITY = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL',
+} as const;
+
+export type IncidentSeverity = (typeof INCIDENT_SEVERITY)[keyof typeof INCIDENT_SEVERITY];
 
 /**
  * Incident types (Art. 33.3 - nature of violation)
  */
-export type IncidentType =
-  | "UNAUTHORIZED_ACCESS" // Brute force, privilege escalation
-  | "CROSS_TENANT_ACCESS" // Tenant isolation violation (CRITICAL)
-  | "DATA_LEAK" // Mass export, exposed API
-  | "PII_IN_LOGS" // PII detected in logs (EPIC 8)
-  | "DATA_LOSS" // Backup failure, corruption
-  | "SERVICE_UNAVAILABLE" // Prolonged downtime (> 4h)
-  | "MALWARE" // Malware/ransomware detected
-  | "VULNERABILITY_EXPLOITED" // Exploited vulnerability
-  | "OTHER"; // Other security incident
+export const INCIDENT_TYPE = {
+  UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',       // Brute force, privilege escalation
+  CROSS_TENANT_ACCESS: 'CROSS_TENANT_ACCESS',       // Tenant isolation violation (CRITICAL)
+  DATA_LEAK: 'DATA_LEAK',                           // Mass export, exposed API
+  PII_IN_LOGS: 'PII_IN_LOGS',                       // PII detected in logs (EPIC 8)
+  DATA_LOSS: 'DATA_LOSS',                           // Backup failure, corruption
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',       // Prolonged downtime (> 4h)
+  MALWARE: 'MALWARE',                               // Malware/ransomware detected
+  VULNERABILITY_EXPLOITED: 'VULNERABILITY_EXPLOITED', // Exploited vulnerability
+  OTHER: 'OTHER',                                   // Other security incident
+} as const;
+
+export type IncidentType = (typeof INCIDENT_TYPE)[keyof typeof INCIDENT_TYPE];
 
 /**
  * Risk level for GDPR notification decision (Art. 33-34)
  */
-export type RiskLevel =
-  | "UNKNOWN" // Evaluation in progress
-  | "NONE" // No risk to rights/freedoms
-  | "LOW" // Low risk
-  | "MEDIUM" // Medium risk
-  | "HIGH"; // High risk → CNIL + users notification required
+export const INCIDENT_RISK_LEVEL = {
+  UNKNOWN: 'UNKNOWN',   // Evaluation in progress
+  NONE: 'NONE',         // No risk to rights/freedoms
+  LOW: 'LOW',           // Low risk
+  MEDIUM: 'MEDIUM',     // Medium risk
+  HIGH: 'HIGH',         // High risk → CNIL + users notification required
+} as const;
+
+export type RiskLevel = (typeof INCIDENT_RISK_LEVEL)[keyof typeof INCIDENT_RISK_LEVEL];
 
 /**
  * Data classification categories affected
  */
-export type DataCategory = "P0" | "P1" | "P2" | "P3";
+export const INCIDENT_DATA_CATEGORY = {
+  P0: 'P0',   // Public data
+  P1: 'P1',   // Internal non-sensitive
+  P2: 'P2',   // Personal data
+  P3: 'P3',   // Sensitive data (Art. 9)
+} as const;
+
+export type DataCategory = (typeof INCIDENT_DATA_CATEGORY)[keyof typeof INCIDENT_DATA_CATEGORY];
 
 /**
  * How incident was detected
  */
-export type DetectionSource =
-  | "SYSTEM" // Automated detection (middleware, monitoring)
-  | "MONITORING" // Observability alerts (EPIC 7)
-  | "USER" // User reported
-  | "AUDIT" // Internal audit
-  | "PENTEST"; // Security testing
+export const DETECTION_SOURCE = {
+  SYSTEM: 'SYSTEM',         // Automated detection (middleware, monitoring)
+  MONITORING: 'MONITORING', // Observability alerts (EPIC 7)
+  USER: 'USER',             // User reported
+  AUDIT: 'AUDIT',           // Internal audit
+  PENTEST: 'PENTEST',       // Security testing
+} as const;
+
+export type DetectionSource = (typeof DETECTION_SOURCE)[keyof typeof DETECTION_SOURCE];
 
 // =============================================================================
 // DOMAIN ENTITY
@@ -149,7 +172,7 @@ export function createSecurityIncident(
     dataCategories: input.dataCategories ?? [],
     usersAffected: input.usersAffected ?? 0,
     recordsAffected: input.recordsAffected ?? 0,
-    riskLevel: input.riskLevel ?? "UNKNOWN",
+    riskLevel: input.riskLevel ?? INCIDENT_RISK_LEVEL.UNKNOWN,
     cnilNotified: false,
     cnilNotifiedAt: null,
     cnilReference: null,
@@ -174,16 +197,16 @@ export function createSecurityIncident(
  */
 export function isCnilNotificationRequired(incident: SecurityIncident): boolean {
   // HIGH risk = mandatory notification
-  if (incident.riskLevel === "HIGH") return true;
+  if (incident.riskLevel === INCIDENT_RISK_LEVEL.HIGH) return true;
 
   // MEDIUM risk = notification recommended (DPO decision)
-  if (incident.riskLevel === "MEDIUM") return true;
+  if (incident.riskLevel === INCIDENT_RISK_LEVEL.MEDIUM) return true;
 
   // CRITICAL severity always requires notification
-  if (incident.severity === "CRITICAL") return true;
+  if (incident.severity === INCIDENT_SEVERITY.CRITICAL) return true;
 
   // Cross-tenant access = always critical
-  if (incident.type === "CROSS_TENANT_ACCESS") return true;
+  if (incident.type === INCIDENT_TYPE.CROSS_TENANT_ACCESS) return true;
 
   return false;
 }
@@ -196,7 +219,7 @@ export function isUsersNotificationRequired(
   incident: SecurityIncident
 ): boolean {
   // Only HIGH risk requires users notification
-  return incident.riskLevel === "HIGH";
+  return incident.riskLevel === INCIDENT_RISK_LEVEL.HIGH;
 }
 
 /**

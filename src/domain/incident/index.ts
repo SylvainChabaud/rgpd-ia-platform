@@ -22,6 +22,12 @@ export {
   isCnilDeadlineOverdue,
   SEVERITY_ORDER,
   RISK_LEVEL_ORDER,
+  // Constants
+  INCIDENT_SEVERITY,
+  INCIDENT_TYPE,
+  INCIDENT_RISK_LEVEL,
+  INCIDENT_DATA_CATEGORY,
+  DETECTION_SOURCE,
 } from "./SecurityIncident";
 
 // Repository Port

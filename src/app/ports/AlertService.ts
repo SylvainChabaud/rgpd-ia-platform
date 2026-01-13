@@ -11,9 +11,15 @@
  */
 
 /**
- * Alert severity levels
+ * Alert severity level constants
  */
-export type AlertSeverity = "info" | "warning" | "critical";
+export const ALERT_SEVERITY = {
+  INFO: 'info',
+  WARNING: 'warning',
+  CRITICAL: 'critical',
+} as const;
+
+export type AlertSeverity = (typeof ALERT_SEVERITY)[keyof typeof ALERT_SEVERITY];
 
 /**
  * Alert message

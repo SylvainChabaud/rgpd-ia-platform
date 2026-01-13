@@ -8,6 +8,7 @@
  */
 
 import { ACTOR_SCOPE, type ActorScope } from "@/shared/actorScope";
+import { ACTOR_ROLE } from "@/shared/actorRole";
 import { verifyJwt } from "@/lib/jwt";
 
 export interface AuthenticatedActor {
@@ -45,14 +46,14 @@ export class StubAuthProvider implements AuthProvider {
     this.validTokens.set("stub-platform-super1", {
       actorId: "platform-super-1",
       actorScope: ACTOR_SCOPE.PLATFORM,
-      roles: ["SUPERADMIN"],
+      roles: [ACTOR_ROLE.SUPERADMIN],
     });
 
     this.validTokens.set("stub-tenant-admin1", {
       actorId: "tenant-admin-1",
       actorScope: ACTOR_SCOPE.TENANT,
       tenantId: "11111111-1111-4111-8111-111111111111",
-      roles: ["TENANT_ADMIN"],
+      roles: [ACTOR_ROLE.TENANT_ADMIN],
     });
   }
 

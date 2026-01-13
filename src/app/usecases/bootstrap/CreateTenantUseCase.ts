@@ -6,7 +6,7 @@ import type { TenantRepo } from "@/app/ports/TenantRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
-import type { PolicyEngine } from "@/app/auth/policyEngine";
+import { PERMISSION, type PolicyEngine } from "@/app/auth/policyEngine";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 const InputSchema = z.object({
@@ -30,7 +30,7 @@ export class CreateTenantUseCase {
     raw: unknown
   ): Promise<{ tenantId: string }> {
     // Check permission via policy engine (LOT 1.2 compliance)
-    const decision = await this.policy.check(ctx, "tenant:create");
+    const decision = await this.policy.check(ctx, PERMISSION.TENANT_CREATE);
     if (!decision.allowed) {
       throw new ForbiddenError(decision.reason ?? "Permission denied");
     }

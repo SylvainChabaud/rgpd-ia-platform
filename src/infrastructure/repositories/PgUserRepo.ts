@@ -10,7 +10,8 @@
 
 import { pool } from '@/infrastructure/db/pg';
 import { withTenantContext } from '@/infrastructure/db/tenantContext';
-import type { User, UserRepo } from '@/app/ports/UserRepo';
+import type { User, UserRepo, UserDataStatus } from '@/app/ports/UserRepo';
+import { USER_DATA_STATUS } from '@/app/ports/UserRepo';
 import type { UserScope } from '@/shared/actorScope';
 
 export class PgUserRepo implements UserRepo {
@@ -204,7 +205,7 @@ export class PgUserRepo implements UserRepo {
     offset?: number
     tenantId?: string
     role?: string
-    status?: 'active' | 'suspended'
+    status?: UserDataStatus
   }): Promise<User[]> {
     const where: string[] = ['deleted_at IS NULL']
     const values: unknown[] = []
@@ -217,10 +218,10 @@ export class PgUserRepo implements UserRepo {
       where.push(`role = $${idx++}`)
       values.push(role)
     }
-    if (status === 'active') {
+    if (status === USER_DATA_STATUS.ACTIVE) {
       where.push(`(data_suspended IS NULL OR data_suspended = false)`)
     }
-    if (status === 'suspended') {
+    if (status === USER_DATA_STATUS.SUSPENDED) {
       where.push(`data_suspended = true`)
     }
     const sql = `SELECT id, tenant_id, email_hash, display_name, password_hash, scope, role, created_at, deleted_at,
@@ -252,7 +253,7 @@ export class PgUserRepo implements UserRepo {
     limit?: number
     offset?: number
     role?: string
-    status?: 'active' | 'suspended'
+    status?: UserDataStatus
     search?: string
     sortBy?: 'name' | 'createdAt' | 'role'
     sortOrder?: 'asc' | 'desc'
@@ -271,9 +272,9 @@ export class PgUserRepo implements UserRepo {
       values.push(role)
     }
 
-    if (status === 'active') {
+    if (status === USER_DATA_STATUS.ACTIVE) {
       where.push(`(data_suspended IS NULL OR data_suspended = false)`)
-    } else if (status === 'suspended') {
+    } else if (status === USER_DATA_STATUS.SUSPENDED) {
       where.push(`data_suspended = true`)
     }
 
@@ -316,7 +317,7 @@ export class PgUserRepo implements UserRepo {
   }: {
     tenantId: string
     role?: string
-    status?: 'active' | 'suspended'
+    status?: UserDataStatus
     search?: string
   }): Promise<number> {
     // BLOCKER: validate tenantId (RGPD isolation)
@@ -333,9 +334,9 @@ export class PgUserRepo implements UserRepo {
       values.push(role)
     }
 
-    if (status === 'active') {
+    if (status === USER_DATA_STATUS.ACTIVE) {
       where.push(`(data_suspended IS NULL OR data_suspended = false)`)
-    } else if (status === 'suspended') {
+    } else if (status === USER_DATA_STATUS.SUSPENDED) {
       where.push(`data_suspended = true`)
     }
 

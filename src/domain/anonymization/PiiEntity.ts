@@ -21,7 +21,16 @@
  * - SSN: French social security numbers
  * - IBAN: International bank account numbers
  */
-export type PiiType = "PERSON" | "EMAIL" | "PHONE" | "ADDRESS" | "SSN" | "IBAN";
+export const PII_TYPE = {
+  PERSON: 'PERSON',
+  EMAIL: 'EMAIL',
+  PHONE: 'PHONE',
+  ADDRESS: 'ADDRESS',
+  SSN: 'SSN',
+  IBAN: 'IBAN',
+} as const;
+
+export type PiiType = (typeof PII_TYPE)[keyof typeof PII_TYPE];
 
 /**
  * Represents a single detected PII entity in text

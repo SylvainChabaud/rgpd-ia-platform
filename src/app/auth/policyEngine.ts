@@ -2,15 +2,21 @@ import type { RequestContext } from "@/app/context/RequestContext";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
+ * Permission constants
+ */
+export const PERMISSION = {
+  TENANT_CREATE: "tenant:create",
+  TENANT_READ: "tenant:read",
+  TENANT_ADMIN_CREATE: "tenant-admin:create",
+  TENANT_USERS_READ: "tenant:users:read",
+  TENANT_USERS_WRITE: "tenant:users:write",
+  PLATFORM_MANAGE: "platform:manage",
+} as const;
+
+/**
  * Permission definition
  */
-export type Permission =
-  | "tenant:create"
-  | "tenant:read"
-  | "tenant-admin:create"
-  | "tenant:users:read"
-  | "tenant:users:write"
-  | "platform:manage";
+export type Permission = (typeof PERMISSION)[keyof typeof PERMISSION];
 
 /**
  * Policy decision result
@@ -50,8 +56,8 @@ export class DefaultPolicyEngine implements PolicyEngine {
     if (ctx.actorScope === ACTOR_SCOPE.SYSTEM) {
       if (ctx.bootstrapMode) {
         if (
-          permission === "tenant:create" ||
-          permission === "tenant-admin:create"
+          permission === PERMISSION.TENANT_CREATE ||
+          permission === PERMISSION.TENANT_ADMIN_CREATE
         ) {
           return { allowed: true, reason: "SYSTEM bootstrap mode" };
         }
@@ -61,12 +67,12 @@ export class DefaultPolicyEngine implements PolicyEngine {
 
     // PLATFORM scope
     if (ctx.actorScope === ACTOR_SCOPE.PLATFORM) {
-      if (permission === "platform:manage") {
+      if (permission === PERMISSION.PLATFORM_MANAGE) {
         return { allowed: true, reason: "PLATFORM scope" };
       }
       if (
-        permission === "tenant:create" ||
-        permission === "tenant-admin:create"
+        permission === PERMISSION.TENANT_CREATE ||
+        permission === PERMISSION.TENANT_ADMIN_CREATE
       ) {
         return { allowed: true, reason: "PLATFORM can create tenants" };
       }
@@ -84,11 +90,11 @@ export class DefaultPolicyEngine implements PolicyEngine {
       }
 
       // Tenant-scoped permissions
-      if (permission === "tenant:read" || permission === "tenant:users:read") {
+      if (permission === PERMISSION.TENANT_READ || permission === PERMISSION.TENANT_USERS_READ) {
         return { allowed: true, reason: "TENANT scope owns resource" };
       }
 
-      if (permission === "tenant:users:write") {
+      if (permission === PERMISSION.TENANT_USERS_WRITE) {
         return { allowed: true, reason: "TENANT_ADMIN role" };
       }
 

@@ -1,5 +1,6 @@
 import type { OppositionRepo } from '@/app/ports/OppositionRepo';
 import type { UserOpposition } from '@/domain/legal/UserOpposition';
+import { OPPOSITION_STATUS } from '@/domain/legal/UserOpposition';
 
 /**
  * List user oppositions use-case
@@ -38,7 +39,7 @@ export async function listOppositions(
   const oppositions = await oppositionRepo.findByUser(tenantId, userId);
 
   // Compter les oppositions pending
-  const pendingCount = oppositions.filter(o => o.status === 'pending').length;
+  const pendingCount = oppositions.filter(o => o.status === OPPOSITION_STATUS.PENDING).length;
 
   return {
     oppositions,

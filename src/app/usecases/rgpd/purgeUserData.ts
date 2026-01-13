@@ -12,6 +12,7 @@ import {
   deleteExportMetadata,
 } from "@/infrastructure/storage/ExportStorage";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import { RGPD_REQUEST_STATUS } from "@/domain/rgpd/DeletionRequest";
 
 /**
  * Purge User Data use-case (RGPD Art. 17 - Right to erasure)
@@ -118,7 +119,7 @@ export async function purgeUserData(
   };
 
   // Step 7: Update RGPD request status
-  await rgpdRequestRepo.updateStatus(requestId, "COMPLETED", now);
+  await rgpdRequestRepo.updateStatus(requestId, RGPD_REQUEST_STATUS.COMPLETED, now);
 
   // Step 8: Emit audit event (P1 only)
   // Note: metadata must be flat (no nested objects) for RGPD compliance

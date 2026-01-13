@@ -23,6 +23,7 @@ import type {
   IncidentType,
   DataCategory,
 } from "@/domain/incident/SecurityIncident";
+import { INCIDENT_RISK_LEVEL } from "@/domain/incident/SecurityIncident";
 import type {
   SecurityIncidentRepo,
   IncidentFilters,
@@ -100,7 +101,7 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
           input.dataCategories ?? [],
           input.usersAffected ?? 0,
           input.recordsAffected ?? 0,
-          input.riskLevel ?? "UNKNOWN",
+          input.riskLevel ?? INCIDENT_RISK_LEVEL.UNKNOWN,
           input.detectedBy ?? ACTOR_SCOPE.SYSTEM,
           input.sourceIp ?? null,
           input.createdBy ?? null,
@@ -120,7 +121,7 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
             severity: input.severity,
             type: input.type,
             title: input.title,
-            riskLevel: input.riskLevel ?? "UNKNOWN",
+            riskLevel: input.riskLevel ?? INCIDENT_RISK_LEVEL.UNKNOWN,
           }),
           input.createdBy ?? null,
           ACTOR_SCOPE.SYSTEM,
@@ -291,10 +292,11 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
     return await withPlatformContext(pool, async (client) => {
       const result = await client.query(
         `SELECT * FROM security_incidents
-         WHERE risk_level IN ('HIGH', 'MEDIUM')
+         WHERE risk_level IN ($1, $2)
            AND cnil_notified = FALSE
            AND detected_at > NOW() - INTERVAL '72 hours'
-         ORDER BY detected_at ASC`
+         ORDER BY detected_at ASC`,
+        [INCIDENT_RISK_LEVEL.HIGH, INCIDENT_RISK_LEVEL.MEDIUM]
       );
       return result.rows.map(mapRowToIncident);
     });

@@ -15,7 +15,9 @@
  */
 
 import type { SecurityIncident, IncidentSeverity } from "@/domain/incident";
-import type { AlertService, Alert } from "@/app/ports/AlertService";
+import { INCIDENT_SEVERITY } from "@/domain/incident";
+import type { AlertService, Alert, AlertSeverity } from "@/app/ports/AlertService";
+import { ALERT_SEVERITY } from "@/app/ports/AlertService";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { logEvent, logError } from "@/shared/logger";
 
@@ -103,14 +105,14 @@ export class IncidentAlertService {
       // Slack for HIGH and CRITICAL
       if (
         this.config.slack &&
-        (incident.severity === "HIGH" || incident.severity === "CRITICAL")
+        (incident.severity === INCIDENT_SEVERITY.HIGH || incident.severity === INCIDENT_SEVERITY.CRITICAL)
       ) {
         const slackResult = await this.sendSlackAlert(incident);
         results.push(slackResult);
       }
 
       // PagerDuty for CRITICAL only
-      if (this.config.pagerDuty && incident.severity === "CRITICAL") {
+      if (this.config.pagerDuty && incident.severity === INCIDENT_SEVERITY.CRITICAL) {
         const pdResult = await this.sendPagerDutyAlert(incident);
         results.push(pdResult);
       }
@@ -139,7 +141,7 @@ export class IncidentAlertService {
     incident: SecurityIncident
   ): Promise<void> {
     const alert: Alert = {
-      severity: "critical",
+      severity: ALERT_SEVERITY.CRITICAL,
       title: `⚠️ CNIL DEADLINE: ${incident.title}`,
       message: this.formatCnilDeadlineMessage(incident),
       metadata: {
@@ -239,7 +241,7 @@ export class IncidentAlertService {
         payload: {
           summary: `[${incident.severity}] ${incident.title}`,
           source: "rgpd-ia-platform",
-          severity: incident.severity === "CRITICAL" ? "critical" : "error",
+          severity: incident.severity === INCIDENT_SEVERITY.CRITICAL ? "critical" : "error",
           timestamp: incident.detectedAt.toISOString(),
           custom_details: {
             type: incident.type,
@@ -296,7 +298,7 @@ export class IncidentAlertService {
       icon_emoji: this.config.slack.iconEmoji || ":shield:",
       attachments: [
         {
-          color: message.color || this.getSlackColor("warning"),
+          color: message.color || this.getSlackColor(ALERT_SEVERITY.WARNING),
           text: message.text,
           mrkdwn_in: ["text"],
         },
@@ -408,43 +410,43 @@ export class IncidentAlertService {
 
   private mapSeverityToAlertLevel(
     severity: IncidentSeverity
-  ): "info" | "warning" | "critical" {
+  ): AlertSeverity {
     switch (severity) {
-      case "CRITICAL":
-      case "HIGH":
-        return "critical";
-      case "MEDIUM":
-        return "warning";
+      case INCIDENT_SEVERITY.CRITICAL:
+      case INCIDENT_SEVERITY.HIGH:
+        return ALERT_SEVERITY.CRITICAL;
+      case INCIDENT_SEVERITY.MEDIUM:
+        return ALERT_SEVERITY.WARNING;
       default:
-        return "info";
+        return ALERT_SEVERITY.INFO;
     }
   }
 
   private getSeverityEmoji(severity: IncidentSeverity): string {
     switch (severity) {
-      case "CRITICAL":
+      case INCIDENT_SEVERITY.CRITICAL:
         return "🚨";
-      case "HIGH":
+      case INCIDENT_SEVERITY.HIGH:
         return "🔴";
-      case "MEDIUM":
+      case INCIDENT_SEVERITY.MEDIUM:
         return "🟡";
-      case "LOW":
+      case INCIDENT_SEVERITY.LOW:
         return "🟢";
       default:
         return "⚪";
     }
   }
 
-  private getSlackColor(severity: IncidentSeverity | "warning"): string {
+  private getSlackColor(severity: IncidentSeverity | AlertSeverity): string {
     switch (severity) {
-      case "CRITICAL":
+      case INCIDENT_SEVERITY.CRITICAL:
         return "#8B0000"; // Dark red
-      case "HIGH":
+      case INCIDENT_SEVERITY.HIGH:
         return "#FF0000"; // Red
-      case "MEDIUM":
-      case "warning":
+      case INCIDENT_SEVERITY.MEDIUM:
+      case ALERT_SEVERITY.WARNING:
         return "#FFA500"; // Orange
-      case "LOW":
+      case INCIDENT_SEVERITY.LOW:
         return "#008000"; // Green
       default:
         return "#808080"; // Gray

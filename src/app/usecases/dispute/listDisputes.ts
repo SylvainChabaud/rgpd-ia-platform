@@ -1,5 +1,6 @@
 import type { DisputeRepo } from '@/app/ports/DisputeRepo';
 import type { UserDispute } from '@/domain/legal/UserDispute';
+import { DISPUTE_STATUS } from '@/domain/legal/UserDispute';
 
 /**
  * List user disputes use-case
@@ -39,8 +40,8 @@ export async function listDisputes(
   const disputes = await disputeRepo.findByUser(tenantId, userId);
 
   // Compter les disputes par statut
-  const pendingCount = disputes.filter(d => d.status === 'pending').length;
-  const underReviewCount = disputes.filter(d => d.status === 'under_review').length;
+  const pendingCount = disputes.filter(d => d.status === DISPUTE_STATUS.PENDING).length;
+  const underReviewCount = disputes.filter(d => d.status === DISPUTE_STATUS.UNDER_REVIEW).length;
 
   return {
     disputes,

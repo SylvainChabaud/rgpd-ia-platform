@@ -1,6 +1,6 @@
 import { invokeStubProvider } from "@/ai/gateway/providers/stub";
 import { invokeOllamaProvider } from "@/ai/gateway/providers/ollama";
-import { AI_PROVIDER } from "@/ai/gateway/config";
+import { AI_PROVIDER, AI_PROVIDER_TYPE } from "@/ai/gateway/config";
 import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { UserRepo } from "@/app/ports/UserRepo";
 import { checkConsent } from "@/ai/gateway/enforcement/checkConsent";
@@ -85,10 +85,10 @@ export async function invokeLLM(
   // Route to configured provider (with redacted input)
   let providerOutput: InvokeLLMOutput;
   switch (AI_PROVIDER) {
-    case "ollama":
+    case AI_PROVIDER_TYPE.OLLAMA:
       providerOutput = await invokeOllamaProvider(redactedInput);
       break;
-    case "stub":
+    case AI_PROVIDER_TYPE.STUB:
       providerOutput = await invokeStubProvider(redactedInput);
       break;
     default:

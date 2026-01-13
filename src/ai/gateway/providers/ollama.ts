@@ -1,5 +1,5 @@
 import type { InvokeLLMInput, InvokeLLMOutput, LlmMessage } from "@/ai/gateway/invokeLLM";
-import { OLLAMA_CONFIG } from "@/ai/gateway/config";
+import { OLLAMA_CONFIG, AI_PROVIDER_TYPE } from "@/ai/gateway/config";
 
 /**
  * Ollama local provider (LOT 3.0 POC)
@@ -113,7 +113,7 @@ export async function invokeOllamaProvider(
         inputTokens: data.prompt_eval_count || 0,
         outputTokens: data.eval_count || 0,
       },
-      provider: "ollama",
+      provider: AI_PROVIDER_TYPE.OLLAMA,
       model: data.model,
     };
   } catch (error) {

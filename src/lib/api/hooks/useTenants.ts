@@ -9,7 +9,7 @@ import type {
   UpdateTenantInput,
   ListTenantsResponse,
   PaginationParams,
-  TenantStats,
+  TenantStatsResponse,
 } from '@/types/api'
 
 /**
@@ -56,12 +56,12 @@ export function useTenantById(id: string) {
 }
 
 /**
- * Get tenant stats (users count, AI jobs count, etc.)
+ * Get tenant stats (users count, AI jobs count, storage, etc.)
  */
 export function useTenantStats(id: string) {
   return useQuery({
     queryKey: ['tenants', id, 'stats'],
-    queryFn: () => apiClient<TenantStats>(`/tenants/${id}/stats`),
+    queryFn: () => apiClient<TenantStatsResponse>(`/tenants/${id}/stats`),
     enabled: !!id,
   })
 }

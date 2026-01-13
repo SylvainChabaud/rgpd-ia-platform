@@ -8,6 +8,16 @@
 
 import type { UserScope } from '@/shared/actorScope';
 
+/**
+ * User data status for filtering (Art. 18 RGPD)
+ */
+export const USER_DATA_STATUS = {
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+} as const;
+
+export type UserDataStatus = (typeof USER_DATA_STATUS)[keyof typeof USER_DATA_STATUS];
+
 export interface User {
   id: string;
   tenantId: string | null;

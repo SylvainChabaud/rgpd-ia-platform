@@ -5,6 +5,7 @@ import type {
   CreateAiJobInput,
   UpdateAiJobStatusInput,
 } from "@/app/ports/AiJobRepo";
+import { AI_JOB_STATUS } from "@/app/ports/AiJobRepo";
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import type { QueryResult } from "pg";
@@ -65,13 +66,14 @@ export class PgAiJobRepo implements AiJobRepo {
     await withTenantContext(pool, tenantId, async (client) => {
       await client.query(
         `INSERT INTO ai_jobs (id, tenant_id, user_id, purpose, model_ref, status)
-         VALUES ($1, $2, $3, $4, $5, 'PENDING')`,
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           id,
           tenantId,
           input.userId || null,
           input.purpose,
           input.modelRef || null,
+          AI_JOB_STATUS.PENDING,
         ]
       );
     });

@@ -9,7 +9,16 @@
  * sur un traitement automatisé.
  */
 
-export type DisputeStatus = 'pending' | 'resolved' | 'rejected';
+/**
+ * Dispute status constants
+ */
+export const DISPUTE_STATUS = {
+  PENDING: 'pending',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+} as const;
+
+export type DisputeStatus = (typeof DISPUTE_STATUS)[keyof typeof DISPUTE_STATUS];
 
 export interface UserDispute {
   readonly id: string;
@@ -87,14 +96,14 @@ export function canDisputeJob(aiJobCompletedAt: Date): boolean {
  * Business rule: vérifier si contestation est en attente
  */
 export function isDisputePending(dispute: UserDispute): boolean {
-  return dispute.status === 'pending';
+  return dispute.status === DISPUTE_STATUS.PENDING;
 }
 
 /**
  * Business rule: vérifier si contestation est résolue
  */
 export function isDisputeResolved(dispute: UserDispute): boolean {
-  return dispute.status === 'resolved';
+  return dispute.status === DISPUTE_STATUS.RESOLVED;
 }
 
 /**

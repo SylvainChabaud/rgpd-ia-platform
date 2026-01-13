@@ -23,6 +23,18 @@ import { randomUUID } from 'crypto';
 import { ACTOR_SCOPE, type UserScope } from '@/shared/actorScope';
 import { hashEmail } from '@/shared/ids';
 
+/**
+ * Authentication failure reason constants
+ */
+export const AUTH_FAILURE_REASON = {
+  NOT_FOUND: 'not_found',
+  USER_SUSPENDED: 'user_suspended',
+  TENANT_SUSPENDED: 'tenant_suspended',
+  AUTH_FAILED: 'auth_failed',
+} as const;
+
+export type AuthFailureReason = (typeof AUTH_FAILURE_REASON)[keyof typeof AUTH_FAILURE_REASON];
+
 export type AuthenticateUserInput = {
   email: string;
   password: string;
@@ -71,7 +83,7 @@ export async function authenticateUser(
       actorId: undefined,
       tenantId: undefined,
       metadata: {
-        reason: 'not_found',
+        reason: AUTH_FAILURE_REASON.NOT_FOUND,
         // CRITICAL: DO NOT log email or email_hash (P2 data)
       },
     });
@@ -88,7 +100,7 @@ export async function authenticateUser(
       actorId: user.id,
       tenantId: user.tenantId || undefined,
       metadata: {
-        reason: 'user_suspended',
+        reason: AUTH_FAILURE_REASON.USER_SUSPENDED,
       },
     });
 
@@ -106,7 +118,7 @@ export async function authenticateUser(
         actorId: user.id,
         tenantId: user.tenantId,
         metadata: {
-          reason: 'tenant_suspended',
+          reason: AUTH_FAILURE_REASON.TENANT_SUSPENDED,
           suspensionReason: tenant.suspensionReason || 'unknown',
         },
       });
@@ -127,7 +139,7 @@ export async function authenticateUser(
       actorId: user.id,
       tenantId: user.tenantId || undefined,
       metadata: {
-        reason: 'auth_failed',
+        reason: AUTH_FAILURE_REASON.AUTH_FAILED,
       },
     });
 

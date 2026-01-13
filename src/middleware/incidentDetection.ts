@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   evaluateDetectionEvent,
+  DETECTION_EVENT_TYPE,
   type CrossTenantEvent,
 } from "@/app/usecases/incident";
 import { createIncident } from "@/app/usecases/incident";
@@ -81,7 +82,7 @@ export async function reportCrossTenantAccess(
   event: Omit<CrossTenantEvent, "type">
 ): Promise<void> {
   const detectionEvent: CrossTenantEvent = {
-    type: "CROSS_TENANT_ACCESS",
+    type: DETECTION_EVENT_TYPE.CROSS_TENANT_ACCESS,
     ...event,
   };
 
@@ -184,7 +185,7 @@ import {
   getFailedLoginCount,
 } from "@/infrastructure/security/FailedLoginTracker";
 import type { BruteForceEvent } from "@/app/usecases/incident";
-import { DETECTION_THRESHOLDS } from "@/app/usecases/incident";
+import { DETECTION_THRESHOLDS, DETECTION_EVENT_TYPE as DET } from "@/app/usecases/incident";
 
 /**
  * Record a failed login attempt and check for brute force
@@ -207,7 +208,7 @@ export async function recordFailedLoginAndDetect(
 
   // Create brute force incident
   const event: BruteForceEvent = {
-    type: "BRUTE_FORCE",
+    type: DET.BRUTE_FORCE,
     sourceIp,
     email,
     attemptCount: count,
@@ -313,7 +314,7 @@ export async function recordExportAndDetect(
 
   // Create mass export incident
   const event = {
-    type: "MASS_EXPORT" as const,
+    type: DET.MASS_EXPORT,
     userId,
     tenantId,
     recordCount: entry.count,

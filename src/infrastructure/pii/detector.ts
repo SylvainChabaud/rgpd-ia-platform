@@ -16,7 +16,7 @@ import type {
   PiiEntity,
   PiiDetectionResult,
 } from "@/domain/anonymization";
-import { createPiiDetectionResult } from "@/domain/anonymization";
+import { PII_TYPE, createPiiDetectionResult } from "@/domain/anonymization";
 import { PII_PATTERNS, isWhitelistedName } from "./patterns";
 
 /**
@@ -53,7 +53,7 @@ export function detectPII(text: string): PiiDetectionResult {
       let endIndex = match.index + value.length;
 
       // For PERSON pattern, trim leading/trailing non-letters
-      if (piiType === "PERSON") {
+      if (piiType === PII_TYPE.PERSON) {
         value = value.trim();
         // Adjust start index if we trimmed leading chars
         const leadingTrimmed = match[0].length - match[0].trimStart().length;
@@ -62,7 +62,7 @@ export function detectPII(text: string): PiiDetectionResult {
       }
 
       // Apply whitelist filtering for PERSON type
-      if (piiType === "PERSON" && isWhitelistedName(value)) {
+      if (piiType === PII_TYPE.PERSON && isWhitelistedName(value)) {
         continue;
       }
 
@@ -111,7 +111,7 @@ export function detectPIIByType(
     const value = match[0];
 
     // Apply whitelist filtering for PERSON type
-    if (type === "PERSON" && isWhitelistedName(value)) {
+    if (type === PII_TYPE.PERSON && isWhitelistedName(value)) {
       continue;
     }
 

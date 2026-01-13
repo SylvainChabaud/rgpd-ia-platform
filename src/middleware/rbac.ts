@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractContext, isPlatformAdmin } from '@/lib/requestContext';
 import { forbiddenError } from '@/lib/errorResponse';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { ACTOR_ROLE } from '@/shared/actorRole';
 
 /**
  * RBAC middleware factory
@@ -126,9 +127,8 @@ export function withTenantAdmin<T extends NextHandler>(
       );
     }
 
-    // Check if role contains 'ADMIN' (flexible matching for TENANT_ADMIN, SUPERADMIN, etc.)
-    // This allows both TENANT_ADMIN and legacy 'admin' to pass
-    if (!ctx.role.includes('ADMIN') && ctx.role !== 'admin') {
+    // Check if role is TENANT_ADMIN (strict check, no legacy support)
+    if (ctx.role !== ACTOR_ROLE.TENANT_ADMIN) {
       return NextResponse.json(
         forbiddenError('Tenant admin access required'),
         { status: 403 }

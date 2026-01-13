@@ -13,12 +13,14 @@ import { ACTOR_SCOPE } from "@/shared/actorScope";
  * - Audit event emitted (P1 data only)
  *
  * LOT 5.0 — Consentement (opt-in / revoke) + enforcement
+ * LOT 12.2 — Enhanced with purposeId support for strong purpose-consent link
  */
 
 export type GrantConsentInput = {
   tenantId: string;
   userId: string;
   purpose: string;
+  purposeId?: string; // LOT 12.2: Optional link to purposes table (UUID)
 };
 
 export async function grantConsent(
@@ -26,7 +28,7 @@ export async function grantConsent(
   auditWriter: AuditEventWriter,
   input: GrantConsentInput
 ): Promise<void> {
-  const { tenantId, userId, purpose } = input;
+  const { tenantId, userId, purpose, purposeId } = input;
 
   // Validation: tenantId, userId, purpose required
   if (!tenantId || !userId || !purpose) {
@@ -34,9 +36,11 @@ export async function grantConsent(
   }
 
   // Create consent record
+  // LOT 12.2: Include purposeId for strong link to purposes table
   await consentRepo.create(tenantId, {
     userId,
     purpose,
+    purposeId,
     granted: true,
     grantedAt: new Date(),
   });
@@ -50,6 +54,7 @@ export async function grantConsent(
     tenantId,
     metadata: {
       purpose,
+      purposeId, // LOT 12.2: Track purposeId in audit for traceability
     },
   });
 }

@@ -7,7 +7,15 @@
  * - LOT 3.0 : Provider local POC
  */
 
-export type ProviderType = "stub" | "ollama";
+/**
+ * AI Provider constants
+ */
+export const AI_PROVIDER_TYPE = {
+  STUB: "stub",
+  OLLAMA: "ollama",
+} as const;
+
+export type ProviderType = (typeof AI_PROVIDER_TYPE)[keyof typeof AI_PROVIDER_TYPE];
 
 /**
  * Active provider
@@ -15,7 +23,7 @@ export type ProviderType = "stub" | "ollama";
  * POC: ollama (local inference)
  */
 export const AI_PROVIDER: ProviderType =
-  (process.env.AI_PROVIDER as ProviderType) || "stub";
+  (process.env.AI_PROVIDER as ProviderType) || AI_PROVIDER_TYPE.STUB;
 
 /**
  * Ollama configuration (LOT 3.0 POC)
@@ -30,6 +38,7 @@ export const OLLAMA_CONFIG = {
 /**
  * Validate configuration on load
  */
-if (!["stub", "ollama"].includes(AI_PROVIDER)) {
-  throw new Error(`Invalid AI_PROVIDER: ${AI_PROVIDER}. Must be 'stub' or 'ollama'.`);
+const validProviders = Object.values(AI_PROVIDER_TYPE);
+if (!validProviders.includes(AI_PROVIDER)) {
+  throw new Error(`Invalid AI_PROVIDER: ${AI_PROVIDER}. Must be one of: ${validProviders.join(", ")}.`);
 }

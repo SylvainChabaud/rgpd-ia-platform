@@ -12,7 +12,17 @@
  * - ALL operations MUST include tenantId (strict isolation)
  */
 
-export type AiJobStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+/**
+ * AI Job status constants
+ */
+export const AI_JOB_STATUS = {
+  PENDING: 'PENDING',
+  RUNNING: 'RUNNING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+} as const;
+
+export type AiJobStatus = (typeof AI_JOB_STATUS)[keyof typeof AI_JOB_STATUS];
 
 export interface AiJob {
   id: string;

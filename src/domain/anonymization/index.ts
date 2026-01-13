@@ -6,7 +6,7 @@
  */
 
 export type { PiiType, PiiEntity, PiiDetectionResult } from "./PiiEntity";
-export { createPiiDetectionResult } from "./PiiEntity";
+export { PII_TYPE, createPiiDetectionResult } from "./PiiEntity";
 
 export type {
   PiiMapping,

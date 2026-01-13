@@ -93,3 +93,11 @@ export function conflictError(
 ): ErrorResponse {
   return errorResponse('Conflict', message);
 }
+
+/**
+ * Tenant context required error (403)
+ * Used when a tenant-scoped operation is missing tenant context
+ */
+export function tenantContextRequiredError(): ErrorResponse {
+  return forbiddenError('Tenant context required');
+}

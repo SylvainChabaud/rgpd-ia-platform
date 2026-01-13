@@ -11,17 +11,34 @@
  */
 
 /**
- * RGPD request type (EXPORT or DELETE)
+ * RGPD request type constants
  */
-export type RgpdRequestType = "EXPORT" | "DELETE";
+export const RGPD_REQUEST_TYPE = {
+  EXPORT: 'EXPORT',
+  DELETE: 'DELETE',
+} as const;
 
 /**
- * RGPD request status
+ * RGPD request type (EXPORT or DELETE)
+ */
+export type RgpdRequestType = (typeof RGPD_REQUEST_TYPE)[keyof typeof RGPD_REQUEST_TYPE];
+
+/**
+ * RGPD request status constants
  * - PENDING: Soft delete done, awaiting purge
  * - COMPLETED: Hard delete done, data irrecoverable
  * - CANCELLED: Request cancelled before purge
  */
-export type RgpdRequestStatus = "PENDING" | "COMPLETED" | "CANCELLED";
+export const RGPD_REQUEST_STATUS = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+/**
+ * RGPD request status
+ */
+export type RgpdRequestStatus = (typeof RGPD_REQUEST_STATUS)[keyof typeof RGPD_REQUEST_STATUS];
 
 /**
  * RGPD Request (persisted in rgpd_requests table)

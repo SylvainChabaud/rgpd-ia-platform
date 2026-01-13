@@ -12,6 +12,7 @@ import type {
   ListUsersResponse,
   PaginationParams,
 } from '@/types/api'
+import type { UserDataStatus } from '@/app/ports/UserRepo'
 
 /**
  * TanStack Query hooks for Users API
@@ -42,7 +43,7 @@ import type {
 export function useListUsers(params?: PaginationParams & {
   tenantId?: string
   role?: string
-  status?: 'active' | 'suspended'
+  status?: UserDataStatus
 }) {
   // Get current user scope to determine which endpoint to use
   const user = useAuthStore((state) => state.user)

@@ -136,6 +136,9 @@ export interface TenantDashboardStats {
       completed: number
     }
   }
+  storage: {
+    usedBytes: number // Estimated storage in bytes
+  }
 }
 
 /**

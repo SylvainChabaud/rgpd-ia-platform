@@ -19,6 +19,8 @@ export {
   getDefaultSeverity,
   mapEventToIncidentType,
   DETECTION_THRESHOLDS,
+  DETECTION_EVENT_TYPE,
+  type DetectionEventType,
   type DetectionEvent,
   type BruteForceEvent,
   type CrossTenantEvent,

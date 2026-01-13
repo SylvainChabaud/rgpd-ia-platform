@@ -4,6 +4,7 @@ import type {
   ReviewOppositionInput,
 } from '@/app/ports/OppositionRepo';
 import type { UserOpposition, OppositionStatus, TreatmentType } from '@/domain/legal/UserOpposition';
+import { OPPOSITION_STATUS } from '@/domain/legal/UserOpposition';
 import { pool } from '@/infrastructure/db/pg';
 import { withTenantContext } from '@/infrastructure/db/tenantContext';
 import type { QueryResult } from 'pg';
@@ -106,7 +107,7 @@ export class PgOppositionRepo implements OppositionRepo {
           input.userId,
           input.treatmentType,
           input.reason.trim(),
-          'pending',
+          OPPOSITION_STATUS.PENDING,
           null,
           null,
           now,
@@ -150,7 +151,7 @@ export class PgOppositionRepo implements OppositionRepo {
       }
 
       const opposition = mapRowToOpposition(checkRes.rows[0]);
-      if (opposition.status !== 'pending') {
+      if (opposition.status !== OPPOSITION_STATUS.PENDING) {
         throw new Error('Only pending oppositions can be reviewed');
       }
 
@@ -222,9 +223,9 @@ export class PgOppositionRepo implements OppositionRepo {
         `SELECT id, tenant_id, user_id, treatment_type, reason, status,
                 admin_response, reviewed_by, created_at, reviewed_at, metadata
          FROM user_oppositions
-         WHERE tenant_id = $1 AND status = 'pending' AND deleted_at IS NULL
+         WHERE tenant_id = $1 AND status = $2 AND deleted_at IS NULL
          ORDER BY created_at ASC`,
-        [tenantId]
+        [tenantId, OPPOSITION_STATUS.PENDING]
       );
 
       return res.rows.map(mapRowToOpposition);
@@ -245,11 +246,11 @@ export class PgOppositionRepo implements OppositionRepo {
                 admin_response, reviewed_by, created_at, reviewed_at, metadata
          FROM user_oppositions
          WHERE tenant_id = $1
-           AND status = 'pending'
+           AND status = $2
            AND created_at < NOW() - INTERVAL '${SLA_DAYS} days'
            AND deleted_at IS NULL
          ORDER BY created_at ASC`,
-        [tenantId]
+        [tenantId, OPPOSITION_STATUS.PENDING]
       );
 
       return res.rows.map(mapRowToOpposition);
@@ -266,8 +267,8 @@ export class PgOppositionRepo implements OppositionRepo {
       const res = await client.query(
         `SELECT COUNT(*) as count
          FROM user_oppositions
-         WHERE tenant_id = $1 AND status = 'pending' AND deleted_at IS NULL`,
-        [tenantId]
+         WHERE tenant_id = $1 AND status = $2 AND deleted_at IS NULL`,
+        [tenantId, OPPOSITION_STATUS.PENDING]
       );
 
       return parseInt(res.rows[0].count, 10);

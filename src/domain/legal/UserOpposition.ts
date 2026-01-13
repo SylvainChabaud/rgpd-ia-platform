@@ -9,8 +9,30 @@
  * raisons tenant à sa situation particulière (sauf obligations légales).
  */
 
-export type OppositionStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected';
-export type TreatmentType = 'analytics' | 'marketing' | 'profiling' | 'ai_inference' | 'newsletter';
+/**
+ * Opposition status constants
+ */
+export const OPPOSITION_STATUS = {
+  PENDING: 'pending',
+  REVIEWED: 'reviewed',
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+} as const;
+
+export type OppositionStatus = (typeof OPPOSITION_STATUS)[keyof typeof OPPOSITION_STATUS];
+
+/**
+ * Treatment type constants
+ */
+export const TREATMENT_TYPE = {
+  ANALYTICS: 'analytics',
+  MARKETING: 'marketing',
+  PROFILING: 'profiling',
+  AI_INFERENCE: 'ai_inference',
+  NEWSLETTER: 'newsletter',
+} as const;
+
+export type TreatmentType = (typeof TREATMENT_TYPE)[keyof typeof TREATMENT_TYPE];
 
 export interface UserOpposition {
   readonly id: string;
@@ -83,7 +105,7 @@ export function createUserOpposition(
     userId: input.userId,
     treatmentType: input.treatmentType,
     reason: input.reason.trim(),
-    status: 'pending',
+    status: OPPOSITION_STATUS.PENDING,
     adminResponse: null,
     reviewedBy: null,
     metadata: input.metadata,
@@ -98,7 +120,7 @@ export function reviewOpposition(
   review: ReviewOppositionInput
 ): Omit<UserOpposition, 'id' | 'createdAt'> {
   // Validation: opposition doit être pending
-  if (opposition.status !== 'pending') {
+  if (opposition.status !== OPPOSITION_STATUS.PENDING) {
     throw new Error('Only pending oppositions can be reviewed');
   }
 
@@ -120,7 +142,7 @@ export function reviewOpposition(
  * Business rule: vérifier si SLA dépassé (> 30 jours sans réponse)
  */
 export function isSlaExceeded(opposition: UserOpposition): boolean {
-  if (opposition.status !== 'pending') return false;
+  if (opposition.status !== OPPOSITION_STATUS.PENDING) return false;
 
   const slaDate = new Date(opposition.createdAt);
   slaDate.setDate(slaDate.getDate() + RESPONSE_SLA_DAYS);
@@ -131,7 +153,7 @@ export function isSlaExceeded(opposition: UserOpposition): boolean {
  * Business rule: calculer jours restants avant SLA
  */
 export function getDaysUntilSla(opposition: UserOpposition): number {
-  if (opposition.status !== 'pending') return 0;
+  if (opposition.status !== OPPOSITION_STATUS.PENDING) return 0;
 
   const slaDate = new Date(opposition.createdAt);
   slaDate.setDate(slaDate.getDate() + RESPONSE_SLA_DAYS);
@@ -146,7 +168,7 @@ export function getDaysUntilSla(opposition: UserOpposition): number {
  * Business rule: déterminer si opposition acceptée
  */
 export function isOppositionAccepted(opposition: UserOpposition): boolean {
-  return opposition.status === 'accepted';
+  return opposition.status === OPPOSITION_STATUS.ACCEPTED;
 }
 
 /**

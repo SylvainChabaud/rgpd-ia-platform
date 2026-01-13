@@ -85,12 +85,7 @@ export function isTenantMember(context: RequestContext, tenantId: string): boole
 /**
  * Check if user is a tenant admin
  * Returns false for PLATFORM scope users
- *
- * Note: Legacy 'admin' check kept for backward compatibility with old tokens
  */
 export function isTenantAdmin(context: RequestContext): boolean {
-  return context.scope === ACTOR_SCOPE.TENANT && (
-    context.role === ACTOR_ROLE.TENANT_ADMIN ||
-    context.role === 'admin'  // Legacy support (deprecated)
-  );
+  return context.scope === ACTOR_SCOPE.TENANT && context.role === ACTOR_ROLE.TENANT_ADMIN;
 }

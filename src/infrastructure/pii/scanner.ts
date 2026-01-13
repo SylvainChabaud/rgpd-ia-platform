@@ -15,6 +15,8 @@
 
 import { detectPII } from "./detector";
 import type { PiiType } from "@/domain/anonymization";
+import { PII_TYPE } from "@/domain/anonymization";
+import { ALERT_SEVERITY, type AlertSeverity } from "@/app/ports/AlertService";
 
 /**
  * Log line with metadata
@@ -63,7 +65,7 @@ export interface PiiLeakResult {
   /**
    * Severity of the leak (info, warning, critical)
    */
-  severity: "info" | "warning" | "critical";
+  severity: AlertSeverity;
 }
 
 /**
@@ -173,30 +175,30 @@ export function scanLogLines(logLines: LogLine[]): PiiScanResult {
 function determineSeverity(
   piiTypes: PiiType[],
   piiCount: number
-): "info" | "warning" | "critical" {
+): AlertSeverity {
   // Critical PII types
-  const criticalTypes: PiiType[] = ["SSN", "IBAN"];
+  const criticalTypes: PiiType[] = [PII_TYPE.SSN, PII_TYPE.IBAN];
   if (piiTypes.some((t) => criticalTypes.includes(t))) {
-    return "critical";
+    return ALERT_SEVERITY.CRITICAL;
   }
 
   // High PII count
   if (piiCount > 10) {
-    return "critical";
+    return ALERT_SEVERITY.CRITICAL;
   }
 
   // Warning PII types
-  const warningTypes: PiiType[] = ["EMAIL", "PHONE", "PERSON"];
+  const warningTypes: PiiType[] = [PII_TYPE.EMAIL, PII_TYPE.PHONE, PII_TYPE.PERSON];
   if (piiTypes.some((t) => warningTypes.includes(t))) {
-    return "warning";
+    return ALERT_SEVERITY.WARNING;
   }
 
   // Medium PII count
   if (piiCount > 5) {
-    return "warning";
+    return ALERT_SEVERITY.WARNING;
   }
 
-  return "info";
+  return ALERT_SEVERITY.INFO;
 }
 
 /**

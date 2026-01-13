@@ -8,13 +8,29 @@
  * Implémente le droit d'opposition prévu par l'article 21 du RGPD.
  */
 
-export type OppositionStatus = 'pending' | 'approved' | 'rejected';
-export type TreatmentType =
-  | 'marketing'
-  | 'profiling'
-  | 'analytics'
-  | 'ai_processing'
-  | 'legitimate_interest';
+/**
+ * Opposition status constants
+ */
+export const OPPOSITION_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+} as const;
+
+export type OppositionStatus = (typeof OPPOSITION_STATUS)[keyof typeof OPPOSITION_STATUS];
+
+/**
+ * Treatment type constants
+ */
+export const TREATMENT_TYPE = {
+  MARKETING: 'marketing',
+  PROFILING: 'profiling',
+  ANALYTICS: 'analytics',
+  AI_PROCESSING: 'ai_processing',
+  LEGITIMATE_INTEREST: 'legitimate_interest',
+} as const;
+
+export type TreatmentType = (typeof TREATMENT_TYPE)[keyof typeof TREATMENT_TYPE];
 
 export interface UserOpposition {
   readonly id: string;
@@ -47,15 +63,15 @@ export const MAX_OPPOSITION_REASON_LENGTH = 1000;
 
 // Traitements qui doivent être automatiquement approuvés (Art. 21.1)
 export const AUTO_APPROVE_TREATMENTS: TreatmentType[] = [
-  'marketing',
-  'profiling',
+  TREATMENT_TYPE.MARKETING,
+  TREATMENT_TYPE.PROFILING,
 ];
 
 // Traitements nécessitant révision manuelle (intérêt légitime impérieux)
 export const MANUAL_REVIEW_TREATMENTS: TreatmentType[] = [
-  'ai_processing',
-  'legitimate_interest',
-  'analytics',
+  TREATMENT_TYPE.AI_PROCESSING,
+  TREATMENT_TYPE.LEGITIMATE_INTEREST,
+  TREATMENT_TYPE.ANALYTICS,
 ];
 
 /**
@@ -79,13 +95,7 @@ export function createOpposition(
   }
 
   // Validation: type de traitement valide
-  const validTreatments: TreatmentType[] = [
-    'marketing',
-    'profiling',
-    'analytics',
-    'ai_processing',
-    'legitimate_interest',
-  ];
+  const validTreatments: TreatmentType[] = Object.values(TREATMENT_TYPE);
 
   if (!validTreatments.includes(input.treatmentType)) {
     throw new Error('Invalid treatment type');
@@ -117,14 +127,14 @@ export function requiresManualReview(treatmentType: TreatmentType): boolean {
  * Business rule: vérifier si opposition est en attente
  */
 export function isOppositionPending(opposition: UserOpposition): boolean {
-  return opposition.status === 'pending';
+  return opposition.status === OPPOSITION_STATUS.PENDING;
 }
 
 /**
  * Business rule: vérifier si opposition est approuvée
  */
 export function isOppositionApproved(opposition: UserOpposition): boolean {
-  return opposition.status === 'approved';
+  return opposition.status === OPPOSITION_STATUS.APPROVED;
 }
 
 /**

@@ -13,6 +13,17 @@
  */
 
 /**
+ * Use case risk level constants
+ */
+export const USE_CASE_RISK_LEVEL = {
+  LOW: "low",
+  MODERATE: "moderate",
+  HIGH: "high",
+} as const;
+
+export type UseCaseRiskLevel = (typeof USE_CASE_RISK_LEVEL)[keyof typeof USE_CASE_RISK_LEVEL];
+
+/**
  * Allowed LLM Use Cases (§2 of LLM_USAGE_POLICY.md)
  */
 export enum AllowedUseCase {
@@ -96,7 +107,7 @@ export interface UseCaseValidationResult {
   readonly useCase: string;
 
   /** Risk level (low/moderate/high) */
-  readonly riskLevel: "low" | "moderate" | "high";
+  readonly riskLevel: UseCaseRiskLevel;
 
   /** Rejection reason if not allowed */
   readonly rejectionReason?: string;
@@ -133,7 +144,7 @@ export function validateUseCase(useCase: string): UseCaseValidationResult {
     return {
       allowed: false,
       useCase,
-      riskLevel: "high",
+      riskLevel: USE_CASE_RISK_LEVEL.HIGH,
       rejectionReason: `Forbidden use case: ${useCase} (violates LLM_USAGE_POLICY.md §3)`,
       consentRequired: false,
       humanValidationRequired: false,
@@ -156,7 +167,7 @@ export function validateUseCase(useCase: string): UseCaseValidationResult {
   return {
     allowed: false,
     useCase,
-    riskLevel: "high",
+    riskLevel: USE_CASE_RISK_LEVEL.HIGH,
     rejectionReason: `Unknown use case: ${useCase} (not in allowlist)`,
     consentRequired: false,
     humanValidationRequired: false,
@@ -167,7 +178,7 @@ export function validateUseCase(useCase: string): UseCaseValidationResult {
  * Get risk profile for allowed use case
  */
 function getAllowedUseCaseRiskProfile(useCase: AllowedUseCase): {
-  riskLevel: "low" | "moderate" | "high";
+  riskLevel: UseCaseRiskLevel;
   consentRequired: boolean;
   humanValidationRequired: boolean;
 } {
@@ -179,7 +190,7 @@ function getAllowedUseCaseRiskProfile(useCase: AllowedUseCase): {
     case AllowedUseCase.PII_ANONYMIZATION:
     case AllowedUseCase.PII_REDACTION:
       return {
-        riskLevel: "low",
+        riskLevel: USE_CASE_RISK_LEVEL.LOW,
         consentRequired: true, // Always require consent for AI processing
         humanValidationRequired: false,
       };
@@ -189,7 +200,7 @@ function getAllowedUseCaseRiskProfile(useCase: AllowedUseCase): {
     case AllowedUseCase.DOCUMENT_TYPE_DETECTION:
     case AllowedUseCase.NON_DECISIONAL_SCORING:
       return {
-        riskLevel: "moderate",
+        riskLevel: USE_CASE_RISK_LEVEL.MODERATE,
         consentRequired: true,
         humanValidationRequired: false,
       };
@@ -198,7 +209,7 @@ function getAllowedUseCaseRiskProfile(useCase: AllowedUseCase): {
     case AllowedUseCase.FIELD_EXTRACTION:
     case AllowedUseCase.CONTENT_STRUCTURING:
       return {
-        riskLevel: "moderate",
+        riskLevel: USE_CASE_RISK_LEVEL.MODERATE,
         consentRequired: true,
         humanValidationRequired: false,
       };
@@ -207,14 +218,14 @@ function getAllowedUseCaseRiskProfile(useCase: AllowedUseCase): {
     case AllowedUseCase.WRITING_ASSISTANCE:
     case AllowedUseCase.SUGGESTIONS:
       return {
-        riskLevel: "high",
+        riskLevel: USE_CASE_RISK_LEVEL.HIGH,
         consentRequired: true,
         humanValidationRequired: true, // Always require human validation
       };
 
     default:
       return {
-        riskLevel: "high",
+        riskLevel: USE_CASE_RISK_LEVEL.HIGH,
         consentRequired: true,
         humanValidationRequired: true,
       };

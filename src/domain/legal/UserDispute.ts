@@ -8,7 +8,17 @@
  * prises automatiquement par l'IA (droit à révision humaine).
  */
 
-export type DisputeStatus = 'pending' | 'under_review' | 'resolved' | 'rejected';
+/**
+ * Dispute status constants
+ */
+export const DISPUTE_STATUS = {
+  PENDING: 'pending',
+  UNDER_REVIEW: 'under_review',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+} as const;
+
+export type DisputeStatus = (typeof DISPUTE_STATUS)[keyof typeof DISPUTE_STATUS];
 
 export interface UserDispute {
   readonly id: string;
@@ -87,7 +97,7 @@ export function createUserDispute(
     aiJobId: input.aiJobId ?? null,
     reason: input.reason.trim(),
     attachmentUrl: input.attachmentUrl ?? null,
-    status: 'pending',
+    status: DISPUTE_STATUS.PENDING,
     adminResponse: null,
     reviewedBy: null,
     metadata: input.metadata,
@@ -102,17 +112,17 @@ export function reviewDispute(
   review: ReviewDisputeInput
 ): Omit<UserDispute, 'id' | 'createdAt'> {
   // Validation: contestation doit être pending ou under_review
-  if (dispute.status !== 'pending' && dispute.status !== 'under_review') {
+  if (dispute.status !== DISPUTE_STATUS.PENDING && dispute.status !== DISPUTE_STATUS.UNDER_REVIEW) {
     throw new Error('Only pending or under_review disputes can be updated');
   }
 
   // Validation: réponse admin obligatoire si resolved ou rejected
-  if ((review.status === 'resolved' || review.status === 'rejected') && !review.adminResponse) {
+  if ((review.status === DISPUTE_STATUS.RESOLVED || review.status === DISPUTE_STATUS.REJECTED) && !review.adminResponse) {
     throw new Error('Admin response is required when resolving or rejecting a dispute');
   }
 
   const now = new Date();
-  const isResolved = review.status === 'resolved' || review.status === 'rejected';
+  const isResolved = review.status === DISPUTE_STATUS.RESOLVED || review.status === DISPUTE_STATUS.REJECTED;
 
   return {
     ...dispute,
@@ -128,7 +138,7 @@ export function reviewDispute(
  * Business rule: vérifier si SLA dépassé (> 30 jours sans réponse)
  */
 export function isSlaExceeded(dispute: UserDispute): boolean {
-  if (dispute.status === 'resolved' || dispute.status === 'rejected') return false;
+  if (dispute.status === DISPUTE_STATUS.RESOLVED || dispute.status === DISPUTE_STATUS.REJECTED) return false;
 
   const slaDate = new Date(dispute.createdAt);
   slaDate.setDate(slaDate.getDate() + REVIEW_SLA_DAYS);
@@ -139,7 +149,7 @@ export function isSlaExceeded(dispute: UserDispute): boolean {
  * Business rule: calculer jours restants avant SLA
  */
 export function getDaysUntilSla(dispute: UserDispute): number {
-  if (dispute.status === 'resolved' || dispute.status === 'rejected') return 0;
+  if (dispute.status === DISPUTE_STATUS.RESOLVED || dispute.status === DISPUTE_STATUS.REJECTED) return 0;
 
   const slaDate = new Date(dispute.createdAt);
   slaDate.setDate(slaDate.getDate() + REVIEW_SLA_DAYS);
@@ -165,7 +175,7 @@ export function isAttachmentExpired(dispute: UserDispute): boolean {
  * Business rule: déterminer si contestation résolue positivement
  */
 export function isDisputeResolved(dispute: UserDispute): boolean {
-  return dispute.status === 'resolved';
+  return dispute.status === DISPUTE_STATUS.RESOLVED;
 }
 
 /**

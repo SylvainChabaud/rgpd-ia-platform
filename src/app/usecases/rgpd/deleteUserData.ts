@@ -5,7 +5,7 @@ import type { UserRepo } from "@/app/ports/UserRepo";
 import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AiJobRepo } from "@/app/ports/AiJobRepo";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
-import { calculatePurgeDate } from "@/domain/rgpd/DeletionRequest";
+import { calculatePurgeDate, RGPD_REQUEST_TYPE, RGPD_REQUEST_STATUS } from "@/domain/rgpd/DeletionRequest";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
@@ -59,10 +59,10 @@ export async function deleteUserData(
     userId
   );
   if (existingRequest) {
-    if (existingRequest.status === "COMPLETED") {
+    if (existingRequest.status === RGPD_REQUEST_STATUS.COMPLETED) {
       throw new Error("User data already deleted");
     }
-    if (existingRequest.status === "PENDING") {
+    if (existingRequest.status === RGPD_REQUEST_STATUS.PENDING) {
       // Idempotent: return existing request
       return {
         requestId: existingRequest.id,
@@ -90,8 +90,8 @@ export async function deleteUserData(
   // Step 4: Create RGPD deletion request
   const request = await rgpdRequestRepo.create(tenantId, {
     userId,
-    type: "DELETE",
-    status: "PENDING",
+    type: RGPD_REQUEST_TYPE.DELETE,
+    status: RGPD_REQUEST_STATUS.PENDING,
     scheduledPurgeAt,
   });
 

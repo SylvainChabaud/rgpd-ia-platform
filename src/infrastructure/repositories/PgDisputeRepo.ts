@@ -4,6 +4,7 @@ import type {
   ReviewDisputeInput,
 } from '@/app/ports/DisputeRepo';
 import type { UserDispute, DisputeStatus } from '@/domain/legal/UserDispute';
+import { DISPUTE_STATUS } from '@/domain/legal/UserDispute';
 import { pool } from '@/infrastructure/db/pg';
 import { withTenantContext } from '@/infrastructure/db/tenantContext';
 import type { QueryResult } from 'pg';
@@ -112,7 +113,7 @@ export class PgDisputeRepo implements DisputeRepo {
           input.aiJobId ?? null,
           input.reason.trim(),
           input.attachmentUrl ?? null,
-          'pending',
+          DISPUTE_STATUS.PENDING,
           null,
           null,
           now,
@@ -137,7 +138,7 @@ export class PgDisputeRepo implements DisputeRepo {
     }
 
     // Validation: réponse admin obligatoire si resolved/rejected
-    if ((review.status === 'resolved' || review.status === 'rejected') && !review.adminResponse) {
+    if ((review.status === DISPUTE_STATUS.RESOLVED || review.status === DISPUTE_STATUS.REJECTED) && !review.adminResponse) {
       throw new Error('Admin response is required when resolving or rejecting a dispute');
     }
 
@@ -156,13 +157,13 @@ export class PgDisputeRepo implements DisputeRepo {
       }
 
       const dispute = mapRowToDispute(checkRes.rows[0]);
-      if (dispute.status !== 'pending' && dispute.status !== 'under_review') {
+      if (dispute.status !== DISPUTE_STATUS.PENDING && dispute.status !== DISPUTE_STATUS.UNDER_REVIEW) {
         throw new Error('Only pending or under_review disputes can be updated');
       }
 
       // Mettre à jour
       const now = new Date();
-      const isResolved = review.status === 'resolved' || review.status === 'rejected';
+      const isResolved = review.status === DISPUTE_STATUS.RESOLVED || review.status === DISPUTE_STATUS.REJECTED;
 
       const updateRes: QueryResult<DisputeRow> = await client.query(
         `UPDATE user_disputes
@@ -260,9 +261,9 @@ export class PgDisputeRepo implements DisputeRepo {
         `SELECT id, tenant_id, user_id, ai_job_id, reason, attachment_url, status,
                 admin_response, reviewed_by, created_at, reviewed_at, resolved_at, metadata
          FROM user_disputes
-         WHERE tenant_id = $1 AND status = 'pending' AND deleted_at IS NULL
+         WHERE tenant_id = $1 AND status = $2 AND deleted_at IS NULL
          ORDER BY created_at ASC`,
-        [tenantId]
+        [tenantId, DISPUTE_STATUS.PENDING]
       );
 
       return res.rows.map(mapRowToDispute);
@@ -280,9 +281,9 @@ export class PgDisputeRepo implements DisputeRepo {
         `SELECT id, tenant_id, user_id, ai_job_id, reason, attachment_url, status,
                 admin_response, reviewed_by, created_at, reviewed_at, resolved_at, metadata
          FROM user_disputes
-         WHERE tenant_id = $1 AND status = 'under_review' AND deleted_at IS NULL
+         WHERE tenant_id = $1 AND status = $2 AND deleted_at IS NULL
          ORDER BY created_at ASC`,
-        [tenantId]
+        [tenantId, DISPUTE_STATUS.UNDER_REVIEW]
       );
 
       return res.rows.map(mapRowToDispute);
@@ -303,11 +304,11 @@ export class PgDisputeRepo implements DisputeRepo {
                 admin_response, reviewed_by, created_at, reviewed_at, resolved_at, metadata
          FROM user_disputes
          WHERE tenant_id = $1
-           AND status IN ('pending', 'under_review')
+           AND status IN ($2, $3)
            AND created_at < NOW() - INTERVAL '${SLA_DAYS} days'
            AND deleted_at IS NULL
          ORDER BY created_at ASC`,
-        [tenantId]
+        [tenantId, DISPUTE_STATUS.PENDING, DISPUTE_STATUS.UNDER_REVIEW]
       );
 
       return res.rows.map(mapRowToDispute);
@@ -324,8 +325,8 @@ export class PgDisputeRepo implements DisputeRepo {
       const res = await client.query(
         `SELECT COUNT(*) as count
          FROM user_disputes
-         WHERE tenant_id = $1 AND status = 'pending' AND deleted_at IS NULL`,
-        [tenantId]
+         WHERE tenant_id = $1 AND status = $2 AND deleted_at IS NULL`,
+        [tenantId, DISPUTE_STATUS.PENDING]
       );
 
       return parseInt(res.rows[0].count, 10);

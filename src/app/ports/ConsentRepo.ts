@@ -16,6 +16,7 @@ export interface Consent {
   tenantId: string;
   userId: string;
   purpose: string;
+  purposeId: string | null; // LOT 12.2: Link to purposes table (UUID)
   granted: boolean;
   grantedAt: Date | null;
   revokedAt: Date | null;
@@ -25,23 +26,34 @@ export interface Consent {
 export interface CreateConsentInput {
   userId: string;
   purpose: string;
+  purposeId?: string; // LOT 12.2: Optional link to purposes table (UUID)
   granted: boolean;
   grantedAt?: Date;
 }
+
+/**
+ * Purpose identifier for consent lookup
+ * LOT 12.2: Support both legacy string and new UUID-based identification
+ */
+export type PurposeIdentifier =
+  | { type: 'label'; value: string }      // Legacy: match by purpose string/label
+  | { type: 'purposeId'; value: string }; // New: match by purposes.id UUID
 
 export interface ConsentRepo {
   /**
    * Find latest consent for user and purpose within tenant
    *
+   * LOT 12.2: Enhanced to support both legacy string and new UUID-based lookup
+   *
    * @param tenantId - REQUIRED tenant isolation
    * @param userId - user identifier
-   * @param purpose - consent purpose (e.g., 'analytics', 'ai_processing')
+   * @param purposeIdentifier - consent purpose (string for legacy, or PurposeIdentifier for new)
    * @returns Latest consent or null
    */
   findByUserAndPurpose(
     tenantId: string,
     userId: string,
-    purpose: string
+    purposeIdentifier: string | PurposeIdentifier
   ): Promise<Consent | null>;
 
   /**
@@ -64,12 +76,14 @@ export interface ConsentRepo {
   /**
    * Revoke consent for user and purpose
    *
+   * LOT 12.2: Enhanced to support both legacy string and new UUID-based lookup
+   *
    * @param tenantId - REQUIRED tenant isolation
    * @param userId - user identifier
-   * @param purpose - consent purpose
+   * @param purposeIdentifier - consent purpose (string for legacy, or PurposeIdentifier for new)
    * @throws Error if tenantId is empty (RGPD blocker)
    */
-  revoke(tenantId: string, userId: string, purpose: string): Promise<void>;
+  revoke(tenantId: string, userId: string, purposeIdentifier: string | PurposeIdentifier): Promise<void>;
 
   /**
    * Soft delete all consents for user (cascade RGPD deletion)

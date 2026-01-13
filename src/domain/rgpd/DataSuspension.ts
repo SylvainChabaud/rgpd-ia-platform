@@ -49,6 +49,16 @@ export interface UnsuspendDataInput {
 }
 
 /**
+ * Suspension event types for audit events
+ */
+export const SUSPENSION_EVENT_TYPE = {
+  SUSPENDED: 'suspended',
+  UNSUSPENDED: 'unsuspended',
+} as const;
+
+export type SuspensionEventType = (typeof SUSPENSION_EVENT_TYPE)[keyof typeof SUSPENSION_EVENT_TYPE];
+
+/**
  * Constantes business rules
  */
 export const MAX_NOTES_LENGTH = 1000;           // Limite notes internes
@@ -183,7 +193,7 @@ export function toPublicDataSuspension(suspension: DataSuspension): {
  */
 export function toAuditEvent(
   suspension: DataSuspension,
-  eventType: 'suspended' | 'unsuspended'
+  eventType: SuspensionEventType
 ): {
   eventType: string;
   tenantId: string;
@@ -211,12 +221,12 @@ export function generateSuspensionEmailMessage(suspension: DataSuspension): {
   preview: string;
   body: string;
 } {
-  const eventType = suspension.suspended ? 'suspended' : 'unsuspended';
+  const eventType = suspension.suspended ? SUSPENSION_EVENT_TYPE.SUSPENDED : SUSPENSION_EVENT_TYPE.UNSUSPENDED;
   const reasonLabel = suspension.suspendedReason
     ? getSuspensionReasonLabel(suspension.suspendedReason)
     : '';
 
-  if (eventType === 'suspended') {
+  if (eventType === SUSPENSION_EVENT_TYPE.SUSPENDED) {
     return {
       subject: 'Suspension du traitement de vos données',
       preview: 'Votre demande de suspension a été prise en compte',
