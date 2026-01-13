@@ -1,10 +1,12 @@
 # EPIC 11 — Back Office Super Admin (Interface PLATFORM)
 
-**Date** : 25 décembre 2025
-**Statut** : ❌ TODO
+**Date** : 25 décembre 2025 (Mise à jour : 13 janvier 2026)
+**Statut** : ✅ TERMINÉ (LOT 11.0-11.3)
 **Périmètre** : Frontend (Interface Web)
 **Scope** : PLATFORM (Super Admin uniquement)
 **RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 32 (Sécurité)
+
+> **Note** : Les fonctionnalités de protection plateforme (escalades, monitoring conformité tenants) sont traitées dans **EPIC 14** qui dépend de cet EPIC et de EPIC 12.
 
 ---
 
@@ -102,6 +104,7 @@ Construire une interface web **Back Office** sécurisée permettant au Super Adm
 | **EPIC 6** | ✅ Dépend | Accès aux logs/metrics (observabilité) |
 | **EPIC 7** | ✅ Dépend | Accès aux artefacts d'audit (preuves RGPD) |
 | **EPIC 12** | ➡️ Influence | Partage infrastructure Next.js (même app) |
+| **EPIC 14** | ⬅️ Dépendant | EPIC 14 utilise le dashboard Super Admin (LOT 11.3) + API suspension (LOT 11.1) |
 
 ---
 
@@ -141,9 +144,9 @@ Construire une interface web **Back Office** sécurisée permettant au Super Adm
 |----------------|---------------|-------------|-------------|--------|
 | RGPD Exports cross-tenant | `GET /api/rgpd/exports` | Tous les exports en cours | EPIC 5/LOT 5.1 | ✅ Implémenté |
 | RGPD Deletions cross-tenant | `GET /api/rgpd/deletions` | Toutes les suppressions en cours | EPIC 5/LOT 5.2 | ✅ Implémenté |
-| RGPD Violations Registry | `GET /api/rgpd/violations` | Registre incidents (Art. 33) | EPIC 9/LOT 9.0 | ❌ **À implémenter** |
-| DPIA Document Access | `GET /api/docs/dpia` | Accès DPIA Gateway LLM | EPIC 10/LOT 10.5 | ❌ **À implémenter** |
-| Registre Traitements | `GET /api/docs/registre` | Accès registre Art. 30 | EPIC 10/LOT 10.4 | ❌ **À implémenter** |
+| RGPD Violations Registry | `GET /api/incidents` | Registre incidents (Art. 33) | EPIC 9/LOT 9.0 | ✅ Implémenté |
+| DPIA Document Access | `GET /api/docs/dpia` | Accès DPIA Gateway LLM | EPIC 10/LOT 10.5 | ✅ Implémenté |
+| Registre Traitements | `GET /api/docs/registre` | Accès registre Art. 30 | EPIC 10/LOT 10.4 | ✅ Implémenté |
 
 ### 1.4.3 Corrélation avec EPIC 12 (Tenant Admin)
 
@@ -168,8 +171,8 @@ Construire une interface web **Back Office** sécurisée permettant au Super Adm
 | Stats globales | EPIC 4 | ✅ OK | US 11.8 |
 | Audit trail cross-tenant | EPIC 1 | ✅ OK | US 11.9 |
 | Logs système (Grafana) | EPIC 6 | ✅ OK | US 11.10 |
-| **Violations Registry API** | EPIC 9/LOT 9.0 | ❌ TODO | Dashboard alertes |
-| **DPIA/Registre Access API** | EPIC 10/LOT 10.4-10.5 | ❌ TODO | Documents conformité |
+| Violations Registry API | EPIC 9/LOT 9.0 | ✅ OK | Dashboard alertes |
+| DPIA/Registre Access API | EPIC 10/LOT 10.4-10.5 | ✅ OK | Documents conformité |
 
 ---
 
@@ -790,14 +793,53 @@ try {
 
 Référence **TASKS.md** :
 
-| LOT | Description | Durée estimée | Dépendances |
-|-----|-------------|---------------|-------------|
-| **LOT 11.0** | Infra Back Office + Auth | 5 jours | LOT 5.3 (API Routes) |
-| **LOT 11.1** | Gestion Tenants (CRUD) | 5 jours | LOT 11.0 |
-| **LOT 11.2** | Gestion Users Plateforme | 4 jours | LOT 11.0 |
-| **LOT 11.3** | Audit & Monitoring Dashboard | 4 jours | LOT 6.1 (Observabilité) |
+| LOT | Description | Durée estimée | Dépendances | Statut |
+|-----|-------------|---------------|-------------|--------|
+| **LOT 11.0** | Infra Back Office + Auth | 5 jours | LOT 5.3 (API Routes) | ✅ **TERMINÉ** |
+| **LOT 11.1** | Gestion Tenants (CRUD) | 5 jours | LOT 11.0 | ✅ **TERMINÉ** |
+| **LOT 11.2** | Gestion Users Plateforme | 4 jours | LOT 11.0 | ✅ **TERMINÉ** |
+| **LOT 11.3** | Audit & Monitoring Dashboard | 4 jours | LOT 6.1 (Observabilité) | ✅ **TERMINÉ** |
 
-**Total EPIC 11** : ~18 jours (3,6 semaines)
+**Total EPIC 11** : ~18 jours (3,6 semaines) ✅ TERMINÉ
+
+> **Note** : Les fonctionnalités de protection plateforme (escalades, monitoring conformité, rapports) ont été déplacées vers **EPIC 14** pour respecter l'ordre des dépendances (EPIC 14 dépend de EPIC 11 ET EPIC 12).
+
+### 7.1 Détails LOT 11.0 - Infra Back Office + Auth ✅
+
+**Implémenté** (voir `docs/implementation/LOT11.0-11.1_IMPLEMENTATION.md`) :
+- Structure route groups Next.js
+- Layout Super Admin avec PlatformSidebar
+- Authentification scope PLATFORM
+- Middleware RBAC
+- Page login partagée avec redirection scope-based
+
+### 7.2 Détails LOT 11.1 - Gestion Tenants ✅
+
+**Implémenté** :
+- CRUD tenants complet
+- Liste tenants avec filtres et pagination
+- Création tenant + admin initial
+- Suspension/réactivation tenant
+- Page détails tenant avec stats
+
+### 7.3 Détails LOT 11.2 - Gestion Users Plateforme ✅
+
+**Implémenté** :
+- Liste users cross-tenant
+- Création admin tenant
+- Suspension/réactivation user
+- Filtres et recherche
+
+### 7.4 Détails LOT 11.3 - Audit & Monitoring Dashboard ✅
+
+**Implémenté** (voir `docs/implementation/LOT11.3_IMPLEMENTATION.md`) :
+- Dashboard stats globales (KPIs, graphiques)
+- Page audit events avec export CSV
+- Page logs système
+- Registre violations (Art. 33.5)
+- Registre traitements (Art. 30)
+- DPIA Gateway LLM (Art. 35)
+- 198 tests unitaires, 92% coverage
 
 ---
 

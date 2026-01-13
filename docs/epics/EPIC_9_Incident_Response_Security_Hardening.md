@@ -1,10 +1,10 @@
 # EPIC 9 — Incident Response & Security Hardening
 
-**Date** : 25 décembre 2025  
-**Statut** : ❌ TODO  
-**Périmètre** : Backend + Ops/Sec + Documentation  
-**Scope** : PLATFORM (DevOps, SRE, DPO)  
-**RGPD Coverage** : Art. 33-34 (Notification violations), Art. 32 (Sécurité), Art. 5.1(f) (Intégrité)  
+**Date** : 25 décembre 2025
+**Statut** : ✅ TERMINÉ
+**Périmètre** : Backend + Ops/Sec + Documentation
+**Scope** : PLATFORM (DevOps, SRE, DPO)
+**RGPD Coverage** : Art. 33-34 (Notification violations), Art. 32 (Sécurité), Art. 5.1(f) (Intégrité)
 **Durée estimée** : 2 semaines
 
 ---
@@ -13,10 +13,10 @@
 
 ### 1.1 Contexte RGPD
 
-**Gap critique identifié** (cf. `ANALYSE_COUVERTURE_RGPD.md`) :
-- ❌ **Notification violations (Art. 33-34)** : Aucun processus
-- ⚠️ **Tests sécurité incomplets** : Pas de pentest, pas de tests chaos
-- ⚠️ **Backup/restore** : Non testé E2E
+**Gaps comblés** (implémenté) :
+- ✅ **Notification violations (Art. 33-34)** : Registre incidents + workflow 72h (LOT 9.0)
+- ✅ **Tests sécurité** : Pentest & Vulnerability Scanning (LOT 9.1)
+- ✅ **Résilience** : Chaos Engineering & tests E2E (LOT 9.2)
 
 **Articles RGPD concernés** :
 - **Art. 33** : Notification violation à l'autorité de contrôle (CNIL) **dans les 72 heures**

@@ -157,20 +157,20 @@ Construire une interface web **Front User** sécurisée et RGPD-compliant permet
 | **US 13.10** | Download Export | `GET /api/rgpd/exports/:exportId/download` | GET | EPIC 5/LOT 5.1 | ✅ Implémenté |
 | **US 13.11** | Request Deletion | `POST /api/rgpd/delete` | POST | EPIC 5/LOT 5.2 | ✅ Implémenté |
 | **US 13.11** | Confirm Deletion | `POST /api/rgpd/delete/confirm/:token` | POST | EPIC 5/LOT 5.2 | ✅ Implémenté |
-| **Layout** | Cookie Banner | `POST /api/consents/cookies` | POST | EPIC 10/LOT 10.3 | ❌ **À implémenter** |
-| **Layout** | Cookie Preferences | `GET /api/consents/cookies` | GET | EPIC 10/LOT 10.3 | ❌ **À implémenter** |
+| **Layout** | Cookie Banner | `POST /api/consents/cookies` | POST | EPIC 10/LOT 10.3 | ✅ Implémenté |
+| **Layout** | Cookie Preferences | `GET /api/consents/cookies` | GET | EPIC 10/LOT 10.3 | ✅ Implémenté |
 
 ### 1.4.2 Endpoints RGPD Complémentaires (Art. 18/21/22)
 
-> **Gaps identifiés** : Ces endpoints sont requis pour conformité RGPD complète mais non encore implémentés.
+> **APIs Backend implémentées** : Ces endpoints sont disponibles (EPIC 10 ✅), l'intégration frontend EPIC 13 reste à faire.
 
-| Droit RGPD | Fonctionnalité | Endpoint BACK proposé | EPIC Source | Status |
-|------------|----------------|----------------------|-------------|--------|
-| **Art. 18** | Suspendre mes données | `POST /api/rgpd/suspend` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 18** | Réactiver mes données | `POST /api/rgpd/unsuspend` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 21** | Opposition traitement | `POST /api/rgpd/oppose` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 22** | Demander révision humaine | `POST /api/rgpd/contest` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 22** | List mes contestations | `GET /api/rgpd/contests?userId=` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| Droit RGPD | Fonctionnalité | Endpoint BACK | EPIC Source | Status Backend |
+|------------|----------------|---------------|-------------|----------------|
+| **Art. 18** | Suspendre mes données | `POST /api/rgpd/suspend` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 18** | Réactiver mes données | `POST /api/rgpd/unsuspend` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 21** | Opposition traitement | `POST /api/rgpd/oppose` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 22** | Demander révision humaine | `POST /api/rgpd/contest` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 22** | List mes contestations | `GET /api/rgpd/contests?userId=` | EPIC 10/LOT 10.6 | ✅ Implémenté |
 
 ### 1.4.3 Prérequis BACK avant développement FRONT
 
@@ -182,9 +182,9 @@ Construire une interface web **Front User** sécurisée et RGPD-compliant permet
 | API Consents CRUD | EPIC 5/LOT 5.0 | ✅ OK | US 13.4, 13.7, 13.8 |
 | API Export RGPD | EPIC 5/LOT 5.1 | ✅ OK | US 13.10 |
 | API Deletion RGPD | EPIC 5/LOT 5.2 | ✅ OK | US 13.11 |
-| **API Cookies consent** | EPIC 10/LOT 10.3 | ❌ TODO | Cookie Banner Layout |
-| **API Art. 18/21/22** | EPIC 10/LOT 10.6 | ❌ TODO | Page My Data (droits complémentaires) |
-| **PII Pseudonymization** | EPIC 8/LOT 8.0 | ❌ TODO | Sécurité invocation LLM (Art. 32) |
+| API Cookies consent | EPIC 10/LOT 10.3 | ✅ OK | Cookie Banner Layout |
+| API Art. 18/21/22 | EPIC 10/LOT 10.6 | ✅ OK | Page My Data (droits complémentaires) |
+| PII Pseudonymization | EPIC 8/LOT 8.0 | ✅ OK | Sécurité invocation LLM (Art. 32) |
 
 ---
 

@@ -29,8 +29,8 @@ Cet EPIC fournit **tous les composants backend et documents** requis pour confor
 
 **Ordonnancement** :
 1. ✅ EPIC 8-9 (terminés)
-2. **👉 EPIC 10 (démarrer MAINTENANT)** ← Backend + Docs + Composants
-3. EPIC 11-13 (frontends, incluent nativement intégrations RGPD)
+2. ✅ EPIC 10 (terminé) ← Backend + Docs + Composants
+3. ✅ EPIC 11 (terminé), 🟡 EPIC 12 (en cours), ❌ EPIC 13-14 (TODO)
 
 ---
 
@@ -38,14 +38,14 @@ Cet EPIC fournit **tous les composants backend et documents** requis pour confor
 
 ### 1.1 Contexte RGPD
 
-**Gap critique identifié** (cf. `ANALYSE_COUVERTURE_RGPD.md`) :
-- ❌ **Politique de confidentialité** : Absente (Art. 13-14)
-- ❌ **CGU / CGV** : Absentes (base légale contrat)
-- ❌ **Page "Informations RGPD"** : Contact DPO, droits utilisateurs, réclamation CNIL manquants
-- ❌ **Cookie consent banner** : Absent (ePrivacy)
-- ❌ **Registre des traitements** : Manquant (Art. 30)
-- ❌ **DPIA** : Non réalisée (Art. 35)
-- ⚠️ **Droits complémentaires** : Art. 18 (Limitation), Art. 21 (Opposition), Art. 22 (Décisions automatisées) non couverts
+**Gaps comblés** (tous implémentés) :
+- ✅ **Politique de confidentialité** : Implémentée (Art. 13-14) - LOT 10.0
+- ✅ **CGU / CGV** : Implémentées (base légale contrat) - LOT 10.1
+- ✅ **Page "Informations RGPD"** : Contact DPO, droits utilisateurs, réclamation CNIL - LOT 10.2
+- ✅ **Cookie consent banner** : Implémenté (ePrivacy) - LOT 10.3
+- ✅ **Registre des traitements** : Créé (Art. 30) - LOT 10.7
+- ✅ **DPIA** : Réalisée (Art. 35) - LOT 10.7
+- ✅ **Droits complémentaires** : Art. 18, 21, 22 implémentés - LOT 10.5-10.6
 
 **Articles RGPD concernés** :
 - **Art. 13-14** : Information des personnes (transparence)

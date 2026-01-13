@@ -1,11 +1,12 @@
 # TASKS.md — Roadmap d'exécution (Plateforme RGPD-IA complète)
 
-> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 13** et en respectant les markdowns normatifs.
+> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 14** et en respectant les markdowns normatifs.
 >
 > **Périmètre** :
 > - **EPIC 1-7** : Backend Core (API + services + infra) — 85% RGPD
 > - **EPIC 8-10** : Backend RGPD 100% (Anonymisation, Security, Legal) — Gaps critiques
 > - **EPIC 11-13** : Frontend (Back Office + Front User) — Interfaces
+> - **EPIC 14** : Sécurité & Gouvernance RGPD Plateforme — Protection proactive
 
 ---
 
@@ -23,9 +24,10 @@
 | **EPIC 8** | Anonymisation & Pseudonymisation (Backend) | ✅ 100% | LOT 8.0-8.2 |
 | **EPIC 9** | Incident Response & Security Hardening (Backend) | ✅ 100% | LOT 9.0-9.2 |
 | **EPIC 10** | RGPD Legal & Compliance (Backend + Frontend + Docs) | ✅ 100% | LOT 10.0-10.7 |
-| **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ❌ TODO | LOT 11.0-11.3 |
-| **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | ❌ TODO | LOT 12.0-12.3 |
+| **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ✅ 100% | LOT 11.0-11.3 |
+| **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | 🟡 EN COURS | LOT 12.0-12.4 |
 | **EPIC 13** | Front User (Frontend utilisateur final) | ❌ TODO | LOT 13.0-13.4 |
+| **EPIC 14** | Sécurité & Gouvernance RGPD Plateforme | ❌ TODO | LOT 14.0 |
 
 ---
 
@@ -51,13 +53,14 @@ Références de cadrage (utiles) :
 - `docs/epics/Epic 6 — Stack Ia Docker Rgpd-ready (industrialisation).pdf` (EPIC 6)
 - `docs/epics/Epic 7 — Kit Conformité & Audit Rgpd (ia).pdf` (EPIC 7)
 
-**EPICs 8-13 (Markdown - Phase 2 en cours)** :
+**EPICs 8-14 (Markdown - Phase 2+ en cours)** :
 - `docs/epics/EPIC_8_Anonymisation_Pseudonymisation.md` (EPIC 8)
 - `docs/epics/EPIC_9_Incident_Response_Security_Hardening.md` (EPIC 9)
 - `docs/epics/EPIC_10_RGPD_Legal_Compliance.md` (EPIC 10)
-- `docs/epics/EPIC_11_Back_Office_Super_Admin.md` (EPIC 11)
+- `docs/epics/EPIC_11_Back_Office_Super_Admin.md` (EPIC 11) ✅
 - `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (EPIC 12)
 - `docs/epics/EPIC_13_Front_User.md` (EPIC 13)
+- `docs/epics/EPIC_14_Securite_Gouvernance_RGPD.md` (EPIC 14)
 
 **Documents de cadrage** :
 - `docs/epics/00 — Analyse De L'objectif (version Alignée Epic 1→7).pdf`
@@ -140,22 +143,23 @@ Références de cadrage (utiles) :
 ### Phase 3 : Frontend (EPIC 11-13) — 🟢 INTERFACES UTILISATEURS
 **Objectif** : Interfaces web pour administrer et utiliser la plateforme
 
-**Prérequis** : 
+**Prérequis** :
 - ✅ Phase 2A terminée (EPIC 8-9 backend RGPD core production-ready)
 - ✅ Phase 2B terminée (EPIC 10 backend APIs + docs + composants prêts)
 
 **Ordre recommandé** :
-1. ❌ **EPIC 11** : Back Office Super Admin (Frontend PLATFORM)
-   - LOT 11.0 : Infra Back Office (Next.js App Router + Auth)
-   - LOT 11.1 : Gestion Tenants (CRUD)
-   - LOT 11.2 : Gestion Users Plateforme (CRUD)
-   - LOT 11.3 : Audit & Monitoring Dashboard (intègre affichage Registre EPIC 10/LOT 10.4 + DPIA EPIC 10/LOT 10.5 + registre violations EPIC 9/LOT 9.0)
+1. ✅ **EPIC 11** : Back Office Super Admin (Frontend PLATFORM) — **TERMINÉ**
+   - LOT 11.0 : Infra Back Office (Next.js App Router + Auth) ✅
+   - LOT 11.1 : Gestion Tenants (CRUD) ✅
+   - LOT 11.2 : Gestion Users Plateforme (CRUD) ✅
+   - LOT 11.3 : Audit & Monitoring Dashboard ✅
 
-2. ❌ **EPIC 12** : Back Office Tenant Admin (Frontend TENANT)
-   - LOT 12.0 : Dashboard Tenant (Stats + Activity Feed)
-   - LOT 12.1 : Gestion Users Tenant (CRUD)
-   - LOT 12.2 : Gestion Consentements (Purposes + Tracking)
+2. 🟡 **EPIC 12** : Back Office Tenant Admin (Frontend TENANT)
+   - LOT 12.0 : Dashboard Tenant (Stats + Activity Feed) ✅
+   - LOT 12.1 : Gestion Users Tenant (CRUD) ✅
+   - LOT 12.2 : Gestion Consentements (Purposes + Tracking) ✅
    - LOT 12.3 : RGPD Management (Export/Delete Requests + intègre dashboards suspensions/oppositions/contests EPIC 10/LOT 10.6)
+   - LOT 12.4 : Fonctionnalités DPO (DPIA pré-remplis + Registre Art. 30 + Validation workflows + API escalade)
 
 3. ❌ **EPIC 13** : Front User (Frontend utilisateur final)
    - LOT 13.0 : Authentification & Layout User (intègre Cookie Banner EPIC 10/LOT 10.3 + liens footer pages légales EPIC 10/LOT 10.0-10.2)
@@ -163,6 +167,19 @@ Références de cadrage (utiles) :
    - LOT 13.2 : Historique AI Jobs (Liste + Filtres)
    - LOT 13.3 : Mes Consentements (Gestion + Historique)
    - LOT 13.4 : Mes Données RGPD (Export + Effacement + intègre droits Art. 18/21/22 EPIC 10/LOT 10.6)
+
+---
+
+### Phase 4 : Gouvernance RGPD (EPIC 14) — 🔴 PROTECTION PLATEFORME
+**Objectif** : Protection proactive et monitoring conformité tenants
+
+**Prérequis** :
+- ✅ EPIC 11 terminé (dashboard Super Admin existant)
+- ❌ EPIC 12 LOT 12.4 (API escalade côté tenant/DPO)
+
+**Ordre** :
+1. ❌ **EPIC 14** : Sécurité & Gouvernance RGPD Plateforme
+   - LOT 14.0 : Monitoring Conformité + Escalades + Actions + Rapports
 
 ---
 
@@ -1468,10 +1485,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 
 ---
 
-## LOT 11.3 — Audit & Monitoring Dashboard
+## LOT 11.3 — Audit & Monitoring Dashboard ✅
 
 **EPIC couverts** : EPIC 11, EPIC 7, EPIC 9 (registre violations), EPIC 10 (registre traitements, DPIA)
 **Durée estimée** : 4 jours
+**Statut** : ✅ **TERMINÉ** (voir `docs/implementation/LOT11.3_IMPLEMENTATION.md`)
 
 **Avant implémentation** : lire EPIC 11 (`docs/epics/EPIC_11_Back_Office_Super_Admin.md`) + EPIC 7 (audit) + EPIC 9 (`docs/epics/EPIC_9_Incident_Response_Security_Hardening.md`, LOT 9.0) + EPIC 10 (`docs/epics/EPIC_10_RGPD_Legal_Compliance.md`, LOT 10.4, 10.5).
 
@@ -1482,7 +1500,7 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Affichage DPIA Gateway LLM (LOT 10.5, lecture seule)
 - Gestion registre violations données (LOT 9.0, CRUD + export CSV)
 
-**Artefacts attendus**
+**Artefacts livrés**
 - Dashboard stats globales (widgets : tenants actifs, users totaux, AI jobs ce mois)
 - Page audit events (table avec filtres : tenant, user, action, date range)
 - Page registre violations données (liste, ajout, export CSV) — intégration LOT 9.0
@@ -1490,31 +1508,11 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Page DPIA Gateway LLM (lecture seule, affichage markdown) — intégration LOT 10.5
 - Graphiques activité (AI jobs par jour, exports RGPD, effacements)
 - Logs système (erreurs critiques, alertes)
-  - Environnement dev : lecture directe fichiers logs (via API backend)
-  - Environnement prod : intégration Loki/Elasticsearch (requêtes via API)
-  - Filtres : level (error, warn), tenant, date range
-  - Pagination : max 100 lignes
 - Export audit trail (CSV)
 
-**Prérequis** : Intégration avec système observabilité (LOT 6.1)
+**Résultats tests** : 198 tests unitaires, 92% coverage
 
-**Acceptance criteria (bloquants)**
-- Stats en temps réel
-- Filtres audit events fonctionnels
-- Graphiques lisibles (Recharts v2 - React 19 natif)
-- Export audit CSV RGPD-safe (P1 uniquement)
-- Registre violations CRUD fonctionnel
-- Registre traitements affiché correctement (markdown → HTML)
-- DPIA affiché correctement (markdown → HTML)
-- Logs système consultables (dev + prod)
-
-**Tests obligatoires**
-- Chargement dashboard stats
-- Filtrage audit events
-- Export CSV audit
-- CRUD registre violations (LOT 9.0)
-- Affichage registre traitements (LOT 10.4)
-- Affichage DPIA (LOT 10.5)
+> **Note** : Les fonctionnalités de protection plateforme (escalades, monitoring conformité, rapports) ont été déplacées vers **EPIC 14** pour respecter l'ordre des dépendances.
 
 ---
 
@@ -1586,29 +1584,98 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 ## LOT 12.2 — Gestion Consentements (Purposes + Tracking)
 
 **EPIC couverts** : EPIC 12, EPIC 5
-**Durée estimée** : 5 jours
+**Durée estimée** : 7 jours
 
-**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) + EPIC 5 (consents).
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) + EPIC 5 (consents) + `docs/implementation/LOT12.2_PURPOSE_TEMPLATES_SPEC.md`.
 
-**Objectif** : configurer et suivre les consentements IA par tenant.
+**Objectif** : configurer et suivre les consentements IA par tenant avec conformité RGPD garantie.
+
+### Architecture Purpose Templates (3 niveaux)
+
+**Niveau 1 — Templates système (Plateforme)**
+- 8 templates pré-validés RGPD avec base légale, catégorie, niveau de risque
+- Activés automatiquement pour chaque nouveau tenant
+- Immutables (base légale, risque non modifiables par tenant)
+
+**Niveau 2 — Configuration tenant**
+- Tenant Admin peut activer/désactiver les templates
+- Personnalisation : libellé, description, obligatoire
+- Champs RGPD hérités du template (lecture seule)
+
+**Niveau 3 — Finalités personnalisées (Wizard guidé)**
+- Pour besoins métier spécifiques non couverts par templates
+- Wizard 5 étapes avec questions RGPD
+- Avertissements automatiques (données P2/P3, DPIA requis)
+- Validation avant activation
+
+### Templates système inclus
+
+| Code | Nom | Base légale | Risque | DPIA |
+|------|-----|-------------|--------|------|
+| `AI_SUMMARIZATION` | Synthèse de documents | CONSENT | MEDIUM | Non |
+| `AI_CLASSIFICATION` | Classification automatique | CONSENT | MEDIUM | Non |
+| `AI_EXTRACTION` | Extraction d'entités | CONSENT | HIGH | Oui |
+| `AI_GENERATION` | Génération de contenu | CONSENT | MEDIUM | Non |
+| `AI_TRANSLATION` | Traduction automatique | CONSENT | LOW | Non |
+| `AI_OCR` | Reconnaissance caractères | CONSENT | LOW | Non |
+| `ANALYTICS_USAGE` | Statistiques utilisation | LEGITIMATE_INTEREST | LOW | Non |
+| `ESSENTIAL_SECURITY` | Sécurité | LEGITIMATE_INTEREST | LOW | Non |
+
+### Champs RGPD obligatoires (Art. 6)
+
+Chaque purpose doit avoir :
+- `lawful_basis` : base légale RGPD (CONSENT, CONTRACT, LEGAL_OBLIGATION, VITAL_INTEREST, PUBLIC_INTEREST, LEGITIMATE_INTEREST)
+- `category` : catégorie (AI_PROCESSING, ANALYTICS, MARKETING, ESSENTIAL)
+- `risk_level` : niveau de risque (LOW, MEDIUM, HIGH, CRITICAL)
+- `max_data_class` : classification données max (P0, P1, P2, P3)
+- `requires_dpia` : DPIA requis (true/false)
 
 **Artefacts attendus**
-- Page liste purposes (configurable : résumé, classification, extraction)
-- Page créer purpose (form : label, description, required)
+
+*Backend*
+- Migration `020_purpose_templates.sql` : table templates + champs RGPD sur purposes
+- Seeds `purpose-templates.sql` : 8 templates système
+- Port `PurposeTemplateRepo.ts` : interface templates
+- Repository `PgPurposeTemplateRepo.ts` : implémentation PostgreSQL
+- Service `CustomPurposeValidator.ts` : validation finalités personnalisées
+- API `GET /api/purposes/templates` : liste templates
+- API `POST /api/purposes/adopt` : adopter template
+- API `POST /api/purposes/custom/validate` : valider finalité perso
+- API `POST /api/purposes/custom` : créer finalité perso
+
+*Frontend*
+- Page liste purposes avec onglets (Templates, Personnalisées, Toutes)
+- Badges : base légale, niveau de risque, système/personnalisé
+- Page browser templates : grille cards avec filtres
+- Wizard création 5 étapes : identification, données, traitement, base légale, validation
+- Hooks React Query : `usePurposeTemplates`, `useAdoptTemplate`, `useValidateCustomPurpose`
+
+*Existant (déjà implémenté)*
 - Matrice consentements (users × purposes : granted/revoked/pending)
 - Historique consentements par user (date accordé, date révoqué)
 - Export consentements (CSV)
 
 **Acceptance criteria (bloquants)**
-- Purposes configurables par tenant
+- Templates système activés automatiquement pour nouveaux tenants
+- Base légale (Art. 6) trackée pour toutes les finalités
+- Niveau de risque et DPIA affichés sur chaque purpose
+- Wizard guidé avec avertissements RGPD pour finalités personnalisées
+- Templates système non supprimables (désactivables uniquement)
+- Immutabilité base légale après adoption
 - Matrice consentements lisible
 - Historique traçable
 - Export CSV RGPD-safe
+- Isolation tenant stricte
 
 **Tests obligatoires**
-- Créer purpose E2E
+- Templates CRUD API
+- Adopter template E2E
+- Créer purpose personnalisé via wizard E2E
+- Vérifier warnings RGPD (données P2/P3, DPIA)
+- Immutabilité base légale
 - Voir matrice consentements
 - Export CSV consentements
+- Isolation tenant (pas de cross-tenant templates personnalisés)
 
 ---
 
@@ -1638,6 +1705,155 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - Voir demandes export E2E
 - Voir demandes effacement E2E
 - Isolation tenant (pas de cross-tenant)
+
+---
+
+## LOT 12.4 — Fonctionnalités DPO (DPIA + Registre Art. 30)
+
+**EPIC couverts** : EPIC 12, EPIC 10 (Art. 35 DPIA)
+**Durée estimée** : 5 jours
+**Dépendances** : LOT 12.2 (Purposes), LOT 12.3 (RGPD Management), LOT 10.5 (DPIA backend)
+
+**Avant implémentation** : lire EPIC 12 (`docs/epics/EPIC_12_Back_Office_Tenant_Admin.md`) section 7.4 (DPO) + EPIC 10 (DPIA).
+
+**Objectif** : permettre au DPO du tenant de valider les DPIA et gérer le registre des traitements.
+
+**Architecture** :
+- Le DPO est un **rôle au sein du tenant** (pas un scope séparé)
+- Utilise le même layout `(tenant-admin)` que TENANT_ADMIN
+- Sidebar conditionnelle : affiche les menus DPO si `user.role === 'DPO'`
+- RBAC backend : vérifie le rôle DPO sur les routes `/portal/dpia/*`, `/portal/registre/*`
+
+**Séparation TENANT_ADMIN / DPO (Art. 38 RGPD)** :
+- **Comptes séparés** : TENANT_ADMIN et DPO = 2 users distincts (même si même personne physique)
+- **Un rôle par compte** : un user ne peut avoir qu'un seul rôle
+- **Détection cumul** : warning RGPD si même email/nom pour les 2 rôles
+- **Audit obligatoire** : event `rgpd.dpo.conflict_warning` si cumul détecté
+- **Acknowledgment UI** : checkbox avec transfert de responsabilité (Art. 24 + 38.6)
+- **Export preuve** : PDF téléchargeable pour le tenant (utilisable si contrôle CNIL)
+
+**Responsabilité en cas de cumul (Art. 24 RGPD)** :
+| Acteur | Responsabilité |
+|--------|---------------|
+| **Plateforme** | Informer (warning) + documenter (audit) + fournir preuve (PDF) |
+| **Tenant** | Décision organisationnelle + acknowledgment explicite |
+| **DPO** | Signaler tout conflit d'intérêts réel |
+
+→ Si le tenant confirme malgré le warning, **c'est le tenant qui assume la responsabilité** (Art. 24)
+
+**Artefacts attendus**
+
+*Sidebar conditionnelle* :
+- Ajouter liens DPO dans `TenantSidebar.tsx` si `role === 'DPO'`
+- Menus : DPIA, Registre Art. 30, Incidents (optionnel)
+
+*Pages DPIA* (`/portal/dpia/*`) :
+- `/portal/dpia` : Liste DPIA en attente / validées / rejetées
+- `/portal/dpia/[id]` : Détail DPIA pré-remplie (par développeur plateforme)
+- Actions : Valider, Rejeter (avec justification), Modifier (certaines sections)
+- Export PDF de la DPIA validée
+
+*Registre des traitements Art. 30* (`/portal/registre/*`) :
+- `/portal/registre` : Liste des traitements du tenant
+- Vue consolidée : finalités activées + base légale + durée conservation
+- Export CSV/PDF pour documentation CNIL
+
+*Workflow DPIA* :
+1. TENANT_ADMIN active un outil HIGH/CRITICAL
+2. Notification envoyée au DPO (email + badge dashboard)
+3. DPO voit la DPIA pré-remplie (par la plateforme)
+4. DPO peut modifier les sections éditables
+5. DPO valide ou rejette avec justification
+6. Outil activable seulement après validation DPO
+
+*API endpoints* :
+- `GET /api/dpia` : Liste DPIA tenant (DPO only)
+- `GET /api/dpia/:id` : Détail DPIA avec template pré-rempli
+- `PATCH /api/dpia/:id` : Valider/Rejeter DPIA (DPO only)
+- `GET /api/dpia/:id/export` : Export PDF
+- `GET /api/registre` : Registre Art. 30 (DPO only)
+- `GET /api/registre/export` : Export CSV/PDF
+
+*Modèle données DPIA pré-remplie* :
+```typescript
+interface DpiaTemplate {
+  // Section 1: Description (pré-rempli par plateforme)
+  description: string;
+  purposes: string[];
+  dataProcessed: string[];
+  dataClassification: 'P0' | 'P1' | 'P2' | 'P3';
+
+  // Section 2: Risques (pré-rempli par plateforme)
+  risks: {
+    id: string;
+    description: string;
+    likelihood: 'LOW' | 'MEDIUM' | 'HIGH';
+    impact: 'LOW' | 'MEDIUM' | 'HIGH';
+    mitigation: string;
+  }[];
+
+  // Section 3: Mesures sécurité (pré-rempli)
+  securityMeasures: string[];
+
+  // Section 4: Validation DPO (à remplir)
+  dpoComments?: string;
+  dpoDecision?: 'APPROVED' | 'REJECTED' | 'PENDING';
+  validatedAt?: Date;
+  validatedBy?: string;
+}
+```
+
+**Acceptance criteria (bloquants)**
+- Sidebar affiche menus DPO conditionnellement
+- DPO peut voir liste DPIA avec statuts
+- DPO peut valider/rejeter une DPIA
+- DPIA pré-remplie par la plateforme (risques, mesures)
+- Export PDF DPIA validée
+- Registre Art. 30 consultable
+- RBAC : seul le DPO accède aux routes `/portal/dpia/*`
+- Audit : toutes actions DPO auditées
+
+**Tests obligatoires**
+- RBAC : TENANT_ADMIN ne peut pas accéder aux pages DPO
+- RBAC : MEMBER ne peut pas accéder aux pages DPO
+- Workflow : activation outil HIGH → notification DPO
+- Workflow : validation DPO → outil activable
+- Export PDF DPIA
+- Isolation tenant (DPO tenant A ne voit pas DPIA tenant B)
+- Séparation rôles : un user ne peut pas avoir 2 rôles simultanément
+- Détection cumul : warning affiché si email DPO similaire à TENANT_ADMIN
+- Audit cumul : event `rgpd.dpo.conflict_warning` créé avec IP + timestamp + userId
+- Transfert responsabilité : checkbox avec mention Art. 24 RGPD obligatoire
+- Export preuve : PDF téléchargeable avec warning + acknowledgment + date
+
+**Articulation LOT 12.3 ↔ LOT 12.4 (Accès DPO aux données RGPD)**
+
+Le DPO a besoin d'accéder aux données opérationnelles RGPD (LOT 12.3) pour assurer sa mission de conformité :
+
+| Page LOT 12.3 | Accès DPO | Action DPO |
+|---------------|-----------|------------|
+| `/portal/rgpd/exports` | Lecture | Statistiques pour rapport |
+| `/portal/rgpd/deletions` | Lecture | Statistiques pour rapport |
+| `/portal/rgpd/suspensions` | Lecture | Suivi Art. 18 |
+| `/portal/rgpd/oppositions` | Lecture | Suivi Art. 21 |
+| `/portal/rgpd/contests` | Lecture + Action | **Valider conformité réponse** |
+
+*Workflow contestations Art. 22* :
+1. USER conteste une décision IA
+2. TENANT_ADMIN reçoit et répond
+3. DPO valide que la réponse est conforme RGPD
+
+*Widget Dashboard DPO* :
+- KPIs RGPD agrégés (demandes en cours, délais moyens)
+- Alertes conformité (demande > 30 jours, contestation non traitée, DPIA en attente)
+
+**RGPD Compliance**
+- Art. 35 : DPIA obligatoire pour traitements HIGH/CRITICAL
+- Art. 30 : Registre des traitements maintenu
+- Art. 37-39 : Rôle DPO respecté (indépendance, accès aux informations)
+- Art. 38.3 : Indépendance du DPO (comptes séparés)
+- Art. 38.6 : Pas de conflit d'intérêts (détection + warning + audit)
+- Art. 22 : DPO valide conformité des réponses aux contestations
 
 ---
 
@@ -1863,6 +2079,112 @@ docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://app.exam
 - **Opposition traitement E2E** (Art. 21)
 - **Contestation décision IA E2E** (Art. 22)
 - **Tests skippés activés** : `tests/api.e2e.legal-compliance.test.ts` → retirer `.skip()`
+
+---
+
+
+# EPIC 14 — Sécurité & Gouvernance RGPD Plateforme
+
+## LOT 14.0 — Monitoring Conformité + Escalades + Actions
+
+**EPIC couverts** : EPIC 14, EPIC 11 (dashboard existant), EPIC 12 (API escalade)
+**Durée estimée** : 5 jours
+**Dépendances** : LOT 11.3 ✅ (dashboard Super Admin), LOT 12.4 (API escalade côté tenant)
+
+**Avant implémentation** : lire EPIC 14 (`docs/epics/EPIC_14_Securite_Gouvernance_RGPD.md`) + EPIC 11 (section dashboard) + EPIC 12 (section 7.4.0.1 escalade).
+
+**Objectif** : permettre au Super Admin de surveiller la conformité RGPD de tous les tenants et d'intervenir sur les tenants non-conformes.
+
+**Architecture** :
+- Utilise le dashboard Super Admin existant (`/admin/dashboard`) de LOT 11.3
+- Ajoute des pages dédiées sous `/admin/escalades` et `/admin/compliance`
+- Réutilise l'API suspension tenant de LOT 11.1
+- Reçoit les escalades envoyées par les DPO via `POST /api/platform/escalade` (LOT 12.4)
+
+**Artefacts Backend**
+
+*Migration SQL* :
+- Table `escalades` : stockage des escalades créées par les tenants
+- Table `tenant_compliance` : score conformité calculé par tenant
+
+*APIs* :
+- `GET /api/admin/tenants/compliance` : conformité tous tenants (PLATFORM)
+- `GET /api/admin/tenants/:id/compliance` : conformité un tenant (PLATFORM)
+- `GET /api/admin/escalades` : liste escalades (PLATFORM)
+- `GET /api/admin/escalades/:id` : détail escalade (PLATFORM)
+- `PATCH /api/admin/escalades/:id` : action sur escalade (PLATFORM)
+- `POST /api/admin/tenants/:id/warning` : envoyer warning (PLATFORM)
+- `GET /api/admin/reports/compliance` : rapport conformité PDF/CSV (PLATFORM)
+- `POST /api/platform/escalade` : créer escalade (TENANT - DPO)
+
+*Jobs* :
+- `check-tenant-compliance` : calcule % conformité par tenant (toutes les heures)
+- `alert-non-compliance` : génère alertes pour tenants non-conformes (quotidien)
+- `escalade-reminder` : rappel escalades non traitées > 48h (quotidien)
+
+*Service* :
+- `TenantComplianceService` : logique de calcul conformité
+
+**Artefacts Frontend**
+
+*Widget dashboard* (`/admin/dashboard`) :
+- % conformité global plateforme
+- Liste tenants non-conformes (top 5)
+- Badge notification nouvelles escalades
+
+*Page escalades* (`/admin/escalades`) :
+- Liste escalades avec filtres (statut, severity, tenant, type)
+- Actions : Acknowledge, Resolve, Close
+- Historique actions sur chaque escalade
+
+*Page conformité* (`/admin/compliance`) :
+- Vue consolidée conformité tous tenants
+- Tri par niveau de risque (CRITICAL > HIGH > MEDIUM > LOW)
+- Critères déclencheurs par tenant
+
+*Page rapports* (`/admin/compliance/report`) :
+- Sélection période (mois, trimestre, année)
+- Export PDF formaté (stats, incidents, actions)
+- Export CSV pour analyse
+
+**Critères de non-conformité tenant**
+
+| Critère | Article RGPD | Seuil | Severity |
+|---------|--------------|-------|----------|
+| Demande RGPD sans réponse | Art. 12 | > 30 jours | HIGH |
+| Contestation Art. 22 non traitée | Art. 22 | > 15 jours | HIGH |
+| DPO non désigné (si obligatoire) | Art. 37 | - | MEDIUM |
+| DPIA requis non validé | Art. 35 | - | HIGH |
+| Cumul DPO/Admin sans acknowledgment | Art. 38.6 | - | MEDIUM |
+| Violation données non notifiée | Art. 33 | > 72h | CRITICAL |
+
+**Acceptance criteria (bloquants)**
+- Super Admin voit % conformité global sur dashboard
+- Super Admin voit liste tenants non-conformes avec critères
+- Super Admin reçoit escalades des DPO
+- Super Admin peut acknowledge/resolve une escalade
+- Super Admin peut envoyer warning à un tenant
+- Super Admin peut suspendre un tenant non-conforme (réutilise API LOT 11.1)
+- Super Admin peut générer rapport conformité PDF/CSV
+- Toutes actions Super Admin auditées
+- Raisons obligatoires pour warning/suspension
+- API escalade accessible scope TENANT (DPO only)
+
+**Tests obligatoires**
+- RBAC : seul scope PLATFORM accède aux routes `/admin/escalades/*`
+- RBAC : scope TENANT peut POST `/api/platform/escalade`
+- Calcul conformité tenant correct
+- Workflow escalade E2E : DPO POST → Super Admin voit → action
+- Export rapport PDF
+- Isolation tenant (escalade tenant A invisible pour tenant B)
+- Audit trail complet des actions Super Admin
+
+**RGPD Compliance**
+- Art. 5 : Accountability (traçabilité actions plateforme)
+- Art. 24 : Responsabilité du responsable de traitement
+- Art. 32 : Sécurité du traitement
+- Art. 33-34 : Notification violations (monitoring)
+- Art. 37-39 : Rôle DPO (escalade)
 
 ---
 

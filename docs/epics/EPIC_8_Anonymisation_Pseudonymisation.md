@@ -1,10 +1,10 @@
 # EPIC 8 — Anonymisation & Pseudonymisation (Backend)
 
-**Date** : 25 décembre 2025  
-**Statut** : ❌ TODO  
-**Périmètre** : Backend (Gateway LLM + Logs + Audit)  
-**Scope** : PLATFORM / TENANT / MEMBER  
-**RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 32 (Sécurité, Pseudonymisation)  
+**Date** : 25 décembre 2025
+**Statut** : ✅ TERMINÉ
+**Périmètre** : Backend (Gateway LLM + Logs + Audit)
+**Scope** : PLATFORM / TENANT / MEMBER
+**RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 32 (Sécurité, Pseudonymisation)
 **Durée estimée** : 2 semaines
 
 ---
@@ -13,10 +13,10 @@
 
 ### 1.1 Contexte RGPD
 
-**Gap critique identifié** (cf. `ANALYSE_COUVERTURE_RGPD.md`) :
-- ❌ **Pseudonymisation Gateway LLM** : Mentionnée dans `LLM_USAGE_POLICY.md` mais **non implémentée**
-- ❌ **Anonymisation IP logs** : Mentionnée LOT6.1 mais **pas de code**
-- ⚠️ **Risque fuite PII** : Prompts/outputs IA peuvent contenir noms, emails, téléphones sans protection
+**Gaps comblés** (implémenté) :
+- ✅ **Pseudonymisation Gateway LLM** : PII Detection & Redaction implémenté (LOT 8.0)
+- ✅ **Anonymisation IP logs** : IP anonymization implémenté (LOT 8.1)
+- ✅ **Audit PII Logs** : Scan automatique implémenté (LOT 8.2)
 
 **Articles RGPD concernés** :
 - **Art. 5(1)(c)** : Minimisation des données

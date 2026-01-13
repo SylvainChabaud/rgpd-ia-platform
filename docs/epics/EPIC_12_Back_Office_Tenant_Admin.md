@@ -1,10 +1,10 @@
 # EPIC 12 — Back Office Tenant Admin (Interface TENANT)
 
-**Date** : 25 décembre 2025
-**Statut** : ❌ TODO
+**Date** : 25 décembre 2025 (Mise à jour : 13 janvier 2026)
+**Statut** : 🟡 EN COURS (LOT 12.0, 12.1, 12.2 ✅ TERMINÉS)
 **Périmètre** : Frontend (Interface Web)
-**Scope** : TENANT (Tenant Admin uniquement)
-**RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 32 (Sécurité), Art. 15-17-20 (Droits utilisateurs)
+**Scope** : TENANT (Tenant Admin + DPO)
+**RGPD Coverage** : Art. 5 (Minimisation), Art. 25 (Privacy by Design), Art. 30 (Registre traitements), Art. 32 (Sécurité), Art. 35 (DPIA), Art. 37-39 (DPO), Art. 15-17-20 (Droits utilisateurs)
 
 ---
 
@@ -87,9 +87,11 @@ Le **Tenant Admin** est l'administrateur d'une entreprise cliente (tenant) qui u
 - **Tenant Admin (EPIC 12)** : Vue **mono-tenant** (son entreprise uniquement)
 
 **Utilisateurs cibles** :
-- Responsable IT d'une entreprise cliente
-- DPO d'une entreprise cliente (Data Protection Officer)
-- Manager RH (gestion comptes utilisateurs)
+- Responsable IT d'une entreprise cliente (TENANT_ADMIN)
+- Manager RH (gestion comptes utilisateurs) (TENANT_ADMIN)
+- **DPO d'une entreprise cliente** (Data Protection Officer) → rôle spécifique, même scope TENANT
+
+> **Note Architecture DPO** : Le DPO est un **rôle** au sein du scope TENANT, pas un scope séparé. Il utilise la même interface `/portal/*` avec des menus conditionnels selon `user.role === 'DPO'`.
 
 ### 1.2 Objectifs techniques
 
@@ -138,25 +140,30 @@ Construire une interface web **Back Office Tenant** sécurisée permettant au Te
 | **US 12.6** | Update User | `PATCH /api/tenants/:tenantId/users/:userId` | PATCH | EPIC 1/LOT 1.1 | ✅ Implémenté |
 | **US 12.7** | Suspend User | `POST /api/tenants/:tenantId/users/:userId/suspend` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
 | **US 12.7** | Reactivate User | `POST /api/tenants/:tenantId/users/:userId/reactivate` | POST | EPIC 1/LOT 1.1 | ✅ Implémenté |
-| **US 12.8** | List Purposes | `GET /api/tenants/:tenantId/purposes` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
-| **US 12.8** | Create Purpose | `POST /api/tenants/:tenantId/purposes` | POST | EPIC 5/LOT 5.0 | ✅ Implémenté |
-| **US 12.8** | Update Purpose | `PATCH /api/tenants/:tenantId/purposes/:purposeId` | PATCH | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 12.8** | List Purpose Templates | `GET /api/purposes/templates` | GET | EPIC 12/LOT 12.2 | ✅ Implémenté |
+| **US 12.8** | Get Template Details | `GET /api/purposes/templates/:code` | GET | EPIC 12/LOT 12.2 | ✅ Implémenté |
+| **US 12.8** | Adopt Template | `POST /api/purposes/adopt` | POST | EPIC 12/LOT 12.2 | ✅ Implémenté |
+| **US 12.8** | List Purposes | `GET /api/purposes` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
+| **US 12.8** | Create Custom Purpose | `POST /api/purposes/custom` | POST | EPIC 12/LOT 12.2 | ✅ Implémenté |
+| **US 12.8** | Validate Custom Purpose | `POST /api/purposes/custom/validate` | POST | EPIC 12/LOT 12.2 | ✅ Implémenté |
+| **US 12.8** | Update Purpose | `PATCH /api/purposes/:purposeId` | PATCH | EPIC 5/LOT 5.0 | ✅ Implémenté |
 | **US 12.9** | Consent Matrix | `GET /api/tenants/:tenantId/consents/matrix` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
 | **US 12.10** | Consent History | `GET /api/consents/:userId/history` | GET | EPIC 5/LOT 5.0 | ✅ Implémenté |
 | **US 12.11** | List Export Requests | `GET /api/tenants/:tenantId/rgpd/exports` | GET | EPIC 5/LOT 5.1 | ✅ Implémenté |
 | **US 12.12** | List Deletion Requests | `GET /api/tenants/:tenantId/rgpd/deletions` | GET | EPIC 5/LOT 5.2 | ✅ Implémenté |
 | **US 12.13** | Export CSV | `GET /api/tenants/:tenantId/export-csv` | GET | EPIC 5/LOT 5.3 | ✅ Implémenté |
 
-### 1.4.2 Endpoints RGPD Complémentaires à Ajouter (Art. 18/21/22)
+### 1.4.2 Endpoints RGPD Complémentaires (Art. 18/21/22)
 
-> **Gaps identifiés** : Ces endpoints permettent au Tenant Admin de suivre les droits RGPD complémentaires exercés par ses users.
+> Ces endpoints permettent au Tenant Admin de suivre les droits RGPD complémentaires exercés par ses users. **Implémentés dans LOT 10.6.**
 
 | Droit RGPD | Fonctionnalité Tenant Admin | Endpoint BACK proposé | EPIC Source | Status |
 |------------|----------------------------|----------------------|-------------|--------|
-| **Art. 18** | Liste suspensions données | `GET /api/tenants/:tenantId/rgpd/suspensions` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 21** | Liste oppositions | `GET /api/tenants/:tenantId/rgpd/oppositions` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 22** | Liste contestations IA | `GET /api/tenants/:tenantId/rgpd/contests` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
-| **Art. 22** | Traiter contestation | `PATCH /api/rgpd/contests/:contestId` | EPIC 10/LOT 10.6 | ❌ **À implémenter** |
+| **Art. 18** | Liste suspensions données | `GET /api/tenants/:tenantId/rgpd/suspensions` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 18** | Suspendre données tenant | `POST /api/tenants/:tenantId/rgpd/suspensions` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 21** | Liste oppositions | `GET /api/tenants/:tenantId/rgpd/oppositions` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 22** | Liste contestations IA | `GET /api/tenants/:tenantId/rgpd/contests` | EPIC 10/LOT 10.6 | ✅ Implémenté |
+| **Art. 22** | Traiter contestation | `PATCH /api/rgpd/contests/:contestId` | EPIC 10/LOT 10.6 | ✅ Implémenté |
 
 ### 1.4.3 Corrélation avec EPIC 13 (Front User)
 
@@ -238,11 +245,11 @@ Références aux EPICs backend existants :
 **Afin de** gérer mes utilisateurs et suivre l'activité IA
 
 **Acceptance Criteria** :
-- [ ] Page login partagée avec EPIC 11 (même app)
-- [ ] Redirection automatique selon scope :
+- [x] Page login partagée avec EPIC 11 (même app)
+- [x] Redirection automatique selon scope :
   - scope PLATFORM → Dashboard Super Admin (EPIC 11)
   - scope TENANT → Dashboard Tenant Admin (EPIC 12)
-- [ ] Logout fonctionnel
+- [x] Logout fonctionnel
 - [ ] 2FA optionnel
 
 **TODO (identifié lors de l'implémentation EPIC 11)** :
@@ -257,23 +264,23 @@ Références aux EPICs backend existants :
 **Afin de** suivre l'activité IA et RGPD
 
 **Acceptance Criteria** :
-- [ ] Widgets KPIs :
+- [x] Widgets KPIs :
   - Total users actifs (admin/member)
   - AI jobs ce mois (succès vs échoués)
   - Consentements actifs (accordés vs révoqués)
   - Exports RGPD en cours (pending/completed)
   - Effacements RGPD en cours (pending/completed)
-- [ ] Graphiques :
+- [x] Graphiques :
   - AI jobs par jour (30 derniers jours)
   - Consentements accordés vs révoqués (évolution 12 semaines)
   - Taux succès/échec jobs IA (par purpose)
-- [ ] Activity feed (50 dernières actions) :
+- [x] Activity feed (50 dernières actions) :
   - User créé
   - Consentement accordé/révoqué
   - Job IA lancé (succès/échec)
   - Export RGPD demandé
   - Effacement RGPD demandé
-- [ ] **Isolation tenant** : Voit uniquement **son** tenant
+- [x] **Isolation tenant** : Voit uniquement **son** tenant
 
 ---
 
@@ -283,52 +290,52 @@ Références aux EPICs backend existants :
 **Afin de** gérer les comptes
 
 **Acceptance Criteria** :
-- [ ] Table users :
+- [x] Table users :
   - Username, Email, Role (admin/member), Status (active/suspended), Created At, Last Login
-- [ ] Filtres :
+- [x] Filtres :
   - Role : admin/member/all
   - Status : active/suspended/all
   - Recherche : par email ou username
-- [ ] Pagination (50 par page)
-- [ ] Tri par colonne (name, email, created_at, last_login)
-- [ ] Actions rapides :
+- [x] Pagination (50 par page)
+- [x] Tri par colonne (name, email, created_at, last_login)
+- [x] Actions rapides :
   - Voir détails user
   - Éditer user
   - Suspendre/Réactiver user
   - Envoyer invitation (si pas encore activé)
-- [ ] **Isolation tenant** : Voit uniquement users de **son** tenant
+- [x] **Isolation tenant** : Voit uniquement users de **son** tenant
 
 ---
 
-#### US 12.4 : Créer un utilisateur de mon tenant
-**En tant que** Tenant Admin  
-**Je veux** créer un nouveau user dans mon entreprise  
+#### US 12.4 : Créer un utilisateur de mon tenant ✅
+**En tant que** Tenant Admin
+**Je veux** créer un nouveau user dans mon entreprise
 **Afin de** onboarder un collaborateur
 
 **Acceptance Criteria** :
-- [ ] Formulaire :
+- [x] Formulaire :
   - Email (requis, unique par tenant)
   - Name (requis)
   - Role (requis) : dropdown admin/member
-- [ ] Validation :
+- [x] Validation :
   - Email format valide
   - Email unique dans le tenant (erreur si dupliqué)
   - Name 2-100 caractères
 - [ ] Génération invitation :
   - Email envoyé avec lien activation (token unique, TTL 7j)
   - User créé avec status `pending` (devient `active` après activation)
-- [ ] Audit event créé (user.created)
-- [ ] Feedback : Toast succès + redirection vers liste users
+- [x] Audit event créé (user.created)
+- [x] Feedback : Toast succès + redirection vers liste users
 
 ---
 
-#### US 12.5 : Voir les détails d'un user de mon tenant
-**En tant que** Tenant Admin  
-**Je veux** voir les détails d'un utilisateur de mon entreprise  
+#### US 12.5 : Voir les détails d'un user de mon tenant ✅
+**En tant que** Tenant Admin
+**Je veux** voir les détails d'un utilisateur de mon entreprise
 **Afin de** comprendre son usage et troubleshooter
 
 **Acceptance Criteria** :
-- [ ] Page détails user :
+- [x] Page détails user :
   - **Infos générales** : Email, Name, Role, Status, Created At, Last Login
   - **Stats** : Total AI jobs, Jobs succès/échecs, Consentements actifs
   - **Historique AI jobs** (table, derniers 100) :
@@ -337,122 +344,212 @@ Références aux EPICs backend existants :
     - Purpose, Status (granted/revoked), Date accordé, Date révoqué (si applicable)
   - **Audit events user** (table, derniers 50) :
     - Date, Action (consent.granted, ai.invoked, rgpd.export, etc.), Status
-- [ ] Actions possibles :
+- [x] Actions possibles :
   - Éditer user (nom, role)
   - Suspendre/Réactiver user
   - Révoquer tous consentements (confirmation obligatoire)
-- [ ] **Isolation tenant** : Voit uniquement users de **son** tenant
+- [x] **Isolation tenant** : Voit uniquement users de **son** tenant
 
 ---
 
-#### US 12.6 : Éditer un utilisateur de mon tenant
-**En tant que** Tenant Admin  
-**Je veux** modifier les infos d'un utilisateur de mon entreprise  
+#### US 12.6 : Éditer un utilisateur de mon tenant ✅
+**En tant que** Tenant Admin
+**Je veux** modifier les infos d'un utilisateur de mon entreprise
 **Afin de** corriger ou mettre à jour ses données
 
 **Acceptance Criteria** :
-- [ ] Formulaire pré-rempli :
+- [x] Formulaire pré-rempli :
   - Name (éditable)
   - Role (éditable) : dropdown admin/member
   - Email (lecture seule, pas éditable)
-- [ ] Validation :
+- [x] Validation :
   - Name 2-100 caractères
-- [ ] Sauvegarde :
+- [x] Sauvegarde :
   - PATCH /api/tenants/{tenantId}/users/{userId}
   - Audit event créé (user.updated)
-- [ ] Feedback : Toast succès + retour page détails user
+- [x] Feedback : Toast succès + retour page détails user
 
 ---
 
-#### US 12.7 : Suspendre un utilisateur de mon tenant
-**En tant que** Tenant Admin  
-**Je veux** suspendre un utilisateur de mon entreprise  
+#### US 12.7 : Suspendre un utilisateur de mon tenant ✅
+**En tant que** Tenant Admin
+**Je veux** suspendre un utilisateur de mon entreprise
 **Afin de** bloquer temporairement son accès (départ, incident)
 
 **Acceptance Criteria** :
-- [ ] Bouton "Suspendre" avec confirmation (modal)
-- [ ] Raison obligatoire (dropdown + texte libre) :
+- [x] Bouton "Suspendre" avec confirmation (modal)
+- [x] Raison obligatoire (dropdown + texte libre) :
   - Départ de l'entreprise
   - Incident sécurité
   - Non-conformité RGPD
   - Autre (préciser)
-- [ ] Suspension immédiate :
+- [x] Suspension immédiate :
   - User status = `suspended`
   - User ne peut plus se connecter (backend rejette auth)
 - [ ] Email notification user (optionnel mais recommandé)
-- [ ] Audit event créé (user.suspended)
-- [ ] Réactivation possible (bouton "Réactiver")
+- [x] Audit event créé (user.suspended)
+- [x] Réactivation possible (bouton "Réactiver")
 
 ---
 
-#### US 12.8 : Configurer les purposes IA de mon tenant
-**En tant que** Tenant Admin  
-**Je veux** configurer les purposes IA disponibles dans mon entreprise  
-**Afin de** définir les usages autorisés (résumé, classification, extraction, etc.)
+#### US 12.8 : Configurer les purposes IA de mon tenant ✅
+**En tant que** Tenant Admin
+**Je veux** configurer les purposes IA disponibles dans mon entreprise
+**Afin de** définir les usages autorisés (résumé, classification, extraction, etc.) avec conformité RGPD garantie
+
+> **⚠️ RGPD CRITIQUE** : Chaque purpose doit avoir une base légale (Art. 6 RGPD). Le système fournit des templates pré-validés pour guider le Tenant Admin non-expert.
+
+**Architecture Purpose Templates (3 niveaux)** :
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  NIVEAU 1 — TEMPLATES SYSTÈME (Plateforme)                      │
+│  8 templates pré-validés RGPD, activés automatiquement          │
+│  Base légale, niveau de risque, catégorie définis               │
+│  Immutables par tenant (désactivables uniquement)               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  NIVEAU 2 — CONFIGURATION TENANT                                │
+│  Activer/désactiver templates système                            │
+│  Personnaliser : libellé, description, obligatoire              │
+│  Champs RGPD hérités (lecture seule)                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  NIVEAU 3 — FINALITÉS PERSONNALISÉES (Wizard guidé)             │
+│  Pour besoins métier non couverts par templates                 │
+│  Wizard 5 étapes avec questions RGPD                            │
+│  Avertissements automatiques, validation avant activation       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Templates système inclus** (activés automatiquement pour chaque tenant) :
+
+| Code | Nom | Base légale | Catégorie | Risque | DPIA |
+|------|-----|-------------|-----------|--------|------|
+| `AI_SUMMARIZATION` | Synthèse de documents | CONSENT | AI_PROCESSING | MEDIUM | Non |
+| `AI_CLASSIFICATION` | Classification automatique | CONSENT | AI_PROCESSING | MEDIUM | Non |
+| `AI_EXTRACTION` | Extraction d'entités | CONSENT | AI_PROCESSING | HIGH | Oui |
+| `AI_GENERATION` | Génération de contenu | CONSENT | AI_PROCESSING | MEDIUM | Non |
+| `AI_TRANSLATION` | Traduction automatique | CONSENT | AI_PROCESSING | LOW | Non |
+| `AI_OCR` | Reconnaissance caractères | CONSENT | AI_PROCESSING | LOW | Non |
+| `ANALYTICS_USAGE` | Statistiques utilisation | LEGITIMATE_INTEREST | ANALYTICS | LOW | Non |
+| `ESSENTIAL_SECURITY` | Sécurité | LEGITIMATE_INTEREST | ESSENTIAL | LOW | Non |
+
+**Champs RGPD obligatoires (Art. 6)** :
+- `lawful_basis` : Base légale (CONSENT, CONTRACT, LEGAL_OBLIGATION, VITAL_INTEREST, PUBLIC_INTEREST, LEGITIMATE_INTEREST)
+- `category` : Catégorie (AI_PROCESSING, ANALYTICS, MARKETING, ESSENTIAL)
+- `risk_level` : Niveau de risque (LOW, MEDIUM, HIGH, CRITICAL)
+- `max_data_class` : Classification données max (P0, P1, P2, P3)
+- `requires_dpia` : DPIA requis (true/false)
 
 **Acceptance Criteria** :
-- [ ] Page liste purposes :
-  - Table : Label, Description, Required (obligatoire ou optionnel), Active, Created At
-- [ ] Actions :
-  - Créer purpose
-  - Éditer purpose
-  - Activer/Désactiver purpose (soft delete)
-- [ ] Formulaire créer/éditer purpose :
-  - Label (requis) : ex. "Résumé de documents"
-  - Description (requis) : ex. "Résumer des contrats, emails, rapports"
-  - Required (boolean) : Si true, consentement obligatoire pour utiliser plateforme
-  - Active (boolean) : Si false, purpose masqué aux users
-- [ ] Validation :
-  - Label unique par tenant
-  - Description 10-500 caractères
-- [ ] **Isolation tenant** : Purposes configurables par tenant (pas partagés)
-- [ ] Audit event créé (purpose.created, purpose.updated)
+
+*Page liste purposes (avec onglets)* :
+- [x] Onglet "Templates" : templates système (activés/désactivés)
+- [x] Onglet "Personnalisées" : finalités créées par le tenant
+- [x] Onglet "Toutes" : vue combinée avec filtres
+- [x] Table : Label, Description, Base légale, Risque, Required, Active, Type (Système/Custom)
+- [x] Badges visuels :
+  - Base légale : CONSENTEMENT (bleu), INTÉRÊT LÉGITIME (vert), etc.
+  - Risque : LOW (vert), MEDIUM (jaune), HIGH (orange), CRITICAL (rouge)
+  - Type : Système (badge), Personnalisé (badge outline)
+  - DPIA : Badge "DPIA requis" si applicable
+
+*Actions templates système* :
+- [x] Activer/désactiver (toggle)
+- [x] Personnaliser libellé et description
+- [x] Définir comme obligatoire (isRequired)
+- [x] **INTERDIT** : modifier base légale, risque, catégorie (hérités, lecture seule)
+- [x] **INTERDIT** : supprimer template système
+
+*Browser templates (nouvelle page)* :
+- [x] Grille de cards : templates disponibles avec icônes catégorie
+- [x] Filtres : par catégorie, par niveau de risque, par base légale
+- [x] Info explicative sur chaque template (description, base légale, risque)
+- [x] Bouton "Activer pour mon organisation" avec modal de confirmation
+- [x] Afficher templates déjà activés (badge "Actif")
+
+*Wizard création finalité personnalisée (5 étapes)* :
+- [x] **Étape 1 - Identification** : label, description (validation 2-100 / 10-500 chars)
+- [x] **Étape 2 - Données personnelles** :
+  - Checkbox : P0 (aucune), P1 (techniques), P2 (personnelles), P3 (sensibles)
+  - Warning si P3 sélectionné : "Données sensibles Art. 9 - DPIA potentiellement requis"
+- [x] **Étape 3 - Type de traitement** :
+  - Checkbox : IA automatisé, profilage, décision automatisée Art. 22
+  - Warning si profilage ou décision auto : "Vérification Art. 22 requise"
+- [x] **Étape 4 - Base légale (Art. 6)** :
+  - Radio : CONSENT (recommandé pour IA), CONTRACT, LEGAL_OBLIGATION, etc.
+  - Explication pour chaque option
+  - Suggestion automatique basée sur réponses précédentes
+- [x] **Étape 5 - Validation** :
+  - Récapitulatif complet
+  - Niveau de risque calculé automatiquement
+  - Avertissements RGPD si applicable
+  - Checkbox "J'ai lu et compris les implications RGPD"
+  - Checkbox DPIA si risque HIGH/CRITICAL : "Je reconnais qu'une DPIA peut être requise"
+
+*Validation et conformité* :
+- [x] Label unique par tenant
+- [x] Description 10-500 caractères
+- [x] Base légale obligatoire
+- [x] Immutabilité base légale après création (modification = nouvelle version)
+- [x] DPIA warning pour risques HIGH/CRITICAL
+
+*Audit et traçabilité* :
+- [x] Audit event : purpose.template.adopted, purpose.template.disabled
+- [x] Audit event : purpose.custom.created, purpose.custom.updated
+- [x] **Isolation tenant** : Purposes personnalisés isolés par tenant
+- [x] Templates système partagés (lecture seule pour tous tenants)
 
 ---
 
-#### US 12.9 : Voir la matrice consentements (users × purposes)
-**En tant que** Tenant Admin  
-**Je veux** voir une matrice des consentements (users × purposes)  
+#### US 12.9 : Voir la matrice consentements (users × purposes) ✅
+**En tant que** Tenant Admin
+**Je veux** voir une matrice des consentements (users × purposes)
 **Afin de** avoir une vue d'ensemble des consentements IA
 
 **Acceptance Criteria** :
-- [ ] Matrice consentements :
+- [x] Matrice consentements :
   - **Lignes** : Users de mon tenant
   - **Colonnes** : Purposes configurés
   - **Cellules** : État consentement :
-    - ✅ Granted (vert)
-    - ❌ Revoked (rouge)
-    - ⏸️ Pending (gris) : jamais demandé
-- [ ] Filtres :
+    - Granted (vert)
+    - Revoked (rouge)
+    - Pending (gris) : jamais demandé
+- [x] Filtres :
   - Par user (search)
   - Par purpose (dropdown)
   - Par statut (granted/revoked/pending)
-- [ ] Actions cellule (clic) :
+- [x] Actions cellule (clic) :
   - Voir historique consentement (dates accordé/révoqué)
   - Révoquer consentement (confirmation obligatoire)
-- [ ] Export CSV :
+- [x] Export CSV :
   - Format : User Email, Purpose, Status, Date Granted, Date Revoked
   - RGPD-safe : P1/P2 uniquement, pas de contenu
-- [ ] **Isolation tenant** : Voit uniquement consentements de **son** tenant
+- [x] **Isolation tenant** : Voit uniquement consentements de **son** tenant
 
 ---
 
-#### US 12.10 : Voir l'historique des consentements d'un user
-**En tant que** Tenant Admin  
-**Je veux** voir l'historique complet des consentements d'un utilisateur  
+#### US 12.10 : Voir l'historique des consentements d'un user ✅
+**En tant que** Tenant Admin
+**Je veux** voir l'historique complet des consentements d'un utilisateur
 **Afin de** tracer les changements de consentement (audit RGPD)
 
 **Acceptance Criteria** :
-- [ ] Timeline consentements (par user) :
+- [x] Timeline consentements (par user) :
   - Date, Purpose, Action (granted/revoked), Source (user/admin)
-- [ ] Filtres :
+- [x] Filtres :
   - Par purpose
   - Par date range
-- [ ] Détails :
+- [x] Détails :
   - Si révoqué : date révocation, raison (optionnel)
   - Si accordé : date accord, IP (optionnel), user agent (optionnel)
-- [ ] Export CSV historique (RGPD-safe)
-- [ ] **Isolation tenant** : Voit uniquement consentements de **son** tenant
+- [x] Export CSV historique (RGPD-safe)
+- [x] **Isolation tenant** : Voit uniquement consentements de **son** tenant
 
 ---
 
@@ -935,26 +1032,26 @@ export async function POST(req: Request) {
 
 ### 6.1 Fonctionnel
 
-- [ ] Tenant Admin peut se connecter (même login que Super Admin)
-- [ ] Tenant Admin est redirigé vers son dashboard tenant (scope TENANT)
-- [ ] Dashboard tenant affiche stats exactes (users, AI jobs, consents, RGPD)
-- [ ] Tenant Admin peut créer/éditer/suspendre users de **son** tenant uniquement
-- [ ] Tenant Admin peut voir détails complets d'un user (historique jobs, consents, audit)
-- [ ] Tenant Admin peut configurer purposes IA de **son** tenant
-- [ ] Tenant Admin peut voir matrice consentements (users × purposes)
-- [ ] Tenant Admin peut voir historique consentements par user
-- [ ] Tenant Admin peut voir demandes export RGPD de **ses** users
-- [ ] Tenant Admin peut voir demandes effacement RGPD de **ses** users
-- [ ] Tenant Admin peut exporter données en CSV (RGPD-safe : P1/P2 uniquement)
+- [x] Tenant Admin peut se connecter (même login que Super Admin)
+- [x] Tenant Admin est redirigé vers son dashboard tenant (scope TENANT)
+- [x] Dashboard tenant affiche stats exactes (users, AI jobs, consents, RGPD)
+- [x] Tenant Admin peut créer/éditer/suspendre users de **son** tenant uniquement
+- [x] Tenant Admin peut voir détails complets d'un user (historique jobs, consents, audit)
+- [x] Tenant Admin peut configurer purposes IA de **son** tenant
+- [x] Tenant Admin peut voir matrice consentements (users × purposes)
+- [x] Tenant Admin peut voir historique consentements par user
+- [ ] Tenant Admin peut voir demandes export RGPD de **ses** users (LOT 12.3)
+- [ ] Tenant Admin peut voir demandes effacement RGPD de **ses** users (LOT 12.3)
+- [x] Tenant Admin peut exporter données en CSV (RGPD-safe : P1/P2 uniquement)
 
 ### 6.2 RGPD
 
-- [ ] **Isolation tenant stricte** : Admin tenant A ne voit **JAMAIS** données tenant B
-- [ ] Aucune donnée P3 affichée (contenus prompts/outputs interdits)
-- [ ] Aucune donnée P2/P3 stockée côté client (localStorage/sessionStorage)
-- [ ] Messages d'erreur RGPD-safe (pas de stack traces)
-- [ ] Export CSV RGPD-safe (P1/P2 uniquement)
-- [ ] Actions Tenant Admin auditées (backend)
+- [x] **Isolation tenant stricte** : Admin tenant A ne voit **JAMAIS** données tenant B
+- [x] Aucune donnée P3 affichée (contenus prompts/outputs interdits)
+- [x] Aucune donnée P2/P3 stockée côté client (localStorage/sessionStorage)
+- [x] Messages d'erreur RGPD-safe (pas de stack traces)
+- [x] Export CSV RGPD-safe (P1/P2 uniquement)
+- [x] Actions Tenant Admin auditées (backend)
 
 ### 6.3 Sécurité
 
@@ -987,14 +1084,494 @@ export async function POST(req: Request) {
 
 Référence **TASKS.md** :
 
-| LOT | Description | Durée estimée | Dépendances |
-|-----|-------------|---------------|-------------|
-| **LOT 12.0** | Dashboard Tenant + Activity Feed | 3 jours | LOT 5.3 (API Routes), LOT 11.0 (Infra Back Office) |
-| **LOT 12.1** | Gestion Users Tenant (CRUD) | 4 jours | LOT 12.0 |
-| **LOT 12.2** | Gestion Consentements (Purposes + Matrix) | 5 jours | LOT 5.0 (Consentement backend), LOT 12.0 |
-| **LOT 12.3** | RGPD Management (Export/Delete Requests) | 4 jours | LOT 5.1-5.2 (Export/Effacement backend), LOT 12.0 |
+| LOT | Description | Durée estimée | Dépendances | Statut |
+|-----|-------------|---------------|-------------|--------|
+| **LOT 12.0** | Dashboard Tenant + Activity Feed | 3 jours | LOT 5.3 (API Routes), LOT 11.0 (Infra Back Office) | ✅ **TERMINÉ** |
+| **LOT 12.1** | Gestion Users Tenant (CRUD) | 4 jours | LOT 12.0 | ✅ **TERMINÉ** |
+| **LOT 12.2** | Gestion Consentements (Purposes + Matrix) | 5 jours | LOT 5.0 (Consentement backend), LOT 12.0 | ✅ **TERMINÉ** |
+| **LOT 12.3** | RGPD Management (Export/Delete Requests) | 4 jours | LOT 5.1-5.2 (Export/Effacement backend), LOT 12.0 | ❌ TODO |
+| **LOT 12.4** | Fonctionnalités DPO (DPIA + Registre Art. 30) | 5 jours | LOT 12.2, LOT 12.3, LOT 10.5 (DPIA backend) | ❌ TODO |
 
-**Total EPIC 12** : ~16 jours (3,2 semaines)
+**Total EPIC 12** : ~21 jours (4,2 semaines)
+
+### 7.1 Détails LOT 12.0 - Dashboard Tenant ✅
+
+**Implémenté** :
+- Dashboard tenant avec KPIs (users, jobs IA, consentements, RGPD)
+- Widgets statistiques avec Recharts
+- Activity feed (dernières actions)
+- Isolation tenant stricte
+
+**Pages** :
+- `/portal` - Dashboard principal
+- `/portal/dashboard` - Alias dashboard
+
+### 7.2 Détails LOT 12.1 - Gestion Users Tenant ✅
+
+**Implémenté** :
+- Liste users avec filtres et pagination
+- Création user avec formulaire validé
+- Détails user avec stats, jobs, consents, audit
+- Édition user (nom, rôle)
+- Suspension/Réactivation user
+
+**Pages** :
+- `/portal/users` - Liste users
+- `/portal/users/new` - Création user
+- `/portal/users/[id]` - Détails user
+- `/portal/users/[id]/edit` - Édition user
+
+### 7.3 Détails LOT 12.2 - Gestion Consentements ✅
+
+**Implémenté** :
+
+*Onglet Purposes (Finalités IA)* :
+- Liste des purposes tenant avec filtres
+- Wizard 5 étapes création purpose personnalisé (stepper RGPD)
+- Browser templates système (8 templates pré-validés)
+- Adoption/activation templates
+- Édition purpose existant
+- Lien fort purpose → consent via `purposeId`
+
+*Onglet Matrice* :
+- Matrice users × purposes
+- États visuels : Accordé (vert), Révoqué (rouge), En attente (gris)
+- Actions : voir historique, révoquer consent
+
+*Onglet Historique* :
+- Timeline consentements par user
+- Filtres par purpose, date
+- Export CSV RGPD-safe
+
+*APIs implémentées* :
+- `GET /api/purposes` - Liste purposes
+- `GET /api/purposes/templates` - Templates système
+- `POST /api/purposes/adopt` - Adopter template
+- `POST /api/purposes/custom` - Créer purpose personnalisé
+- `POST /api/purposes/custom/validate` - Valider purpose
+- `PATCH /api/purposes/:id` - Modifier purpose
+- `GET /api/consents/matrix` - Matrice consentements
+- `GET /api/consents/history` - Historique par user
+- `GET /api/consents/export` - Export CSV
+
+*Tests* :
+- 43+ tests unitaires (gateway, usecases, API routes)
+- Support `PurposeIdentifier` (purposeId ou label)
+- Backward compatibility avec consent string-based
+
+**Pages** :
+- `/portal/consents` - Vue globale avec onglets
+- `/portal/consents/purposes` - Liste purposes
+- `/portal/consents/purposes/new` - Wizard création (stepper 5 étapes)
+- `/portal/consents/purposes/[id]/edit` - Édition purpose
+- `/portal/consents/matrix` - Matrice users × purposes
+- `/portal/consents/history` - Historique consentements
+
+**Documentation** :
+- `docs/implementation/LOT12.2_IMPLEMENTATION.md` - Rapport complet
+
+### 7.4 Détails LOT 12.4 - Fonctionnalités DPO ❌
+
+> **Architecture DPO** : Le DPO est un **rôle** (`ACTOR_ROLE.DPO`) au sein du scope `TENANT`, pas un scope séparé. Il utilise la même interface `/portal/*` avec une **sidebar conditionnelle** basée sur `user.role === 'DPO'`.
+
+#### 7.4.0 Séparation TENANT_ADMIN / DPO (Conformité Art. 38 RGPD)
+
+> **⚠️ CRITIQUE RGPD** : Le DPO doit être indépendant (Art. 38.3) et ne pas avoir de conflit d'intérêts (Art. 38.6).
+
+**Règles d'implémentation** :
+
+| Règle | Description | Justification RGPD |
+|-------|-------------|-------------------|
+| **Comptes séparés** | TENANT_ADMIN et DPO = 2 users distincts dans la base | Séparation des responsabilités |
+| **Un rôle par compte** | Un user ne peut avoir qu'un seul rôle | Éviter cumul conflictuel |
+| **Pas de switch de rôle** | Impossible de changer de rôle en session | Traçabilité claire |
+| **Détection cumul** | Warning si même email/nom pour les 2 rôles | Art. 38.6 - Conflit d'intérêts |
+
+**Workflow d'assignation DPO** :
+```typescript
+// À l'assignation du rôle DPO
+async function assignDpoRole(userId: string, tenantId: string) {
+  const user = await getUser(userId);
+
+  // Vérifier si l'email est similaire à un TENANT_ADMIN existant
+  const existingAdmin = await findAdminWithSimilarEmail(user.email, tenantId);
+
+  if (existingAdmin) {
+    // Audit RGPD obligatoire
+    await emitAuditEvent({
+      eventType: 'rgpd.dpo.conflict_warning',
+      metadata: {
+        warning: 'DPO may be same person as TENANT_ADMIN',
+        article: 'Art. 38.6 RGPD - Potential conflict of interest',
+        adminEmail: existingAdmin.email,
+        dpoEmail: user.email
+      }
+    });
+
+    // Retourner warning (ne bloque pas, mais documente)
+    return {
+      success: true,
+      requiresAcknowledgment: true,
+      warning: {
+        code: 'DPO_CONFLICT_WARNING',
+        message: `⚠️ RGPD Art. 38.6 - Le cumul des fonctions d'administrateur et DPO
+                  peut créer un conflit d'intérêts. La CNIL recommande de séparer ces rôles.`,
+        recommendation: 'Désigner une personne différente comme DPO si possible.'
+      }
+    };
+  }
+
+  return { success: true };
+}
+```
+
+**Interface UI - Warning cumul avec transfert de responsabilité** :
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ Avertissement RGPD - Art. 38.6                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Le DPO désigné (alice@company.com) semble être la même        │
+│  personne que l'administrateur du tenant.                       │
+│                                                                 │
+│  Le RGPD (Art. 38.6) indique que le DPO peut exercer d'autres  │
+│  missions à condition qu'elles n'entraînent pas de conflit     │
+│  d'intérêts.                                                    │
+│                                                                 │
+│  La CNIL recommande de ne pas désigner comme DPO :              │
+│  • Le responsable IT / DSI                                      │
+│  • Le responsable RH                                            │
+│  • Le dirigeant de l'entreprise                                 │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │ ⚖️ TRANSFERT DE RESPONSABILITÉ                            │ │
+│  │                                                           │ │
+│  │ En confirmant cette assignation, votre organisation       │ │
+│  │ (le responsable du traitement au sens de l'Art. 24 RGPD)  │ │
+│  │ reconnaît et accepte :                                    │ │
+│  │                                                           │ │
+│  │ 1. Avoir été informée du potentiel conflit d'intérêts     │ │
+│  │ 2. Prendre la responsabilité de cette décision            │ │
+│  │ 3. Pouvoir justifier ce choix auprès de la CNIL           │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  [ ] Je confirme que mon organisation assume la responsabilité  │
+│      de cette décision conformément à l'Art. 24 RGPD.           │
+│                                                                 │
+│  [Annuler]                            [Confirmer l'assignation] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Chaîne de responsabilité (Art. 24 RGPD)** :
+
+| Acteur | Responsabilité | Ce qu'il fournit |
+|--------|---------------|------------------|
+| **Plateforme** (vous) | Informer et documenter | Warning + audit + preuve |
+| **Tenant** (entreprise) | Décision organisationnelle | Acknowledgment + justification |
+| **DPO** (personne) | Exercice indépendant | Signalement si conflit réel |
+
+**Données enregistrées lors de l'acknowledgment** :
+```typescript
+interface DpoConflictAcknowledgment {
+  tenantId: string;
+  dpoUserId: string;
+  adminUserId: string;           // Admin qui a fait l'assignation
+  acknowledgedAt: Date;
+  acknowledgedBy: string;        // Qui a coché la case (userId)
+  ipAddress: string;             // IP de confirmation
+  userAgent: string;             // Browser/device
+  warningDisplayed: string;      // Hash du texte warning affiché
+  rgpdArticles: ['Art. 24', 'Art. 38.3', 'Art. 38.6'];
+}
+```
+
+**Export preuve pour le tenant** :
+- PDF téléchargeable avec : date, warning affiché, personne ayant confirmé
+- Conservé dans l'audit trail du tenant
+- Utilisable en cas de contrôle CNIL
+
+**Acceptance Criteria séparation DPO** :
+- [ ] Un user = un seul rôle (TENANT_ADMIN ou DPO, pas les deux)
+- [ ] Détection automatique si même personne physique (email similaire)
+- [ ] Warning RGPD Art. 38.6 affiché avec mention responsabilité Art. 24
+- [ ] Checkbox acknowledgment avec texte transfert responsabilité
+- [ ] Audit event créé avec données complètes (IP, timestamp, qui a confirmé)
+- [ ] Export PDF preuve disponible pour le tenant
+- [ ] Test E2E : assignation DPO avec warning cumul + acknowledgment
+- [ ] Test unitaire : détection emails similaires
+- [ ] Test unitaire : génération preuve PDF
+
+#### 7.4.0.1 Répartition Alertes Protection (TENANT vs PLATFORM)
+
+> **Clarification architecturale** : Les fonctionnalités de protection se répartissent entre LOT 12.4 (TENANT) et **EPIC 14** (PLATFORM).
+
+**Ce que reçoit le DPO/Tenant (LOT 12.4 - scope TENANT)** :
+
+| Fonctionnalité | Description | Implémentation |
+|----------------|-------------|----------------|
+| **Dashboard alertes DPO** | KPIs + alertes conformité | Widget dans `/portal` si `role === 'DPO'` |
+| **Warning cumul DPO/Admin** | Détection lors création/édition user | Modal + acknowledgment |
+| **Alertes délais RGPD** | Demande > 30 jours sans réponse | Badge + notification |
+| **Notification DPIA à valider** | Nouveau purpose activé | Badge dans sidebar |
+| **Bouton escalade** | Signaler problème à la plateforme | `POST /api/platform/escalade` |
+
+**Ce que gère la Plateforme (EPIC 14 - scope PLATFORM)** :
+
+| Fonctionnalité | Description | LOT EPIC 14 |
+|----------------|-------------|-------------|
+| **Monitoring global tenants** | Vue consolidée conformité tous tenants | LOT 14.0 |
+| **Escalade reçue de tenants** | Tableau de bord escalades | LOT 14.0 |
+| **Blocking tenant non-conforme** | Action suspension tenant | LOT 14.0 |
+| **Rapport mensuel global** | Statistiques conformité plateforme | LOT 14.0 |
+| **Actions coercitives** | Suspension/réactivation tenant | LOT 14.0 (utilise API LOT 11.1) |
+
+**Workflow escalade (TENANT → PLATFORM)** :
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│      DPO        │       │   PLATEFORME    │       │   SUPER ADMIN   │
+│ signale problème│──────▶│ reçoit escalade │──────▶│ décide action   │
+│ via API (12.4)  │       │ (EPIC 14)       │       │ (warning/block) │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+**API escalade (appelée depuis `/portal` - LOT 12.4)** :
+```typescript
+// POST /api/platform/escalade (accessible scope TENANT, traité par EPIC 14)
+interface EscaladeRequest {
+  tenantId: string;        // Auto-injecté depuis JWT
+  type: 'RGPD_NON_COMPLIANCE' | 'DPO_CONFLICT' | 'SECURITY_INCIDENT' | 'OTHER';
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  attachments?: string[];  // IDs audit events liés
+}
+```
+
+> **Note** : Les endpoints de monitoring global et blocking sont documentés dans `EPIC_14_Securite_Gouvernance_RGPD.md`.
+
+**Objectif** : Permettre au DPO du tenant de :
+1. Consulter et valider les DPIA pré-remplis par le développeur pour chaque outil IA
+2. Gérer le Registre des traitements (Art. 30 RGPD)
+3. Suivre la conformité RGPD du tenant
+
+#### 7.4.1 Sidebar conditionnelle
+
+```typescript
+// TenantSidebar.tsx - Ajout menus DPO
+const navigation = [
+  // Menus Tenant Admin (existants)
+  { name: 'Dashboard', href: '/portal', icon: LayoutDashboard },
+  { name: 'Utilisateurs', href: '/portal/users', icon: Users },
+  { name: 'Consentements', href: '/portal/consents', icon: Shield },
+  { name: 'RGPD', href: '/portal/rgpd', icon: FileText },
+
+  // Menus DPO (conditionnels)
+  ...(user.role === 'DPO' ? [
+    { name: 'DPIA', href: '/portal/dpia', icon: FileSearch, badge: 'DPO' },
+    { name: 'Registre Art. 30', href: '/portal/registre', icon: Database, badge: 'DPO' },
+  ] : []),
+];
+```
+
+#### 7.4.2 Pages DPIA (`/portal/dpia/*`)
+
+**Concept DPIA pré-rempli** :
+- Le développeur (PLATFORM) crée les outils IA avec leurs DPIA pré-remplis (`DpiaTemplate`)
+- Le DPO du tenant consulte, modifie si besoin, et **valide** les DPIA
+- Une fois validé, le DPIA est gelé (immutable) et horodaté
+
+**Routes** :
+| Route | Description |
+|-------|-------------|
+| `/portal/dpia` | Liste des DPIA (tous outils activés pour le tenant) |
+| `/portal/dpia/[purposeCode]` | Détail DPIA d'un outil (lecture + validation) |
+| `/portal/dpia/[purposeCode]/edit` | Modification DPIA avant validation (DPO only) |
+
+**Interface `DpiaTemplate`** :
+```typescript
+interface DpiaTemplate {
+  purposeCode: string;           // Code purpose lié (ex: 'AI_EXTRACTION')
+  title: string;                 // Titre DPIA
+  description: string;           // Description traitement
+
+  // Section 1: Nature du traitement
+  processingNature: {
+    dataTypes: string[];         // Types données traitées
+    dataCategories: DataClassification[]; // P0, P1, P2, P3
+    dataSubjects: string[];      // Catégories personnes concernées
+    processingOperations: string[]; // Opérations effectuées
+  };
+
+  // Section 2: Nécessité et proportionnalité
+  necessity: {
+    purpose: string;             // Finalité détaillée
+    lawfulBasis: LawfulBasis;    // Base légale Art. 6
+    dataMinimsation: boolean;    // Minimisation respectée
+    retentionPeriod: string;     // Durée conservation
+    dataSubjectRights: string;   // Exercice des droits
+  };
+
+  // Section 3: Risques identifiés
+  risks: Array<{
+    id: string;
+    description: string;
+    likelihood: 'LOW' | 'MEDIUM' | 'HIGH';
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    mitigations: string[];
+  }>;
+
+  // Section 4: Mesures de sécurité
+  securityMeasures: {
+    technical: string[];         // Mesures techniques (chiffrement, pseudonymisation...)
+    organizational: string[];    // Mesures organisationnelles
+    llmSpecific: string[];       // Mesures spécifiques Gateway LLM
+  };
+
+  // Métadonnées
+  createdBy: string;             // Développeur ayant créé le template
+  createdAt: Date;
+  version: string;
+
+  // Validation DPO (rempli par le DPO)
+  dpoValidation?: {
+    validatedBy: string;         // DPO ID
+    validatedAt: Date;
+    comments?: string;
+    status: 'PENDING' | 'VALIDATED' | 'REJECTED' | 'REQUIRES_CHANGES';
+  };
+}
+```
+
+**Workflow DPIA** :
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│ TENANT_ADMIN    │       │      DPO        │       │    SYSTÈME      │
+│ active template │──────▶│ reçoit notif    │──────▶│ DPIA créé       │
+│ pour tenant     │       │ "DPIA à valider"│       │ status=PENDING  │
+└─────────────────┘       └────────┬────────┘       └─────────────────┘
+                                   │
+                                   ▼
+                          ┌─────────────────┐
+                          │ DPO consulte    │
+                          │ DPIA pré-rempli │
+                          └────────┬────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+            ┌───────────┐  ┌───────────┐  ┌───────────┐
+            │ VALIDE    │  │ MODIFIE   │  │ REJETTE   │
+            │ (gelé)    │  │ puis      │  │ (raison)  │
+            └───────────┘  │ VALIDE    │  └───────────┘
+                           └───────────┘
+```
+
+#### 7.4.3 Registre des traitements (Art. 30)
+
+**Routes** :
+| Route | Description |
+|-------|-------------|
+| `/portal/registre` | Registre complet des traitements |
+| `/portal/registre/export` | Export PDF/CSV du registre |
+
+**Contenu du registre** (généré automatiquement) :
+- Liste des finalités activées pour le tenant
+- Base légale de chaque traitement
+- Catégories de données traitées
+- Durées de conservation
+- Mesures de sécurité
+- Coordonnées DPO
+- Date dernière mise à jour
+
+#### 7.4.4 APIs DPO
+
+| Endpoint | Méthode | Description | Role |
+|----------|---------|-------------|------|
+| `GET /api/dpia` | GET | Liste DPIA tenant | DPO |
+| `GET /api/dpia/:purposeCode` | GET | Détail DPIA | DPO |
+| `PATCH /api/dpia/:purposeCode` | PATCH | Modifier DPIA (avant validation) | DPO |
+| `POST /api/dpia/:purposeCode/validate` | POST | Valider DPIA | DPO |
+| `GET /api/registre` | GET | Registre Art. 30 | DPO, TENANT_ADMIN |
+| `GET /api/registre/export` | GET | Export registre PDF/CSV | DPO |
+
+#### 7.4.5 Acceptance Criteria LOT 12.4
+
+**Sidebar DPO** :
+- [ ] Sidebar affiche menus DPIA et Registre uniquement si `role === 'DPO'`
+- [ ] Badge "DPO" sur les menus spécifiques
+- [ ] Navigation fluide entre pages DPO et pages Tenant Admin
+
+**Pages DPIA** :
+- [ ] Liste DPIA avec statuts (PENDING, VALIDATED, REJECTED)
+- [ ] Filtres par statut, par date, par niveau de risque
+- [ ] Vue détaillée DPIA pré-rempli avec toutes sections
+- [ ] Mode édition pour modifier avant validation
+- [ ] Boutons Valider / Rejeter avec confirmation
+- [ ] Historique des validations/rejets
+
+**Registre Art. 30** :
+- [ ] Vue registre complet avec tous traitements actifs
+- [ ] Export PDF formaté CNIL-compliant
+- [ ] Export CSV pour analyses
+- [ ] Horodatage dernière mise à jour
+
+**RBAC** :
+- [ ] Routes `/portal/dpia/*` accessibles uniquement si `role === 'DPO'`
+- [ ] API endpoints protégés par RBAC (403 si non DPO)
+- [ ] Registre accessible DPO + TENANT_ADMIN (lecture seule pour admin)
+
+**Tests obligatoires** :
+- [ ] Test E2E : DPO accède aux pages DPIA
+- [ ] Test E2E : TENANT_ADMIN ne voit pas les menus DPO
+- [ ] Test E2E : Workflow validation DPIA complet
+- [ ] Test unitaire : RBAC sur endpoints DPO
+- [ ] Test unitaire : Génération registre Art. 30
+
+**RGPD Compliance** :
+- [ ] Art. 30 : Registre des traitements conforme
+- [ ] Art. 35 : DPIA documentés et validés
+- [ ] Art. 37-39 : Fonctionnalités DPO respectées
+
+#### 7.4.6 Articulation LOT 12.3 ↔ LOT 12.4 (Accès DPO aux données RGPD)
+
+> **Important** : Le DPO a besoin d'accéder aux données opérationnelles RGPD (LOT 12.3) pour assurer sa mission de conformité.
+
+**Accès DPO aux pages LOT 12.3** :
+
+| Page LOT 12.3 | Accès DPO | Action DPO |
+|---------------|-----------|------------|
+| `/portal/rgpd/exports` | ✅ Lecture | Statistiques pour rapport conformité |
+| `/portal/rgpd/deletions` | ✅ Lecture | Statistiques pour rapport conformité |
+| `/portal/rgpd/suspensions` | ✅ Lecture | Suivi Art. 18 (limitation traitement) |
+| `/portal/rgpd/oppositions` | ✅ Lecture | Suivi Art. 21 (droit d'opposition) |
+| `/portal/rgpd/contests` | ✅ Lecture + **Action** | **Valider conformité** de la réponse TENANT_ADMIN |
+
+**Workflow contestations Art. 22 (partagé LOT 12.3 + 12.4)** :
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│     USER        │       │  TENANT_ADMIN   │       │      DPO        │
+│ conteste        │──────▶│ reçoit et       │──────▶│ valide que la   │
+│ décision IA     │       │ répond          │       │ réponse est     │
+└─────────────────┘       └─────────────────┘       │ conforme RGPD   │
+                                                    └─────────────────┘
+```
+
+**Widget Dashboard DPO** (intégré dans `/portal` si `role === 'DPO'`) :
+- KPIs RGPD agrégés :
+  - Demandes export en cours / traitées
+  - Demandes effacement en cours / traitées
+  - Contestations en attente de validation DPO
+  - Délai moyen de traitement
+- **Alertes conformité** :
+  - ⚠️ Demande > 30 jours sans réponse (non-conformité Art. 12)
+  - ⚠️ Contestation Art. 22 non traitée
+  - ⚠️ DPIA en attente de validation
+
+**Acceptance Criteria supplémentaires** :
+- [ ] DPO peut accéder aux pages `/portal/rgpd/*` en lecture
+- [ ] DPO peut valider conformité des réponses aux contestations Art. 22
+- [ ] Dashboard DPO affiche KPIs RGPD agrégés
+- [ ] Alertes conformité visibles sur dashboard DPO
+- [ ] Test E2E : DPO valide une contestation Art. 22
 
 ---
 
@@ -1033,7 +1610,7 @@ Référence **TASKS.md** :
 ## 9. Checklist de livraison (DoD EPIC 12)
 
 ### Code
-- [ ] Tous les LOTs 12.0-12.3 implémentés
+- [ ] Tous les LOTs 12.0-12.4 implémentés
 - [ ] Tests E2E passants (100%)
 - [ ] Tests RGPD passants (100%)
 - [ ] TypeScript strict (0 erreurs)
@@ -1042,11 +1619,13 @@ Référence **TASKS.md** :
 ### Documentation
 - [ ] README Back Office Tenant (setup, usage)
 - [ ] Guide utilisateur Tenant Admin (manuel)
+- [ ] Guide utilisateur DPO (DPIA, Registre Art. 30)
 
 ### Sécurité
 - [ ] Scan sécurité frontend (npm audit)
 - [ ] CSP validé
 - [ ] Isolation tenant validée (tests)
+- [ ] RBAC DPO validé (accès conditionnel)
 
 ### Performance
 - [ ] Lighthouse score > 90
@@ -1056,6 +1635,8 @@ Référence **TASKS.md** :
 - [ ] Isolation tenant stricte (tests E2E)
 - [ ] Pas de données P3 affichées (audit)
 - [ ] Export CSV RGPD-safe (validation)
+- [ ] Registre Art. 30 conforme
+- [ ] DPIA validés et horodatés
 
 ---
 
@@ -1066,6 +1647,6 @@ Après complétion EPIC 12 :
 
 ---
 
-**Document créé le 25 décembre 2025**  
-**Version 1.0**  
+**Document créé le 25 décembre 2025**
+**Version 1.1** (Ajout LOT 12.4 - Fonctionnalités DPO)
 **Auteur** : Équipe Plateforme RGPD-IA

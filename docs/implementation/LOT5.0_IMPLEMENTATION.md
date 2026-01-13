@@ -384,8 +384,12 @@ Time:        2.526 s
 |--------|--------|------------|----------|
 | ConsentRepo optionnel | Enforcement peut être omis | À rendre obligatoire | **P1** (LOT futur) |
 | Pas de cache consent | Requête DB à chaque appel IA | Cache 5-10s + invalidation | P2 (optimisation) |
-| Purpose libre (string) | Risque typos | Enum TypeScript | P3 (LOT 5.3) |
+| ~~Purpose libre (string)~~ | ~~Risque typos~~ | ~~Enum TypeScript~~ | ~~P3 (LOT 5.3)~~ ✅ Résolu LOT 12.2 |
 | InMemoryAuditEventWriter | Perte events en cas crash | PgAuditEventWriter | P2 (LOT futur) |
+
+> **Note LOT 12.2** : Le problème "Purpose libre (string)" a été résolu par l'ajout du support `purposeId`.
+> Les consents peuvent maintenant être liés aux purposes par UUID via `purpose_id`, garantissant une
+> connexion forte entre purposes configurés et enforcement Gateway.
 
 ### 7.3 Points de Vigilance Production
 
@@ -436,7 +440,7 @@ Time:        2.526 s
 
 ### 9.3 Optimisations Futures
 - Cache consent (5-10s) avec invalidation sur revoke
-- Enum TypeScript des purposes autorisés
+- ~~Enum TypeScript des purposes autorisés~~ ✅ Résolu par `purposeId` (LOT 12.2)
 - PgAuditEventWriter (persistance audit)
 - Dashboard consents (admin UI)
 
@@ -471,6 +475,96 @@ Time:        2.526 s
 | Date | Version | Auteur | Changements |
 |------|---------|--------|-------------|
 | 2025-12-25 | 1.0.0 | Claude Sonnet 4.5 | Implémentation initiale LOT 5.0 |
+| 2026-01-12 | 1.1.0 | Claude Opus 4.5 | LOT 12.2: Ajout support `purposeId` pour connexion forte purposes-consent |
+
+---
+
+## 12. LOT 12.2 — Connexion Purpose-Consent (Addendum)
+
+### 12.1 Problème résolu
+
+Le LOT 5.0 initial utilisait un `purpose` string libre pour l'enforcement :
+- Risque de typos
+- Pas de lien fort avec les purposes configurés via le stepper
+- Pas de traçabilité entre purposes et consents
+
+### 12.2 Solution implémentée
+
+**Architecture de connexion** :
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  STEPPER LOT 12.2 (création purpose)                             │
+│  → Crée purpose avec id: uuid-xyz, label: "Mon traitement"       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  API POST /api/consents (grant consent)                          │
+│  → Body: { userId, purpose: "Mon traitement", purposeId: uuid }  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  TABLE consents                                                  │
+│  → purpose: "Mon traitement" (rétrocompatibilité)                │
+│  → purpose_id: uuid-xyz (lien fort)                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  GATEWAY checkConsent()                                          │
+│  → Support PurposeIdentifier: { type: 'purposeId', value: uuid } │
+│  → Ou legacy string: "Mon traitement"                            │
+│  → Recherche par purpose_id OU purpose label                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12.3 Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/app/ports/ConsentRepo.ts` | Ajout `purposeId`, `PurposeIdentifier` type |
+| `src/infrastructure/repositories/PgConsentRepo.ts` | Support recherche par `purposeId` ou `label` |
+| `src/ai/gateway/enforcement/checkConsent.ts` | Support `PurposeIdentifier` |
+| `src/app/usecases/consent/grantConsent.ts` | Ajout `purposeId` dans input |
+| `src/app/usecases/consent/revokeConsent.ts` | Support révocation par `purposeId` |
+| `app/api/consents/route.ts` | Ajout `purposeId` dans body |
+| `app/api/consents/revoke/route.ts` | Ajout `purposeId` dans body |
+
+### 12.4 Rétrocompatibilité
+
+- ✅ Les anciens consents avec `purpose` string continuent de fonctionner
+- ✅ Les nouveaux consents peuvent utiliser `purposeId` pour lien fort
+- ✅ L'enforcement Gateway supporte les deux modes
+- ✅ La recherche par label fait un lookup dans la table `purposes`
+
+### 12.5 Usage recommandé
+
+**Nouveau code** : Toujours passer `purposeId` quand disponible
+
+```typescript
+// API call
+await fetch('/api/consents', {
+  method: 'POST',
+  body: JSON.stringify({
+    userId: 'user-123',
+    purpose: purpose.label,    // Pour affichage
+    purposeId: purpose.id,     // Pour lien fort (UUID)
+  }),
+});
+```
+
+**Gateway enforcement** : Utiliser `purposeId` si disponible
+
+```typescript
+await checkConsent(
+  consentRepo,
+  tenantId,
+  userId,
+  { type: 'purposeId', value: purpose.id }
+);
+```
 
 ---
 
