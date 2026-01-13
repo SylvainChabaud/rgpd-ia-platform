@@ -51,9 +51,41 @@ import {
   Trash2,
   Calendar,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+
+// =========================
+// Constants
+// =========================
+
+const JOBS_PAGE_SIZE = 20
+const AUDIT_PAGE_SIZE = 50
+
+const USER_TAB = {
+  JOBS: 'jobs',
+  CONSENTS: 'consents',
+  AUDIT: 'audit',
+} as const;
+
+const JOB_STATUS = {
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  PENDING: 'PENDING',
+} as const;
+
+const CONSENT_STATUS = {
+  GRANTED: 'granted',
+  REVOKED: 'revoked',
+} as const;
+
+const CONSENT_SOURCE = {
+  USER: 'user',
+  ADMIN: 'admin',
+  SYSTEM: 'system',
+} as const;
 
 /**
  * User Detail Page - TENANT Admin (LOT 12.1)
@@ -87,11 +119,21 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [suspendReason, setSuspendReason] = useState('')
 
+  // Pagination states
+  const [jobsPage, setJobsPage] = useState(0)
+  const [auditPage, setAuditPage] = useState(0)
+
   const { data: userData, isLoading: userLoading, error: userError, refetch: refetchUser } = useUserDetail(userId)
   const { data: statsData, isLoading: statsLoading } = useUserStats(userId)
-  const { data: jobsData, isLoading: jobsLoading } = useUserJobs(userId, { limit: 20 })
+  const { data: jobsData, isLoading: jobsLoading } = useUserJobs(userId, {
+    limit: JOBS_PAGE_SIZE,
+    offset: jobsPage * JOBS_PAGE_SIZE
+  })
   const { data: consentsData, isLoading: consentsLoading } = useUserConsents(userId)
-  const { data: auditData, isLoading: auditLoading } = useUserAuditEvents(userId, { limit: 50 })
+  const { data: auditData, isLoading: auditLoading } = useUserAuditEvents(userId, {
+    limit: AUDIT_PAGE_SIZE,
+    offset: auditPage * AUDIT_PAGE_SIZE
+  })
 
   const suspendUser = useSuspendTenantUser(userId)
   const reactivateUser = useReactivateTenantUser(userId)
@@ -100,8 +142,14 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   const user = userData?.user
   const stats = statsData?.stats
   const jobs = jobsData?.jobs || []
+  const jobsTotal = jobsData?.total || 0
   const consents = consentsData?.consents || []
   const auditEvents = auditData?.events || []
+  const auditTotal = auditData?.total || 0
+
+  // Pagination helpers
+  const jobsTotalPages = Math.ceil(jobsTotal / JOBS_PAGE_SIZE)
+  const auditTotalPages = Math.ceil(auditTotal / AUDIT_PAGE_SIZE)
 
   const handleSuspend = () => {
     if (!suspendReason.trim()) return
@@ -262,7 +310,17 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               <>
                 <p className="text-2xl font-bold">{stats?.jobs.total || 0}</p>
                 <p className="text-sm text-muted-foreground">
-                  {stats?.jobs.success || 0} succès / {stats?.jobs.failed || 0} échecs
+                  <span className="text-green-600">{stats?.jobs.success || 0} succès</span>
+                  {' / '}
+                  <span className="text-red-600">{stats?.jobs.failed || 0} échecs</span>
+                  {((stats?.jobs.pending || 0) + (stats?.jobs.running || 0)) > 0 && (
+                    <>
+                      {' / '}
+                      <span className="text-yellow-600">
+                        {(stats?.jobs.pending || 0) + (stats?.jobs.running || 0)} en cours
+                      </span>
+                    </>
+                  )}
                 </p>
               </>
             )}
@@ -311,29 +369,30 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
       </div>
 
       {/* Tabs for History */}
-      <Tabs defaultValue="jobs" className="w-full">
+      <Tabs defaultValue={USER_TAB.JOBS} className="w-full">
         <TabsList>
-          <TabsTrigger value="jobs" className="flex items-center gap-2">
+          <TabsTrigger value={USER_TAB.JOBS} className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
-            Jobs IA ({jobs.length})
+            Jobs IA ({jobsTotal})
           </TabsTrigger>
-          <TabsTrigger value="consents" className="flex items-center gap-2">
+          <TabsTrigger value={USER_TAB.CONSENTS} className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" />
             Consentements ({consents.length})
           </TabsTrigger>
-          <TabsTrigger value="audit" className="flex items-center gap-2">
+          <TabsTrigger value={USER_TAB.AUDIT} className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            Audit ({auditEvents.length})
+            Audit ({auditTotal})
           </TabsTrigger>
         </TabsList>
 
         {/* Jobs Tab */}
-        <TabsContent value="jobs">
+        <TabsContent value={USER_TAB.JOBS}>
           <Card>
             <CardHeader>
               <CardTitle>Historique des Jobs IA</CardTitle>
               <CardDescription>
-                Liste des traitements IA effectués par cet utilisateur (20 derniers)
+                Liste des traitements IA effectués par cet utilisateur
+                {jobsTotal > 0 && ` (${jobsPage * JOBS_PAGE_SIZE + 1}-${Math.min((jobsPage + 1) * JOBS_PAGE_SIZE, jobsTotal)} sur ${jobsTotal})`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -346,45 +405,81 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               ) : jobs.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Aucun job IA</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Purpose</TableHead>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Latence</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {jobs.map((job) => (
-                      <TableRow key={job.id}>
-                        <TableCell>
-                          {job.createdAt
-                            ? formatDistanceToNow(new Date(job.createdAt), { locale: fr, addSuffix: true })
-                            : '-'}
-                        </TableCell>
-                        <TableCell>{job.purpose}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{job.model}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={job.status === 'COMPLETED' ? 'default' : 'destructive'}>
-                            {job.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{job.latencyMs ? `${job.latencyMs}ms` : '-'}</TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Purpose</TableHead>
+                        <TableHead>Modèle</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Latence</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {jobs.map((job) => (
+                        <TableRow key={job.id}>
+                          <TableCell>
+                            {job.createdAt
+                              ? formatDistanceToNow(new Date(job.createdAt), { locale: fr, addSuffix: true })
+                              : '-'}
+                          </TableCell>
+                          <TableCell>{job.purpose}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{job.model}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                job.status === JOB_STATUS.COMPLETED ? 'default' :
+                                job.status === JOB_STATUS.FAILED ? 'destructive' :
+                                'secondary'
+                              }
+                            >
+                              {job.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{job.latencyMs ? `${job.latencyMs}ms` : '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {/* Jobs Pagination */}
+                  {jobsTotalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Page {jobsPage + 1} sur {jobsTotalPages}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setJobsPage((p) => Math.max(0, p - 1))}
+                          disabled={jobsPage === 0}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Précédent
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setJobsPage((p) => Math.min(jobsTotalPages - 1, p + 1))}
+                          disabled={jobsPage >= jobsTotalPages - 1}
+                        >
+                          Suivant
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Consents Tab */}
-        <TabsContent value="consents">
+        <TabsContent value={USER_TAB.CONSENTS}>
           <Card>
             <CardHeader>
               <CardTitle>Consentements</CardTitle>
@@ -423,16 +518,16 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                         <TableCell>
                           <Badge
                             variant={
-                              consent.status === 'granted'
+                              consent.status === CONSENT_STATUS.GRANTED
                                 ? 'default'
-                                : consent.status === 'revoked'
+                                : consent.status === CONSENT_STATUS.REVOKED
                                 ? 'destructive'
                                 : 'secondary'
                             }
                           >
-                            {consent.status === 'granted'
+                            {consent.status === CONSENT_STATUS.GRANTED
                               ? 'Accordé'
-                              : consent.status === 'revoked'
+                              : consent.status === CONSENT_STATUS.REVOKED
                               ? 'Révoqué'
                               : 'En attente'}
                           </Badge>
@@ -457,12 +552,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         </TabsContent>
 
         {/* Audit Tab */}
-        <TabsContent value="audit">
+        <TabsContent value={USER_TAB.AUDIT}>
           <Card>
             <CardHeader>
               <CardTitle>Événements d&apos;audit</CardTitle>
               <CardDescription>
-                Historique des actions liées à cet utilisateur (50 derniers)
+                Historique des actions liées à cet utilisateur
+                {auditTotal > 0 && ` (${auditPage * AUDIT_PAGE_SIZE + 1}-${Math.min((auditPage + 1) * AUDIT_PAGE_SIZE, auditTotal)} sur ${auditTotal})`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -475,48 +571,78 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               ) : auditEvents.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">Aucun événement</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Rôle</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {auditEvents.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell>
-                          {event.createdAt
-                            ? formatDistanceToNow(new Date(event.createdAt), { locale: fr, addSuffix: true })
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              event.type.includes('failed') || event.type.includes('revoked') || event.type.includes('suspended')
-                                ? 'destructive'
-                                : event.type.includes('created') || event.type.includes('granted') || event.type.includes('completed')
-                                ? 'default'
-                                : 'secondary'
-                            }
-                          >
-                            {event.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {event.isActor && event.isTarget ? (
-                            <Badge variant="outline">Acteur & Cible</Badge>
-                          ) : event.isActor ? (
-                            <Badge variant="outline">Acteur</Badge>
-                          ) : (
-                            <Badge variant="outline">Cible</Badge>
-                          )}
-                        </TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Rôle</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {auditEvents.map((event) => (
+                        <TableRow key={event.id}>
+                          <TableCell>
+                            {event.createdAt
+                              ? formatDistanceToNow(new Date(event.createdAt), { locale: fr, addSuffix: true })
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                event.type.includes('failed') || event.type.includes('revoked') || event.type.includes('suspended')
+                                  ? 'destructive'
+                                  : event.type.includes('created') || event.type.includes('granted') || event.type.includes('completed')
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                            >
+                              {event.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {event.isActor && event.isTarget ? (
+                              <Badge variant="outline">Acteur & Cible</Badge>
+                            ) : event.isActor ? (
+                              <Badge variant="outline">Acteur</Badge>
+                            ) : (
+                              <Badge variant="outline">Cible</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {/* Audit Pagination */}
+                  {auditTotalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Page {auditPage + 1} sur {auditTotalPages}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAuditPage((p) => Math.max(0, p - 1))}
+                          disabled={auditPage === 0}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Précédent
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAuditPage((p) => Math.min(auditTotalPages - 1, p + 1))}
+                          disabled={auditPage >= auditTotalPages - 1}
+                        >
+                          Suivant
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

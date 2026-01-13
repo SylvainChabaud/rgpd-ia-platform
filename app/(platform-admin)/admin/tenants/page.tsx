@@ -30,10 +30,21 @@ import { Plus, Eye } from 'lucide-react'
  * - No user content or sensitive data
  * - Audit trail logged backend
  */
+
+// Status filter constants (local to this page)
+const STATUS_FILTER = {
+  ALL: '',
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+  DELETED: 'deleted',
+} as const;
+
+type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
+
 export default function TenantsPage() {
   const [page, setPage] = useState(0)
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const limit = 20
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(STATUS_FILTER.ALL)
+  const limit = 100
 
   const { data, isLoading, error } = useListTenants({
     limit,
@@ -68,16 +79,16 @@ export default function TenantsPage() {
 
   // Apply client-side filtering
   const tenants = allTenants.filter((tenant) => {
-    if (statusFilter === 'active') {
+    if (statusFilter === STATUS_FILTER.ACTIVE) {
       return !tenant.suspendedAt && !tenant.deletedAt
     }
-    if (statusFilter === 'suspended') {
+    if (statusFilter === STATUS_FILTER.SUSPENDED) {
       return tenant.suspendedAt && !tenant.deletedAt
     }
-    if (statusFilter === 'deleted') {
+    if (statusFilter === STATUS_FILTER.DELETED) {
       return tenant.deletedAt
     }
-    return true // 'all' or no filter
+    return true // STATUS_FILTER.ALL or no filter
   })
 
   const hasNextPage = allTenants.length === limit
@@ -93,7 +104,7 @@ export default function TenantsPage() {
             Vue cross-tenant - {tenants.length} tenant(s) affiché(s)
           </p>
         </div>
-        <Link href="/tenants/new">
+        <Link href="/admin/tenants/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Créer un Tenant
@@ -113,13 +124,13 @@ export default function TenantsPage() {
               <label className="text-sm font-medium">Statut</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="suspended">Suspendu</option>
-                <option value="deleted">Supprimé</option>
+                <option value={STATUS_FILTER.ALL}>Tous les statuts</option>
+                <option value={STATUS_FILTER.ACTIVE}>Actif</option>
+                <option value={STATUS_FILTER.SUSPENDED}>Suspendu</option>
+                <option value={STATUS_FILTER.DELETED}>Supprimé</option>
               </select>
             </div>
 
@@ -127,7 +138,7 @@ export default function TenantsPage() {
             <div className="flex items-end">
               <Button
                 onClick={() => {
-                  setStatusFilter('')
+                  setStatusFilter(STATUS_FILTER.ALL)
                   setPage(0)
                 }}
                 variant="outline"
@@ -149,7 +160,7 @@ export default function TenantsPage() {
           {tenants.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Aucun tenant trouvé</p>
-              <Link href="/tenants/new" className="mt-4 inline-block">
+              <Link href="/admin/tenants/new" className="mt-4 inline-block">
                 <Button variant="outline">
                   <Plus className="mr-2 h-4 w-4" />
                   Créer le premier tenant
@@ -189,7 +200,7 @@ export default function TenantsPage() {
                         {new Date(tenant.createdAt).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/tenants/${tenant.id}`}>
+                        <Link href={`/admin/tenants/${tenant.id}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="mr-2 h-4 w-4" />
                             Détails

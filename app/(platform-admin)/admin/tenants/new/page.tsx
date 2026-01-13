@@ -85,7 +85,7 @@ export default function CreateTenantPage() {
   const onSubmit = (data: CreateTenantFormData) => {
     createTenant(data, {
       onSuccess: () => {
-        router.push('/tenants')
+        router.push('/admin/tenants')
       },
     })
   }
@@ -94,7 +94,7 @@ export default function CreateTenantPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/tenants">
+        <Link href="/admin/tenants">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste

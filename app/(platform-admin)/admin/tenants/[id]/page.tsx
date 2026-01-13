@@ -73,7 +73,7 @@ export default function TenantDetailsPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive">Tenant introuvable</p>
-          <Link href="/tenants" className="mt-4 inline-block">
+          <Link href="/admin/tenants" className="mt-4 inline-block">
             <Button variant="outline">Retour à la liste</Button>
           </Link>
         </div>
@@ -89,7 +89,7 @@ export default function TenantDetailsPage() {
     deleteTenant(undefined, {
       onSuccess: () => {
         setShowDeleteDialog(false)
-        router.push('/tenants')
+        router.push('/admin/tenants')
       },
     })
   }
@@ -110,7 +110,7 @@ export default function TenantDetailsPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/tenants">
+        <Link href="/admin/tenants">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste
@@ -129,7 +129,7 @@ export default function TenantDetailsPage() {
         <div className="flex gap-2">
           {!isDeleted && !isSuspended && (
             <>
-              <Link href={`/tenants/${tenantId}/edit`}>
+              <Link href={`/admin/tenants/${tenantId}/edit`}>
                 <Button variant="outline">
                   <Edit className="mr-2 h-4 w-4" />
                   Modifier
@@ -270,17 +270,23 @@ export default function TenantDetailsPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.usersCount ?? 0}</div>
+              <div className="text-2xl font-bold">{stats.stats?.users?.total ?? 0}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.stats?.users?.active ?? 0} actifs
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Jobs IA</CardTitle>
+              <CardTitle className="text-sm font-medium">Jobs IA (ce mois)</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.aiJobsCount ?? 0}</div>
+              <div className="text-2xl font-bold">{stats.stats?.aiJobs?.total ?? 0}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.stats?.aiJobs?.success ?? 0} réussis
+              </p>
             </CardContent>
           </Card>
 
@@ -291,8 +297,11 @@ export default function TenantDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {(stats.storageUsed / 1024 / 1024).toFixed(2)} MB
+                {((stats.stats?.storage?.usedBytes ?? 0) / 1024 / 1024).toFixed(2)} MB
               </div>
+              <p className="text-xs text-muted-foreground">
+                estimé
+              </p>
             </CardContent>
           </Card>
         </div>

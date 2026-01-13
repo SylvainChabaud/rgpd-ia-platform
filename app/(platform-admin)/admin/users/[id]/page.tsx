@@ -80,7 +80,7 @@ export default function UserDetailsPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive">Utilisateur introuvable</p>
-          <Link href="/users" className="mt-4 inline-block">
+          <Link href="/admin/users" className="mt-4 inline-block">
             <Button variant="outline">Retour à la liste</Button>
           </Link>
         </div>
@@ -99,7 +99,7 @@ export default function UserDetailsPage() {
     deleteUser(undefined, {
       onSuccess: () => {
         setShowDeleteDialog(false)
-        router.push('/users')
+        router.push('/admin/users')
       },
     })
   }
@@ -110,7 +110,7 @@ export default function UserDetailsPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/users">
+        <Link href="/admin/users">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste
@@ -140,7 +140,7 @@ export default function UserDetailsPage() {
               <ButtonWrapper />
             </span>
           ) : (
-            <Link href={`/users/${userId}/edit`}>
+            <Link href={`/admin/users/${userId}/edit`}>
               <ButtonWrapper />
             </Link>
           )}
@@ -201,7 +201,7 @@ export default function UserDetailsPage() {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Tenant</p>
               {tenant ? (
-                <Link href={`/tenants/${tenant.id}`}>
+                <Link href={`/admin/tenants/${tenant.id}`}>
                   <Badge variant="outline" className="cursor-pointer hover:bg-muted">
                     {tenant.name}
                   </Badge>

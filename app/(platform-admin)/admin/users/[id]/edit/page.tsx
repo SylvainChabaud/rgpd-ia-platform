@@ -66,7 +66,7 @@ export default function EditUserPage() {
   const onSubmit = (data: UpdateUserFormData) => {
     updateUser(data, {
       onSuccess: () => {
-        router.push(`/users/${userId}`)
+        router.push(`/admin/users/${userId}`)
       },
     })
   }
@@ -87,7 +87,7 @@ export default function EditUserPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-destructive">Utilisateur introuvable</p>
-          <Link href="/users" className="mt-4 inline-block">
+          <Link href="/admin/users" className="mt-4 inline-block">
             <Button variant="outline">Retour à la liste</Button>
           </Link>
         </div>
@@ -102,7 +102,7 @@ export default function EditUserPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href={`/users/${userId}`}>
+        <Link href={`/admin/users/${userId}`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour aux détails
@@ -209,7 +209,7 @@ export default function EditUserPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/users/${userId}`)}
+                onClick={() => router.push(`/admin/users/${userId}`)}
                 disabled={isPending}
               >
                 Annuler

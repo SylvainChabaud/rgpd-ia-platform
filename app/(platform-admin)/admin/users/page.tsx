@@ -3,6 +3,19 @@
 import { ACTOR_ROLE } from '@/shared/actorRole'
 
 import { useState, useMemo } from 'react'
+
+// =========================
+// Filter Constants
+// =========================
+
+const FILTER_ALL = '' as const;
+
+const USER_STATUS_FILTER = {
+  ALL: FILTER_ALL,
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+} as const;
+type UserStatusFilter = (typeof USER_STATUS_FILTER)[keyof typeof USER_STATUS_FILTER];
 import Link from 'next/link'
 import { useListUsers, useListTenants } from '@/lib/api/hooks/useUsers'
 import { useBulkSuspendUsers, useBulkReactivateUsers } from '@/lib/api/hooks/useUsers'
@@ -50,9 +63,9 @@ import { Plus, Eye, Users } from 'lucide-react'
  */
 export default function UsersPage() {
   const [page, setPage] = useState(0)
-  const [tenantFilter, setTenantFilter] = useState<string>('')
-  const [roleFilter, setRoleFilter] = useState<string>('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [tenantFilter, setTenantFilter] = useState<string>(FILTER_ALL)
+  const [roleFilter, setRoleFilter] = useState<string>(FILTER_ALL)
+  const [statusFilter, setStatusFilter] = useState<string>(USER_STATUS_FILTER.ALL)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [showBulkSuspendDialog, setShowBulkSuspendDialog] = useState(false)
   const [showBulkReactivateDialog, setShowBulkReactivateDialog] = useState(false)
@@ -158,7 +171,7 @@ export default function UsersPage() {
             Vue cross-tenant - {users.length} utilisateur(s) affiché(s)
           </p>
         </div>
-        <Link href="/users/new">
+        <Link href="/admin/users/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Créer un Utilisateur
@@ -181,7 +194,7 @@ export default function UsersPage() {
                 onChange={(e) => setTenantFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les tenants</option>
+                <option value={FILTER_ALL}>Tous les tenants</option>
                 {tenants.map((tenant) => (
                   <option key={tenant.id} value={tenant.id}>
                     {tenant.name}
@@ -198,7 +211,7 @@ export default function UsersPage() {
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les rôles</option>
+                <option value={FILTER_ALL}>Tous les rôles</option>
                 <option value={ACTOR_ROLE.SUPERADMIN}>Super Admin</option>
                 <option value={ACTOR_ROLE.TENANT_ADMIN}>Administrateur</option>
                 <option value={ACTOR_ROLE.MEMBER}>Membre</option>
@@ -211,12 +224,12 @@ export default function UsersPage() {
               <label className="text-sm font-medium">Status</label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setStatusFilter(e.target.value as UserStatusFilter)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="suspended">Suspendu</option>
+                <option value={USER_STATUS_FILTER.ALL}>Tous les statuts</option>
+                <option value={USER_STATUS_FILTER.ACTIVE}>Actif</option>
+                <option value={USER_STATUS_FILTER.SUSPENDED}>Suspendu</option>
               </select>
             </div>
 
@@ -224,9 +237,9 @@ export default function UsersPage() {
             <div className="flex items-end">
               <Button
                 onClick={() => {
-                  setTenantFilter('')
-                  setRoleFilter('')
-                  setStatusFilter('')
+                  setTenantFilter(FILTER_ALL)
+                  setRoleFilter(FILTER_ALL)
+                  setStatusFilter(USER_STATUS_FILTER.ALL)
                   setPage(0)
                 }}
                 variant="outline"
@@ -281,7 +294,7 @@ export default function UsersPage() {
           {users.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
-              <Link href="/users/new" className="mt-4 inline-block">
+              <Link href="/admin/users/new" className="mt-4 inline-block">
                 <Button variant="outline">
                   <Plus className="mr-2 h-4 w-4" />
                   Créer le premier utilisateur
@@ -377,7 +390,7 @@ export default function UsersPage() {
                           {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Link href={`/users/${user.id}`}>
+                          <Link href={`/admin/users/${user.id}`}>
                             <Button variant="ghost" size="sm">
                               <Eye className="mr-2 h-4 w-4" />
                               Détails

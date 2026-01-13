@@ -3,6 +3,35 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { ACTOR_ROLE } from '@/shared/actorRole'
+
+// =========================
+// Filter Constants
+// =========================
+
+const FILTER_ALL = '' as const;
+
+const USER_STATUS_FILTER = {
+  ALL: FILTER_ALL,
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+} as const;
+type UserStatusFilter = (typeof USER_STATUS_FILTER)[keyof typeof USER_STATUS_FILTER];
+
+const SORT_FIELD = {
+  NAME: 'name',
+  CREATED_AT: 'createdAt',
+  ROLE: 'role',
+} as const;
+type SortField = (typeof SORT_FIELD)[keyof typeof SORT_FIELD];
+
+const SORT_ORDER = {
+  ASC: 'asc',
+  DESC: 'desc',
+} as const;
+type SortOrder = (typeof SORT_ORDER)[keyof typeof SORT_ORDER];
+
+const DEFAULT_SORT_FIELD = SORT_FIELD.CREATED_AT;
+const DEFAULT_SORT_ORDER = SORT_ORDER.DESC;
 import {
   useTenantUsers,
   useBulkSuspendTenantUsers,
@@ -54,12 +83,12 @@ import { Plus, Eye, Users, Search, ChevronLeft, ChevronRight, AlertCircle } from
  */
 export default function TenantUsersPage() {
   const [page, setPage] = useState(0)
-  const [roleFilter, setRoleFilter] = useState<string>('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [searchInput, setSearchInput] = useState<string>('')
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'role'>('createdAt')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [roleFilter, setRoleFilter] = useState<string>(FILTER_ALL)
+  const [statusFilter, setStatusFilter] = useState<string>(USER_STATUS_FILTER.ALL)
+  const [searchQuery, setSearchQuery] = useState<string>(FILTER_ALL)
+  const [searchInput, setSearchInput] = useState<string>(FILTER_ALL)
+  const [sortBy, setSortBy] = useState<SortField>(DEFAULT_SORT_FIELD)
+  const [sortOrder, setSortOrder] = useState<SortOrder>(DEFAULT_SORT_ORDER)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [showBulkSuspendDialog, setShowBulkSuspendDialog] = useState(false)
   const [showBulkReactivateDialog, setShowBulkReactivateDialog] = useState(false)
@@ -99,12 +128,12 @@ export default function TenantUsersPage() {
     }
   }
 
-  const handleSort = (column: 'name' | 'createdAt' | 'role') => {
+  const handleSort = (column: SortField) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === SORT_ORDER.ASC ? SORT_ORDER.DESC : SORT_ORDER.ASC)
     } else {
       setSortBy(column)
-      setSortOrder('desc')
+      setSortOrder(DEFAULT_SORT_ORDER)
     }
     setPage(0)
   }
@@ -159,12 +188,12 @@ export default function TenantUsersPage() {
   }
 
   const resetFilters = () => {
-    setRoleFilter('')
-    setStatusFilter('')
-    setSearchQuery('')
-    setSearchInput('')
-    setSortBy('createdAt')
-    setSortOrder('desc')
+    setRoleFilter(FILTER_ALL)
+    setStatusFilter(USER_STATUS_FILTER.ALL)
+    setSearchQuery(FILTER_ALL)
+    setSearchInput(FILTER_ALL)
+    setSortBy(DEFAULT_SORT_FIELD)
+    setSortOrder(DEFAULT_SORT_ORDER)
     setPage(0)
   }
 
@@ -257,7 +286,7 @@ export default function TenantUsersPage() {
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les rôles</option>
+                <option value={FILTER_ALL}>Tous les rôles</option>
                 <option value={ACTOR_ROLE.TENANT_ADMIN}>Administrateur</option>
                 <option value={ACTOR_ROLE.MEMBER}>Membre</option>
               </select>
@@ -269,14 +298,14 @@ export default function TenantUsersPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value)
+                  setStatusFilter(e.target.value as UserStatusFilter)
                   setPage(0)
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="suspended">Suspendu</option>
+                <option value={USER_STATUS_FILTER.ALL}>Tous les statuts</option>
+                <option value={USER_STATUS_FILTER.ACTIVE}>Actif</option>
+                <option value={USER_STATUS_FILTER.SUSPENDED}>Suspendu</option>
               </select>
             </div>
 
@@ -356,22 +385,22 @@ export default function TenantUsersPage() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('name')}
+                      onClick={() => handleSort(SORT_FIELD.NAME)}
                     >
-                      Nom {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      Nom {sortBy === SORT_FIELD.NAME && (sortOrder === SORT_ORDER.ASC ? '↑' : '↓')}
                     </TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('role')}
+                      onClick={() => handleSort(SORT_FIELD.ROLE)}
                     >
-                      Rôle {sortBy === 'role' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      Rôle {sortBy === SORT_FIELD.ROLE && (sortOrder === SORT_ORDER.ASC ? '↑' : '↓')}
                     </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('createdAt')}
+                      onClick={() => handleSort(SORT_FIELD.CREATED_AT)}
                     >
-                      Créé le {sortBy === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      Créé le {sortBy === SORT_FIELD.CREATED_AT && (sortOrder === SORT_ORDER.ASC ? '↑' : '↓')}
                     </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>

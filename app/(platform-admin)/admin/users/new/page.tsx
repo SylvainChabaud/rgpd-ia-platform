@@ -7,6 +7,12 @@ import { useRouter } from 'next/navigation'
 import { useCreateUser, useListTenants } from '@/lib/api/hooks/useUsers'
 import { createUserSchema, type CreateUserFormData } from '@/lib/validation/userSchemas'
 import { ACTOR_ROLE } from '@/shared/actorRole'
+
+// =========================
+// Constants
+// =========================
+
+const PLACEHOLDER_VALUE = '' as const;
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -116,7 +122,7 @@ export default function CreateUserPage() {
   const onSubmit = (data: CreateUserFormData) => {
     createUser(data, {
       onSuccess: () => {
-        router.push('/users')
+        router.push('/admin/users')
       },
     })
   }
@@ -139,7 +145,7 @@ export default function CreateUserPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumb */}
       <div>
-        <Link href="/users">
+        <Link href="/admin/users">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour à la liste
@@ -176,7 +182,7 @@ export default function CreateUserPage() {
                   disabled={isPending}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <option value="">Sélectionner un tenant</option>
+                  <option value={PLACEHOLDER_VALUE}>Sélectionner un tenant</option>
                   {tenants.map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.name}

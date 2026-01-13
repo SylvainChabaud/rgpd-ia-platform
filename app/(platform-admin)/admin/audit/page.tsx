@@ -22,23 +22,53 @@ import { format } from 'date-fns'
  * - No sensitive metadata content
  * - CSV export with UTF-8 BOM (Excel-compatible)
  */
+
+// =========================
+// Filter Constants
+// =========================
+
+const FILTER_ALL = 'all';
+
+const AUDIT_EVENT_TYPE = {
+  AUTH_LOGIN_SUCCESS: 'auth.login.success',
+  DATA_SUSPENSION_ACTIVATED: 'data.suspension.activated',
+  DATA_SUSPENSION_DEACTIVATED: 'data.suspension.deactivated',
+  PLATFORM_SUPERADMIN_CREATED: 'platform.superadmin.created',
+  TENANT_ADMIN_CREATED: 'tenant.admin.created',
+  TENANT_CREATED: 'tenant.created',
+  TENANT_DELETED: 'tenant.deleted',
+  TENANT_SUSPENDED: 'tenant.suspended',
+  TENANT_UNSUSPENDED: 'tenant.unsuspended',
+  TENANT_UPDATED: 'tenant.updated',
+  TENANT_USER_CREATED: 'tenant.user.created',
+  USER_DELETED: 'user.deleted',
+  USER_UPDATED: 'user.updated',
+} as const;
+
+const PAGE_SIZE = {
+  SMALL: 25,
+  MEDIUM: 50,
+  LARGE: 100,
+} as const;
+const DEFAULT_PAGE_SIZE = PAGE_SIZE.MEDIUM;
+
 export default function AuditTrailPage() {
   const [filters, setFilters] = useState({
-    eventType: 'all',
-    limit: 50,
+    eventType: FILTER_ALL,
+    limit: DEFAULT_PAGE_SIZE,
     offset: 0,
   })
 
   const { data, isLoading } = useListAuditEvents({
     ...filters,
-    eventType: filters.eventType === 'all' ? '' : filters.eventType,
+    eventType: filters.eventType === FILTER_ALL ? '' : filters.eventType,
   })
 
   const handleExport = async () => {
     try {
       // Build query params
       const queryParams = new URLSearchParams()
-      if (filters.eventType && filters.eventType !== 'all') {
+      if (filters.eventType && filters.eventType !== FILTER_ALL) {
         queryParams.append('eventType', filters.eventType)
       }
 
@@ -114,20 +144,20 @@ export default function AuditTrailPage() {
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="auth.login.success">auth.login.success</SelectItem>
-                  <SelectItem value="data.suspension.activated">data.suspension.activated</SelectItem>
-                  <SelectItem value="data.suspension.deactivated">data.suspension.deactivated</SelectItem>
-                  <SelectItem value="platform.superadmin.created">platform.superadmin.created</SelectItem>
-                  <SelectItem value="tenant.admin.created">tenant.admin.created</SelectItem>
-                  <SelectItem value="tenant.created">tenant.created</SelectItem>
-                  <SelectItem value="tenant.deleted">tenant.deleted</SelectItem>
-                  <SelectItem value="tenant.suspended">tenant.suspended</SelectItem>
-                  <SelectItem value="tenant.unsuspended">tenant.unsuspended</SelectItem>
-                  <SelectItem value="tenant.updated">tenant.updated</SelectItem>
-                  <SelectItem value="tenant.user.created">tenant.user.created</SelectItem>
-                  <SelectItem value="user.deleted">user.deleted</SelectItem>
-                  <SelectItem value="user.updated">user.updated</SelectItem>
+                  <SelectItem value={FILTER_ALL}>Tous les types</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.AUTH_LOGIN_SUCCESS}>{AUDIT_EVENT_TYPE.AUTH_LOGIN_SUCCESS}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.DATA_SUSPENSION_ACTIVATED}>{AUDIT_EVENT_TYPE.DATA_SUSPENSION_ACTIVATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.DATA_SUSPENSION_DEACTIVATED}>{AUDIT_EVENT_TYPE.DATA_SUSPENSION_DEACTIVATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.PLATFORM_SUPERADMIN_CREATED}>{AUDIT_EVENT_TYPE.PLATFORM_SUPERADMIN_CREATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_ADMIN_CREATED}>{AUDIT_EVENT_TYPE.TENANT_ADMIN_CREATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_CREATED}>{AUDIT_EVENT_TYPE.TENANT_CREATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_DELETED}>{AUDIT_EVENT_TYPE.TENANT_DELETED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_SUSPENDED}>{AUDIT_EVENT_TYPE.TENANT_SUSPENDED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_UNSUSPENDED}>{AUDIT_EVENT_TYPE.TENANT_UNSUSPENDED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_UPDATED}>{AUDIT_EVENT_TYPE.TENANT_UPDATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.TENANT_USER_CREATED}>{AUDIT_EVENT_TYPE.TENANT_USER_CREATED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.USER_DELETED}>{AUDIT_EVENT_TYPE.USER_DELETED}</SelectItem>
+                  <SelectItem value={AUDIT_EVENT_TYPE.USER_UPDATED}>{AUDIT_EVENT_TYPE.USER_UPDATED}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -142,16 +172,16 @@ export default function AuditTrailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.SMALL)}>{PAGE_SIZE.SMALL}</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.MEDIUM)}>{PAGE_SIZE.MEDIUM}</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.LARGE)}>{PAGE_SIZE.LARGE}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-end">
               <Button
-                onClick={() => setFilters({ eventType: 'all', limit: 50, offset: 0 })}
+                onClick={() => setFilters({ eventType: FILTER_ALL, limit: DEFAULT_PAGE_SIZE, offset: 0 })}
                 variant="outline"
                 className="w-full md:w-auto"
               >

@@ -17,11 +17,38 @@ import Link from 'next/link'
  * RGPD: Art. 33.5 (mandatory violations registry)
  * Access: SUPER_ADMIN, DPO only
  */
+
+// =========================
+// Filter Constants
+// =========================
+
+const FILTER_ALL = 'all';
+
+const INCIDENT_SEVERITY = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL',
+} as const;
+
+const RESOLVED_STATUS = {
+  ALL: FILTER_ALL,
+  UNRESOLVED: 'false',
+  RESOLVED: 'true',
+} as const;
+
+const PAGE_SIZE = {
+  SMALL: 25,
+  MEDIUM: 50,
+  LARGE: 100,
+} as const;
+const DEFAULT_PAGE_SIZE = PAGE_SIZE.MEDIUM;
+
 export default function ViolationsPage() {
   const [filters, setFilters] = useState({
-    severity: 'all',
-    resolved: 'all',
-    limit: 50,
+    severity: FILTER_ALL,
+    resolved: RESOLVED_STATUS.ALL,
+    limit: DEFAULT_PAGE_SIZE,
     offset: 0,
   })
 
@@ -29,8 +56,8 @@ export default function ViolationsPage() {
     queryKey: ['incidents', filters],
     queryFn: () => {
       const params = new URLSearchParams()
-      if (filters.severity && filters.severity !== 'all') params.append('severity', filters.severity)
-      if (filters.resolved && filters.resolved !== 'all') params.append('resolved', filters.resolved)
+      if (filters.severity && filters.severity !== FILTER_ALL) params.append('severity', filters.severity)
+      if (filters.resolved && filters.resolved !== FILTER_ALL) params.append('resolved', filters.resolved)
       params.append('limit', String(filters.limit))
       params.append('offset', String(filters.offset))
 
@@ -54,8 +81,8 @@ export default function ViolationsPage() {
     try {
       // Build query params from current filters
       const params = new URLSearchParams()
-      if (filters.severity && filters.severity !== 'all') params.append('severity', filters.severity)
-      if (filters.resolved && filters.resolved !== 'all') params.append('resolved', filters.resolved)
+      if (filters.severity && filters.severity !== FILTER_ALL) params.append('severity', filters.severity)
+      if (filters.resolved && filters.resolved !== FILTER_ALL) params.append('resolved', filters.resolved)
 
       // Get authentication token from sessionStorage (same as apiClient)
       const token = sessionStorage.getItem('auth_token')
@@ -142,11 +169,11 @@ export default function ViolationsPage() {
                   <SelectValue placeholder="Toutes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="LOW">LOW</SelectItem>
-                  <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-                  <SelectItem value="HIGH">HIGH</SelectItem>
-                  <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                  <SelectItem value={FILTER_ALL}>Toutes</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.LOW}>{INCIDENT_SEVERITY.LOW}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.MEDIUM}>{INCIDENT_SEVERITY.MEDIUM}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.HIGH}>{INCIDENT_SEVERITY.HIGH}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.CRITICAL}>{INCIDENT_SEVERITY.CRITICAL}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -161,9 +188,9 @@ export default function ViolationsPage() {
                   <SelectValue placeholder="Tous" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="false">Non résolus</SelectItem>
-                  <SelectItem value="true">Résolus</SelectItem>
+                  <SelectItem value={RESOLVED_STATUS.ALL}>Tous</SelectItem>
+                  <SelectItem value={RESOLVED_STATUS.UNRESOLVED}>Non résolus</SelectItem>
+                  <SelectItem value={RESOLVED_STATUS.RESOLVED}>Résolus</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -178,16 +205,16 @@ export default function ViolationsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.SMALL)}>{PAGE_SIZE.SMALL}</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.MEDIUM)}>{PAGE_SIZE.MEDIUM}</SelectItem>
+                  <SelectItem value={String(PAGE_SIZE.LARGE)}>{PAGE_SIZE.LARGE}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-end">
               <Button
-                onClick={() => setFilters({ severity: 'all', resolved: 'all', limit: 50, offset: 0 })}
+                onClick={() => setFilters({ severity: FILTER_ALL, resolved: RESOLVED_STATUS.ALL, limit: DEFAULT_PAGE_SIZE, offset: 0 })}
                 variant="outline"
                 className="w-full md:w-auto"
               >
@@ -235,7 +262,7 @@ export default function ViolationsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
-                {data.incidents.filter((i) => i.severity === 'CRITICAL').length}
+                {data.incidents.filter((i) => i.severity === INCIDENT_SEVERITY.CRITICAL).length}
               </div>
             </CardContent>
           </Card>
@@ -303,9 +330,9 @@ export default function ViolationsPage() {
                       <td className="py-2">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
-                            incident.severity === 'CRITICAL'
+                            incident.severity === INCIDENT_SEVERITY.CRITICAL
                               ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                              : incident.severity === 'HIGH'
+                              : incident.severity === INCIDENT_SEVERITY.HIGH
                               ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
                               : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                           }`}

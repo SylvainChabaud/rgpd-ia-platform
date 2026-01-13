@@ -13,6 +13,60 @@ import { apiClient } from '@/lib/api/apiClient'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
+// =========================
+// Constants
+// =========================
+
+const INCIDENT_SEVERITY = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL',
+} as const;
+type IncidentSeverity = (typeof INCIDENT_SEVERITY)[keyof typeof INCIDENT_SEVERITY];
+
+const INCIDENT_TYPE = {
+  UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',
+  CROSS_TENANT_ACCESS: 'CROSS_TENANT_ACCESS',
+  DATA_LEAK: 'DATA_LEAK',
+  PII_IN_LOGS: 'PII_IN_LOGS',
+  DATA_LOSS: 'DATA_LOSS',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  MALWARE: 'MALWARE',
+  VULNERABILITY_EXPLOITED: 'VULNERABILITY_EXPLOITED',
+  OTHER: 'OTHER',
+} as const;
+type IncidentType = (typeof INCIDENT_TYPE)[keyof typeof INCIDENT_TYPE];
+
+const INCIDENT_TYPE_LABELS: Record<IncidentType, string> = {
+  [INCIDENT_TYPE.UNAUTHORIZED_ACCESS]: 'Accès non autorisé',
+  [INCIDENT_TYPE.CROSS_TENANT_ACCESS]: 'Accès cross-tenant',
+  [INCIDENT_TYPE.DATA_LEAK]: 'Fuite de données',
+  [INCIDENT_TYPE.PII_IN_LOGS]: 'PII dans les logs',
+  [INCIDENT_TYPE.DATA_LOSS]: 'Perte de données',
+  [INCIDENT_TYPE.SERVICE_UNAVAILABLE]: 'Service indisponible',
+  [INCIDENT_TYPE.MALWARE]: 'Malware',
+  [INCIDENT_TYPE.VULNERABILITY_EXPLOITED]: 'Vulnérabilité exploitée',
+  [INCIDENT_TYPE.OTHER]: 'Autre',
+};
+
+const RISK_LEVEL = {
+  UNKNOWN: 'UNKNOWN',
+  NONE: 'NONE',
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+} as const;
+type RiskLevel = (typeof RISK_LEVEL)[keyof typeof RISK_LEVEL];
+
+const RISK_LEVEL_LABELS: Record<RiskLevel, string> = {
+  [RISK_LEVEL.UNKNOWN]: 'Non évalué',
+  [RISK_LEVEL.NONE]: 'Aucun risque',
+  [RISK_LEVEL.LOW]: 'Risque faible',
+  [RISK_LEVEL.MEDIUM]: 'Risque moyen',
+  [RISK_LEVEL.HIGH]: 'Risque élevé',
+};
+
 /**
  * Create Security Incident (Violation) Page
  * LOT 11.3 - EPIC 9.0 Integration
@@ -26,14 +80,14 @@ export default function NewViolationPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
-    severity: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
-    type: 'OTHER' as string,
+    severity: INCIDENT_SEVERITY.MEDIUM as IncidentSeverity,
+    type: INCIDENT_TYPE.OTHER as IncidentType,
     title: '',
     description: '',
     dataCategories: [] as string[],
     usersAffected: '',
     recordsAffected: '',
-    riskLevel: 'UNKNOWN' as 'UNKNOWN' | 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH',
+    riskLevel: RISK_LEVEL.UNKNOWN as RiskLevel,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,17 +154,17 @@ export default function NewViolationPage() {
               <Label htmlFor="severity">Sévérité *</Label>
               <Select
                 value={formData.severity}
-                onValueChange={(value: typeof formData.severity) => setFormData({ ...formData, severity: value })}
+                onValueChange={(value: IncidentSeverity) => setFormData({ ...formData, severity: value })}
                 required
               >
                 <SelectTrigger id="severity">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LOW">LOW</SelectItem>
-                  <SelectItem value="MEDIUM">MEDIUM</SelectItem>
-                  <SelectItem value="HIGH">HIGH</SelectItem>
-                  <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.LOW}>{INCIDENT_SEVERITY.LOW}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.MEDIUM}>{INCIDENT_SEVERITY.MEDIUM}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.HIGH}>{INCIDENT_SEVERITY.HIGH}</SelectItem>
+                  <SelectItem value={INCIDENT_SEVERITY.CRITICAL}>{INCIDENT_SEVERITY.CRITICAL}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -120,22 +174,18 @@ export default function NewViolationPage() {
               <Label htmlFor="type">Type d&apos;incident *</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
+                onValueChange={(value: IncidentType) => setFormData({ ...formData, type: value })}
                 required
               >
                 <SelectTrigger id="type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UNAUTHORIZED_ACCESS">Accès non autorisé</SelectItem>
-                  <SelectItem value="CROSS_TENANT_ACCESS">Accès cross-tenant</SelectItem>
-                  <SelectItem value="DATA_LEAK">Fuite de données</SelectItem>
-                  <SelectItem value="PII_IN_LOGS">PII dans les logs</SelectItem>
-                  <SelectItem value="DATA_LOSS">Perte de données</SelectItem>
-                  <SelectItem value="SERVICE_UNAVAILABLE">Service indisponible</SelectItem>
-                  <SelectItem value="MALWARE">Malware</SelectItem>
-                  <SelectItem value="VULNERABILITY_EXPLOITED">Vulnérabilité exploitée</SelectItem>
-                  <SelectItem value="OTHER">Autre</SelectItem>
+                  {Object.values(INCIDENT_TYPE).map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {INCIDENT_TYPE_LABELS[type]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -199,17 +249,17 @@ export default function NewViolationPage() {
               <Label htmlFor="riskLevel">Niveau de risque RGPD</Label>
               <Select
                 value={formData.riskLevel}
-                onValueChange={(value: typeof formData.riskLevel) => setFormData({ ...formData, riskLevel: value })}
+                onValueChange={(value: RiskLevel) => setFormData({ ...formData, riskLevel: value })}
               >
                 <SelectTrigger id="riskLevel">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UNKNOWN">Non évalué</SelectItem>
-                  <SelectItem value="NONE">Aucun risque</SelectItem>
-                  <SelectItem value="LOW">Risque faible</SelectItem>
-                  <SelectItem value="MEDIUM">Risque moyen</SelectItem>
-                  <SelectItem value="HIGH">Risque élevé</SelectItem>
+                  {Object.values(RISK_LEVEL).map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {RISK_LEVEL_LABELS[level]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

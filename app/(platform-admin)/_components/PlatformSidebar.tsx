@@ -1,5 +1,14 @@
 'use client'
 
+// =========================
+// Constants
+// =========================
+
+const THEME = {
+  DARK: 'dark',
+  LIGHT: 'light',
+} as const;
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth/authStore'
@@ -109,8 +118,8 @@ export function PlatformSidebar() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-              {theme === 'dark' ? (
+            <DropdownMenuItem onClick={() => setTheme(theme === THEME.DARK ? THEME.LIGHT : THEME.DARK)}>
+              {theme === THEME.DARK ? (
                 <>
                   <Sun className="mr-2 h-4 w-4" />
                   Mode clair
