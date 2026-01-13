@@ -3,10 +3,12 @@
 -- =============================================================================
 --
 -- Ce fichier contient des donnees de demonstration pour le dashboard tenant:
--- - consents: consentements utilisateurs
 -- - ai_jobs: jobs IA (metadata uniquement, pas de contenu P3)
 -- - rgpd_requests: demandes RGPD (export/suppression)
 -- - audit_events: evenements d'audit pour l'activity feed
+--
+-- NOTE: Les consentements sont maintenant geres par dev-purposes-consents.sql
+-- qui utilise le format purpose_id (UUID) lie a la table purposes.
 --
 -- Usage:
 --   - Utilise par setup-dev.bat (developpement manuel)
@@ -20,111 +22,12 @@
 BEGIN;
 
 -- =============================================================================
--- CONSENTS - Consentements utilisateurs (P2 data)
+-- CLEANUP: Supprimer les anciens consentements avec format texte (purpose)
 -- =============================================================================
--- Purpose types: 'analytics', 'ai_processing', 'marketing', 'data_sharing'
+-- Les consentements avec purpose_id NULL utilisent l'ancien format
+-- et doivent etre supprimes pour coherence avec le nouveau modele
 
--- Get tenant and user IDs for seeding
-DO $$
-DECLARE
-    v_acme_tenant_id UUID;
-    v_techcorp_tenant_id UUID;
-    v_globalservices_tenant_id UUID;
-    v_user_id UUID;
-    v_user_ids UUID[];
-    i INTEGER;
-BEGIN
-    -- Get tenant IDs
-    SELECT id INTO v_acme_tenant_id FROM tenants WHERE slug = 'acme' LIMIT 1;
-    SELECT id INTO v_techcorp_tenant_id FROM tenants WHERE slug = 'techcorp' LIMIT 1;
-    SELECT id INTO v_globalservices_tenant_id FROM tenants WHERE slug = 'globalservices' LIMIT 1;
-
-    -- Skip if tenants don't exist
-    IF v_acme_tenant_id IS NULL THEN
-        RAISE NOTICE 'Tenant acme not found, skipping dashboard data seed';
-        RETURN;
-    END IF;
-
-    -- ==========================================================================
-    -- CONSENTS for ACME tenant
-    -- ==========================================================================
-
-    -- Get user IDs for ACME tenant
-    SELECT ARRAY_AGG(id) INTO v_user_ids FROM users WHERE tenant_id = v_acme_tenant_id LIMIT 10;
-
-    IF v_user_ids IS NOT NULL AND array_length(v_user_ids, 1) > 0 THEN
-        -- Insert consents for each user
-        FOREACH v_user_id IN ARRAY v_user_ids
-        LOOP
-            -- Analytics consent (granted)
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_acme_tenant_id, v_user_id, 'analytics', true, NOW() - INTERVAL '30 days', NOW() - INTERVAL '30 days')
-            ON CONFLICT DO NOTHING;
-
-            -- AI processing consent (granted)
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_acme_tenant_id, v_user_id, 'ai_processing', true, NOW() - INTERVAL '25 days', NOW() - INTERVAL '25 days')
-            ON CONFLICT DO NOTHING;
-
-            -- Marketing consent (some granted, some revoked)
-            IF random() > 0.5 THEN
-                INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-                VALUES (v_acme_tenant_id, v_user_id, 'marketing', true, NOW() - INTERVAL '20 days', NOW() - INTERVAL '20 days')
-                ON CONFLICT DO NOTHING;
-            ELSE
-                INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, revoked_at, created_at)
-                VALUES (v_acme_tenant_id, v_user_id, 'marketing', false, NOW() - INTERVAL '20 days', NOW() - INTERVAL '5 days', NOW() - INTERVAL '20 days')
-                ON CONFLICT DO NOTHING;
-            END IF;
-        END LOOP;
-    END IF;
-
-    -- ==========================================================================
-    -- CONSENTS for TechCorp tenant
-    -- ==========================================================================
-
-    SELECT ARRAY_AGG(id) INTO v_user_ids FROM users WHERE tenant_id = v_techcorp_tenant_id LIMIT 10;
-
-    IF v_user_ids IS NOT NULL AND array_length(v_user_ids, 1) > 0 THEN
-        FOREACH v_user_id IN ARRAY v_user_ids
-        LOOP
-            -- AI processing consent (granted)
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_techcorp_tenant_id, v_user_id, 'ai_processing', true, NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days')
-            ON CONFLICT DO NOTHING;
-
-            -- Data sharing consent (pending - not yet granted)
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, created_at)
-            VALUES (v_techcorp_tenant_id, v_user_id, 'data_sharing', false, NOW() - INTERVAL '10 days')
-            ON CONFLICT DO NOTHING;
-        END LOOP;
-    END IF;
-
-    -- ==========================================================================
-    -- CONSENTS for GlobalServices tenant
-    -- ==========================================================================
-
-    SELECT ARRAY_AGG(id) INTO v_user_ids FROM users WHERE tenant_id = v_globalservices_tenant_id LIMIT 10;
-
-    IF v_user_ids IS NOT NULL AND array_length(v_user_ids, 1) > 0 THEN
-        FOREACH v_user_id IN ARRAY v_user_ids
-        LOOP
-            -- All consents granted
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_globalservices_tenant_id, v_user_id, 'analytics', true, NOW() - INTERVAL '45 days', NOW() - INTERVAL '45 days')
-            ON CONFLICT DO NOTHING;
-
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_globalservices_tenant_id, v_user_id, 'ai_processing', true, NOW() - INTERVAL '40 days', NOW() - INTERVAL '40 days')
-            ON CONFLICT DO NOTHING;
-
-            INSERT INTO consents (tenant_id, user_id, purpose, granted, granted_at, created_at)
-            VALUES (v_globalservices_tenant_id, v_user_id, 'marketing', true, NOW() - INTERVAL '35 days', NOW() - INTERVAL '35 days')
-            ON CONFLICT DO NOTHING;
-        END LOOP;
-    END IF;
-
-END $$;
+DELETE FROM consents WHERE purpose_id IS NULL;
 
 -- =============================================================================
 -- AI_JOBS - Jobs IA metadata (P1 data - NO content/prompts)
