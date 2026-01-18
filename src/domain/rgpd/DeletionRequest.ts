@@ -10,6 +10,8 @@
  * LOT 5.2 — Effacement RGPD (delete + purge + crypto-shredding)
  */
 
+import { RGPD_DELETION_RETENTION_DAYS } from '@/domain/retention/RetentionPolicy';
+
 /**
  * RGPD request type constants
  */
@@ -54,17 +56,12 @@ export type RgpdRequest = {
   completedAt?: Date; // When hard delete was completed
 };
 
-/**
- * Retention period before hard delete (configurable)
- * Default: 30 days (RGPD best practice for right to erasure)
- */
-export const DELETION_RETENTION_DAYS = 30;
 
 /**
  * Calculate scheduled purge date from deletion request
  */
 export function calculatePurgeDate(deletedAt: Date): Date {
   const purgeAt = new Date(deletedAt);
-  purgeAt.setDate(purgeAt.getDate() + DELETION_RETENTION_DAYS);
+  purgeAt.setDate(purgeAt.getDate() + RGPD_DELETION_RETENTION_DAYS);
   return purgeAt;
 }

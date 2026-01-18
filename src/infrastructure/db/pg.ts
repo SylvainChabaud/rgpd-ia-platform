@@ -14,7 +14,10 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: false, // activer en prod si nécessaire
+  // SECURITY: Enable SSL in production (OWASP A02:2021 - Cryptographic Failures)
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: true }
+    : false,
 });
 
 pool.on("error", (err) => {

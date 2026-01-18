@@ -14,14 +14,16 @@ export class PgTenantUserRepo implements TenantUserRepo {
     // CRITICAL RGPD: tenant_id is stored but not validated at DB layer
     // Isolation enforced at use-case layer (CreateTenantAdminUseCase)
     // TODO EPIC4: add DB constraint CHECK (scope='TENANT' => tenant_id IS NOT NULL)
+    // SECURITY: Use parameterized query for all values (no string interpolation)
     await pool.query(
-      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'${ACTOR_SCOPE.TENANT}',$6)`,
+      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         input.id,
         input.tenantId,
         input.emailHash,
         input.displayName,
         input.passwordHash,
+        ACTOR_SCOPE.TENANT,
         ACTOR_ROLE.TENANT_ADMIN,
       ]
     );
@@ -37,14 +39,16 @@ export class PgTenantUserRepo implements TenantUserRepo {
     // Create regular tenant user (MEMBER role)
     // CRITICAL RGPD: tenant_id is stored but not validated at DB layer
     // Isolation enforced at use-case layer (CreateTenantUserUseCase)
+    // SECURITY: Use parameterized query for all values (no string interpolation)
     await pool.query(
-      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,'${ACTOR_SCOPE.TENANT}',$6)`,
+      `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         input.id,
         input.tenantId,
         input.emailHash,
         input.displayName,
         input.passwordHash,
+        ACTOR_SCOPE.TENANT,
         ACTOR_ROLE.MEMBER,
       ]
     );

@@ -43,8 +43,9 @@ export async function withTenantContext<T>(
   try {
     // Set tenant context for RLS policies
     // Using SET LOCAL ensures the setting is transaction-scoped only
+    // SECURITY: Use parameterized query to prevent SQL injection
     await client.query("BEGIN");
-    await client.query(`SET LOCAL app.current_tenant_id = '${tenantId}'`);
+    await client.query("SELECT set_config('app.current_tenant_id', $1, true)", [tenantId]);
 
     // Execute callback with tenant context active
     const result = await callback(client);

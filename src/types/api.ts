@@ -45,7 +45,9 @@ export interface AuditEvent {
   id: string
   eventType: string
   actorId: string | null
+  actorDisplayName: string | null
   tenantId: string | null
+  tenantName: string | null
   targetId: string | null
   createdAt: string
 }
@@ -151,16 +153,21 @@ export interface TenantStatsResponse {
 }
 
 /**
- * Activity Event for Tenant Dashboard (P1 data only)
+ * Activity Event for Tenant Dashboard (P1 data + displayName)
  * LOT 12.0 - Dashboard Tenant Admin
  *
- * RGPD: Event types and IDs only, no content
+ * RGPD: Event types, IDs + displayName (NO email)
+ * Consistent with /portal/users which also shows displayName only
  */
 export interface ActivityEvent {
   id: string
   type: string
   actorId: string | null
   targetId: string | null
+  /** Actor display name - NO email (RGPD compliant) */
+  actorDisplayName?: string | null
+  /** Target display name - NO email (RGPD compliant) */
+  targetDisplayName?: string | null
   createdAt: string
   metadata?: Record<string, string | number | boolean | null>
 }
@@ -275,4 +282,166 @@ export interface ListUsersResponse {
  */
 export interface ListAuditEventsResponse {
   events: AuditEvent[]
+}
+
+// ============================================
+// RGPD Request Types (LOT 12.3)
+// ============================================
+
+/**
+ * RGPD Request type constants
+ */
+export type RgpdRequestType = 'EXPORT' | 'DELETE';
+
+/**
+ * RGPD Request status constants
+ */
+export type RgpdRequestStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+
+/**
+ * RGPD Request list item (P1 data + displayName)
+ * LOT 12.3 - Tenant Admin RGPD Management
+ *
+ * RGPD: NO email (P2 data) - displayName only for identification
+ * Consistent with /portal/users which also shows displayName only
+ */
+export interface RgpdRequestListItem {
+  id: string;
+  userId: string;
+  /** User display name (P1 equivalent in admin context) - NO email */
+  userDisplayName: string;
+  type: RgpdRequestType;
+  status: RgpdRequestStatus;
+  createdAt: string;
+  scheduledPurgeAt?: string | null;
+  completedAt?: string | null;
+}
+
+/**
+ * RGPD Requests List Response
+ * LOT 12.3
+ */
+export interface RgpdRequestsListResponse {
+  requests: RgpdRequestListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * RGPD Exports List Response
+ * LOT 12.3
+ */
+export interface RgpdExportsListResponse {
+  exports: Omit<RgpdRequestListItem, 'type'>[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * RGPD Deletions List Response
+ * LOT 12.3
+ */
+export interface RgpdDeletionsListResponse {
+  deletions: Omit<RgpdRequestListItem, 'type'>[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * RGPD Request filter params
+ * LOT 12.3
+ */
+export interface RgpdRequestParams {
+  limit?: number;
+  offset?: number;
+  status?: RgpdRequestStatus;
+}
+
+/**
+ * RGPD Stats Response (for KPI widgets)
+ * LOT 12.3 - Tenant Admin RGPD Management
+ *
+ * RGPD: P1 aggregated counts only
+ */
+export interface RgpdStatsResponse {
+  stats: {
+    exports: {
+      pending: number;
+      completed: number;
+    };
+    deletions: {
+      pending: number;
+      completed: number;
+    };
+    suspensions: {
+      active: number;
+      total: number;
+    };
+    oppositions: {
+      pending: number;
+      reviewed: number;
+      total: number;
+    };
+    contests: {
+      pending: number;
+      resolved: number;
+      total: number;
+    };
+  };
+}
+
+/**
+ * RGPD Suspension list item (Art. 18)
+ * LOT 12.3
+ */
+export interface RgpdSuspensionListItem {
+  id: string;
+  userId: string;
+  /** User display name - NO email (RGPD compliant) */
+  userDisplayName: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  liftedAt?: string | null;
+}
+
+/**
+ * RGPD Opposition list item (Art. 21)
+ * LOT 12.3
+ */
+export interface RgpdOppositionListItem {
+  id: string;
+  userId: string;
+  /** User display name - NO email (RGPD compliant) */
+  userDisplayName: string;
+  treatmentType: string;
+  reason: string;
+  status: string;
+  adminResponse?: string | null;
+  reviewedBy?: string | null;
+  createdAt: string;
+  reviewedAt?: string | null;
+}
+
+/**
+ * RGPD Contest/Dispute list item (Art. 22)
+ * LOT 12.3
+ */
+export interface RgpdContestListItem {
+  id: string;
+  userId: string;
+  /** User display name - NO email (RGPD compliant) */
+  userDisplayName: string;
+  aiJobId: string;
+  reason: string;
+  status: string;
+  adminResponse?: string | null;
+  reviewedBy?: string | null;
+  hasAttachment: boolean;
+  createdAt: string;
+  reviewedAt?: string | null;
+  resolvedAt?: string | null;
 }

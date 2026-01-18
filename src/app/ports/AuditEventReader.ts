@@ -12,7 +12,9 @@ export interface AuditEventRecord {
   id: string;
   eventType: string;
   actorId: string | null;
+  actorDisplayName: string | null;
   tenantId: string | null;
+  tenantName: string | null;
   targetId: string | null;
   createdAt: Date;
 }

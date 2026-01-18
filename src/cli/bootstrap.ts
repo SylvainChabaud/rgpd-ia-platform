@@ -48,8 +48,8 @@ program
     const state = new PgBootstrapStateRepo();
     const uc = new GetBootstrapStatusUseCase(state);
     const res = await uc.execute();
-     
-    console.log(JSON.stringify(res));
+    // RGPD-safe: status contains only P1 data (booleans)
+    logInfo({ event: "bootstrap.status", actorScope: ACTOR_SCOPE.SYSTEM, meta: { bootstrapped: res.bootstrapped } });
   });
 
 program
@@ -65,8 +65,8 @@ program
     const audit = new PgAuditEventWriter();
     const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
     const res = await uc.execute(opts);
-     
-    console.log(JSON.stringify(res));
+    // RGPD-safe: log only P1 data (userId), never P2 (displayName, email)
+    logInfo({ event: "bootstrap.superadmin.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.platformUserId } });
   });
 
 program
@@ -84,8 +84,8 @@ program
     const uc = new CreateTenantUseCase(tenants, audit, policyEngine);
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
-     
-    console.log(JSON.stringify(res));
+    // RGPD-safe: log only P1 data (tenantId), never P2 (name)
+    logInfo({ event: "bootstrap.tenant.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { tenantId: res.tenantId } });
   });
 
 program
@@ -111,8 +111,8 @@ program
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
-
-    console.log(JSON.stringify(res));
+    // RGPD-safe: log only P1 data (userId, tenantId), never P2 (displayName, email)
+    logInfo({ event: "bootstrap.tenant-admin.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.tenantAdminId, tenantId: res.tenantId } });
   });
 
 program
@@ -138,8 +138,8 @@ program
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     const res = await uc.execute(ctx, opts);
-
-    console.log(JSON.stringify(res));
+    // RGPD-safe: log only P1 data (userId, tenantId), never P2 (displayName, email)
+    logInfo({ event: "bootstrap.tenant-user.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.tenantUserId, tenantId: res.tenantId } });
   });
 
 program.parseAsync(process.argv);

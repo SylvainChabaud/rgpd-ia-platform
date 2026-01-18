@@ -1,9 +1,10 @@
 /**
  * Create User Use Case
- * LOT 5.3 - API Layer
+ * LOT 5.3 - API Layer (Enhanced LOT 1.6)
  *
  * RGPD compliance:
- * - Email hashed (SHA-256) before storage
+ * - Email hashed (SHA-256) for authentication lookup
+ * - Email encrypted (AES-256) for notifications (Art. 15, 34)
  * - Password hashed (Sha256PasswordHasher)
  * - Tenant isolation enforced
  * - Audit event emitted
@@ -68,18 +69,21 @@ export async function createUser(
   // Hash password
   const passwordHash = await passwordHasher.hash(password);
 
-  // Create user
+  // Create user with encrypted email (LOT 1.6)
   const userId = newId();
 
-  await userRepo.createUser({
-    id: userId,
-    tenantId,
-    emailHash,
-    displayName,
-    passwordHash,
-    scope: ACTOR_SCOPE.TENANT, // Users created via API are always TENANT-scoped
-    role,
-  });
+  await userRepo.createUserWithEmail(
+    {
+      id: userId,
+      tenantId,
+      emailHash,
+      displayName,
+      passwordHash,
+      scope: ACTOR_SCOPE.TENANT, // Users created via API are always TENANT-scoped
+      role,
+    },
+    email // Pass plain email for AES encryption
+  );
 
   // Emit audit event (RGPD-safe: no email/password in event)
   await auditEventWriter.write({

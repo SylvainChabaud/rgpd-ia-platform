@@ -132,6 +132,30 @@ export function useRGPDStats(days: number = 30) {
 }
 
 /**
+ * Audit retention stats for RGPD compliance monitoring
+ * LOT 11.3 - Art. 5.1.e (Storage limitation)
+ */
+export interface AuditRetentionStats {
+  totalEvents: number
+  oldestEventAge: number | null
+  rgpdCompliant: boolean
+  retentionMonths: number
+}
+
+/**
+ * Get audit retention stats for RGPD compliance card
+ */
+export function useAuditRetentionStats() {
+  return useQuery({
+    queryKey: ['audit', 'retention-stats'],
+    queryFn: () => apiClient<AuditRetentionStats>('/audit/stats'),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  })
+}
+
+/**
  * Export audit events to CSV
  * This returns a URL for download, not a query hook
  */
@@ -149,4 +173,33 @@ export function getAuditExportUrl(params?: {
   if (params?.endDate) queryParams.append('endDate', params.endDate)
 
   return `/api/audit/export?${queryParams.toString()}`
+}
+
+// ============================================
+// Incidents Stats (Art. 33.5 RGPD)
+// ============================================
+
+/**
+ * Incidents stats for RGPD compliance card
+ * LOT 11.3 - Art. 33.5 (Violations registry)
+ */
+export interface IncidentsStats {
+  total: number
+  bySeverity: Record<string, number>
+  byType: Record<string, number>
+  unresolved: number
+  pendingCnilNotification: number
+}
+
+/**
+ * Get incidents stats for RGPD compliance card (unfiltered total)
+ */
+export function useIncidentsStats() {
+  return useQuery({
+    queryKey: ['incidents', 'stats'],
+    queryFn: () => apiClient<{ stats: IncidentsStats }>('/incidents/stats'),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  })
 }

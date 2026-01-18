@@ -1,11 +1,12 @@
 /**
  * PostgreSQL User Repository Implementation
- * LOT 5.3 - API Layer
+ * LOT 5.3 - API Layer (Enhanced LOT 1.6)
  *
  * RGPD compliance:
  * - Tenant isolation enforced at query level
  * - Soft delete support (deleted_at column)
- * - Email stored as hash only (P2 protection)
+ * - Email stored as hash (for auth) + encrypted (for notifications)
+ * - Email access: User (le sien), DPO uniquement (Art. 15, 34)
  */
 
 import { pool } from '@/infrastructure/db/pg';
@@ -13,6 +14,7 @@ import { withTenantContext } from '@/infrastructure/db/tenantContext';
 import type { User, UserRepo, UserDataStatus } from '@/app/ports/UserRepo';
 import { USER_DATA_STATUS } from '@/app/ports/UserRepo';
 import type { UserScope } from '@/shared/actorScope';
+import * as AesEncryption from '@/infrastructure/security/AesEncryptionService';
 
 export class PgUserRepo implements UserRepo {
   async findByEmailHash(emailHash: string): Promise<User | null> {
@@ -103,6 +105,69 @@ export class PgUserRepo implements UserRepo {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [user.id, user.tenantId, user.emailHash, user.displayName, user.passwordHash, user.scope, user.role]
     );
+  }
+
+  /**
+   * Create user with encrypted email (LOT 1.6)
+   * Used for new users - stores both hash (auth) and encrypted (notifications)
+   */
+  async createUserWithEmail(
+    user: Omit<User, 'createdAt' | 'deletedAt'>,
+    email: string
+  ): Promise<void> {
+    // Encrypt email for storage (AES-256-GCM)
+    const emailEncrypted = AesEncryption.isEncryptionConfigured()
+      ? AesEncryption.encrypt(email)
+      : null;
+
+    await pool.query(
+      `INSERT INTO users (id, tenant_id, email_hash, email_encrypted, display_name, password_hash, scope, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        user.id,
+        user.tenantId,
+        user.emailHash,
+        emailEncrypted,
+        user.displayName,
+        user.passwordHash,
+        user.scope,
+        user.role,
+      ]
+    );
+  }
+
+  /**
+   * Get decrypted email for a user (LOT 1.6)
+   *
+   * RGPD Access Rules:
+   * - User: can get their own email (Art. 15)
+   * - DPO: can get any email (Art. 34, 37-39)
+   * - Others: FORBIDDEN
+   *
+   * @param userId - User ID to get email for
+   * @returns Decrypted email or null if not available
+   */
+  async getDecryptedEmail(userId: string): Promise<string | null> {
+    const result = await pool.query(
+      `SELECT email_encrypted FROM users WHERE id = $1 AND deleted_at IS NULL`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const emailEncrypted = result.rows[0].email_encrypted;
+    if (!emailEncrypted) {
+      return null; // Legacy user without encrypted email
+    }
+
+    try {
+      return AesEncryption.decrypt(emailEncrypted);
+    } catch {
+      // Decryption failed - key rotation or corruption
+      return null;
+    }
   }
 
   async updateUser(userId: string, updates: { displayName?: string; role?: string }): Promise<void> {

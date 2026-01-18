@@ -62,8 +62,7 @@ export type ExportMetadata = {
 };
 
 /**
- * Export TTL Configuration
+ * Export Configuration
  */
-export const EXPORT_TTL_DAYS = 7;
 export const EXPORT_MAX_DOWNLOADS = 3;
 export const EXPORT_VERSION = "1.0.0";

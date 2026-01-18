@@ -8,6 +8,8 @@
  * - Retention must be MINIMAL and JUSTIFIED
  * - Purge must NOT delete audit trails required for compliance
  * - Purge must NOT prevent RGPD rights (export/delete)
+ *
+ * LOT 12.3 — RGPD Management: Added RGPD rights retention periods
  */
 
 /**
@@ -47,7 +49,59 @@ export const RETENTION_PERIODS = {
    * - Retention: 30 days
    */
   TECHNICAL_LOGS: 30,
+
+  /**
+   * P1: Security incidents (violations registry)
+   * - Art. 33.5 RGPD: mandatory documentation
+   * - NO auto-purge (permanent storage for compliance proof)
+   * - Minimum retention: 5 years
+   */
+  SECURITY_INCIDENTS_YEARS: 5,
 } as const;
+
+// ============================================
+// RGPD Rights Retention Periods (LOT 12.3)
+// ============================================
+
+/**
+ * RGPD Export requests retention (Art. 15, 20)
+ * - Droit d'accès & Portabilité
+ * - Export files available for download
+ * - Retention: 7 days (then auto-purged)
+ */
+export const RGPD_EXPORT_RETENTION_DAYS = 7;
+
+/**
+ * RGPD Deletion requests retention (Art. 17)
+ * - Droit à l'oubli / Right to erasure
+ * - Completed deletion request records
+ * - Retention: 30 days after completion (grace period)
+ */
+export const RGPD_DELETION_RETENTION_DAYS = 30;
+
+/**
+ * RGPD Suspension records retention (Art. 18)
+ * - Droit à la limitation / Right to restriction
+ * - Lifted suspension records (historical)
+ * - Retention: 3 years (legal proof requirement)
+ */
+export const RGPD_SUSPENSION_RETENTION_DAYS = 365 * 3; // 1095 days
+
+/**
+ * RGPD Opposition records retention (Art. 21)
+ * - Droit d'opposition / Right to object
+ * - Processed opposition records (ACCEPTED/REJECTED)
+ * - Retention: 3 years (legal proof requirement)
+ */
+export const RGPD_OPPOSITION_RETENTION_DAYS = 365 * 3; // 1095 days
+
+/**
+ * RGPD Contest/Dispute records retention (Art. 22)
+ * - Décisions automatisées / Automated decision-making
+ * - Resolved contest records (RESOLVED/REJECTED)
+ * - Retention: 90 days (aligned with AI jobs metadata)
+ */
+export const RGPD_CONTEST_RETENTION_DAYS = 90;
 
 /**
  * Retention policy configuration

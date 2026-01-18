@@ -14,6 +14,7 @@ import type {
   ListAuditEventsFilters,
 } from '@/app/ports/AuditEventReader';
 import { pool } from '@/infrastructure/db/pg';
+import { logger } from '@/infrastructure/logging/logger';
 
 export class PgAuditEventReader implements AuditEventReader {
   /**
@@ -34,8 +35,8 @@ export class PgAuditEventReader implements AuditEventReader {
         WHERE created_at < NOW() - INTERVAL '12 months'
       `);
     } catch (error) {
-      // Non-blocking: log error but continue with query
-      console.error('Lazy purge of old audit events failed:', error);
+      // Non-blocking: log error but continue with query (RGPD-safe: no PII)
+      logger.error({ event: 'audit.purge.failed', error: error instanceof Error ? error.message : 'Unknown error' }, 'Lazy purge of old audit events failed');
     }
   }
 
@@ -58,25 +59,25 @@ export class PgAuditEventReader implements AuditEventReader {
 
     // Filter by tenant (TENANT admin scope)
     if (tenantId !== undefined) {
-      whereClauses.push(`tenant_id = $${paramIndex++}`);
+      whereClauses.push(`ae.tenant_id = $${paramIndex++}`);
       values.push(tenantId);
     }
 
     // Filter by event type
     if (eventType) {
-      whereClauses.push(`event_type = $${paramIndex++}`);
+      whereClauses.push(`ae.event_type = $${paramIndex++}`);
       values.push(eventType);
     }
 
     // Filter by start date
     if (startDate) {
-      whereClauses.push(`created_at >= $${paramIndex++}`);
+      whereClauses.push(`ae.created_at >= $${paramIndex++}`);
       values.push(startDate);
     }
 
     // Filter by end date
     if (endDate) {
-      whereClauses.push(`created_at <= $${paramIndex++}`);
+      whereClauses.push(`ae.created_at <= $${paramIndex++}`);
       values.push(endDate);
     }
 
@@ -87,10 +88,20 @@ export class PgAuditEventReader implements AuditEventReader {
     values.push(limit, offset);
 
     const res = await pool.query(
-      `SELECT id, event_type, actor_id, tenant_id, target_id, created_at
-       FROM audit_events
+      `SELECT
+         ae.id,
+         ae.event_type,
+         ae.actor_id,
+         u.display_name AS actor_display_name,
+         ae.tenant_id,
+         t.name AS tenant_name,
+         ae.target_id,
+         ae.created_at
+       FROM audit_events ae
+       LEFT JOIN users u ON ae.actor_id = u.id
+       LEFT JOIN tenants t ON ae.tenant_id = t.id
        ${whereClause}
-       ORDER BY created_at DESC
+       ORDER BY ae.created_at DESC
        LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
       values
     );
@@ -99,7 +110,9 @@ export class PgAuditEventReader implements AuditEventReader {
       id: row.id,
       eventType: row.event_type,
       actorId: row.actor_id,
+      actorDisplayName: row.actor_display_name,
       tenantId: row.tenant_id,
+      tenantName: row.tenant_name,
       targetId: row.target_id,
       createdAt: new Date(row.created_at),
     }));
@@ -115,10 +128,20 @@ export class PgAuditEventReader implements AuditEventReader {
     }
 
     const res = await pool.query(
-      `SELECT id, event_type, actor_id, tenant_id, target_id, created_at
-       FROM audit_events
-       WHERE tenant_id = $1 AND actor_id = $2
-       ORDER BY created_at DESC
+      `SELECT
+         ae.id,
+         ae.event_type,
+         ae.actor_id,
+         u.display_name AS actor_display_name,
+         ae.tenant_id,
+         t.name AS tenant_name,
+         ae.target_id,
+         ae.created_at
+       FROM audit_events ae
+       LEFT JOIN users u ON ae.actor_id = u.id
+       LEFT JOIN tenants t ON ae.tenant_id = t.id
+       WHERE ae.tenant_id = $1 AND ae.actor_id = $2
+       ORDER BY ae.created_at DESC
        LIMIT $3`,
       [tenantId, userId, limit]
     );
@@ -127,7 +150,9 @@ export class PgAuditEventReader implements AuditEventReader {
       id: row.id,
       eventType: row.event_type,
       actorId: row.actor_id,
+      actorDisplayName: row.actor_display_name,
       tenantId: row.tenant_id,
+      tenantName: row.tenant_name,
       targetId: row.target_id,
       createdAt: new Date(row.created_at),
     }));

@@ -1,9 +1,13 @@
 /**
  * User Repository - Unified read access
- * LOT 5.3 - API Layer
+ * LOT 5.3 - API Layer (Enhanced LOT 1.6)
  *
  * Provides read access to both PLATFORM and TENANT users
  * Used by authentication and user management use-cases
+ *
+ * LOT 1.6 additions:
+ * - createUserWithEmail: stores encrypted email for notifications
+ * - getDecryptedEmail: retrieves email (User own / DPO only)
  */
 
 import type { UserScope } from '@/shared/actorScope';
@@ -66,6 +70,31 @@ export interface UserRepo {
    * Create user (TENANT scope)
    */
   createUser(user: Omit<User, 'createdAt' | 'deletedAt'>): Promise<void>;
+
+  /**
+   * Create user with encrypted email (LOT 1.6)
+   * Stores both hash (auth) and encrypted email (notifications)
+   *
+   * @param user - User data with emailHash
+   * @param email - Plain email to encrypt and store
+   */
+  createUserWithEmail(
+    user: Omit<User, 'createdAt' | 'deletedAt'>,
+    email: string
+  ): Promise<void>;
+
+  /**
+   * Get decrypted email for a user (LOT 1.6)
+   *
+   * RGPD Access Rules (enforced by caller):
+   * - User: can get their own email (Art. 15)
+   * - DPO: can get any email (Art. 34, 37-39)
+   * - Others: FORBIDDEN
+   *
+   * @param userId - User ID to get email for
+   * @returns Decrypted email or null if not available
+   */
+  getDecryptedEmail(userId: string): Promise<string | null>;
 
   /**
    * Update user

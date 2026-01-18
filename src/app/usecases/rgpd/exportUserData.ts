@@ -10,10 +10,8 @@ import type {
   ExportMetadata,
   ExportAuditEvent,
 } from "@/domain/rgpd/ExportBundle";
-import {
-  EXPORT_TTL_DAYS,
-  EXPORT_VERSION,
-} from "@/domain/rgpd/ExportBundle";
+import { EXPORT_VERSION } from "@/domain/rgpd/ExportBundle";
+import { RGPD_EXPORT_RETENTION_DAYS } from "@/domain/retention/RetentionPolicy";
 import {
   encrypt,
   generateExportPassword,
@@ -68,7 +66,7 @@ export async function exportUserData(
   const downloadToken = randomUUID();
   const password = generateExportPassword();
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + EXPORT_TTL_DAYS * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + RGPD_EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
   // Step 1: Collect user data (tenant-scoped via repositories)
   const [consents, aiJobs, auditEventsRaw] = await Promise.all([
