@@ -3,68 +3,54 @@
  * Goal: Increase coverage by ensuring all modules can be imported
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 import { describe, it, expect } from '@jest/globals';
 
 describe('Infrastructure: Alerts', () => {
-  it('should import AlertService', () => {
-    const module = require('@/infrastructure/alerts/AlertService');
-    expect(module).toBeDefined();
-    expect(module.AlertService).toBeDefined();
+  it('should import EmailAlertService', () => {
+    const alertModule = require('@/infrastructure/alerts/AlertService');
+    expect(alertModule).toBeDefined();
+    expect(alertModule.EmailAlertService).toBeDefined();
+    expect(alertModule.createEmailAlertService).toBeDefined();
   });
 
   it('should import IncidentAlertService', () => {
-    const module = require('@/infrastructure/alerts/IncidentAlertService');
-    expect(module).toBeDefined();
-    expect(module.IncidentAlertService).toBeDefined();
+    const incidentModule = require('@/infrastructure/alerts/IncidentAlertService');
+    expect(incidentModule).toBeDefined();
+    expect(incidentModule.IncidentAlertService).toBeDefined();
+    expect(incidentModule.createIncidentAlertService).toBeDefined();
   });
 });
 
 describe('Infrastructure: Config', () => {
   it('should import env config', () => {
-    const module = require('@/infrastructure/config/env');
-    expect(module).toBeDefined();
+    const envModule = require('@/infrastructure/config/env');
+    expect(envModule).toBeDefined();
   });
 });
 
 describe('Infrastructure: DB', () => {
   it('should import migrate', () => {
-    const module = require('@/infrastructure/db/migrate');
-    expect(module).toBeDefined();
+    const migrateModule = require('@/infrastructure/db/migrate');
+    expect(migrateModule).toBeDefined();
   });
 
   it('should import pool', () => {
-    const module = require('@/infrastructure/db/pool');
-    expect(module).toBeDefined();
+    const poolModule = require('@/infrastructure/db/pool');
+    expect(poolModule).toBeDefined();
   });
 });
 
-describe('Infrastructure: Email', () => {
-  it('should import EmailService', () => {
-    const module = require('@/infrastructure/email/EmailService');
-    expect(module).toBeDefined();
-  });
-});
-
-describe('Infrastructure: LLM', () => {
-  it('should import LlmGateway', () => {
-    const module = require('@/infrastructure/llm/LlmGateway');
-    expect(module).toBeDefined();
-  });
-
-  it('should import LlmProviders', () => {
-    const module = require('@/infrastructure/llm/providers');
-    expect(module).toBeDefined();
-  });
-
-  it('should import LlmPolicyEngine', () => {
-    const module = require('@/infrastructure/llm/LlmPolicyEngine');
-    expect(module).toBeDefined();
-  });
-});
+// Note: Email module uses alerts/AlertService.ts for email functionality
+// Note: LLM modules (LlmGateway, LlmProviders, LlmPolicyEngine) planned for LOT 15
 
 describe('Infrastructure: Storage', () => {
-  it('should import FileStorage', () => {
-    const module = require('@/infrastructure/storage/FileStorage');
-    expect(module).toBeDefined();
+  it('should import ExportStorage functions', () => {
+    const storageModule = require('@/infrastructure/storage/ExportStorage');
+    expect(storageModule).toBeDefined();
+    expect(storageModule.storeExportMetadata).toBeDefined();
+    expect(storageModule.getExportMetadata).toBeDefined();
+    expect(storageModule.deleteExportMetadata).toBeDefined();
   });
 });

@@ -449,7 +449,7 @@ describe("RGPD BLOCKER: RLS policies for users table (tenant scope)", () => {
       PLATFORM_USER_ID = newId();
       await rlsPool.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-         VALUES ($1, NULL, $2, $3, $4, 'PLATFORM', 'PLATFORM_ADMIN')`,
+         VALUES ($1, NULL, $2, $3, $4, 'PLATFORM', 'SUPERADMIN')`,
         [PLATFORM_USER_ID, "platform-rls-test@test.com", "Platform User", "__HASH__"]
       );
     } else {

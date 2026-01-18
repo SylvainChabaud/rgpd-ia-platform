@@ -55,7 +55,7 @@ import { GET as GetPurpose, PATCH as UpdatePurpose, DELETE as DeletePurpose } fr
 // =============================================================================
 
 const TEST_TENANT_ID = 'tenant-abc-123';
-const OTHER_TENANT_ID = 'tenant-xyz-456';
+const _OTHER_TENANT_ID = 'tenant-xyz-456';
 const TEST_PURPOSE_ID = 'purpose-001';
 
 function createTenantAdminRequest(path: string, tenantId: string, method: string = 'GET', body?: object): NextRequest {

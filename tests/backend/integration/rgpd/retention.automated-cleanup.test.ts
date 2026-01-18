@@ -80,7 +80,7 @@ async function setupTestData() {
   await withTenantContext(pool, TENANT_ID, async (client) => {
     await client.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-       VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
+       VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
       [USER_ID, TENANT_ID, "test@retention.com", "Retention Test User", "$2a$10$hash"]
     );
   });
@@ -90,20 +90,24 @@ async function setupTestData() {
  * Cleanup: delete all test data by slug (handles any previous test runs)
  */
 async function cleanup() {
-  // Get tenant ID by slug (if exists from previous run)
-  const existingTenant = await pool.query(
-    "SELECT id FROM tenants WHERE slug = $1",
-    ["retention-test"]
-  );
+  // Get all test tenants by slug pattern (handles retention-test, empty-tenant, other-tenant)
+  const slugsToClean = ["retention-test", "empty-tenant", "other-tenant"];
 
-  if (existingTenant.rows.length > 0) {
-    const tenantId = existingTenant.rows[0].id;
-    // Use withTenantContext for RLS-compliant cleanup
-    await withTenantContext(pool, tenantId, async (client) => {
-      await client.query("DELETE FROM ai_jobs WHERE tenant_id = $1", [tenantId]);
-      await client.query("DELETE FROM users WHERE tenant_id = $1", [tenantId]);
-    });
-    await pool.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
+  for (const slug of slugsToClean) {
+    const existingTenant = await pool.query(
+      "SELECT id FROM tenants WHERE slug = $1",
+      [slug]
+    );
+
+    if (existingTenant.rows.length > 0) {
+      const tenantId = existingTenant.rows[0].id;
+      // Use withTenantContext for RLS-compliant cleanup
+      await withTenantContext(pool, tenantId, async (client) => {
+        await client.query("DELETE FROM ai_jobs WHERE tenant_id = $1", [tenantId]);
+        await client.query("DELETE FROM users WHERE tenant_id = $1", [tenantId]);
+      });
+      await pool.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
+    }
   }
 }
 
@@ -314,7 +318,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       await withTenantContext(pool, otherTenantId, async (client) => {
         await client.query(
           `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
+           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
           [otherUserId, otherTenantId, "other@test.com", "Other User", "$2a$10$hash"]
         );
       });

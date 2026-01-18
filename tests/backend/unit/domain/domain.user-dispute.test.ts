@@ -381,8 +381,9 @@ describe('toAuditEvent', () => {
     });
 
     // Verify NO PII in audit event
-    expect((auditEvent as any).reason).toBeUndefined();
-    expect((auditEvent as any).attachmentUrl).toBeUndefined();
+    const auditEventRecord = auditEvent as Record<string, unknown>;
+    expect(auditEventRecord.reason).toBeUndefined();
+    expect(auditEventRecord.attachmentUrl).toBeUndefined();
   });
 
   it('should handle dispute without attachment', () => {

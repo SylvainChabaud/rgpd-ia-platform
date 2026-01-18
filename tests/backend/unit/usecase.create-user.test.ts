@@ -85,6 +85,14 @@ class MemUserRepo implements UserRepo {
     user.dataSuspendedReason = suspended ? (reason ?? null) : null;
     return user;
   }
+
+  async createUserWithEmail(user: Omit<User, 'createdAt' | 'deletedAt'>, _email: string): Promise<void> {
+    await this.createUser(user);
+  }
+
+  async getDecryptedEmail(_userId: string): Promise<string | null> {
+    return null;
+  }
 }
 
 class MemPasswordHasher implements PasswordHasher {

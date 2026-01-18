@@ -52,6 +52,10 @@ class MemUserRepo implements UserRepo {
   async updateDataSuspension(): Promise<User> {
     throw new Error('Not implemented');
   }
+  async createUserWithEmail() {}
+  async getDecryptedEmail(): Promise<string | null> {
+    return null;
+  }
 }
 
 function createUser(overrides: Partial<User> = {}): User {

@@ -78,8 +78,8 @@ function createMemberRequest(tenantId: string, userTenantId: string): NextReques
 
 function setupMockResponses(tenantExists: boolean = true) {
   mockQuery
-    // Tenant exists check
-    .mockResolvedValueOnce({ rows: tenantExists ? [{ id: TEST_TENANT_ID }] : [] })
+    // Tenant exists check (includes name)
+    .mockResolvedValueOnce({ rows: tenantExists ? [{ id: TEST_TENANT_ID, name: 'Test Tenant' }] : [] })
     // Users
     .mockResolvedValueOnce({ rows: [{ active: '50', suspended: '3', total: '53' }] })
     // AI Jobs
@@ -89,7 +89,9 @@ function setupMockResponses(tenantExists: boolean = true) {
     // RGPD Exports
     .mockResolvedValueOnce({ rows: [{ pending: '2', completed: '10' }] })
     // RGPD Deletions
-    .mockResolvedValueOnce({ rows: [{ pending: '1', completed: '5' }] });
+    .mockResolvedValueOnce({ rows: [{ pending: '1', completed: '5' }] })
+    // Storage usage
+    .mockResolvedValueOnce({ rows: [{ total_bytes: '1048576' }] });
 }
 
 function createParams(id: string): { params: Promise<{ id: string }> } {
@@ -252,14 +254,16 @@ describe('GET /api/tenants/:id/stats - Error Handling', () => {
 
   it('[TENANT-STATS-014] should handle empty results gracefully', async () => {
     mockQuery
-      // Tenant exists
-      .mockResolvedValueOnce({ rows: [{ id: TEST_TENANT_ID }] })
+      // Tenant exists (includes name)
+      .mockResolvedValueOnce({ rows: [{ id: TEST_TENANT_ID, name: 'Test Tenant' }] })
       // Empty stats
       .mockResolvedValueOnce({ rows: [{ active: '0', suspended: '0', total: '0' }] })
       .mockResolvedValueOnce({ rows: [{ success: '0', failed: '0', total: '0' }] })
       .mockResolvedValueOnce({ rows: [{ granted: '0', revoked: '0', pending: '0' }] })
       .mockResolvedValueOnce({ rows: [{ pending: '0', completed: '0' }] })
-      .mockResolvedValueOnce({ rows: [{ pending: '0', completed: '0' }] });
+      .mockResolvedValueOnce({ rows: [{ pending: '0', completed: '0' }] })
+      // Storage
+      .mockResolvedValueOnce({ rows: [{ total_bytes: '0' }] });
 
     const req = createTenantAdminRequest(TEST_TENANT_ID, TEST_TENANT_ID);
     const response = await GET(req, createParams(TEST_TENANT_ID));
@@ -272,13 +276,15 @@ describe('GET /api/tenants/:id/stats - Error Handling', () => {
 
   it('[TENANT-STATS-015] should handle missing rows gracefully', async () => {
     mockQuery
-      // Tenant exists
-      .mockResolvedValueOnce({ rows: [{ id: TEST_TENANT_ID }] })
+      // Tenant exists (includes name)
+      .mockResolvedValueOnce({ rows: [{ id: TEST_TENANT_ID, name: 'Test Tenant' }] })
       // Missing rows
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] })
+      // Storage
       .mockResolvedValueOnce({ rows: [] });
 
     const req = createTenantAdminRequest(TEST_TENANT_ID, TEST_TENANT_ID);

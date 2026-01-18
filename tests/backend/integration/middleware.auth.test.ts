@@ -159,7 +159,7 @@ describe('withOptionalAuth middleware', () => {
       userId: 'user-1',
       tenantId: null,
       scope: ACTOR_SCOPE.PLATFORM,
-      role: 'PLATFORM_ADMIN',
+      role: 'SUPERADMIN',
     });
     const req = new NextRequest('http://localhost/api/test', {
       headers: { Authorization: `Bearer ${token}` },

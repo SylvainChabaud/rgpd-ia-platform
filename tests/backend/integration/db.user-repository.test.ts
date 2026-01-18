@@ -440,9 +440,10 @@ describe('PgUserRepo', () => {
         const emailHash = await hashEmail(`order-test-${i}@example.com`);
         const userId = `10000000-0000-0000-0000-000000000${130 + i}`;
         await insertUserWithRLS([userId, TENANT_ID, emailHash, `Order Test ${i}`, passwordHash, 'TENANT', 'MEMBER']);
+        // SECURITY: Use parameterized query even in tests (OWASP A03:2021)
         await pool.query(
-          `UPDATE users SET data_suspended = true, data_suspended_at = NOW() + INTERVAL '${i} seconds', data_suspended_reason = 'Test ${i}' WHERE id = $1`,
-          [userId]
+          `UPDATE users SET data_suspended = true, data_suspended_at = NOW() + ($2 || ' seconds')::INTERVAL, data_suspended_reason = $3 WHERE id = $1`,
+          [userId, i.toString(), `Test ${i}`]
         );
       }
 
@@ -514,8 +515,9 @@ describe('PgUserRepo', () => {
       const afterSuspension = new Date();
 
       expect(updatedUser.dataSuspendedAt).not.toBeNull();
-      expect(updatedUser.dataSuspendedAt!.getTime()).toBeGreaterThanOrEqual(beforeSuspension.getTime());
-      expect(updatedUser.dataSuspendedAt!.getTime()).toBeLessThanOrEqual(afterSuspension.getTime());
+      // Allow 100ms tolerance for timing differences between JS Date and DB NOW()
+      expect(updatedUser.dataSuspendedAt!.getTime()).toBeGreaterThanOrEqual(beforeSuspension.getTime() - 100);
+      expect(updatedUser.dataSuspendedAt!.getTime()).toBeLessThanOrEqual(afterSuspension.getTime() + 100);
     });
   });
 

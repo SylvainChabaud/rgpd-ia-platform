@@ -26,6 +26,7 @@ import { ACTOR_ROLE } from '@/shared/actorRole';
 // =============================================================================
 
 const mockTemplateFindAll = jest.fn();
+const mockTemplateFindWithFilters = jest.fn();
 const mockTemplateFindByCode = jest.fn();
 const mockTemplateCountAdoptions = jest.fn();
 const mockPurposeFindByLabel = jest.fn();
@@ -38,6 +39,7 @@ const mockValidate = jest.fn();
 jest.mock('@/infrastructure/repositories/PgPurposeTemplateRepo', () => ({
   PgPurposeTemplateRepo: jest.fn().mockImplementation(() => ({
     findAll: mockTemplateFindAll,
+    findWithFilters: mockTemplateFindWithFilters,
     findByCode: mockTemplateFindByCode,
     countAdoptions: mockTemplateCountAdoptions,
   })),
@@ -133,6 +135,7 @@ const sampleTemplate = {
   lawfulBasis: 'CONSENT',
   category: 'AI_PROCESSING',
   riskLevel: 'MEDIUM',
+  sector: 'GENERAL',
   defaultRetentionDays: 90,
   requiresDpia: false,
   maxDataClass: 'P1',
@@ -185,7 +188,7 @@ describe('GET /api/purposes/templates - List Templates', () => {
   });
 
   it('[TEMPLATES-003] should return templates list for TENANT_ADMIN', async () => {
-    mockTemplateFindAll.mockResolvedValue([sampleTemplate]);
+    mockTemplateFindWithFilters.mockResolvedValue([sampleTemplate]);
 
     const req = createTenantAdminRequest('/api/purposes/templates', TEST_TENANT_ID);
     const response = await ListTemplates(req);
@@ -199,17 +202,17 @@ describe('GET /api/purposes/templates - List Templates', () => {
   });
 
   it('[TEMPLATES-004] should filter by category', async () => {
-    mockTemplateFindAll.mockResolvedValue([sampleTemplate]);
+    mockTemplateFindWithFilters.mockResolvedValue([sampleTemplate]);
 
     const req = createTenantAdminRequest('/api/purposes/templates?category=AI_PROCESSING', TEST_TENANT_ID);
     const response = await ListTemplates(req);
 
     expect(response.status).toBe(200);
-    expect(mockTemplateFindAll).toHaveBeenCalled();
+    expect(mockTemplateFindWithFilters).toHaveBeenCalled();
   });
 
   it('[TEMPLATES-005] should filter by riskLevel', async () => {
-    mockTemplateFindAll.mockResolvedValue([]);
+    mockTemplateFindWithFilters.mockResolvedValue([]);
 
     const req = createTenantAdminRequest('/api/purposes/templates?riskLevel=HIGH', TEST_TENANT_ID);
     const response = await ListTemplates(req);
@@ -218,7 +221,7 @@ describe('GET /api/purposes/templates - List Templates', () => {
   });
 
   it('[TEMPLATES-006] should filter AI purposes only', async () => {
-    mockTemplateFindAll.mockResolvedValue([sampleTemplate]);
+    mockTemplateFindWithFilters.mockResolvedValue([sampleTemplate]);
 
     const req = createTenantAdminRequest('/api/purposes/templates?aiOnly=true', TEST_TENANT_ID);
     const response = await ListTemplates(req);
@@ -227,7 +230,7 @@ describe('GET /api/purposes/templates - List Templates', () => {
   });
 
   it('[TEMPLATES-007] should handle database errors gracefully', async () => {
-    mockTemplateFindAll.mockRejectedValue(new Error('Database error'));
+    mockTemplateFindWithFilters.mockRejectedValue(new Error('Database error'));
 
     const req = createTenantAdminRequest('/api/purposes/templates', TEST_TENANT_ID);
     const response = await ListTemplates(req);
@@ -641,7 +644,7 @@ describe('POST /api/purposes/custom - Create Custom Purpose', () => {
 describe('Purpose Templates API - RGPD Compliance', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTemplateFindAll.mockResolvedValue([sampleTemplate]);
+    mockTemplateFindWithFilters.mockResolvedValue([sampleTemplate]);
     mockPurposeCreate.mockResolvedValue(samplePurpose);
     mockPurposeFindByLabel.mockResolvedValue(null);
     mockAuditWrite.mockResolvedValue(undefined);
@@ -684,7 +687,7 @@ describe('Purpose Templates API - RGPD Compliance', () => {
     await ListTemplates(req);
 
     // Templates are platform-level but adoption check is tenant-scoped
-    expect(mockTemplateFindAll).toHaveBeenCalled();
+    expect(mockTemplateFindWithFilters).toHaveBeenCalled();
   });
 
   it('[RGPD-004] should provide localized RGPD labels', async () => {
@@ -700,7 +703,7 @@ describe('Purpose Templates API - RGPD Compliance', () => {
 
   it('[RGPD-005] should indicate DPIA requirement', async () => {
     const highRiskTemplate = { ...sampleTemplate, requiresDpia: true, riskLevel: 'HIGH' };
-    mockTemplateFindAll.mockResolvedValue([highRiskTemplate]);
+    mockTemplateFindWithFilters.mockResolvedValue([highRiskTemplate]);
 
     const req = createTenantAdminRequest('/api/purposes/templates', TEST_TENANT_ID);
     const response = await ListTemplates(req);

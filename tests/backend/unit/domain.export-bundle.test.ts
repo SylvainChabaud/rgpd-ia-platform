@@ -9,25 +9,25 @@
 
 import { describe, it, expect } from '@jest/globals';
 import {
-  EXPORT_TTL_DAYS,
   EXPORT_MAX_DOWNLOADS,
   EXPORT_VERSION,
 } from '@/domain/rgpd/ExportBundle';
+import { RGPD_EXPORT_RETENTION_DAYS } from '@/domain/retention/RetentionPolicy';
 
 describe('Domain: ExportBundle', () => {
-  describe('EXPORT_TTL_DAYS constant', () => {
+  describe('RGPD_EXPORT_RETENTION_DAYS constant', () => {
     it('is set to 7 days', () => {
-      expect(EXPORT_TTL_DAYS).toBe(7);
+      expect(RGPD_EXPORT_RETENTION_DAYS).toBe(7);
     });
 
     it('is a positive number', () => {
-      expect(EXPORT_TTL_DAYS).toBeGreaterThan(0);
+      expect(RGPD_EXPORT_RETENTION_DAYS).toBeGreaterThan(0);
     });
 
     it('is reasonable for RGPD compliance', () => {
       // Should be long enough for user to download, but not too long for security
-      expect(EXPORT_TTL_DAYS).toBeGreaterThanOrEqual(1);
-      expect(EXPORT_TTL_DAYS).toBeLessThanOrEqual(30);
+      expect(RGPD_EXPORT_RETENTION_DAYS).toBeGreaterThanOrEqual(1);
+      expect(RGPD_EXPORT_RETENTION_DAYS).toBeLessThanOrEqual(30);
     });
   });
 
@@ -65,20 +65,20 @@ describe('Domain: ExportBundle', () => {
   describe('TTL calculation', () => {
     it('calculates correct expiration date', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      const expiresAt = new Date(now.getTime() + EXPORT_TTL_DAYS * 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(now.getTime() + RGPD_EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
       expect(expiresAt.getTime()).toBeGreaterThan(now.getTime());
 
       const daysDiff = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      expect(daysDiff).toBe(EXPORT_TTL_DAYS);
+      expect(daysDiff).toBe(RGPD_EXPORT_RETENTION_DAYS);
     });
 
     it('expiration is exactly TTL days in future', () => {
       const now = new Date('2024-01-15T12:30:00Z');
-      const expiresAt = new Date(now.getTime() + EXPORT_TTL_DAYS * 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(now.getTime() + RGPD_EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
       const expectedDate = new Date(now);
-      expectedDate.setDate(expectedDate.getDate() + EXPORT_TTL_DAYS);
+      expectedDate.setDate(expectedDate.getDate() + RGPD_EXPORT_RETENTION_DAYS);
 
       expect(expiresAt.getTime()).toBe(expectedDate.getTime());
     });

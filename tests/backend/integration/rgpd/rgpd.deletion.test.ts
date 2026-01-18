@@ -61,7 +61,7 @@ async function setupTenants() {
         "User A",
         "password_hash",
         "TENANT",
-        "user",
+        "MEMBER",
       ]
     );
   });
@@ -77,7 +77,7 @@ async function setupTenants() {
         "User B",
         "password_hash",
         "TENANT",
-        "user",
+        "MEMBER",
       ]
     );
   });
@@ -235,7 +235,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
           "Fresh User",
           "password_hash",
           "TENANT",
-          "user",
+          "MEMBER",
         ]
       );
     });
@@ -342,7 +342,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
           "Export User",
           "password_hash",
           "TENANT",
-          "user",
+          "MEMBER",
         ]
       );
     });
@@ -431,7 +431,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
           "Audit User",
           "password_hash",
           "TENANT",
-          "user",
+          "MEMBER",
         ]
       );
     });
@@ -505,7 +505,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
           "Idempotent User",
           "password_hash",
           "TENANT",
-          "user",
+          "MEMBER",
         ]
       );
     });
@@ -564,7 +564,7 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
           "Recent User",
           "password_hash",
           "TENANT",
-          "user",
+          "MEMBER",
         ]
       );
     });

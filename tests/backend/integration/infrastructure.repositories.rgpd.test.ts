@@ -29,7 +29,7 @@ describe("PgRgpdRequestRepo", () => {
     await withTenantContext(pool, TENANT_ID, async (client) => {
       await client.query(
         `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')
+         VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')
          ON CONFLICT (id) DO NOTHING`,
         [USER_ID, TENANT_ID, "test@rgpd-repo.com", "Test User", "$2a$10$hash"]
       );
@@ -120,7 +120,7 @@ describe("PgRgpdRequestRepo", () => {
       await withTenantContext(pool, TENANT_ID, async (client) => {
         await client.query(
           `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
+           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
           [testUserId, TENANT_ID, "deletion@test.com", "Deletion User", "$2a$10$hash"]
         );
       });
@@ -187,7 +187,7 @@ describe("PgRgpdRequestRepo", () => {
       await withTenantContext(pool, TENANT_ID, async (client) => {
         await client.query(
           `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role)
-           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'USER')`,
+           VALUES ($1, $2, $3, $4, $5, 'TENANT', 'MEMBER')`,
           [testUserId, TENANT_ID, "purge@test.com", "Purge User", "$2a$10$hash"]
         );
       });

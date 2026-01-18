@@ -25,6 +25,10 @@ describe('PgTenantRepo', () => {
     // Create a tenant for admin user (to avoid PLATFORM unique constraint)
     adminTenantId = '00000000-0000-0000-0000-000000009999';
 
+    // Clean up test tenants from previous runs (by slug patterns)
+    await pool.query(`DELETE FROM tenants WHERE slug LIKE 'test-%'`);
+    await pool.query(`DELETE FROM tenants WHERE slug = 'admin-tenant-for-tests'`);
+
     // Use cleanup function
     await pool.query(`SELECT cleanup_test_data($1::uuid[])`, [[adminTenantId]]);
 
@@ -469,7 +473,6 @@ describe('PgTenantRepo', () => {
   describe('suspend', () => {
     it('should suspend tenant', async () => {
       const tenantId = randomUUID();
-      const adminId = randomUUID();
 
       await repo.create({
         id: tenantId,
@@ -479,20 +482,18 @@ describe('PgTenantRepo', () => {
 
       await repo.suspend(tenantId, {
         reason: 'Terms violation',
-        suspendedBy: adminId,
+        suspendedBy: validAdminId, // Use validAdminId from beforeEach (FK constraint)
       });
 
       const tenant = await repo.findById(tenantId);
 
       expect(tenant?.suspendedAt).toBeInstanceOf(Date);
       expect(tenant?.suspensionReason).toBe('Terms violation');
-      expect(tenant?.suspendedBy).toBe(adminId);
+      expect(tenant?.suspendedBy).toBe(validAdminId);
     });
 
     it('should not suspend already suspended tenant', async () => {
       const tenantId = randomUUID();
-      const admin1 = randomUUID();
-      const admin2 = randomUUID();
 
       await repo.create({
         id: tenantId,
@@ -502,19 +503,19 @@ describe('PgTenantRepo', () => {
 
       await repo.suspend(tenantId, {
         reason: 'First suspension',
-        suspendedBy: admin1,
+        suspendedBy: validAdminId,
       });
 
       await repo.suspend(tenantId, {
         reason: 'Second suspension',
-        suspendedBy: admin2,
+        suspendedBy: validAdminId,
       });
 
       const tenant = await repo.findById(tenantId);
 
       // Should keep first suspension
       expect(tenant?.suspensionReason).toBe('First suspension');
-      expect(tenant?.suspendedBy).toBe(admin1);
+      expect(tenant?.suspendedBy).toBe(validAdminId);
     });
 
     it('should not suspend soft-deleted tenant', async () => {
@@ -629,7 +630,6 @@ describe('PgTenantRepo', () => {
   describe('Complete Lifecycle', () => {
     it('should handle full tenant lifecycle', async () => {
       const tenantId = randomUUID();
-      const adminId = randomUUID();
 
       // 1. Create
       await repo.create({
@@ -649,7 +649,7 @@ describe('PgTenantRepo', () => {
       // 3. Suspend
       await repo.suspend(tenantId, {
         reason: 'Temporary suspension',
-        suspendedBy: adminId,
+        suspendedBy: validAdminId, // Use validAdminId from beforeEach (FK constraint)
       });
       tenant = await repo.findById(tenantId);
       expect(tenant?.suspendedAt).not.toBeNull();

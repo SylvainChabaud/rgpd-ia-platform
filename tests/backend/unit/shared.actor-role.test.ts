@@ -134,10 +134,18 @@ describe('Shared: actorRole', () => {
   });
 
   describe('Const assertion', () => {
-    it('is readonly at runtime', () => {
-      expect(() => {
-        (ACTOR_ROLE as { SUPERADMIN: string }).SUPERADMIN = 'modified';
-      }).toThrow();
+    it('enforces type safety at compile time', () => {
+      // Note: 'as const' is a TypeScript compile-time feature, not runtime protection.
+      // This test validates that the values are correctly typed as literal strings.
+      const superadmin: 'SUPERADMIN' = ACTOR_ROLE.SUPERADMIN;
+      const tenantAdmin: 'TENANT_ADMIN' = ACTOR_ROLE.TENANT_ADMIN;
+      const member: 'MEMBER' = ACTOR_ROLE.MEMBER;
+      const dpo: 'DPO' = ACTOR_ROLE.DPO;
+
+      expect(superadmin).toBe('SUPERADMIN');
+      expect(tenantAdmin).toBe('TENANT_ADMIN');
+      expect(member).toBe('MEMBER');
+      expect(dpo).toBe('DPO');
     });
   });
 

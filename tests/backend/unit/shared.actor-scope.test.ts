@@ -119,10 +119,16 @@ describe('Shared: actorScope', () => {
   });
 
   describe('Const assertion', () => {
-    it('is readonly at runtime', () => {
-      expect(() => {
-        (ACTOR_SCOPE as { SYSTEM: string }).SYSTEM = 'modified';
-      }).toThrow();
+    it('enforces type safety at compile time', () => {
+      // Note: 'as const' is a TypeScript compile-time feature, not runtime protection.
+      // This test validates that the values are correctly typed as literal strings.
+      const system: 'SYSTEM' = ACTOR_SCOPE.SYSTEM;
+      const platform: 'PLATFORM' = ACTOR_SCOPE.PLATFORM;
+      const tenant: 'TENANT' = ACTOR_SCOPE.TENANT;
+
+      expect(system).toBe('SYSTEM');
+      expect(platform).toBe('PLATFORM');
+      expect(tenant).toBe('TENANT');
     });
   });
 

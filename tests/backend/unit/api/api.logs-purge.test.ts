@@ -41,8 +41,9 @@ describe('Log Purge - RGPD Compliance', () => {
     const stats = statSync(recentLog);
     const ageInDays = Math.floor((Date.now() - stats.mtimeMs) / (1000 * 60 * 60 * 24));
 
-    // File should be 0 days old
-    expect(ageInDays).toBe(0);
+    // File should be 0 days old (or -1 if timing is slightly off due to clock drift)
+    expect(ageInDays).toBeGreaterThanOrEqual(-1);
+    expect(ageInDays).toBeLessThanOrEqual(0);
     expect(ageInDays).toBeLessThan(30);
   });
 

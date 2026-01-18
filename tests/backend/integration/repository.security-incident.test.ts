@@ -24,9 +24,12 @@ describe('PgSecurityIncidentRepo', () => {
     // Clean test data
     await pool.query(`SELECT cleanup_test_data($1::uuid[])`, [[TENANT_ID]]);
 
-    // Create test tenant
+    // Clean up tenant by slug (in case of leftover from previous run with different ID)
+    await pool.query(`DELETE FROM tenants WHERE slug = $1`, ['incident-test']);
+
+    // Create test tenant (no ON CONFLICT since we just cleaned up)
     await pool.query(
-      `INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+      `INSERT INTO tenants (id, slug, name) VALUES ($1, $2, $3)`,
       [TENANT_ID, 'incident-test', 'Incident Test']
     );
   });

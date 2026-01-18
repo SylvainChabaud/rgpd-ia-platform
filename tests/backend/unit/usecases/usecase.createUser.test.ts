@@ -18,7 +18,7 @@ describe('createUser', () => {
   beforeEach(() => {
     mockUserRepo = {
       findByEmailHash: jest.fn(),
-      createUser: jest.fn(),
+      createUserWithEmail: jest.fn(),
     } as unknown as jest.Mocked<UserRepo>;
 
     mockPasswordHasher = {
@@ -53,13 +53,14 @@ describe('createUser', () => {
     });
 
     expect(result.userId).toBeDefined();
-    expect(mockUserRepo.createUser).toHaveBeenCalledWith(
+    expect(mockUserRepo.createUserWithEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId: 'tenant-1',
         displayName: 'John Doe',
         scope: ACTOR_SCOPE.TENANT,
         role: 'MEMBER',
-      })
+      }),
+      'user@example.com' // Plain email for AES encryption
     );
     expect(mockAuditWriter.write).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -163,10 +164,11 @@ describe('createUser', () => {
     });
 
     expect(mockPasswordHasher.hash).toHaveBeenCalledWith('plaintextpassword');
-    expect(mockUserRepo.createUser).toHaveBeenCalledWith(
+    expect(mockUserRepo.createUserWithEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         passwordHash: 'secure-hash-xyz',
-      })
+      }),
+      'user@example.com' // Plain email for AES encryption
     );
   });
 });

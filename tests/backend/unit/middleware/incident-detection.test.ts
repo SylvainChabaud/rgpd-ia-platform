@@ -14,6 +14,8 @@
  * - [INC-DET-XXX] for incident detection tests
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
   reportCrossTenantAccess,
@@ -111,6 +113,13 @@ jest.mock('@/app/usecases/incident', () => ({
     BRUTE_FORCE_WINDOW_MINUTES: 15,
     MASS_EXPORT_RECORDS: 1000,
     MASS_EXPORT_WINDOW_MINUTES: 10,
+  },
+  DETECTION_EVENT_TYPE: {
+    BRUTE_FORCE: 'BRUTE_FORCE',
+    CROSS_TENANT_ACCESS: 'CROSS_TENANT_ACCESS',
+    MASS_EXPORT: 'MASS_EXPORT',
+    PII_IN_LOGS: 'PII_IN_LOGS',
+    BACKUP_FAILURE: 'BACKUP_FAILURE',
   },
 }));
 

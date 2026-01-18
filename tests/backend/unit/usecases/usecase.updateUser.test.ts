@@ -3,23 +3,44 @@
  * Coverage: src/app/usecases/users/updateUser.ts
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { updateUser } from '@/app/usecases/users/updateUser';
-import type { UserRepo } from '@/app/ports/UserRepo';
+import type { UserRepo, User } from '@/app/ports/UserRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
+import { ACTOR_SCOPE } from '@/shared/actorScope';
+
+const mockUser: User = {
+  id: 'user-1',
+  tenantId: 'tenant-1',
+  emailHash: 'hash',
+  displayName: 'Old Name',
+  passwordHash: 'hash',
+  scope: ACTOR_SCOPE.TENANT,
+  role: 'MEMBER',
+  createdAt: new Date(),
+  deletedAt: null,
+};
 
 describe('updateUser', () => {
-  let mockUserRepo: jest.Mocked<UserRepo>;
-  let mockAuditWriter: jest.Mocked<AuditEventWriter>;
+  let mockUserRepo: Partial<UserRepo>;
+  let mockAuditWriter: Partial<AuditEventWriter>;
+  let mockFindById: jest.Mock;
+  let mockUpdateUser: jest.Mock;
+  let mockWrite: jest.Mock;
 
   beforeEach(() => {
+    mockFindById = jest.fn().mockResolvedValue(mockUser);
+    mockUpdateUser = jest.fn();
+    mockWrite = jest.fn();
+
     mockUserRepo = {
-      updateUser: jest.fn(),
-    } as unknown as jest.Mocked<UserRepo>;
+      findById: mockFindById,
+      updateUser: mockUpdateUser,
+    };
 
     mockAuditWriter = {
-      write: jest.fn(),
-    } as jest.Mocked<AuditEventWriter>;
+      write: mockWrite,
+    };
 
     jest.clearAllMocks();
   });
@@ -33,15 +54,15 @@ describe('updateUser', () => {
         actorId: 'admin-1',
       },
       {
-        userRepo: mockUserRepo,
-        auditEventWriter: mockAuditWriter,
+        userRepo: mockUserRepo as UserRepo,
+        auditEventWriter: mockAuditWriter as AuditEventWriter,
       }
     );
 
-    expect(mockUserRepo.updateUser).toHaveBeenCalledWith('user-1', {
+    expect(mockUpdateUser).toHaveBeenCalledWith('user-1', {
       displayName: 'New Name',
     });
-    expect(mockAuditWriter.write).toHaveBeenCalledWith(
+    expect(mockWrite).toHaveBeenCalledWith(
       expect.objectContaining({
         eventName: 'user.updated',
         targetId: 'user-1',
@@ -58,12 +79,12 @@ describe('updateUser', () => {
         actorId: 'admin-1',
       },
       {
-        userRepo: mockUserRepo,
-        auditEventWriter: mockAuditWriter,
+        userRepo: mockUserRepo as UserRepo,
+        auditEventWriter: mockAuditWriter as AuditEventWriter,
       }
     );
 
-    expect(mockUserRepo.updateUser).toHaveBeenCalledWith('user-1', {
+    expect(mockUpdateUser).toHaveBeenCalledWith('user-1', {
       role: 'TENANT_ADMIN',
     });
   });
@@ -78,8 +99,8 @@ describe('updateUser', () => {
           actorId: 'admin-1',
         },
         {
-          userRepo: mockUserRepo,
-          auditEventWriter: mockAuditWriter,
+          userRepo: mockUserRepo as UserRepo,
+          auditEventWriter: mockAuditWriter as AuditEventWriter,
         }
       )
     ).rejects.toThrow('RGPD VIOLATION');

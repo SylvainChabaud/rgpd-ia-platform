@@ -273,7 +273,7 @@ describe('Repository: PgCookieConsentRepo', () => {
   describe('save - Validation', () => {
     it('should reject save without userId or anonymousId', async () => {
       await expect(
-        repo.save({ analytics: true, marketing: false } as any)
+        repo.save({ analytics: true, marketing: false } as unknown as Parameters<typeof repo.save>[0])
       ).rejects.toThrow('Either userId or anonymousId is required');
     });
 

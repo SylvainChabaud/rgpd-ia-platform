@@ -230,7 +230,8 @@ describe('withTenantAdmin middleware', () => {
     expect(mockHandler).toHaveBeenCalled();
   });
 
-  test('allows tenant admin with any role containing ADMIN', async () => {
+  test('rejects SUPERADMIN role in TENANT scope (must be TENANT_ADMIN)', async () => {
+    // Note: withTenantAdmin requires exactly TENANT_ADMIN role, not SUPERADMIN
     const req = createAuthenticatedRequest({
       userId: 'user-1',
       tenantId: 'tenant-1',
@@ -240,8 +241,10 @@ describe('withTenantAdmin middleware', () => {
     const wrappedHandler = withTenantAdmin(mockHandler);
 
     const response = await wrappedHandler(req);
+    const data = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(mockHandler).toHaveBeenCalled();
+    expect(response.status).toBe(403);
+    expect(data.message).toContain('Tenant admin');
+    expect(mockHandler).not.toHaveBeenCalled();
   });
 });

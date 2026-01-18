@@ -562,7 +562,7 @@ describe('Repository: PgCguRepo', () => {
         acceptanceMethod: 'checkbox',
       });
 
-      const second = await repo.recordAcceptance(TENANT_ID, {
+      await repo.recordAcceptance(TENANT_ID, {
         tenantId: TENANT_ID,
         userId: user2,
         cguVersionId: version.id,
@@ -649,7 +649,7 @@ describe('Repository: PgCguRepo', () => {
         );
       });
 
-      const acceptance = await repo.recordAcceptance(TENANT_ID, {
+      await repo.recordAcceptance(TENANT_ID, {
         tenantId: TENANT_ID,
         userId,
         cguVersionId: version.id,

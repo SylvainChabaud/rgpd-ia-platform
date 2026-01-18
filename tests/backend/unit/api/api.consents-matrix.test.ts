@@ -51,7 +51,7 @@ import { GET } from '@app/api/consents/matrix/route';
 // =============================================================================
 
 const TEST_TENANT_ID = 'tenant-abc-123';
-const OTHER_TENANT_ID = 'tenant-xyz-456';
+const _OTHER_TENANT_ID = 'tenant-xyz-456';
 
 function createTenantAdminRequest(path: string, tenantId: string): NextRequest {
   const token = signJwt({

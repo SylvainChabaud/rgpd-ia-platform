@@ -8,7 +8,8 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { calculatePurgeDate, DELETION_RETENTION_DAYS } from '@/domain/rgpd/DeletionRequest';
+import { calculatePurgeDate } from '@/domain/rgpd/DeletionRequest';
+import { RGPD_DELETION_RETENTION_DAYS as DELETION_RETENTION_DAYS } from '@/domain/retention/RetentionPolicy';
 
 describe('Domain: DeletionRequest', () => {
   describe('calculatePurgeDate', () => {

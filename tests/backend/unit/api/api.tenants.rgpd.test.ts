@@ -11,10 +11,12 @@ import { ACTOR_ROLE } from '@/shared/actorRole';
 const mockListSuspendedByTenant = jest.fn();
 const mockFindOppositionsByTenant = jest.fn();
 const mockFindDisputesByTenant = jest.fn();
+const mockFindById = jest.fn();
 
 jest.mock('@/infrastructure/repositories/PgUserRepo', () => ({
   PgUserRepo: class {
     listSuspendedByTenant = mockListSuspendedByTenant;
+    findById = mockFindById;
   },
 }));
 
@@ -41,6 +43,7 @@ describe('API: /api/tenants/:id/rgpd/*', () => {
     mockListSuspendedByTenant.mockReset();
     mockFindOppositionsByTenant.mockReset();
     mockFindDisputesByTenant.mockReset();
+    mockFindById.mockReset();
   });
 
   it('returns suspensions for tenant admin', async () => {
@@ -125,6 +128,11 @@ describe('API: /api/tenants/:id/rgpd/*', () => {
         resolvedAt: null,
       },
     ]);
+    mockFindById.mockResolvedValue({
+      id: 'user-1',
+      tenantId,
+      displayName: 'User One',
+    });
 
     const request = new NextRequest('http://localhost/api/tenants/id/rgpd/contests', {
       headers: { Authorization: 'Bearer stub-tenant-admin1' },
@@ -153,6 +161,11 @@ describe('API: /api/tenants/:id/rgpd/*', () => {
         reviewedAt: null,
       },
     ]);
+    mockFindById.mockResolvedValue({
+      id: 'user-1',
+      tenantId,
+      displayName: 'User One',
+    });
 
     const request = new NextRequest('http://localhost/api/tenants/id/rgpd/oppositions', {
       headers: { Authorization: 'Bearer stub-tenant-admin1' },

@@ -74,7 +74,7 @@ describe("JWT Token Management", () => {
       expect(decoded.userId).toBe("user-123");
       expect(decoded.tenantId).toBe("tenant-456");
       expect(decoded.scope).toBe("TENANT");
-      expect(decoded.role).toBe("USER");
+      expect(decoded.role).toBe("MEMBER");
       expect(decoded.iat).toBeDefined();
       expect(decoded.exp).toBeDefined();
     });

@@ -31,7 +31,6 @@ tests/
 │       ├── tenants-crud.test.tsx
 │       ├── useTenants-coverage.test.tsx
 │       ├── tenant-ui-rgpd.test.tsx
-│       ├── maskEmail.test.ts               # LOT 11.2 - Email masking
 │       ├── users-crud.test.tsx             # LOT 11.2 - Users CRUD
 │       ├── backoffice-layout.test.tsx      # **NEW** LOT 11.0 - Layout (5 tests)
 │       └── backoffice-login.test.tsx       # **NEW** LOT 11.0 - Login (7 tests)
@@ -140,8 +139,7 @@ npx playwright test --debug        # Mode debug
 | `unit/http/http.https-enforcement.test.ts` | HTTPS |
 | `unit/security/chaos.resilience.test.ts` | Résilience |
 | `frontend/unit/authStore.test.ts` | JWT sessionStorage (8 tests) |
-| `frontend/unit/maskEmail.test.ts` | **Email masking (LOT 11.2, 18 tests)** |
-| `frontend/unit/users-crud.test.tsx` | **Password strength (LOT 11.2, 21 tests)** |
+| `frontend/unit/users-crud.test.tsx` | **Password strength (LOT 11.2)** |
 | `unit/middleware/auth-scope-isolation.test.ts` | **🆕 JWT validation + scope isolation (LOT 11.0, 11 tests)** |
 | `frontend/unit/backoffice-layout.test.tsx` | **🆕 Layout RGPD compliance (LOT 11.0, 5 tests)** |
 | `frontend/unit/backoffice-login.test.tsx` | **🆕 Login security (LOT 11.0, 7 tests)** |
@@ -172,8 +170,7 @@ npx playwright test --debug        # Mode debug
 | Hooks TanStack Query | `useTenants-coverage.test.tsx` | 18 |
 | **LOT 11.0** - Layout RGPD | `backoffice-layout.test.tsx` | **🆕 5** |
 | **LOT 11.0** - Login security | `backoffice-login.test.tsx` | **🆕 7** |
-| **LOT 11.2** - Email masking | `maskEmail.test.ts` | 18 |
-| **LOT 11.2** - Users CRUD | `users-crud.test.tsx` | 21 |
+| **LOT 11.2** - Users CRUD | `users-crud.test.tsx` | 16 |
 | **LOT 11.2** - E2E Users | `backoffice-users.spec.ts` | 5 |
 
 ## Couverture
@@ -187,7 +184,6 @@ npx playwright test --debug        # Mode debug
   - `useTenants.ts` : 100% statements, 93.75% branches
   - `authStore.ts` : 100% statements
   - `apiClient.ts` : 100% statements
-  - `maskEmail.ts` : 100% statements, 100% branches (LOT 11.2)
   - `userSchemas.ts` : 71.42% statements, 100% branches (LOT 11.2)
   - **🆕 backoffice-layout.test.tsx** : 5 tests (LOT 11.0)
   - **🆕 backoffice-login.test.tsx** : 7 tests (LOT 11.0)
