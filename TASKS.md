@@ -1,12 +1,13 @@
 # TASKS.md — Roadmap d'exécution (Plateforme RGPD-IA complète)
 
-> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 14** et en respectant les markdowns normatifs.
+> **But** : permettre à Claude Code de construire **pas à pas** une plateforme **complète (backend + frontends)** **FULL RGPD**, en couvrant **EPIC 1 → EPIC 15** et en respectant les markdowns normatifs.
 >
 > **Périmètre** :
 > - **EPIC 1-7** : Backend Core (API + services + infra) — 85% RGPD
 > - **EPIC 8-10** : Backend RGPD 100% (Anonymisation, Security, Legal) — Gaps critiques
 > - **EPIC 11-13** : Frontend (Back Office + Front User) — Interfaces
 > - **EPIC 14** : Sécurité & Gouvernance RGPD Plateforme — Protection proactive
+> - **EPIC 15** : Catalogue Outils IA (Gestion Platform Admin) — Administration outils
 
 ---
 
@@ -14,7 +15,7 @@
 
 | EPIC | Description | Statut | Artefacts |
 |------|-------------|--------|-----------|
-| **EPIC 1** | Socle applicatif sécurisé (IAM, multi-tenant, Gateway LLM) | ✅ 100% | LOT 1.0-1.5 |
+| **EPIC 1** | Socle applicatif sécurisé (IAM, multi-tenant, Gateway LLM) | 🟡 95% | LOT 1.0-1.6 |
 | **EPIC 2** | Durcissement serveur & réseau (Ops/Sec RGPD) | ✅ 100% | LOT 2.0-2.1 |
 | **EPIC 3** | Validation technique IA locale (POC contrôlé) | ✅ 100% | LOT 3.0 |
 | **EPIC 4** | Stockage IA & données utilisateur RGPD | ✅ 100% | LOT 4.0-4.1 |
@@ -28,6 +29,7 @@
 | **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | 🟡 EN COURS | LOT 12.0-12.4 |
 | **EPIC 13** | Front User (Frontend utilisateur final) | ❌ TODO | LOT 13.0-13.4 |
 | **EPIC 14** | Sécurité & Gouvernance RGPD Plateforme | ❌ TODO | LOT 14.0 |
+| **EPIC 15** | Catalogue Outils IA (Gestion Platform Admin) | ❌ TODO | LOT 15.0-15.2 |
 
 ---
 
@@ -61,6 +63,7 @@ Références de cadrage (utiles) :
 - `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (EPIC 12)
 - `docs/epics/EPIC_13_Front_User.md` (EPIC 13)
 - `docs/epics/EPIC_14_Securite_Gouvernance_RGPD.md` (EPIC 14)
+- `docs/epics/EPIC_15_Catalogue_Outils_IA.md` (EPIC 15)
 
 **Documents de cadrage** :
 - `docs/epics/00 — Analyse De L'objectif (version Alignée Epic 1→7).pdf`
@@ -180,6 +183,31 @@ Références de cadrage (utiles) :
 **Ordre** :
 1. ❌ **EPIC 14** : Sécurité & Gouvernance RGPD Plateforme
    - LOT 14.0 : Monitoring Conformité + Escalades + Actions + Rapports
+
+---
+
+### Phase 5 : Catalogue Outils IA (EPIC 15) — 🟣 ADMINISTRATION PLATEFORME
+**Objectif** : Permettre au Platform Admin de gérer le catalogue des outils IA disponibles pour tous les tenants
+
+**Prérequis** :
+- ✅ EPIC 11 terminé (infrastructure Back Office Super Admin)
+- ✅ EPIC 1 terminé (Auth RBAC, scope PLATFORM)
+- ✅ EPIC 4 terminé (DAL PostgreSQL)
+
+**Ordre** :
+1. ❌ **EPIC 15** : Catalogue Outils IA (Gestion Platform Admin)
+   - LOT 15.0 : Backend Catalogue (API CRUD + Migration données)
+   - LOT 15.1 : Frontend Catalogue (Liste + Détail + CRUD)
+   - LOT 15.2 : DPIA Templates + Stats adoption
+
+**Note** : EPIC 15 peut être réalisé en parallèle de EPIC 12/13/14. Il est indépendant des interfaces Tenant/User mais améliore la gestion plateforme.
+
+**Impact sur autres EPICs** :
+- **EPIC 12** : Remplace `/api/purposes/templates` par `/api/ai-tools/available` (rétrocompatibilité assurée)
+- **EPIC 13** : Affiche nom/icône des outils IA au lieu du code finalité
+- **EPIC 14** : Ajoute monitoring par outil IA
+
+**Détails LOTs** : Voir `docs/epics/EPIC_15_Catalogue_Outils_IA.md`
 
 ---
 
@@ -500,6 +528,105 @@ Sans **aucun endpoint HTTP exposé**.
 - bootstrap OK puis refus au second run
 - create tenant OK / slug dupliqué rejeté
 - test “no sensitive logs” sur bootstrap
+
+---
+
+## LOT 1.6 — Email chiffré (AES-256) pour notifications RGPD
+
+**EPIC couverts** : EPIC 1 (IAM/Users), EPIC 13 (User voit son email), EPIC 14 (DPO accès)
+**Durée estimée** : 1 jour
+**Dépendances** : LOT 1.5 ✅ (Bootstrap users existant)
+**Statut** : ❌ TODO
+
+**Avant implémentation** : relire `DATA_CLASSIFICATION.md` + Art. 15, 34 RGPD.
+
+### Contexte et justification
+
+**Problème actuel** : L'email utilisateur est stocké uniquement en hash SHA-256 (irréversible).
+Cela empêche :
+- User de voir son propre email (Art. 15 - Droit d'accès)
+- DPO de notifier les utilisateurs en cas de violation (Art. 34 - Obligation légale)
+- Système d'envoyer des emails (reset password, alertes sécurité)
+
+**Solution** : Double stockage
+- `email_hash` (existant) → pour authentification (lookup rapide, indexé)
+- `email_encrypted` (nouveau) → pour affichage/notification (AES-256-GCM, clé serveur)
+
+### Règles d'accès FULL RGPD (principe de minimisation)
+
+| Rôle | Voir email | Envoyer email | Justification |
+|------|------------|---------------|---------------|
+| **User** | ✅ Le sien | ✅ (reset pwd) | Art. 15 - Droit d'accès |
+| **Tenant Admin** | ❌ Non | ❌ Non | displayName suffit |
+| **Platform Admin** | ❌ Non | ❌ Non | Délègue au DPO |
+| **DPO** | ✅ Oui | ✅ Oui | Art. 34, 37-39 - Obligation légale |
+| **Système** | N/A | ✅ Oui | Notifications automatiques |
+
+### Artefacts attendus
+
+**Migration DB** :
+- `migrations/024_email_encrypted.sql`
+  - Ajout colonne `email_encrypted BYTEA NULL`
+  - Index sur `email_hash` (si pas déjà présent)
+
+**Service chiffrement** :
+- `src/infrastructure/security/AesEncryptionService.ts`
+  - `encrypt(plaintext: string): string` (base64)
+  - `decrypt(ciphertext: string): string`
+  - Clé via `process.env.EMAIL_ENCRYPTION_KEY` (32 bytes)
+
+**Modification createUser** :
+- `src/app/usecases/users/createUser.ts`
+  - Ajouter `emailEncrypted` dans l'insertion
+
+**Modification PgUserRepo** :
+- `src/infrastructure/repositories/PgUserRepo.ts`
+  - Ajouter lecture/écriture `email_encrypted`
+  - Nouvelle méthode `getDecryptedEmail(userId: string): Promise<string | null>`
+
+**API endpoints** :
+- `GET /api/users/me` → Retourne email déchiffré (User connecté uniquement)
+- `GET /api/platform/users/:id/email` → DPO uniquement (RBAC strict)
+
+**Configuration** :
+- `.env.example` : ajouter `EMAIL_ENCRYPTION_KEY=`
+- `docs/runbooks/secrets-management.md` : documenter rotation clé
+
+### Tests obligatoires
+
+- `tests/backend/unit/security/aes-encryption.test.ts`
+  - Encrypt/decrypt roundtrip
+  - Clé invalide → erreur
+  - Données corrompues → erreur
+
+- `tests/backend/unit/api/api.users.email.test.ts`
+  - User voit son email ✅
+  - User ne voit pas email d'un autre ❌
+  - Tenant Admin ne voit pas email ❌
+  - Platform Admin ne voit pas email ❌
+  - DPO voit email ✅
+
+- `tests/backend/integration/repository.user.email.test.ts`
+  - createUser stocke email_encrypted
+  - getDecryptedEmail retourne email en clair
+
+### Acceptance criteria (bloquants)
+
+- [ ] Migration DB appliquée sans perte de données
+- [ ] Clé de chiffrement NON versionnée (env var uniquement)
+- [ ] User peut voir son email via `/api/users/me`
+- [ ] DPO peut voir email via endpoint dédié
+- [ ] Tenant Admin / Platform Admin ne peuvent PAS voir les emails
+- [ ] Tests RBAC passants (6 scénarios minimum)
+- [ ] Aucun email en clair dans les logs
+
+### Risques et mitigation
+
+| Risque | Probabilité | Mitigation |
+|--------|-------------|------------|
+| Perte clé chiffrement | Moyenne | Backup clé + documentation rotation |
+| Régression auth | Faible | Hash inchangé, ajout seulement |
+| Performance | Faible | Déchiffrement uniquement à la demande |
 
 ---
 

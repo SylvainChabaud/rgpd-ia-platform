@@ -210,7 +210,7 @@ npm run bootstrap:tenant-admin -- --tenantSlug my-company --email admin@mycompan
 
 **⚠️ Important**: Activez le mode bootstrap dans `.env`:
 ```bash
-ENABLE_BOOTSTRAP_MODE=true
+BOOTSTRAP_MODE=true
 ```
 
 ---

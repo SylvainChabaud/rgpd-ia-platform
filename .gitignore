@@ -67,4 +67,7 @@ data/exports/*.enc
 # They contain test results, logs, and compliance reports
 audit-artifacts/
 logs/
+
+# Claude Code local configuration (never commit)
 .claude/settings.local.json
+CLAUDE.local.md

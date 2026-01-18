@@ -56,27 +56,33 @@ echo "Generating cryptographic secrets..."
 echo ""
 
 # Database password
-echo -n "  [1/4] Generating db_password..."
+echo -n "  [1/5] Generating db_password..."
 openssl rand -hex 32 > "$SECRETS_DIR/db_password.txt"
 chmod 600 "$SECRETS_DIR/db_password.txt"
 echo -e " ${GREEN}✓${NC}"
 
 # Session secret
-echo -n "  [2/4] Generating session_secret..."
+echo -n "  [2/5] Generating session_secret..."
 openssl rand -hex 32 > "$SECRETS_DIR/session_secret.txt"
 chmod 600 "$SECRETS_DIR/session_secret.txt"
 echo -e " ${GREEN}✓${NC}"
 
 # JWT secret
-echo -n "  [3/4] Generating jwt_secret..."
+echo -n "  [3/5] Generating jwt_secret..."
 openssl rand -hex 32 > "$SECRETS_DIR/jwt_secret.txt"
 chmod 600 "$SECRETS_DIR/jwt_secret.txt"
 echo -e " ${GREEN}✓${NC}"
 
 # Bootstrap platform secret
-echo -n "  [4/4] Generating bootstrap_platform_secret..."
+echo -n "  [4/5] Generating bootstrap_platform_secret..."
 openssl rand -hex 32 > "$SECRETS_DIR/bootstrap_platform_secret.txt"
 chmod 600 "$SECRETS_DIR/bootstrap_platform_secret.txt"
+echo -e " ${GREEN}✓${NC}"
+
+# Email encryption key (LOT 1.6 - RGPD Art. 15, 34)
+echo -n "  [5/5] Generating email_encryption_key..."
+openssl rand -hex 32 > "$SECRETS_DIR/email_encryption_key.txt"
+chmod 600 "$SECRETS_DIR/email_encryption_key.txt"
 echo -e " ${GREEN}✓${NC}"
 
 echo ""

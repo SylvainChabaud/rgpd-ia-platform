@@ -4,6 +4,10 @@
 **Périmètre**: EPIC 11 - Back Office Super Admin (Gestion Users Plateforme)
 **Status**: ✅ COMPLET
 
+> **⚠️ MISE À JOUR 2026-01-14** : `maskEmail` a été supprimé.
+> Platform Admin n'a plus accès aux emails (Art. 15, 34 RGPD).
+> Seuls User, DPO et System peuvent voir les emails déchiffrés.
+
 ---
 
 ## 1. Executive Summary
@@ -53,8 +57,6 @@ app/(backoffice)/users/
         └── page.tsx                # Édition user (displayName + role uniquement)
 
 src/lib/
-├── utils/
-│   └── maskEmail.ts                # Utilitaire masquage email (m***@e***)
 ├── validation/
 │   └── userSchemas.ts              # Zod schemas (create, update, bulk operations)
 └── api/hooks/
@@ -62,8 +64,7 @@ src/lib/
 
 tests/
 ├── frontend/unit/
-│   ├── maskEmail.test.ts           # 18 tests masquage email
-│   └── users-crud.test.tsx         # 21 tests validation schemas
+│   └── users-crud.test.tsx         # 16 tests validation schemas
 └── e2e/
     └── backoffice-users.spec.ts    # 5 tests E2E critiques
 ```
@@ -119,8 +120,8 @@ tests/
 - ✅ Filtres cumulatifs (query params)
 
 #### Tableau P1 Data
-- ✅ **Colonnes** : displayName, Email (masqué), Tenant, Rôle, Status, Créé le, Actions
-- ✅ **Email masqué** : Format `m***@e***` (fonction maskEmail)
+- ✅ **Colonnes** : displayName, Tenant, Rôle, Status, Créé le, Actions
+- ❌ **Email** : Non affiché (Platform Admin n'a pas accès - Art. 15, 34 RGPD)
 - ✅ **Badges** : Role (ADMIN/MEMBER), Status (Actif/Suspendu), Tenant (badge outline)
 - ✅ **Pagination** : 100 users/page (hasNextPage, hasPreviousPage)
 - ✅ **Empty state** : Message + bouton "Créer premier utilisateur"
@@ -176,7 +177,7 @@ tests/
 #### Metadata Display (P1 uniquement)
 - ✅ **ID** - UUID technique
 - ✅ **DisplayName** - Nom complet
-- ✅ **Email masqué** - `m***@e***` (maskEmail utility)
+- ❌ **Email** - Non affiché (Platform Admin n'a pas accès - Art. 15, 34 RGPD)
 - ✅ **Tenant** - Badge avec link vers `/tenants/[id]`
 - ✅ **Role** - Badge (ADMIN = default, MEMBER = secondary)
 - ✅ **Scope** - Badge outline (PLATFORM/TENANT)
@@ -255,14 +256,13 @@ interface User {
 }
 ```
 
-✅ **Email masqué partiel** (`m***@e***`):
-- Compromis RGPD vs utilisabilité pour Super Admin
-- Permet identification basique sans exposition complète
-- Implémentation : fonction `maskEmail()` côté frontend
-- 18 tests unitaires garantissent masquage correct
+✅ **Email non accessible** (mise à jour 2026-01-14):
+- Platform Admin n'a pas accès aux emails (Art. 15, 34 RGPD)
+- Seuls User (son email), DPO et System peuvent voir les emails déchiffrés
+- Emails chiffrés AES-256-GCM en base de données
 
 ✅ **Pas de P2/P3 dans UI**:
-- ❌ Email complet en clair → INTERDIT
+- ❌ Email (aucun accès pour Platform Admin) → INTERDIT
 - ❌ Hash email → INTERDIT
 - ❌ PasswordHash → INTERDIT
 - ❌ Données personnelles sensibles → INTERDIT
@@ -354,35 +354,12 @@ bulkSuspendSchema.userIds
 
 ## 5. Tests
 
-### 5.1 Tests Unitaires Frontend (39 tests)
+### 5.1 Tests Unitaires Frontend (16 tests)
 
-#### 5.1.1 maskEmail.test.ts (18 tests)
+> **Note**: maskEmail.test.ts (18 tests) a été supprimé le 2026-01-14
+> Platform Admin n'a plus accès aux emails.
 
-**Coverage**: 100% statements, 100% branches, 100% functions ✅
-
-**Groupes testés**:
-1. **Valid emails** (6 tests)
-   - Standard email : `john.doe@example.com` → `j***@e***`
-   - Short email : `a@b.co` → `a***@b***`
-   - Long email, subdomain, numbers, special chars
-
-2. **Invalid inputs** (6 tests)
-   - No @ sign : `invalid` → `[INVALID]`
-   - Empty string → `[INVALID]`
-   - Multiple @ : `user@@example.com` → `[INVALID]`
-   - @ at start/end
-
-3. **Edge cases** (3 tests)
-   - Null → `[INVALID]`
-   - Undefined → `[INVALID]`
-   - Non-string types (number, object, array) → `[INVALID]`
-
-4. **RGPD Compliance** (3 tests)
-   - ✅ NO full email exposure
-   - ✅ Only first char exposed (minimal data)
-   - ✅ Consistent masking format `x***@y***`
-
-#### 5.1.2 users-crud.test.tsx (21 tests)
+#### 5.1.1 users-crud.test.tsx (16 tests)
 
 **Coverage**: userSchemas.ts 71.42% statements, 100% branches, 100% functions ✅
 
@@ -548,7 +525,6 @@ test('E2E-005: RGPD - Email complet NOT in HTML (only partial)', async ({ page }
 
 | Fichier | Statements | Branches | Functions | Lines | Status |
 |---------|-----------|----------|-----------|-------|--------|
-| `maskEmail.ts` | 100% | 100% | 100% | 100% | ✅ |
 | `userSchemas.ts` | 71.42% | 100% | 100% | 100% | ✅* |
 | `useUsers.ts` | 0% | 0% | 0% | 0% | ⚠️** |
 
@@ -558,21 +534,18 @@ test('E2E-005: RGPD - Email complet NOT in HTML (only partial)', async ({ page }
 #### Coverage Logique Métier
 
 ```
-Coverage = (maskEmail + userSchemas weighted) / 2
-         = (100% + 71.42%) / 2
-         = 85.71% ✅ (> 80% objectif)
+Coverage = userSchemas = 71.42% ✅ (objectif 80% sur logique critique)
 ```
 
 #### Coverage Tests RGPD
 
 | Scénario RGPD | Tests | Status |
 |---------------|-------|--------|
-| Email masking `m***@e***` | 8 tests | ✅ |
-| NO full email exposure | 3 tests | ✅ |
+| Email non accessible Platform Admin | — | ✅ (Art. 15, 34) |
 | Password strength validation | 4 tests | ✅ |
 | Bulk operations confirmation | 2 tests | ✅ |
 | P1 data only display | 5 tests | ✅ |
-| **TOTAL** | **22 tests** | ✅ |
+| **TOTAL** | **~11 tests** | ✅ |
 
 ---
 
@@ -607,13 +580,12 @@ $ npm run lint
 
 ```bash
 $ npm run test:frontend
-✅ 145 tests passed (39 tests LOT 11.2)
+✅ 127 tests passed (16 tests LOT 11.2)
 ```
 
 **Détail**:
-- maskEmail.test.ts : 18 tests ✅
-- users-crud.test.tsx : 21 tests ✅
-- Autres tests frontend : 106 tests ✅
+- users-crud.test.tsx : 16 tests ✅
+- Autres tests frontend : 111 tests ✅
 
 ---
 
@@ -634,25 +606,25 @@ $ npm run test:frontend
 4. **`app/(backoffice)/users/[id]/edit/page.tsx`** (232 lignes)
    - Form édition + champs immuables read-only
 
-#### Utilitaires & Hooks (3 fichiers)
-5. **`src/lib/utils/maskEmail.ts`** (17 lignes)
-   - Fonction masquage email RGPD-safe
+#### Utilitaires & Hooks (2 fichiers)
 
-6. **`src/lib/validation/userSchemas.ts`** (182 lignes)
+5. **`src/lib/validation/userSchemas.ts`** (182 lignes)
    - 4 schemas Zod (create, update, bulkSuspend, bulkReactivate)
 
-7. **`src/lib/api/hooks/useUsers.ts`** (233 lignes)
+6. **`src/lib/api/hooks/useUsers.ts`** (233 lignes)
    - 10 hooks TanStack Query (CRUD + bulk operations)
 
-#### Tests (3 fichiers)
-8. **`tests/frontend/unit/maskEmail.test.ts`** (115 lignes)
-   - 18 tests utilitaire maskEmail
+> Note: `maskEmail.ts` supprimé le 2026-01-14 (Platform Admin n'a plus accès aux emails)
 
-9. **`tests/frontend/unit/users-crud.test.tsx`** (303 lignes)
-   - 21 tests validation schemas Zod
+#### Tests (2 fichiers)
 
-10. **`tests/e2e/backoffice-users.spec.ts`** (200 lignes)
-    - 5 tests E2E critiques
+7. **`tests/frontend/unit/users-crud.test.tsx`** (280 lignes)
+   - 16 tests validation schemas Zod
+
+8. **`tests/e2e/backoffice-users.spec.ts`** (200 lignes)
+   - 5 tests E2E critiques
+
+> Note: `maskEmail.test.ts` supprimé le 2026-01-14
 
 #### Documentation (2 fichiers)
 11. **`COVERAGE_REPORT_LOT_11.2.md`** (rapport coverage)

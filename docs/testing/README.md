@@ -179,8 +179,7 @@ tests/                           ← Implémentation des tests
 | **11.1** | `useTenants-coverage.test.tsx` | Art. 32 (Hooks sécurisés) | 18 | ✅ |
 | **11.1** | `tenant-ui-rgpd.test.tsx` | Art. 5 (UI RGPD) | 10 | ✅ |
 | **11.1** | `backoffice-tenants.spec.ts` (E2E) | Art. 5, 30, 32 (E2E CRUD) | 10 | ✅ |
-| **11.2** | `maskEmail.test.ts` | Art. 5 (Masquage email) | 18 | ✅ |
-| **11.2** | `users-crud.test.tsx` | Art. 5, 32 (Users CRUD) | 21 | ✅ |
+| **11.2** | `users-crud.test.tsx` | Art. 5, 32 (Users CRUD) | 16 | ✅ |
 | **11.2** | `backoffice-users.spec.ts` (E2E) | Art. 5, 18, 32 (E2E Users) | 5 | ✅ |
 
 #### Tests E2E API (EPICs 3-10)

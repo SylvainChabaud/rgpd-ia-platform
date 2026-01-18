@@ -106,7 +106,7 @@ BOOTSTRAP_PLATFORM_SECRET=0123456789abcdef0123456789abcdef0123456789abcdef012345
 
 **Sécurité** :
 - ✅ Utilisé UNIQUEMENT pour `pnpm bootstrap:superadmin`
-- ✅ Désactiver après bootstrap (`ENABLE_BOOTSTRAP_MODE=false`)
+- ✅ Désactiver après bootstrap (`BOOTSTRAP_MODE=false`)
 - ✅ Supprimer de l'environnement après usage
 
 ---
@@ -572,7 +572,7 @@ PORT=8080   # Alternative
 
 ---
 
-### ENABLE_BOOTSTRAP_MODE
+### BOOTSTRAP_MODE
 
 **Description** : Activer mode bootstrap (création Super Admin)
 **Format** : Boolean (`true` | `false`)
@@ -582,10 +582,10 @@ PORT=8080   # Alternative
 **Usage** :
 ```bash
 # Activation temporaire pour bootstrap
-ENABLE_BOOTSTRAP_MODE=true
+BOOTSTRAP_MODE=true
 
 # APRÈS bootstrap (MANDATORY)
-ENABLE_BOOTSTRAP_MODE=false
+BOOTSTRAP_MODE=false
 ```
 
 **Sécurité** :
@@ -605,7 +605,7 @@ ENABLE_BOOTSTRAP_MODE=false
 - [ ] Tester connexion Slack (optionnel)
 - [ ] Tester connexion PagerDuty (optionnel)
 - [ ] Vérifier `FAIL_ON_HIGH=true`
-- [ ] Vérifier `ENABLE_BOOTSTRAP_MODE=false`
+- [ ] Vérifier `BOOTSTRAP_MODE=false`
 - [ ] Vérifier `NODE_ENV=production`
 - [ ] Vérifier `LOG_LEVEL=info` ou `warn`
 

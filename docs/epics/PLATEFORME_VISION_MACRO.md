@@ -21,13 +21,15 @@
 ### 1. **SUPER ADMIN** (Équipe technique plateforme)
 - Gère toute la plateforme
 - Crée les tenants (clients/entreprises)
+- **Gère le catalogue des outils IA** (EPIC 15)
 - Surveille les logs, la sécurité
 - Lance les migrations de base de données
 
 ### 2. **TENANT ADMIN** (Ex: Responsable IT chez un client "Entreprise ABC")
 - Gère **son** entreprise uniquement (isolation totale)
 - Crée les comptes utilisateurs de son entreprise
-- Configure les consentements IA
+- **Active les outils IA** du catalogue pour son organisation
+- Configure les consentements IA (finalités)
 - Exporte/supprime les données RGPD de **ses** utilisateurs
 
 ### 3. **USER** (Ex: Marie, employée chez "Entreprise ABC")
@@ -523,6 +525,7 @@ npm run test:lot4     # Tests LOT 4 uniquement
 🟡 EPIC 12 : Back Office Tenant Admin (Frontend TENANT) — EN COURS (LOT 12.0-12.2 ✅)
 🚧 EPIC 13 : Front User (Frontend utilisateur final)
 🚧 EPIC 14 : Sécurité & Gouvernance RGPD Plateforme
+🚧 EPIC 15 : Catalogue Outils IA (Gestion Platform Admin)
 ```
 
 ---
@@ -545,6 +548,7 @@ npm run test:lot4     # Tests LOT 4 uniquement
 - EPIC 12 : Back Office Tenant Admin (LOT 12.0-12.2 ✅, LOT 12.3-12.4 en cours)
 - EPIC 13 : Front User (interface utilisateur final)
 - EPIC 14 : Sécurité & Gouvernance RGPD Plateforme (monitoring, escalades)
+- EPIC 15 : Catalogue Outils IA (gestion des outils IA par le Platform Admin)
 
 ---
 

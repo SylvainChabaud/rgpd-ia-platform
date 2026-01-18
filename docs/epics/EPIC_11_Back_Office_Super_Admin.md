@@ -105,6 +105,7 @@ Construire une interface web **Back Office** sécurisée permettant au Super Adm
 | **EPIC 7** | ✅ Dépend | Accès aux artefacts d'audit (preuves RGPD) |
 | **EPIC 12** | ➡️ Influence | Partage infrastructure Next.js (même app) |
 | **EPIC 14** | ⬅️ Dépendant | EPIC 14 utilise le dashboard Super Admin (LOT 11.3) + API suspension (LOT 11.1) |
+| **EPIC 15** | ⬅️ Dépendant | EPIC 15 (Catalogue Outils IA) utilise l'infrastructure Back Office Super Admin |
 
 ---
 
@@ -570,11 +571,14 @@ const PLATFORM_ROUTES = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/tenants', label: 'Tenants', icon: Building },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/ai-tools', label: 'Catalogue IA', icon: Cpu }, // EPIC 15
   { href: '/admin/audit', label: 'Audit', icon: FileText },
   { href: '/admin/logs', label: 'Logs', icon: Terminal },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 ```
+
+> **Note** : Le menu "Catalogue IA" (`/admin/ai-tools`) sera implémenté dans **EPIC 15**. Il permet au Platform Admin de gérer les outils IA disponibles pour tous les tenants.
 
 #### API Client (RGPD-safe)
 ```typescript

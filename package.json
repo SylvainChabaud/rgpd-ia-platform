@@ -37,9 +37,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:setup": "tsx tests/e2e/setup/seed-test-data.ts",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report"
+    "quality-gate": "tsx tools/quality-gate.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

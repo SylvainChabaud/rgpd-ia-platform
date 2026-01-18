@@ -119,6 +119,7 @@ services:
       SESSION_SECRET_FILE: /run/secrets/session_secret
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       BOOTSTRAP_PLATFORM_SECRET_FILE: /run/secrets/bootstrap_platform_secret
+      EMAIL_ENCRYPTION_KEY_FILE: /run/secrets/email_encryption_key
       # AI Configuration
       AI_PROVIDER: ${AI_PROVIDER:-stub}
       OLLAMA_URL: http://ollama:11434
@@ -127,11 +128,12 @@ services:
       # Observability (LOT 6.1)
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # Feature flags
-      ENABLE_BOOTSTRAP_MODE: ${ENABLE_BOOTSTRAP_MODE:-false}
+      BOOTSTRAP_MODE: ${BOOTSTRAP_MODE:-false}
     secrets:
       - session_secret
       - jwt_secret
       - bootstrap_platform_secret
+      - email_encryption_key
     networks:
       - rgpd_frontend
       - rgpd_backend
@@ -206,3 +208,5 @@ secrets:
     file: ./secrets/jwt_secret.txt
   bootstrap_platform_secret:
     file: ./secrets/bootstrap_platform_secret.txt
+  email_encryption_key:
+    file: ./secrets/email_encryption_key.txt
