@@ -1,0 +1,65 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-block-destructive.ts"
+          },
+          {
+            "type": "command",
+            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-block-dangerous.ts"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-quality-gate.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "defaultMode": "default",
+    "commands": {
+      "allow_exact": [
+        "npx tsx tools/quality-gate.ts",
+        "npm run quality-gate"
+      ],
+      "deny_patterns": [
+        "rm -rf",
+        "sudo",
+        "mkfs",
+        "dd"
+      ]
+    },
+    "network": {
+      "deny_all": false
+    },
+    "filesystem": {
+      "write_allow": [
+        "docs/**",
+        "src/**",
+        "app/**",
+        "tests/**",
+        ".claude/**",
+        "migrations/**",
+        "scripts/**",
+        "tools/**",
+        "prompts/**"
+      ],
+      "write_deny": [
+        "../**",
+        "~/**",
+        "/**"
+      ]
+    }
+  }
+}
