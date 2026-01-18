@@ -19,7 +19,6 @@ type UserStatusFilter = (typeof USER_STATUS_FILTER)[keyof typeof USER_STATUS_FIL
 import Link from 'next/link'
 import { useListUsers, useListTenants } from '@/lib/api/hooks/useUsers'
 import { useBulkSuspendUsers, useBulkReactivateUsers } from '@/lib/api/hooks/useUsers'
-import { maskEmail } from '@/lib/utils/maskEmail'
 import {
   Table,
   TableBody,
@@ -57,7 +56,7 @@ import { Plus, Eye, Users } from 'lucide-react'
  *
  * RGPD Compliance:
  * - Only P1 data displayed (displayName, id, role, tenant, scope)
- * - Email MASKED using maskEmail() utility (m***@e***)
+ * - Email NOT displayed (stored as hash - irreversible)
  * - No sensitive data (P2/P3) exposed
  * - Audit trail logged backend
  */
@@ -316,7 +315,6 @@ export default function UsersPage() {
                       />
                     </TableHead>
                     <TableHead>Nom</TableHead>
-                    <TableHead>Email</TableHead>
                     <TableHead>Tenant</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Status</TableHead>
@@ -340,12 +338,6 @@ export default function UsersPage() {
                           />
                         </TableCell>
                         <TableCell className="font-medium">{user.displayName}</TableCell>
-                        <TableCell>
-                          <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {/* RGPD: Email masqué (m***@e***) */}
-                            {maskEmail(user.displayName + '@example.com')}
-                          </code>
-                        </TableCell>
                         <TableCell>
                           {tenant ? (
                             <Badge variant="outline">{tenant.name}</Badge>

@@ -35,8 +35,10 @@ export default function PlatformAdminLayout({
   useEffect(() => {
     // Restore session from sessionStorage
     checkAuth()
-    // Allow state to settle before checking auth
-    setIsLoading(false)
+    // Allow state to settle before checking auth (using requestAnimationFrame to avoid cascading renders)
+    requestAnimationFrame(() => {
+      setIsLoading(false)
+    })
   }, [checkAuth])
 
   useEffect(() => {

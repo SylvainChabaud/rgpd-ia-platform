@@ -89,6 +89,46 @@ const STEP_DESCRIPTIONS: Record<WizardStep, string> = {
 // Re-use centralized risk badge styles from constants
 const RISK_COLORS = RISK_BADGE_STYLES;
 
+/**
+ * RGPD isRequired Logic (Art. 6 & Art. 7.4)
+ *
+ * - CONSENT: isRequired MUST be false (Art. 7.4 - consent must be free, not conditioned)
+ * - CONTRACT/LEGAL_OBLIGATION/VITAL_INTEREST/PUBLIC_INTEREST: isRequired MUST be true (necessary for service)
+ * - LEGITIMATE_INTEREST: isRequired is optional (user choice, but opposition right Art. 21 applies)
+ */
+const LAWFUL_BASIS_REQUIRED_MAP: Record<string, { value: boolean; locked: boolean; message: string }> = {
+  [LAWFUL_BASIS.CONSENT]: {
+    value: false,
+    locked: true,
+    message: 'Art. 7.4 RGPD : Le consentement doit être libre. Conditionner le service à un consentement non nécessaire est interdit.',
+  },
+  [LAWFUL_BASIS.CONTRACT]: {
+    value: true,
+    locked: true,
+    message: 'Art. 6.1.b RGPD : Ce traitement est nécessaire à l\'exécution du contrat.',
+  },
+  [LAWFUL_BASIS.LEGAL_OBLIGATION]: {
+    value: true,
+    locked: true,
+    message: 'Art. 6.1.c RGPD : Ce traitement est requis par une obligation légale.',
+  },
+  [LAWFUL_BASIS.VITAL_INTEREST]: {
+    value: true,
+    locked: true,
+    message: 'Art. 6.1.d RGPD : Ce traitement est nécessaire pour protéger les intérêts vitaux.',
+  },
+  [LAWFUL_BASIS.PUBLIC_INTEREST]: {
+    value: true,
+    locked: true,
+    message: 'Art. 6.1.e RGPD : Ce traitement est nécessaire à une mission d\'intérêt public.',
+  },
+  [LAWFUL_BASIS.LEGITIMATE_INTEREST]: {
+    value: false,
+    locked: false,
+    message: 'Art. 21 RGPD : L\'utilisateur conserve son droit d\'opposition au traitement.',
+  },
+};
+
 export default function NewPurposePage() {
   const router = useRouter()
   const validatePurpose = useValidateCustomPurpose()
@@ -120,46 +160,6 @@ export default function NewPurposePage() {
 
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  /**
-   * RGPD isRequired Logic (Art. 6 & Art. 7.4)
-   *
-   * - CONSENT: isRequired MUST be false (Art. 7.4 - consent must be free, not conditioned)
-   * - CONTRACT/LEGAL_OBLIGATION/VITAL_INTEREST/PUBLIC_INTEREST: isRequired MUST be true (necessary for service)
-   * - LEGITIMATE_INTEREST: isRequired is optional (user choice, but opposition right Art. 21 applies)
-   */
-  const LAWFUL_BASIS_REQUIRED_MAP: Record<string, { value: boolean; locked: boolean; message: string }> = {
-    [LAWFUL_BASIS.CONSENT]: {
-      value: false,
-      locked: true,
-      message: 'Art. 7.4 RGPD : Le consentement doit être libre. Conditionner le service à un consentement non nécessaire est interdit.',
-    },
-    [LAWFUL_BASIS.CONTRACT]: {
-      value: true,
-      locked: true,
-      message: 'Art. 6.1.b RGPD : Ce traitement est nécessaire à l\'exécution du contrat.',
-    },
-    [LAWFUL_BASIS.LEGAL_OBLIGATION]: {
-      value: true,
-      locked: true,
-      message: 'Art. 6.1.c RGPD : Ce traitement est requis par une obligation légale.',
-    },
-    [LAWFUL_BASIS.VITAL_INTEREST]: {
-      value: true,
-      locked: true,
-      message: 'Art. 6.1.d RGPD : Ce traitement est nécessaire pour protéger les intérêts vitaux.',
-    },
-    [LAWFUL_BASIS.PUBLIC_INTEREST]: {
-      value: true,
-      locked: true,
-      message: 'Art. 6.1.e RGPD : Ce traitement est nécessaire à une mission d\'intérêt public.',
-    },
-    [LAWFUL_BASIS.LEGITIMATE_INTEREST]: {
-      value: false,
-      locked: false,
-      message: 'Art. 21 RGPD : L\'utilisateur conserve son droit d\'opposition au traitement.',
-    },
-  }
 
   // Get current isRequired config based on lawfulBasis
   const isRequiredConfig = lawfulBasis ? LAWFUL_BASIS_REQUIRED_MAP[lawfulBasis] : null
@@ -289,7 +289,7 @@ export default function NewPurposePage() {
   }
 
   // Processing types that trigger high risk (EDPB Guidelines)
-  const HIGH_RISK_PROCESSING_TYPES = [
+  const HIGH_RISK_PROCESSING_TYPES: string[] = [
     PROCESSING_TYPE.AUTOMATED_DECISION, // Art. 35.3.a
     PROCESSING_TYPE.LARGE_SCALE,        // Art. 35.3.b
     PROCESSING_TYPE.MONITORING,         // Art. 35.3.c
@@ -311,13 +311,13 @@ export default function NewPurposePage() {
     }
 
     // Auto-check/uncheck highRisk based on high-risk processing types
-    if (HIGH_RISK_PROCESSING_TYPES.includes(value as typeof PROCESSING_TYPE[keyof typeof PROCESSING_TYPE])) {
+    if (HIGH_RISK_PROCESSING_TYPES.includes(value)) {
       if (isAdding) {
         setHighRisk(true)
       } else {
         // Check if any other high-risk type is still selected
         const hasOtherHighRisk = newProcessingTypes.some((pt) =>
-          HIGH_RISK_PROCESSING_TYPES.includes(pt as typeof PROCESSING_TYPE[keyof typeof PROCESSING_TYPE])
+          HIGH_RISK_PROCESSING_TYPES.includes(pt)
         )
         if (!hasOtherHighRisk) {
           setHighRisk(false)
@@ -331,7 +331,7 @@ export default function NewPurposePage() {
 
   // Check if highRisk toggle should be disabled (locked by high-risk processing types)
   const isHighRiskLocked = processingTypes.some((pt) =>
-    HIGH_RISK_PROCESSING_TYPES.includes(pt as typeof PROCESSING_TYPE[keyof typeof PROCESSING_TYPE])
+    HIGH_RISK_PROCESSING_TYPES.includes(pt)
   )
 
   const progress = (step / 5) * 100

@@ -8,6 +8,7 @@ import { useTenantById, useUpdateTenant } from '@/lib/api/hooks/useTenants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
@@ -205,15 +206,7 @@ export default function EditTenantPage() {
       </Card>
 
       {/* RGPD Notice */}
-      <Card className="bg-muted/40">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>🔒 RGPD:</strong> La modification d&apos;un tenant est tracée dans l&apos;audit
-            trail. Seules les métadonnées P1 peuvent être modifiées (nom). Le slug est
-            immuable pour préserver l&apos;intégrité des références.
-          </p>
-        </ CardContent>
-      </Card>
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.TENANT_EDIT} />
     </div>
   )
 }

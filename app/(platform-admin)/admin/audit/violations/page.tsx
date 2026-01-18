@@ -9,6 +9,9 @@ import { apiClient } from '@/lib/api/apiClient'
 import { AlertCircle, FileDown, Plus } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
+import { useIncidentsStats } from '@/lib/api/hooks/useAudit'
+import { RETENTION_PERIODS } from '@/domain/retention/RetentionPolicy'
 
 /**
  * Security Incidents (Violations Registry) Page
@@ -45,7 +48,12 @@ const PAGE_SIZE = {
 const DEFAULT_PAGE_SIZE = PAGE_SIZE.MEDIUM;
 
 export default function ViolationsPage() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    severity: string
+    resolved: string
+    limit: number
+    offset: number
+  }>({
     severity: FILTER_ALL,
     resolved: RESOLVED_STATUS.ALL,
     limit: DEFAULT_PAGE_SIZE,
@@ -76,6 +84,9 @@ export default function ViolationsPage() {
       }>(`/incidents?${params.toString()}`)
     },
   })
+
+  // Stats without filters for RGPD compliance card
+  const { data: statsData, isLoading: statsLoading } = useIncidentsStats()
 
   const handleExport = async () => {
     try {
@@ -129,21 +140,14 @@ export default function ViolationsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AlertCircle className="h-8 w-8 text-red-600" />
-          <div>
-            <h1 className="text-3xl font-bold">Registre des Violations</h1>
-            <p className="text-muted-foreground">Art. 33.5 RGPD - Obligatoire</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              <span className="font-medium">Rétention :</span> 5 ans minimum (Art. 33.5) •
-              Conservation permanente pour preuve conformité
-            </p>
-          </div>
+          <h1 className="text-3xl font-bold">Registre des Violations</h1>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExport} variant="outline">
             <FileDown className="mr-2 h-4 w-4" />
             Exporter CSV
           </Button>
-          <Link href="/audit/violations/new">
+          <Link href="/admin/audit/violations/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nouvelle violation
@@ -151,6 +155,18 @@ export default function ViolationsPage() {
           </Link>
         </div>
       </div>
+
+      {/* RGPD Compliance Card */}
+      <RgpdComplianceCard
+        variant={COMPLIANCE_CARD_VARIANT.INCIDENTS}
+        isLoading={statsLoading}
+        stats={statsData?.stats ? {
+          totalItems: statsData.stats.total,
+          oldestItemAge: null, // Incidents: no max retention, always compliant
+          retentionValue: RETENTION_PERIODS.SECURITY_INCIDENTS_YEARS,
+          retentionUnit: 'years',
+        } : undefined}
+      />
 
       {/* Filters */}
       <Card>
@@ -225,12 +241,12 @@ export default function ViolationsPage() {
         </CardContent>
       </Card>
 
-      {/* Statistics Summary */}
+      {/* Statistics Summary (filtered results) */}
       {data && data.incidents.length > 0 && (
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Violations</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total (filtre)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{data.pagination.total}</div>
@@ -238,7 +254,7 @@ export default function ViolationsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Non Résolues</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Non resolues (filtre)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
@@ -248,7 +264,7 @@ export default function ViolationsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">CNIL Notifiée</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">CNIL notifiee (filtre)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
@@ -258,7 +274,7 @@ export default function ViolationsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Critiques</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Critiques (filtre)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">

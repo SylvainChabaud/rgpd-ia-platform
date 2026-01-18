@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useListAuditEvents } from '@/lib/api/hooks/useAudit'
+import { useListAuditEvents, useAuditRetentionStats } from '@/lib/api/hooks/useAudit'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import { FileDown } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -52,8 +53,23 @@ const PAGE_SIZE = {
 } as const;
 const DEFAULT_PAGE_SIZE = PAGE_SIZE.MEDIUM;
 
+/**
+ * Format actor/tenant display: shows name only
+ * If name is available: "Jean Dupont"
+ * If no name but ID exists: "Supprimé" (user/tenant was deleted)
+ * If no ID: "-"
+ */
+const formatName = (name: string | null | undefined, id: string | null | undefined): string => {
+  if (!id) return '-';
+  return name || 'Supprimé';
+};
+
 export default function AuditTrailPage() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    eventType: string
+    limit: number
+    offset: number
+  }>({
     eventType: FILTER_ALL,
     limit: DEFAULT_PAGE_SIZE,
     offset: 0,
@@ -63,6 +79,8 @@ export default function AuditTrailPage() {
     ...filters,
     eventType: filters.eventType === FILTER_ALL ? '' : filters.eventType,
   })
+
+  const { data: retentionStats, isLoading: statsLoading } = useAuditRetentionStats()
 
   const handleExport = async () => {
     try {
@@ -116,16 +134,24 @@ export default function AuditTrailPage() {
           <p className="text-muted-foreground">
             Événements système (P1 uniquement, RGPD-safe)
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            <span className="font-medium">Rétention :</span> 12 mois (conforme CNIL) •
-            Purge automatique des événements &gt; 12 mois
-          </p>
         </div>
         <Button onClick={handleExport} variant="outline">
           <FileDown className="mr-2 h-4 w-4" />
           Exporter CSV
         </Button>
       </div>
+
+      {/* RGPD Compliance Card */}
+      <RgpdComplianceCard
+        variant={COMPLIANCE_CARD_VARIANT.AUDIT_LOGS}
+        isLoading={statsLoading}
+        stats={retentionStats ? {
+          totalItems: retentionStats.totalEvents,
+          oldestItemAge: retentionStats.oldestEventAge,
+          retentionValue: retentionStats.retentionMonths,
+          retentionUnit: 'months',
+        } : undefined}
+      />
 
       {/* Filters */}
       <Card>
@@ -213,9 +239,8 @@ export default function AuditTrailPage() {
                   <tr className="text-left">
                     <th className="pb-2 font-medium">Date</th>
                     <th className="pb-2 font-medium">Type</th>
-                    <th className="pb-2 font-medium">Actor ID</th>
-                    <th className="pb-2 font-medium">Tenant ID</th>
-                    <th className="pb-2 font-medium">Target ID</th>
+                    <th className="pb-2 font-medium">Acteur</th>
+                    <th className="pb-2 font-medium">Tenant</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -223,14 +248,11 @@ export default function AuditTrailPage() {
                     <tr key={event.id} className="hover:bg-muted/50">
                       <td className="py-2">{format(new Date(event.createdAt), 'dd/MM/yyyy HH:mm')}</td>
                       <td className="py-2 font-mono text-xs">{event.eventType}</td>
-                      <td className="py-2 font-mono text-xs truncate max-w-[100px]">
-                        {event.actorId || '-'}
+                      <td className="py-2 text-sm">
+                        {formatName(event.actorDisplayName, event.actorId)}
                       </td>
-                      <td className="py-2 font-mono text-xs truncate max-w-[100px]">
-                        {event.tenantId || '-'}
-                      </td>
-                      <td className="py-2 font-mono text-xs truncate max-w-[100px]">
-                        {event.targetId || '-'}
+                      <td className="py-2 text-sm">
+                        {formatName(event.tenantName, event.tenantId)}
                       </td>
                     </tr>
                   ))}

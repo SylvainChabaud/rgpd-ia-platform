@@ -8,7 +8,7 @@ import { useConsentHistory, usePurposes, type ConsentHistoryParams } from '@/lib
 // Constants
 // =========================
 
-const FILTER_ALL = '' as const;
+const FILTER_ALL = '';
 
 const CONSENT_SOURCE = {
   USER: 'user',

@@ -4,12 +4,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useRouter } from 'next/navigation'
 import { useUserById, useUpdateUser } from '@/lib/api/hooks/useUsers'
+import { useTenantById } from '@/lib/api/hooks/useTenants'
 import { updateUserSchema, type UpdateUserFormData } from '@/lib/validation/userSchemas'
 import { ACTOR_ROLE } from '@/shared/actorRole'
-import { maskEmail } from '@/lib/utils/maskEmail'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
@@ -20,14 +22,14 @@ import { useEffect } from 'react'
  * Features:
  * - Pre-filled form with existing user data
  * - Editable fields: displayName, role
- * - Read-only fields: email (immutable hash), tenant (isolation)
+ * - Read-only fields: tenant (isolation)
  * - Form validation (React Hook Form + Zod)
  * - Success → redirect to user details
  * - Error handling with RGPD-safe messages
  *
  * RGPD Compliance:
  * - Only P1 data editable (displayName, role)
- * - Email MASKED (m***@e***) and read-only
+ * - Email NOT accessible (Platform Admin has no access - RGPD Art. 15, 34)
  * - Tenant ID immutable (tenant isolation)
  * - Password changed via separate flow (security)
  * - Audit trail logged backend (PATCH /api/users/[id])
@@ -39,6 +41,10 @@ export default function EditUserPage() {
 
   const { data: userData, isLoading: isLoadingUser, error } = useUserById(userId)
   const { mutate: updateUser, isPending } = useUpdateUser(userId)
+
+  // Fetch tenant name for better UX (Platform Admin needs to identify tenants)
+  const tenantId = userData?.user?.tenantId
+  const { data: tenantData } = useTenantById(tenantId || '')
 
   const {
     register,
@@ -129,25 +135,6 @@ export default function EditUserPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Field (Read-only) */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="text"
-                  value={maskEmail(user.displayName + '@example.com')}
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                ⚠️ L&apos;email ne peut pas être modifié (hash SHA-256 immuable pour contrainte unicité).
-              </p>
-            </div>
-
             {/* DisplayName Field */}
             <div className="space-y-2">
               <label htmlFor="displayName" className="text-sm font-medium">
@@ -194,10 +181,13 @@ export default function EditUserPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Tenant</label>
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-mono">{user.tenantId || 'N/A'}</p>
+                <p className="text-sm">
+                  <span className="font-medium">{tenantData?.tenant?.name || 'Chargement...'}</span>
+                  <span className="text-muted-foreground ml-2 font-mono text-xs">({user.tenantId || 'N/A'})</span>
+                </p>
               </div>
               <p className="text-xs text-muted-foreground">
-                ⚠️ Le tenant ne peut pas être modifié (isolation tenant, contrainte sécurité).
+                Le tenant ne peut pas être modifié (isolation).
               </p>
             </div>
 
@@ -220,16 +210,7 @@ export default function EditUserPage() {
       </Card>
 
       {/* RGPD Notice */}
-      <Card className="bg-muted/40">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>🔒 RGPD (Art. 5, 18):</strong> La modification d&apos;un utilisateur est tracée
-            dans l&apos;audit trail. Seules les données P1 peuvent être modifiées (displayName, role).
-            L&apos;email est immuable (hash SHA-256 unique). Le tenant est immuable (isolation).
-            Le mot de passe est changé via un flow séparé (sécurité).
-          </p>
-        </CardContent>
-      </Card>
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_EDIT} />
     </div>
   )
 }

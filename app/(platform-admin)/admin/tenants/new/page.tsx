@@ -8,6 +8,7 @@ import { useCreateTenant } from '@/lib/api/hooks/useTenants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -182,15 +183,7 @@ export default function CreateTenantPage() {
       </Card>
 
       {/* RGPD Notice */}
-      <Card className="bg-muted/40">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>🔒 RGPD:</strong> La création d&apos;un tenant est tracée dans l&apos;audit
-            trail. Aucune donnée sensible n&apos;est stockée à cette étape (uniquement
-            métadonnées P1).
-          </p>
-        </CardContent>
-      </Card>
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.TENANT_CREATE} />
     </div>
   )
 }

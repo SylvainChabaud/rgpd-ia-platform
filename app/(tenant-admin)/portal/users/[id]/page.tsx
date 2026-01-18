@@ -81,7 +81,7 @@ const CONSENT_STATUS = {
   REVOKED: 'revoked',
 } as const;
 
-const CONSENT_SOURCE = {
+const _CONSENT_SOURCE = {
   USER: 'user',
   ADMIN: 'admin',
   SYSTEM: 'system',

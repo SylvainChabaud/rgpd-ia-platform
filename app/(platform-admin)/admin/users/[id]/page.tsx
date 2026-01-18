@@ -11,7 +11,6 @@ import {
   useDeleteUser,
   useListTenants,
 } from '@/lib/api/hooks/useUsers'
-import { maskEmail } from '@/lib/utils/maskEmail'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +39,7 @@ import { useState } from 'react'
  *
  * RGPD Compliance:
  * - Only P1 data displayed (id, displayName, tenantId, role, scope, dates)
- * - Email MASKED (m***@e***) - NO full email exposure
+ * - Email NOT accessible (Platform Admin has no access - RGPD Art. 15, 34)
  * - No P2/P3 data (passwordHash, email hash)
  * - All actions logged in audit trail (backend)
  * - Suspend/Delete require confirmation
@@ -125,12 +124,6 @@ export default function UserDetailsPage() {
             <User className="h-8 w-8 text-muted-foreground" />
             <div>
               <h1 className="text-3xl font-bold">{user.displayName}</h1>
-              <p className="text-muted-foreground">
-                <code className="text-sm bg-muted px-2 py-1 rounded">
-                  {/* RGPD: Email masqué (m***@e***) */}
-                  {maskEmail(user.displayName + '@example.com')}
-                </code>
-              </p>
             </div>
           </div>
         </div>
@@ -239,8 +232,8 @@ export default function UserDetailsPage() {
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
             <strong>🔒 RGPD:</strong> Seules les données P1 (métadonnées publiques) sont affichées.
-            L&apos;email est masqué (m***@e***). Le hash email et le mot de passe ne sont jamais
-            exposés. Toutes les actions sont auditées.
+            L&apos;email n&apos;est pas accessible (Art. 15, 34 - seuls User, DPO et Système y ont accès).
+            Le hash email et le mot de passe ne sont jamais exposés. Toutes les actions sont auditées.
           </p>
         </CardContent>
       </Card>

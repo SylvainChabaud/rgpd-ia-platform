@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { ArrowLeft, Save, AlertCircle, User } from 'lucide-react'
 import { z } from 'zod'
 
@@ -273,6 +274,9 @@ function EditUserForm({ userId, user, updateUser, router }: EditUserFormProps) {
           </form>
         </CardContent>
       </Card>
+
+      {/* RGPD Notice */}
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_EDIT} />
     </div>
   )
 }

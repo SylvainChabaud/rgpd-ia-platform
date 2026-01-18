@@ -93,7 +93,7 @@ export default function PurposesPage() {
   const { data, isLoading, error } = usePurposes(showInactive)
   const deletePurpose = useDeletePurpose()
 
-  const purposes = data?.purposes || []
+  const purposes = useMemo(() => data?.purposes || [], [data?.purposes])
 
   // Filter purposes based on active tab
   const filteredPurposes = useMemo(() => {

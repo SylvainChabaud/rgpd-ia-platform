@@ -55,9 +55,10 @@ function getEventBadge(type: string): { label: string; variant: 'default' | 'sec
  * LOT 12.0 - Dashboard Tenant Admin
  *
  * RGPD Compliance:
- * - P1 data only (aggregates, event types, IDs)
+ * - P1 data only (aggregates, event types, IDs) + displayName (NO email)
  * - NO user content (prompts, outputs)
  * - Tenant isolation enforced by backend
+ * - Consistent with /portal/users which also shows displayName only
  *
  * Features:
  * - KPI Widgets: Users, AI Jobs, Consents, RGPD Exports
@@ -243,11 +244,11 @@ export default function TenantDashboardPage() {
                       <TableCell>
                         <Badge variant={badge.variant}>{badge.label}</Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {event.actorId ? event.actorId.slice(0, 8) + '...' : '-'}
+                      <TableCell className="font-medium">
+                        {event.actorDisplayName || (event.actorId ? event.actorId.slice(0, 8) + '...' : '-')}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {event.targetId ? event.targetId.slice(0, 8) + '...' : '-'}
+                      <TableCell className="font-medium">
+                        {event.targetDisplayName || (event.targetId ? event.targetId.slice(0, 8) + '...' : '-')}
                       </TableCell>
                     </TableRow>
                   )
