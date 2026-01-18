@@ -6,8 +6,9 @@
  * Provides tenant-scoped activity feed for dashboard
  *
  * RGPD Compliance:
- * - P1 data only (event types, IDs, timestamps)
- * - NO content (prompts, outputs, user data)
+ * - P1 data only (event types, IDs, timestamps) + displayName (NO email)
+ * - NO content (prompts, outputs)
+ * - Consistent with /portal/users which also shows displayName only
  * - Tenant isolation enforced
  */
 
@@ -99,20 +100,24 @@ export const GET = withLogging(
           return NextResponse.json(notFoundError('Tenant'), { status: 404 });
         }
 
-        // Fetch activity events (tenant-scoped)
-        // RGPD: Only P1 metadata, no content
+        // Fetch activity events (tenant-scoped) with user display names
+        // RGPD: P1 metadata + displayName only (NO email)
         const [eventsResult, countResult] = await Promise.all([
           pool.query(
             `
             SELECT
-              id,
-              event_type as type,
-              actor_id as "actorId",
-              target_id as "targetId",
-              created_at as "createdAt"
-            FROM audit_events
-            WHERE tenant_id = $1
-            ORDER BY created_at DESC
+              ae.id,
+              ae.event_type as type,
+              ae.actor_id as "actorId",
+              ae.target_id as "targetId",
+              ae.created_at as "createdAt",
+              COALESCE(actor.display_name, 'Utilisateur supprimé') as "actorDisplayName",
+              COALESCE(target.display_name, 'Utilisateur supprimé') as "targetDisplayName"
+            FROM audit_events ae
+            LEFT JOIN users actor ON ae.actor_id = actor.id
+            LEFT JOIN users target ON ae.target_id = target.id
+            WHERE ae.tenant_id = $1
+            ORDER BY ae.created_at DESC
             LIMIT $2
             `,
             [tenantId, query.limit]
@@ -123,11 +128,14 @@ export const GET = withLogging(
           ),
         ]);
 
+        // Return P1 data + displayName (NO email - RGPD compliant)
         const events: ActivityEvent[] = eventsResult.rows.map((row) => ({
           id: row.id,
           type: row.type,
           actorId: row.actorId,
           targetId: row.targetId,
+          actorDisplayName: row.actorId ? row.actorDisplayName : null,
+          targetDisplayName: row.targetId ? row.targetDisplayName : null,
           createdAt: row.createdAt.toISOString(),
           // NOTE: metadata is intentionally omitted (may contain P2/P3 data)
         }));

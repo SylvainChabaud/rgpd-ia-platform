@@ -22,6 +22,7 @@ import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
 import { PgTenantRepo } from '@/infrastructure/repositories/PgTenantRepo';
 import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHasher';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
+import { logger } from '@/infrastructure/logging/logger';
 import { ZodError } from 'zod';
 
 export const POST = withLogging(
@@ -100,7 +101,11 @@ export const POST = withLogging(
         }
 
         // Internal error (don't expose details)
-        console.error('Login error:', error);
+        // SECURITY: Use logger instead of console.error to avoid exposing stack traces
+        logger.error({
+          event: 'auth.login.error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }, 'Login error');
         return NextResponse.json(
           internalError(),
           { status: 500 }
