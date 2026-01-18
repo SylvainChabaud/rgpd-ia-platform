@@ -9,6 +9,7 @@
  * - Tenant isolation enforced by backend
  */
 
+import { Suspense } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -73,7 +74,11 @@ function createQueryClient() {
 function renderWithProviders(component: React.ReactElement) {
   const queryClient = createQueryClient()
   return render(
-    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<div>Loading...</div>}>
+        {component}
+      </Suspense>
+    </QueryClientProvider>
   )
 }
 
@@ -201,11 +206,29 @@ function setupDefaultMocks() {
 // =============================================================================
 
 describe('UserDetailPage', () => {
+  // Create shared promise - React caches the result after first resolution
   const mockParams = Promise.resolve({ id: 'user-001' })
+
+  // Force promise resolution before any test runs
+  // This is needed because React 19's use() caches Promise results
+  beforeAll(async () => {
+    await mockParams
+  })
 
   beforeEach(() => {
     jest.clearAllMocks()
     setupDefaultMocks()
+  })
+
+  // =====================
+  // Warmup: force React to cache the Promise result
+  // =====================
+  describe('Warmup', () => {
+    it('forces promise caching', async () => {
+      renderWithProviders(<UserDetailPage params={mockParams} />)
+      // Just wait long enough for the component to attempt rendering
+      await waitFor(() => expect(true).toBe(true), { timeout: 100 })
+    })
   })
 
   // =====================

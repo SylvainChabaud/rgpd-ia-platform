@@ -1,6 +1,5 @@
 import { describe, it, expect } from '@jest/globals'
 import { ACTOR_ROLE } from '@/shared/actorRole'
-import { maskEmail } from '@/lib/utils/maskEmail'
 import { createUserSchema, updateUserSchema, bulkSuspendSchema, bulkReactivateSchema } from '@/lib/validation/userSchemas'
 
 /**
@@ -8,10 +7,11 @@ import { createUserSchema, updateUserSchema, bulkSuspendSchema, bulkReactivateSc
  *
  * Test coverage:
  * - Validation schemas (createUser, updateUser, bulk operations)
- * - RGPD compliance (email masking, password strength)
+ * - RGPD compliance (password strength, role validation)
  * - Business logic validation
  *
- * Total: 21 tests
+ * Note: Email masking tests removed - maskEmail utility deprecated
+ * Platform Admin no longer has access to any email (Art. 15, 34 RGPD)
  */
 
 describe('Users CRUD - Business Logic', () => {
@@ -178,61 +178,9 @@ describe('Users CRUD - Business Logic', () => {
   })
 
   // ============================================
-  // Groupe 4: RGPD Compliance (5 tests)
+  // Groupe 4: RGPD Compliance - Password Strength
   // ============================================
-  describe('RGPD Compliance', () => {
-    it('should mask email correctly (m***@e***)', () => {
-      const masked = maskEmail('john.doe@example.com')
-      expect(masked).toBe('j***@e***')
-    })
-
-    it('should NOT expose full email in masked result', () => {
-      const email = 'sensitive.user@private.org'
-      const masked = maskEmail(email)
-
-      // Email complet NOT présent
-      expect(masked).not.toContain('sensitive.user')
-      expect(masked).not.toContain('private.org')
-
-      // Format masqué valide
-      expect(masked).toMatch(/^[a-zA-Z0-9]\*\*\*@[a-zA-Z0-9]\*\*\*$/)
-    })
-
-    it('should expose only first character of local and domain parts', () => {
-      const masked = maskEmail('admin@tenant.com')
-
-      // Uniquement premiers caractères
-      expect(masked).toBe('a***@t***')
-      expect(masked.length).toBeLessThan(15)
-    })
-
-    it('should handle multiple test emails consistently', () => {
-      const testEmails = [
-        'admin@tenant1.com',
-        'user@tenant2.org',
-        'test@tenant3.net',
-      ]
-
-      testEmails.forEach(email => {
-        const masked = maskEmail(email)
-
-        // Tous suivent le pattern x***@y***
-        expect(masked).toMatch(/^[a-zA-Z0-9]\*\*\*@[a-zA-Z0-9]\*\*\*$/)
-
-        // Aucun n'expose l'email complet
-        const [local, domain] = email.split('@')
-        expect(masked).not.toContain(local.substring(1))
-        expect(masked).not.toContain(domain.split('.')[0].substring(1))
-      })
-    })
-
-    it('should return [INVALID] for malformed emails', () => {
-      expect(maskEmail('no-at-sign')).toBe('[INVALID]')
-      expect(maskEmail('')).toBe('[INVALID]')
-      expect(maskEmail('@only-at')).toBe('[INVALID]')
-      expect(maskEmail('user@')).toBe('[INVALID]')
-    })
-  })
+  // Note: Email masking tests removed - Platform Admin has no email access (Art. 15, 34)
 
   // ============================================
   // Groupe 5: Role and Tenant Validation (3 tests)

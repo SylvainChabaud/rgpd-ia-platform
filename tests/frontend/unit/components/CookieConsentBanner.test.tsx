@@ -96,7 +96,7 @@ function setupFetchForExpiredConsent(): void {
   });
 }
 
-function setupFetchForSaveSuccess(): void {
+function _setupFetchForSaveSuccess(): void {
   mockFetch.mockResolvedValue({
     ok: true,
     status: 200,
@@ -104,7 +104,7 @@ function setupFetchForSaveSuccess(): void {
   });
 }
 
-function setupFetchForSaveFailure(): void {
+function _setupFetchForSaveFailure(): void {
   mockFetch.mockResolvedValue({
     ok: false,
     status: 500,
@@ -113,10 +113,12 @@ function setupFetchForSaveFailure(): void {
 }
 
 async function renderAndWaitForBanner(): Promise<void> {
+  // Re-attach fetch mock (in case it was cleared by beforeEach)
+  global.fetch = mockFetch;
   setupFetchFor404();
   render(<CookieConsentBanner />);
   await waitFor(() => {
-    expect(screen.getByText(/Nous utilisons des cookies/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
   }, { timeout: 3000 });
 }
 
@@ -127,6 +129,8 @@ async function renderAndWaitForBanner(): Promise<void> {
 describe('CookieConsentBanner - Display Logic', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset fetch mock on global (in case it was cleared)
+    global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
   });
@@ -135,8 +139,9 @@ describe('CookieConsentBanner - Display Logic', () => {
     setupFetchFor404();
     render(<CookieConsentBanner />);
 
+    // Wait for banner to appear - look for any of the banner elements
     await waitFor(() => {
-      expect(screen.getByText(/Nous utilisons des cookies/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -149,24 +154,26 @@ describe('CookieConsentBanner - Display Logic', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
     });
 
-    expect(screen.queryByText(/Nous utilisons des cookies/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Nous utilisons des cookies/i })).not.toBeInTheDocument();
   });
 
   it('[COOKIE-003] should show banner when consent is expired', async () => {
+    global.fetch = mockFetch;
     setupFetchForExpiredConsent();
     render(<CookieConsentBanner />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Nous utilisons des cookies/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('[COOKIE-004] should show banner on fetch error', async () => {
+    global.fetch = mockFetch;
     mockFetch.mockRejectedValue(new Error('Network error'));
     render(<CookieConsentBanner />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Nous utilisons des cookies/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 });
@@ -174,6 +181,7 @@ describe('CookieConsentBanner - Display Logic', () => {
 describe('CookieConsentBanner - User Interactions', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
+    global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
   });
@@ -253,6 +261,7 @@ describe('CookieConsentBanner - User Interactions', () => {
 describe('CookieConsentBanner - Settings Panel', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
+    global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
   });
@@ -361,7 +370,7 @@ describe('CookieConsentBanner - Settings Panel', () => {
 
     await waitFor(() => {
       expect(screen.queryByText(/Paramètres des cookies/i)).not.toBeInTheDocument();
-      expect(screen.getByText(/Nous utilisons des cookies/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
     });
   });
 });
@@ -369,6 +378,7 @@ describe('CookieConsentBanner - Settings Panel', () => {
 describe('CookieConsentBanner - RGPD Compliance', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
   });
@@ -393,10 +403,10 @@ describe('CookieConsentBanner - RGPD Compliance', () => {
       await new Promise(resolve => setTimeout(resolve, 200));
     });
 
-    expect(mockSetItem).toHaveBeenCalledWith(
-      'cookie_consent',
-      expect.stringContaining('"analytics":true')
-    );
+    // Verify localStorage was updated (using the mocked getItem to check value)
+    const savedConsent = localStorage.getItem('cookie_consent');
+    expect(savedConsent).not.toBeNull();
+    expect(savedConsent).toContain('"analytics":true');
   });
 
   it('[COOKIE-RGPD-003] should have equal prominence for Accept/Reject buttons', async () => {
@@ -430,6 +440,7 @@ describe('CookieConsentBanner - RGPD Compliance', () => {
 describe('CookieConsentBanner - Error Handling', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
     window.alert = jest.fn();

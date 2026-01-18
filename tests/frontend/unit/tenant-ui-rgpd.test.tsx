@@ -111,9 +111,12 @@ describe('RGPD Compliance - Tenant UI (LOT 11.1)', () => {
       }
 
       const mockStats = {
-        usersCount: 42,
-        aiJobsCount: 128,
-        storageUsed: 5242880,
+        stats: {
+          users: { total: 42, active: 40, suspended: 2 },
+          aiJobs: { total: 128, success: 120, failed: 8 },
+          storage: { usedBytes: 5242880 },
+        },
+        tenantName: 'Acme Corp',
       }
 
       ;(global.fetch as jest.Mock)
@@ -131,8 +134,8 @@ describe('RGPD Compliance - Tenant UI (LOT 11.1)', () => {
       expect(html).toContain('Acme Corp')
 
       // Stats counts ALLOWED (aggregate data)
-      expect(html).toContain('42') // usersCount
-      expect(html).toContain('128') // aiJobsCount
+      expect(html).toContain('42') // users total
+      expect(html).toContain('128') // aiJobs total
 
       // P2/P3 FORBIDDEN
       const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
@@ -505,9 +508,12 @@ describe('RGPD Compliance - Tenant UI (LOT 11.1)', () => {
       }
 
       const mockStats = {
-        usersCount: 42,
-        aiJobsCount: 128,
-        storageUsed: 5242880,
+        stats: {
+          users: { total: 42, active: 40, suspended: 2 },
+          aiJobs: { total: 128, success: 120, failed: 8 },
+          storage: { usedBytes: 5242880 },
+        },
+        tenantName: 'Acme Corp',
       }
 
       ;(global.fetch as jest.Mock)

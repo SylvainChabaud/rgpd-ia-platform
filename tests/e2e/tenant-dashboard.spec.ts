@@ -27,7 +27,7 @@ const TENANT_ADMIN_ACME = {
   tenantSlug: 'acme',
 }
 
-const TENANT_ADMIN_TECHCORP = {
+const _TENANT_ADMIN_TECHCORP = {
   email: 'admin@techcorp.local',
   password: 'Admin1234',
   displayName: 'Admin TechCorp',

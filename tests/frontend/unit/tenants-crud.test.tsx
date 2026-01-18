@@ -125,7 +125,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Button is inside a link, so we find the link by its href
       const createLink = await screen.findByRole('link', { name: /créer un tenant/i })
-      expect(createLink).toHaveAttribute('href', '/tenants/new')
+      expect(createLink).toHaveAttribute('href', '/admin/tenants/new')
     })
 
     it('[INT-003] should navigate to details page when clicking tenant row', async () => {
@@ -154,7 +154,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
       })
 
       const detailsLink = screen.getByRole('link', { name: /détails/i })
-      expect(detailsLink).toHaveAttribute('href', '/tenants/tenant-1')
+      expect(detailsLink).toHaveAttribute('href', '/admin/tenants/tenant-1')
     })
 
     it('[INT-004] should display loading state while fetching', () => {
@@ -260,7 +260,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to tenants list
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/tenants')
+        expect(mockPush).toHaveBeenCalledWith('/admin/tenants')
       })
     })
 
@@ -312,9 +312,11 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
       }
 
       const mockStats = {
-        usersCount: 42,
-        aiJobsCount: 128,
-        storageUsed: 5242880, // 5 MB
+        stats: {
+          users: { total: 42, active: 35 },
+          aiJobs: { total: 128, success: 100 },
+          storage: { usedBytes: 5242880 }, // 5 MB
+        },
       }
 
       ;(global.fetch as jest.Mock)
@@ -446,7 +448,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to tenants list
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/tenants')
+        expect(mockPush).toHaveBeenCalledWith('/admin/tenants')
       })
     })
   })
@@ -533,7 +535,7 @@ describe('Integration Tests - Tenant CRUD (LOT 11.1)', () => {
 
       // Should redirect to details
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/tenants/tenant-123')
+        expect(mockPush).toHaveBeenCalledWith('/admin/tenants/tenant-123')
       })
     })
 

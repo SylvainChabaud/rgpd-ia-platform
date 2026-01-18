@@ -10,9 +10,15 @@
  * RGPD compliance: NO sensitive data in tests
  */
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import { usePathname } from 'next/navigation'
 import PlatformAdminLayout from '../../../app/(platform-admin)/layout'
+
+// Mock requestAnimationFrame for Jest
+global.requestAnimationFrame = (callback: FrameRequestCallback) => {
+  return setTimeout(callback, 0) as unknown as number
+}
+global.cancelAnimationFrame = (id: number) => clearTimeout(id)
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -68,30 +74,43 @@ describe('Platform Admin Layout (LOT 11.0)', () => {
   })
 
   describe('Layout Rendering', () => {
-    it('[LAYOUT-001] should render sidebar and main content area', () => {
-      const { container } = render(
-        <PlatformAdminLayout>
-          <div data-testid="main-content">Dashboard Content</div>
-        </PlatformAdminLayout>
-      )
+    it('[LAYOUT-001] should render sidebar and main content area', async () => {
+      let container: HTMLElement
+      await act(async () => {
+        const result = render(
+          <PlatformAdminLayout>
+            <div data-testid="main-content">Dashboard Content</div>
+          </PlatformAdminLayout>
+        )
+        container = result.container
+      })
 
-      // Sidebar should be present
-      expect(screen.getByTestId('sidebar')).toBeInTheDocument()
+      // Wait for loading to finish
+      await waitFor(() => {
+        expect(screen.getByTestId('sidebar')).toBeInTheDocument()
+      })
 
       // Main content should be rendered
       expect(screen.getByTestId('main-content')).toBeInTheDocument()
       expect(screen.getByText('Dashboard Content')).toBeInTheDocument()
 
       // Layout structure should have flex container
-      expect(container.querySelector('.flex')).toBeInTheDocument()
+      expect(container!.querySelector('.flex')).toBeInTheDocument()
     })
 
-    it('[LAYOUT-002] should include navigation links in sidebar', () => {
-      render(
-        <PlatformAdminLayout>
-          <div>Content</div>
-        </PlatformAdminLayout>
-      )
+    it('[LAYOUT-002] should include navigation links in sidebar', async () => {
+      await act(async () => {
+        render(
+          <PlatformAdminLayout>
+            <div>Content</div>
+          </PlatformAdminLayout>
+        )
+      })
+
+      // Wait for loading to finish
+      await waitFor(() => {
+        expect(screen.getByTestId('sidebar')).toBeInTheDocument()
+      })
 
       const sidebar = screen.getByTestId('sidebar')
 
@@ -103,12 +122,19 @@ describe('Platform Admin Layout (LOT 11.0)', () => {
   })
 
   describe('Protected Routes - RBAC Scope Isolation', () => {
-    it('[LAYOUT-003] should allow PLATFORM admin to access all navigation items', () => {
-      render(
-        <PlatformAdminLayout>
-          <div>Dashboard</div>
-        </PlatformAdminLayout>
-      )
+    it('[LAYOUT-003] should allow PLATFORM admin to access all navigation items', async () => {
+      await act(async () => {
+        render(
+          <PlatformAdminLayout>
+            <div>Dashboard</div>
+          </PlatformAdminLayout>
+        )
+      })
+
+      // Wait for loading to finish
+      await waitFor(() => {
+        expect(screen.getByTestId('sidebar')).toBeInTheDocument()
+      })
 
       const sidebar = screen.getByTestId('sidebar')
 
@@ -147,14 +173,23 @@ describe('Platform Admin Layout (LOT 11.0)', () => {
   })
 
   describe('RGPD Compliance', () => {
-    it('[LAYOUT-005] should NOT expose sensitive data in layout HTML', () => {
-      const { container } = render(
-        <PlatformAdminLayout>
-          <div>Content</div>
-        </PlatformAdminLayout>
-      )
+    it('[LAYOUT-005] should NOT expose sensitive data in layout HTML', async () => {
+      let container: HTMLElement
+      await act(async () => {
+        const result = render(
+          <PlatformAdminLayout>
+            <div>Content</div>
+          </PlatformAdminLayout>
+        )
+        container = result.container
+      })
 
-      const html = container.innerHTML
+      // Wait for loading to finish
+      await waitFor(() => {
+        expect(screen.getByTestId('sidebar')).toBeInTheDocument()
+      })
+
+      const html = container!.innerHTML
 
       // NO email patterns
       const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
