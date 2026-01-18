@@ -24,6 +24,12 @@ export const COMPLIANCE_CARD_VARIANT = {
   OPPOSITIONS: 'oppositions',
   SUSPENSIONS: 'suspensions',
   CONTESTS: 'contests',
+  // Consent management variants
+  CONSENTS_HUB: 'consents-hub',
+  CONSENTS_PURPOSES: 'consents-purposes',
+  CONSENTS_MATRIX: 'consents-matrix',
+  CONSENTS_HISTORY: 'consents-history',
+  CONSENTS_TEMPLATES: 'consents-templates',
 } as const
 
 export type ComplianceCardVariant = typeof COMPLIANCE_CARD_VARIANT[keyof typeof COMPLIANCE_CARD_VARIANT]
@@ -119,6 +125,47 @@ const VARIANT_CONFIG: Record<ComplianceCardVariant, VariantConfig> = {
     retentionLabel: 'Retention',
     purgeInfo: 'Les contestations sont conservees pour audit et intervention humaine obligatoire.',
     getComplianceStatus: () => true, // Always compliant (kept for audit trail)
+  },
+  // Consent management variants
+  [COMPLIANCE_CARD_VARIANT.CONSENTS_HUB]: {
+    title: 'Conformite RGPD - Gestion des consentements',
+    article: 'Art. 7 RGPD',
+    requirement: 'Preuve du consentement',
+    retentionLabel: 'Conservation',
+    purgeInfo: 'Les preuves de consentement sont conservees pendant toute la duree du traitement et 5 ans apres.',
+    getComplianceStatus: () => true, // Always compliant (consent management)
+  },
+  [COMPLIANCE_CARD_VARIANT.CONSENTS_PURPOSES]: {
+    title: 'Conformite RGPD - Finalites de traitement',
+    article: 'Art. 5.1.b RGPD',
+    requirement: 'Limitation des finalites',
+    retentionLabel: 'Conservation',
+    purgeInfo: 'Les finalites doivent etre determinees, explicites et legitimes. Chaque finalite doit avoir une base legale.',
+    getComplianceStatus: () => true, // Always compliant (purpose configuration)
+  },
+  [COMPLIANCE_CARD_VARIANT.CONSENTS_MATRIX]: {
+    title: 'Conformite RGPD - Matrice des consentements',
+    article: 'Art. 7.1 & 30 RGPD',
+    requirement: 'Documentation',
+    retentionLabel: 'Conservation',
+    purgeInfo: 'La matrice constitue le registre des consentements, exportable pour audit CNIL.',
+    getComplianceStatus: () => true, // Always compliant (documentation)
+  },
+  [COMPLIANCE_CARD_VARIANT.CONSENTS_HISTORY]: {
+    title: 'Conformite RGPD - Historique des consentements',
+    article: 'Art. 7.1 RGPD',
+    requirement: 'Tracabilite',
+    retentionLabel: 'Conservation',
+    purgeInfo: 'L\'historique horodate prouve le consentement et son eventuel retrait. Conservation obligatoire.',
+    getComplianceStatus: () => true, // Always compliant (audit trail)
+  },
+  [COMPLIANCE_CARD_VARIANT.CONSENTS_TEMPLATES]: {
+    title: 'Conformite RGPD - Templates de finalites',
+    article: 'Art. 6 RGPD',
+    requirement: 'Base legale pre-validee',
+    retentionLabel: 'Validite',
+    purgeInfo: 'Les templates sont pre-valides RGPD avec base legale, categorie et niveau de risque conformes.',
+    getComplianceStatus: () => true, // Always compliant (pre-validated templates)
   },
 }
 

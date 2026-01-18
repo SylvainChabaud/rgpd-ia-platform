@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   ArrowLeft,
   Search,
@@ -198,15 +199,8 @@ export default function ConsentMatrixPage() {
         </Button>
       </div>
 
-      {/* RGPD Info */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>RGPD Art. 7.1</strong> — Cette matrice permet de démontrer que le consentement a été donné
-          par la personne concernée (preuve du consentement). L&apos;export CSV fournit un registre auditable
-          conforme à l&apos;obligation de documentation (Art. 30).
-        </AlertDescription>
-      </Alert>
+      {/* RGPD Compliance Card */}
+      <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_MATRIX} />
 
       {/* Filters */}
       <Card>

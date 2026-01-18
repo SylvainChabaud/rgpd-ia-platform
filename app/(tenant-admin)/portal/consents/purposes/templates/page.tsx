@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   Tooltip,
   TooltipContent,
@@ -196,14 +197,8 @@ export default function TemplatesCatalogPage() {
           </div>
         </div>
 
-        {/* Info Alert */}
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Templates système</strong> — Ces finalités sont pré-configurées avec une base légale, une catégorie
-            et un niveau de risque conformes au RGPD. Vous pouvez personnaliser le libellé et la description lors de l&apos;adoption.
-          </AlertDescription>
-        </Alert>
+        {/* RGPD Compliance Card */}
+        <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_TEMPLATES} />
 
         {/* Filters */}
         <Card>

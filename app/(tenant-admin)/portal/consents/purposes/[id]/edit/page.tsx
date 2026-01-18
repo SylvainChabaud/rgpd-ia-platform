@@ -11,8 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ArrowLeft, ShieldCheck, Save, AlertCircle, Info } from 'lucide-react'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
+import { ArrowLeft, ShieldCheck, Save, AlertCircle } from 'lucide-react'
 
 /**
  * Edit Purpose Page - TENANT Admin (LOT 12.2)
@@ -235,15 +235,8 @@ export default function EditPurposePage({ params }: EditPurposePageProps) {
         </div>
       </div>
 
-      {/* RGPD Info */}
-      <Alert className="max-w-2xl">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>RGPD Art. 5.1.b</strong> — Toute modification de finalité doit rester compatible avec
-          l&apos;objectif initial. Les utilisateurs ayant consenti à cette finalité seront notifiés si
-          la modification impacte substantiellement le traitement de leurs données.
-        </AlertDescription>
-      </Alert>
+      {/* RGPD Notice */}
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.PURPOSE_EDIT} className="max-w-2xl" />
 
       {/* Form */}
       <Card className="max-w-2xl">

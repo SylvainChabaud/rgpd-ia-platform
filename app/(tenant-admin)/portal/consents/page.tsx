@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { usePurposes, useConsentMatrix } from '@/lib/api/hooks/useConsents'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ArrowLeft,
@@ -231,46 +232,8 @@ export default function ConsentsPage() {
         </Link>
       </div>
 
-      {/* Quick Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Conformité RGPD</CardTitle>
-          <CardDescription>
-            Bonnes pratiques pour la gestion des consentements
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium">Consentement explicite</h4>
-                <p className="text-sm text-muted-foreground">
-                  Les utilisateurs doivent activement donner leur consentement (opt-in)
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium">Révocation facile</h4>
-                <p className="text-sm text-muted-foreground">
-                  Le retrait du consentement doit être aussi simple que son octroi
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium">Traçabilité</h4>
-                <p className="text-sm text-muted-foreground">
-                  L&apos;historique des consentements est conservé pour l&apos;audit
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* RGPD Compliance Card */}
+      <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_HUB} />
     </div>
   )
 }

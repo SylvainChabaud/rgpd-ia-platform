@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   Tooltip,
   TooltipContent,
@@ -214,15 +215,8 @@ export default function PurposesPage() {
           </div>
         </div>
 
-        {/* RGPD Info */}
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>RGPD Art. 6 & 7</strong> — Les finalités de traitement définissent les objectifs pour lesquels
-            les données personnelles sont traitées par l&apos;IA. Chaque finalité doit avoir une <strong>base légale</strong> et
-            un <strong>niveau de risque</strong> définis.
-          </AlertDescription>
-        </Alert>
+        {/* RGPD Compliance Card */}
+        <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_PURPOSES} />
 
         {/* Tabs & Filters */}
         <Card>

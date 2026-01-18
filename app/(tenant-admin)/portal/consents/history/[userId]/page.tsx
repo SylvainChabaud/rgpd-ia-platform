@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   ArrowLeft,
   History,
@@ -171,15 +172,8 @@ export default function ConsentHistoryPage({ params }: ConsentHistoryPageProps) 
         </div>
       </div>
 
-      {/* RGPD Info */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>RGPD Art. 7.1 & 30</strong> — Cet historique constitue la preuve horodatée des consentements
-          et de leur retrait. Il répond à l&apos;obligation de documentation et peut être présenté en cas
-          de contrôle par l&apos;autorité de protection des données (CNIL).
-        </AlertDescription>
-      </Alert>
+      {/* RGPD Compliance Card */}
+      <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_HISTORY} />
 
       {/* Filters */}
       <Card>

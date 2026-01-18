@@ -33,6 +33,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
   ArrowLeft,
@@ -361,6 +362,9 @@ export default function NewPurposePage() {
             </Button>
           </Link>
         </div>
+
+        {/* RGPD Notice */}
+        <RgpdNotice variant={RGPD_NOTICE_VARIANT.PURPOSE_CREATE} />
 
         {/* Progress */}
         <Card>
