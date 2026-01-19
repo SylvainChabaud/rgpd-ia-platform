@@ -23,6 +23,7 @@ import { internalError, validationError, conflictError, notFoundError, tenantCon
 import { z, ZodError } from 'zod';
 import { getPool } from '@/infrastructure/db/pool';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { autoCreateDpiaForPurpose } from '@/app/usecases/dpia/autoCreateDpiaForPurpose';
 
 /**
  * Schema for adopting a template
@@ -118,11 +119,41 @@ export const POST = withLogging(
             },
           });
 
+          // Auto-create DPIA for HIGH/CRITICAL risk purposes (LOT 12.4)
+          // Inject dependencies per architecture boundaries (no direct infra imports in usecases)
+          const { PgDpiaRepo } = await import('@/infrastructure/repositories/PgDpiaRepo');
+          const dpiaRepo = new PgDpiaRepo();
+          const dpiaResult = await autoCreateDpiaForPurpose(
+            {
+              tenantId: context.tenantId,
+              actorId: context.userId,
+              purpose: {
+                id: purpose.id,
+                label: purpose.label,
+                description: purpose.description,
+                riskLevel: purpose.riskLevel,
+                maxDataClass: purpose.maxDataClass,
+                requiresDpia: purpose.requiresDpia,
+              },
+              context: {
+                templateCode: body.templateCode,
+                source: 'adopt',
+              },
+            },
+            {
+              dpiaRepo,
+              auditWriter,
+              logger,
+            }
+          );
+
           logger.info({
             purposeId: purpose.id,
             templateCode: body.templateCode,
             tenantId: context.tenantId,
             actorId: context.userId,
+            requiresDpia: purpose.requiresDpia,
+            dpiaId: dpiaResult.dpiaId,
           }, 'Purpose template adopted');
 
           return NextResponse.json({
@@ -144,6 +175,8 @@ export const POST = withLogging(
               createdAt: purpose.createdAt.toISOString(),
               updatedAt: purpose.updatedAt.toISOString(),
             },
+            dpiaId: dpiaResult.dpiaId,
+            warnings: dpiaResult.warnings,
           }, { status: 201 });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

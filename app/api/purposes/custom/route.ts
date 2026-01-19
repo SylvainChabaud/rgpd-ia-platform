@@ -27,6 +27,7 @@ import {
   RISK_LEVEL,
   DATA_CLASS,
 } from '@/app/ports/PurposeTemplateRepo';
+import { autoCreateDpiaForPurpose, isDpiaRequired } from '@/app/usecases/dpia/autoCreateDpiaForPurpose';
 
 // Zod enum tuples derived from constants
 const LAWFUL_BASIS_VALUES = [
@@ -109,10 +110,9 @@ export const POST = withLogging(
             return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
           }
 
-          // Check DPIA acknowledgment for high-risk purposes
-          const HIGH_RISK_LEVELS = [RISK_LEVEL.HIGH, RISK_LEVEL.CRITICAL] as const;
-          const isHighRisk = (HIGH_RISK_LEVELS as readonly string[]).includes(body.riskLevel);
-          if (isHighRisk && !body.acknowledgeDpiaWarning) {
+          // Check DPIA acknowledgment for high-risk purposes (uses centralized logic)
+          const requiresDpia = isDpiaRequired(body.riskLevel, body.maxDataClass);
+          if (requiresDpia && !body.acknowledgeDpiaWarning) {
             return NextResponse.json(validationError([{
               path: ['acknowledgeDpiaWarning'],
               message: 'DPIA acknowledgment is required for high-risk purposes',
@@ -125,9 +125,6 @@ export const POST = withLogging(
           if (existing) {
             return NextResponse.json(conflictError('A purpose with this label already exists'), { status: 409 });
           }
-
-          // Determine if DPIA is required based on risk level or data classification
-          const requiresDpia = isHighRisk || body.maxDataClass === DATA_CLASS.P3;
 
           // Create purpose
           const purpose = await purposeRepo.create(context.tenantId, {
@@ -142,7 +139,7 @@ export const POST = withLogging(
             isActive: true,
           });
 
-          // Emit audit event
+          // Emit audit event for purpose creation
           const auditWriter = new PgAuditEventWriter();
           await auditWriter.write({
             id: crypto.randomUUID(),
@@ -160,6 +157,33 @@ export const POST = withLogging(
             },
           });
 
+          // Auto-create DPIA for HIGH/CRITICAL risk purposes (LOT 12.4)
+          // Inject dependencies per architecture boundaries (no direct infra imports in usecases)
+          const { PgDpiaRepo } = await import('@/infrastructure/repositories/PgDpiaRepo');
+          const dpiaRepo = new PgDpiaRepo();
+          const dpiaResult = await autoCreateDpiaForPurpose(
+            {
+              tenantId: context.tenantId,
+              actorId: context.userId,
+              purpose: {
+                id: purpose.id,
+                label: purpose.label,
+                description: purpose.description,
+                riskLevel: purpose.riskLevel,
+                maxDataClass: purpose.maxDataClass,
+                requiresDpia: purpose.requiresDpia,
+              },
+              context: {
+                source: 'custom',
+              },
+            },
+            {
+              dpiaRepo,
+              auditWriter,
+              logger,
+            }
+          );
+
           logger.info({
             purposeId: purpose.id,
             tenantId: context.tenantId,
@@ -167,6 +191,7 @@ export const POST = withLogging(
             lawfulBasis: body.lawfulBasis,
             riskLevel: body.riskLevel,
             requiresDpia,
+            dpiaId: dpiaResult.dpiaId,
           }, 'Custom purpose created');
 
           return NextResponse.json({
@@ -187,9 +212,8 @@ export const POST = withLogging(
               createdAt: purpose.createdAt.toISOString(),
               updatedAt: purpose.updatedAt.toISOString(),
             },
-            warnings: requiresDpia ? [
-              'Cette finalité nécessite une Analyse d\'Impact (DPIA). Contactez votre DPO avant mise en production.',
-            ] : [],
+            dpiaId: dpiaResult.dpiaId,
+            warnings: dpiaResult.warnings,
           }, { status: 201 });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
