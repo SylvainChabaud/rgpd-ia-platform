@@ -71,3 +71,9 @@ logs/
 # Claude Code local configuration (never commit)
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Local development files
+claude-code-from-scratch-starter/
+prompts/
+tools/
+nul

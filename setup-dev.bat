@@ -43,6 +43,9 @@ set TENANT1_USER2_PASSWORD=User1234
 set TENANT1_USER3_EMAIL=charlie@acme.local
 set TENANT1_USER3_NAME=Charlie Bernard
 set TENANT1_USER3_PASSWORD=User1234
+set TENANT1_DPO_EMAIL=dpo@acme.local
+set TENANT1_DPO_NAME=Marie Dubois (DPO)
+set TENANT1_DPO_PASSWORD=Dpo12345
 
 REM Tenant 2: TechCorp
 set TENANT2_NAME=TechCorp
@@ -56,6 +59,9 @@ set TENANT2_USER1_PASSWORD=User1234
 set TENANT2_USER2_EMAIL=emma@techcorp.local
 set TENANT2_USER2_NAME=Emma Rousseau
 set TENANT2_USER2_PASSWORD=User1234
+set TENANT2_DPO_EMAIL=dpo@techcorp.local
+set TENANT2_DPO_NAME=Jean Legal (DPO)
+set TENANT2_DPO_PASSWORD=Dpo12345
 
 REM Tenant 3: GlobalServices
 set TENANT3_NAME=GlobalServices
@@ -72,6 +78,9 @@ set TENANT3_USER2_PASSWORD=User1234
 set TENANT3_USER3_EMAIL=henry@globalservices.local
 set TENANT3_USER3_NAME=Henry Simon
 set TENANT3_USER3_PASSWORD=User1234
+set TENANT3_DPO_EMAIL=dpo@globalservices.local
+set TENANT3_DPO_NAME=Hemric Legal (DPO)
+set TENANT3_DPO_PASSWORD=Dpo12345
 
 REM ============================================================================
 REM Parsing des arguments
@@ -284,11 +293,12 @@ echo [Etape 7/14] Creation du Tenant Admin pour %TENANT1_NAME%...
 call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_ADMIN_EMAIL% --displayName "%TENANT1_ADMIN_NAME%" --password %TENANT1_ADMIN_PASSWORD%
 if errorlevel 1 goto :admin_error
 
-echo [Etape 8/14] Creation des utilisateurs pour %TENANT1_NAME%...
+echo [Etape 8/14] Creation des utilisateurs et DPO pour %TENANT1_NAME%...
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER1_EMAIL% --displayName "%TENANT1_USER1_NAME%" --password %TENANT1_USER1_PASSWORD%
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER2_EMAIL% --displayName "%TENANT1_USER2_NAME%" --password %TENANT1_USER2_PASSWORD%
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER3_EMAIL% --displayName "%TENANT1_USER3_NAME%" --password %TENANT1_USER3_PASSWORD%
-echo [+] Tenant %TENANT1_NAME% cree avec 3 utilisateurs
+call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_DPO_EMAIL% --displayName "%TENANT1_DPO_NAME%" --password %TENANT1_DPO_PASSWORD%
+echo [+] Tenant %TENANT1_NAME% cree avec 3 utilisateurs + 1 DPO
 echo.
 
 REM ============================================================================
@@ -303,10 +313,11 @@ echo [Etape 10/14] Creation du Tenant Admin pour %TENANT2_NAME%...
 call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_ADMIN_EMAIL% --displayName "%TENANT2_ADMIN_NAME%" --password %TENANT2_ADMIN_PASSWORD%
 if errorlevel 1 goto :admin_error
 
-echo [Etape 11/14] Creation des utilisateurs pour %TENANT2_NAME%...
+echo [Etape 11/14] Creation des utilisateurs et DPO pour %TENANT2_NAME%...
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER1_EMAIL% --displayName "%TENANT2_USER1_NAME%" --password %TENANT2_USER1_PASSWORD%
 call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER2_EMAIL% --displayName "%TENANT2_USER2_NAME%" --password %TENANT2_USER2_PASSWORD%
-echo [+] Tenant %TENANT2_NAME% cree avec 2 utilisateurs
+call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_DPO_EMAIL% --displayName "%TENANT2_DPO_NAME%" --password %TENANT2_DPO_PASSWORD%
+echo [+] Tenant %TENANT2_NAME% cree avec 2 utilisateurs + 1 DPO
 echo.
 
 REM ============================================================================
@@ -404,7 +415,7 @@ echo   Generation des donnees de simulation
 echo ========================================================================
 echo.
 
-echo [Seed 1/3] Finalites et consentements...
+echo [Seed 1/4] Finalites et consentements...
 type migrations\seeds\dev-purposes-consents.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed purposes/consents
@@ -412,7 +423,15 @@ if errorlevel 1 (
     echo [+] Finalites et consentements crees
 )
 
-echo [Seed 2/3] Violations RGPD...
+echo [Seed 2/4] DPIA (Analyses d'impact) - LOT 12.4...
+type migrations\seeds\dev-dpia.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
+if errorlevel 1 (
+    echo [!] Echec du seed DPIA
+) else (
+    echo [+] DPIAs creees (Art. 35)
+)
+
+echo [Seed 3/4] Violations RGPD...
 type migrations\seeds\dev-incidents.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed violations
@@ -420,7 +439,7 @@ if errorlevel 1 (
     echo [+] 10 violations RGPD creees
 )
 
-echo [Seed 3/3] Donnees dashboard (ai_jobs, rgpd_requests, audit_events)...
+echo [Seed 4/4] Donnees dashboard (ai_jobs, rgpd_requests, audit_events)...
 type migrations\seeds\dev-dashboard-data.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed dashboard
@@ -449,10 +468,12 @@ if "%DO_ACCOUNTS%"=="true" (
     echo.
     echo   %TENANT1_NAME%:
     echo     Admin: %TENANT1_ADMIN_EMAIL% / %TENANT1_ADMIN_PASSWORD%
+    echo     DPO:   %TENANT1_DPO_EMAIL% / %TENANT1_DPO_PASSWORD%
     echo     Users: %TENANT1_USER1_EMAIL%, %TENANT1_USER2_EMAIL%, %TENANT1_USER3_EMAIL%
     echo.
     echo   %TENANT2_NAME%:
     echo     Admin: %TENANT2_ADMIN_EMAIL% / %TENANT2_ADMIN_PASSWORD%
+    echo     DPO:   %TENANT2_DPO_EMAIL% / %TENANT2_DPO_PASSWORD%
     echo     Users: %TENANT2_USER1_EMAIL%, %TENANT2_USER2_EMAIL%
     echo.
     echo   %TENANT3_NAME%:
@@ -465,6 +486,7 @@ if "%DO_SIMULATION%"=="true" (
     echo Donnees de simulation creees:
     echo   - Finalites de traitement IA (purposes)
     echo   - Consentements utilisateurs (consents)
+    echo   - DPIA - Analyses d'impact Art. 35 (dpias, dpia_risks) - LOT 12.4
     echo   - Jobs IA (ai_jobs)
     echo   - Requetes RGPD (rgpd_requests)
     echo   - Violations de securite (security_incidents)

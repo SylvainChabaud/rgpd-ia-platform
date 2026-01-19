@@ -21,6 +21,7 @@
     "bootstrap:tenant": "tsx src/cli/bootstrap.ts tenant",
     "bootstrap:tenant-admin": "tsx src/cli/bootstrap.ts tenant-admin",
     "bootstrap:tenant-user": "tsx src/cli/bootstrap.ts tenant-user",
+    "bootstrap:tenant-dpo": "tsx src/cli/bootstrap.ts tenant-dpo",
     "audit:collect": "tsx scripts/audit/collect-evidence.ts",
     "audit:secrets": "bash scripts/audit/scan-secrets.sh",
     "audit:rgpd-tests": "bash scripts/audit/run-rgpd-tests.sh",
