@@ -138,3 +138,41 @@ export function withTenantAdmin<T extends NextHandler>(
     return handler(req, context);
   }) as T;
 }
+
+/**
+ * Tenant admin or DPO middleware
+ * Requires TENANT scope and either TENANT_ADMIN or DPO role
+ * DPO needs access to view users and consents for RGPD compliance oversight
+ */
+export function withTenantAdminOrDpo<T extends NextHandler>(
+  handler: T
+): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (async (req: NextRequest, context?: any) => {
+    const ctx = extractContext(req);
+
+    if (!ctx) {
+      return NextResponse.json(
+        forbiddenError('Authentication required'),
+        { status: 403 }
+      );
+    }
+
+    if (ctx.scope !== ACTOR_SCOPE.TENANT) {
+      return NextResponse.json(
+        forbiddenError('Tenant scope required'),
+        { status: 403 }
+      );
+    }
+
+    // Check if role is TENANT_ADMIN or DPO
+    if (ctx.role !== ACTOR_ROLE.TENANT_ADMIN && ctx.role !== ACTOR_ROLE.DPO) {
+      return NextResponse.json(
+        forbiddenError('Tenant admin or DPO access required'),
+        { status: 403 }
+      );
+    }
+
+    return handler(req, context);
+  }) as T;
+}

@@ -14,9 +14,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
-import { withTenantAdmin } from '@/middleware/rbac';
+import { withTenantAdmin, withTenantAdminOrDpo } from '@/middleware/rbac';
 import { requireContext } from '@/lib/requestContext';
 import { PgPurposeRepo } from '@/infrastructure/repositories/PgPurposeRepo';
+import { PgDpiaRepo } from '@/infrastructure/repositories/PgDpiaRepo';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, validationError, conflictError, tenantContextRequiredError } from '@/lib/errorResponse';
@@ -49,7 +50,7 @@ const CreatePurposeSchema = z.object({
  */
 export const GET = withLogging(
   withAuth(
-    withTenantAdmin(
+    withTenantAdminOrDpo(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);
@@ -76,6 +77,18 @@ export const GET = withLogging(
           const purposeRepo = new PgPurposeRepo();
           const purposes = await purposeRepo.findAll(context.tenantId, query.includeInactive);
 
+          // Fetch DPIA statuses for purposes that require DPIA (LOT 12.4)
+          // Use batch query to avoid N+1 performance issue
+          const dpiaRepo = new PgDpiaRepo();
+          const purposesWithDpia = purposes.filter(p => p.requiresDpia);
+          const purposeIds = purposesWithDpia.map(p => p.id);
+
+          // Single batch query instead of N+1 loop
+          const dpias = await dpiaRepo.findByPurposeIds(context.tenantId, purposeIds);
+          const dpiaInfoMap = new Map<string, { status: string | null; id: string | null }>(
+            dpias.map(dpia => [dpia.purposeId, { status: dpia.status, id: dpia.id }])
+          );
+
           logger.info({
             tenantId: context.tenantId,
             count: purposes.length,
@@ -83,24 +96,29 @@ export const GET = withLogging(
           }, 'Purposes listed');
 
           return NextResponse.json({
-            purposes: purposes.map(purpose => ({
-              id: purpose.id,
-              templateId: purpose.templateId,
-              label: purpose.label,
-              description: purpose.description,
-              lawfulBasis: purpose.lawfulBasis,
-              category: purpose.category,
-              riskLevel: purpose.riskLevel,
-              maxDataClass: purpose.maxDataClass,
-              requiresDpia: purpose.requiresDpia,
-              isRequired: purpose.isRequired,
-              isActive: purpose.isActive,
-              isFromTemplate: purpose.isFromTemplate,
-              isSystem: purpose.isSystem,
-              validationStatus: purpose.validationStatus,
-              createdAt: purpose.createdAt.toISOString(),
-              updatedAt: purpose.updatedAt.toISOString(),
-            })),
+            purposes: purposes.map(purpose => {
+              const dpiaInfo = purpose.requiresDpia ? dpiaInfoMap.get(purpose.id) : null;
+              return {
+                id: purpose.id,
+                templateId: purpose.templateId,
+                label: purpose.label,
+                description: purpose.description,
+                lawfulBasis: purpose.lawfulBasis,
+                category: purpose.category,
+                riskLevel: purpose.riskLevel,
+                maxDataClass: purpose.maxDataClass,
+                requiresDpia: purpose.requiresDpia,
+                dpiaStatus: dpiaInfo?.status ?? null,
+                dpiaId: dpiaInfo?.id ?? null,
+                isRequired: purpose.isRequired,
+                isActive: purpose.isActive,
+                isFromTemplate: purpose.isFromTemplate,
+                isSystem: purpose.isSystem,
+                validationStatus: purpose.validationStatus,
+                createdAt: purpose.createdAt.toISOString(),
+                updatedAt: purpose.updatedAt.toISOString(),
+              };
+            }),
             total: purposes.length,
           });
         } catch (error: unknown) {

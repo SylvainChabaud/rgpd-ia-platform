@@ -142,7 +142,7 @@ export class PgPurposeRepo implements PurposeRepo {
           lawful_basis, category, risk_level, max_data_class, requires_dpia,
           is_required, is_active, is_from_template, is_system, validation_status
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, false, '${VALIDATION_STATUS.VALIDATED}')
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, false, $11)
          RETURNING ${SELECT_COLUMNS}`,
         [
           tenantId,
@@ -155,6 +155,7 @@ export class PgPurposeRepo implements PurposeRepo {
           input.requiresDpia ?? false,
           input.isRequired ?? false,
           input.isActive ?? true,
+          VALIDATION_STATUS.VALIDATED,
         ]
       );
 
@@ -290,13 +291,16 @@ export class PgPurposeRepo implements PurposeRepo {
       }
 
       // Create purpose from template
+      // is_system = true prevents deletion (tenant admin can only deactivate)
+      // SECURITY: Use parameterized query to prevent SQL injection
+      // Never interpolate values directly into SQL strings
       const res: QueryResult<PurposeRow> = await client.query(
         `INSERT INTO purposes (
           tenant_id, template_id, label, description,
           lawful_basis, category, risk_level, max_data_class, requires_dpia,
           is_required, is_active, is_from_template, is_system, validation_status
         )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, true, true, '${VALIDATION_STATUS.VALIDATED}')
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, true, true, $11)
          RETURNING ${SELECT_COLUMNS}`,
         [
           tenantId,
@@ -309,6 +313,7 @@ export class PgPurposeRepo implements PurposeRepo {
           template.max_data_class,
           template.requires_dpia,
           input.isRequired ?? false,
+          VALIDATION_STATUS.VALIDATED,
         ]
       );
 

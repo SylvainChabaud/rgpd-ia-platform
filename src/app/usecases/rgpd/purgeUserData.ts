@@ -4,13 +4,9 @@ import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { UserRepo } from "@/app/ports/UserRepo";
 import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AiJobRepo } from "@/app/ports/AiJobRepo";
+import type { ExportStorage } from "@/app/ports/ExportStorage";
+import type { Logger } from "@/app/ports/Logger";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
-import { logger } from "@/infrastructure/logging/logger";
-import {
-  getExportMetadataByUserId,
-  deleteExportBundle,
-  deleteExportMetadata,
-} from "@/infrastructure/storage/ExportStorage";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { RGPD_REQUEST_STATUS } from "@/domain/rgpd/DeletionRequest";
 
@@ -52,14 +48,33 @@ export type PurgeUserDataOutput = {
   };
 };
 
+/**
+ * Dependencies for purgeUserData
+ * Injected from API routes - never instantiated in usecase
+ */
+export interface PurgeUserDataDeps {
+  rgpdRequestRepo: RgpdRequestRepo;
+  auditWriter: AuditEventWriter;
+  userRepo: UserRepo;
+  consentRepo: ConsentRepo;
+  aiJobRepo: AiJobRepo;
+  exportStorage: ExportStorage;
+  logger: Logger;
+}
+
 export async function purgeUserData(
-  rgpdRequestRepo: RgpdRequestRepo,
-  auditWriter: AuditEventWriter,
-  userRepo: UserRepo,
-  consentRepo: ConsentRepo,
-  aiJobRepo: AiJobRepo,
-  input: PurgeUserDataInput
+  input: PurgeUserDataInput,
+  deps: PurgeUserDataDeps
 ): Promise<PurgeUserDataOutput> {
+  const {
+    rgpdRequestRepo,
+    auditWriter,
+    userRepo,
+    consentRepo,
+    aiJobRepo,
+    exportStorage,
+    logger,
+  } = deps;
   const { requestId } = input;
 
   // Validation
@@ -88,15 +103,15 @@ export async function purgeUserData(
 
   // Step 4: Crypto-shredding - delete export bundles
   // Find all exports for this user
-  const exportMetadataList = getExportMetadataByUserId(tenantId, userId);
+  const exportMetadataList = exportStorage.getExportMetadataByUserId(tenantId, userId);
   let deletedExports = 0;
 
   for (const metadata of exportMetadataList) {
     try {
       // Delete encrypted file (crypto-shredding: key becomes inaccessible)
-      await deleteExportBundle(metadata.exportId);
+      await exportStorage.deleteExportBundle(metadata.exportId);
       // Delete metadata
-      deleteExportMetadata(metadata.exportId);
+      exportStorage.deleteExportMetadata(metadata.exportId);
       deletedExports++;
     } catch (error) {
       // Log error but continue purge (best effort)

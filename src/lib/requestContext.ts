@@ -89,3 +89,15 @@ export function isTenantMember(context: RequestContext, tenantId: string): boole
 export function isTenantAdmin(context: RequestContext): boolean {
   return context.scope === ACTOR_SCOPE.TENANT && context.role === ACTOR_ROLE.TENANT_ADMIN;
 }
+
+/**
+ * Check if user is a tenant admin or DPO
+ * DPO has access to tenant dashboard for RGPD compliance oversight
+ * Returns false for PLATFORM scope users
+ */
+export function isTenantAdminOrDpo(context: RequestContext): boolean {
+  return (
+    context.scope === ACTOR_SCOPE.TENANT &&
+    (context.role === ACTOR_ROLE.TENANT_ADMIN || context.role === ACTOR_ROLE.DPO)
+  );
+}

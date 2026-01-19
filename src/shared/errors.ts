@@ -49,3 +49,30 @@ export class ValidationError extends AppError {
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
+
+// =========================
+// RGPD Error Messages
+// =========================
+
+/**
+ * Standardized RGPD violation error messages
+ * Used in repositories and services for consistent error handling
+ */
+export const RGPD_ERROR_MESSAGES = {
+  TENANT_ID_REQUIRED: 'RGPD VIOLATION: tenantId required',
+  TENANT_ID_REQUIRED_QUERY: 'RGPD VIOLATION: tenantId required for purpose queries',
+  TENANT_ID_REQUIRED_CREATE: 'RGPD VIOLATION: tenantId required for purpose creation',
+  TENANT_ID_REQUIRED_UPDATE: 'RGPD VIOLATION: tenantId required for purpose update',
+  TENANT_ID_REQUIRED_DELETE: 'RGPD VIOLATION: tenantId required for purpose deletion',
+  CROSS_TENANT_ACCESS: 'RGPD VIOLATION: cross-tenant access denied',
+} as const;
+
+/**
+ * Purpose-specific error messages
+ */
+export const PURPOSE_ERROR_MESSAGES = {
+  CANNOT_DELETE_SYSTEM: 'Cannot delete system purpose. Deactivate it instead.',
+  TEMPLATE_NOT_FOUND: 'Template not found or inactive',
+  TEMPLATE_ALREADY_ADOPTED: 'Template already adopted by this tenant',
+  LABEL_ALREADY_EXISTS: 'A purpose with this label already exists',
+} as const;

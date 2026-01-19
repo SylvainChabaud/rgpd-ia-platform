@@ -10,6 +10,7 @@ import { CreatePlatformSuperAdminUseCase } from "@/app/usecases/bootstrap/Create
 import { CreateTenantUseCase } from "@/app/usecases/bootstrap/CreateTenantUseCase";
 import { CreateTenantAdminUseCase } from "@/app/usecases/bootstrap/CreateTenantAdminUseCase";
 import { CreateTenantUserUseCase } from "@/app/usecases/bootstrap/CreateTenantUserUseCase";
+import { CreateTenantDpoUseCase } from "@/app/usecases/bootstrap/CreateTenantDpoUseCase";
 import { GetBootstrapStatusUseCase } from "@/app/usecases/bootstrap/GetBootstrapStatusUseCase";
 import { logInfo } from "@/shared/logger";
 import { platformContext, systemContext } from "@/app/context/RequestContext";
@@ -56,15 +57,16 @@ program
   .command("superadmin")
   .requiredOption("--email <email>")
   .requiredOption("--displayName <name>")
-  .option("--password <password>", "Password for development (optional)")
-  .description("Create the platform superadmin (non-replayable)")
+  .description("Create the platform superadmin (non-replayable). Set BOOTSTRAP_PASSWORD env var for password.")
   .action(async (opts) => {
     await runMigrations();
     const state = new PgBootstrapStateRepo();
     const users = new PgPlatformUserRepo();
     const audit = new PgAuditEventWriter();
     const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
-    const res = await uc.execute(opts);
+    // SECURITY: Read password from env var, never from CLI args (shell history exposure)
+    const password = process.env.BOOTSTRAP_PASSWORD;
+    const res = await uc.execute({ ...opts, password });
     // RGPD-safe: log only P1 data (userId), never P2 (displayName, email)
     logInfo({ event: "bootstrap.superadmin.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.platformUserId } });
   });
@@ -93,10 +95,9 @@ program
   .requiredOption("--tenantSlug <slug>")
   .requiredOption("--email <email>")
   .requiredOption("--displayName <name>")
-  .option("--password <password>", "Password for development (optional)")
   .option("--platformActorId <id>")
   .description(
-    "Create a tenant admin (requires PLATFORM context or SYSTEM in bootstrap mode)"
+    "Create a tenant admin (requires PLATFORM context or SYSTEM in bootstrap mode). Set BOOTSTRAP_PASSWORD env var for password."
   )
   .action(async (opts) => {
     await runMigrations();
@@ -110,7 +111,9 @@ program
       policyEngine
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
-    const res = await uc.execute(ctx, opts);
+    // SECURITY: Read password from env var, never from CLI args (shell history exposure)
+    const password = process.env.BOOTSTRAP_PASSWORD;
+    const res = await uc.execute(ctx, { ...opts, password });
     // RGPD-safe: log only P1 data (userId, tenantId), never P2 (displayName, email)
     logInfo({ event: "bootstrap.tenant-admin.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.tenantAdminId, tenantId: res.tenantId } });
   });
@@ -120,10 +123,9 @@ program
   .requiredOption("--tenantSlug <slug>")
   .requiredOption("--email <email>")
   .requiredOption("--displayName <name>")
-  .option("--password <password>", "Password for development (optional)")
   .option("--platformActorId <id>")
   .description(
-    "Create a tenant user (requires PLATFORM context or SYSTEM in bootstrap mode)"
+    "Create a tenant user (requires PLATFORM context or SYSTEM in bootstrap mode). Set BOOTSTRAP_PASSWORD env var for password."
   )
   .action(async (opts) => {
     await runMigrations();
@@ -137,9 +139,39 @@ program
       policyEngine
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
-    const res = await uc.execute(ctx, opts);
+    // SECURITY: Read password from env var, never from CLI args (shell history exposure)
+    const password = process.env.BOOTSTRAP_PASSWORD;
+    const res = await uc.execute(ctx, { ...opts, password });
     // RGPD-safe: log only P1 data (userId, tenantId), never P2 (displayName, email)
     logInfo({ event: "bootstrap.tenant-user.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.tenantUserId, tenantId: res.tenantId } });
+  });
+
+program
+  .command("tenant-dpo")
+  .requiredOption("--tenantSlug <slug>")
+  .requiredOption("--email <email>")
+  .requiredOption("--displayName <name>")
+  .option("--platformActorId <id>")
+  .description(
+    "Create a tenant DPO - LOT 12.4 (requires PLATFORM context or SYSTEM in bootstrap mode). Set BOOTSTRAP_PASSWORD env var for password."
+  )
+  .action(async (opts) => {
+    await runMigrations();
+    const tenants = new PgTenantRepo();
+    const tenantUsers = new PgTenantUserRepo();
+    const audit = new PgAuditEventWriter();
+    const uc = new CreateTenantDpoUseCase(
+      tenants,
+      tenantUsers,
+      audit,
+      policyEngine
+    );
+    const ctx = resolveBootstrapContext(opts.platformActorId);
+    // SECURITY: Read password from env var, never from CLI args (shell history exposure)
+    const password = process.env.BOOTSTRAP_PASSWORD;
+    const res = await uc.execute(ctx, { ...opts, password });
+    // RGPD-safe: log only P1 data (userId, tenantId), never P2 (displayName, email)
+    logInfo({ event: "bootstrap.tenant-dpo.created", actorScope: ACTOR_SCOPE.SYSTEM, meta: { userId: res.tenantDpoId, tenantId: res.tenantId } });
   });
 
 program.parseAsync(process.argv);
