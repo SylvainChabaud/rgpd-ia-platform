@@ -68,6 +68,7 @@ function createTenantAdminRequest(tenantId: string, urlTenantId: string): NextRe
 function createPlatformAdminRequest(urlTenantId: string): NextRequest {
   const token = signJwt({
     userId: PLATFORM_USER_ID,
+    tenantId: null,
     scope: ACTOR_SCOPE.PLATFORM,
     role: ACTOR_ROLE.SUPERADMIN,
   });

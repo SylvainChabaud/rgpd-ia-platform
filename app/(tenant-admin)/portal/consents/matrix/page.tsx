@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert as _Alert, AlertDescription as _AlertDescription } from '@/components/ui/alert'
 import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   ArrowLeft,
@@ -40,7 +40,7 @@ import {
   ChevronRight,
   Eye,
   Grid3X3,
-  Info,
+  Info as _Info,
 } from 'lucide-react'
 
 /**

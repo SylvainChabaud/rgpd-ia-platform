@@ -94,9 +94,9 @@ const sampleAuditEvents: AuditEventRecord[] = [
 // MOCK IMPLEMENTATIONS
 // =============================================================================
 
-function createMockConsentRepo(consents: Consent[] = sampleConsents): jest.Mocked<ConsentRepo> {
+function createMockConsentRepo(consents: Consent[] = sampleConsents) {
   return {
-    findByUser: jest.fn().mockResolvedValue(consents),
+    findByUser: jest.fn<() => Promise<Consent[]>>().mockResolvedValue(consents),
     findByUserAndPurpose: jest.fn(),
     create: jest.fn(),
     revoke: jest.fn(),
@@ -105,9 +105,9 @@ function createMockConsentRepo(consents: Consent[] = sampleConsents): jest.Mocke
   } as unknown as jest.Mocked<ConsentRepo>;
 }
 
-function createMockAiJobRepo(jobs: AiJob[] = sampleAiJobs): jest.Mocked<AiJobRepo> {
+function createMockAiJobRepo(jobs: AiJob[] = sampleAiJobs) {
   return {
-    findByUser: jest.fn().mockResolvedValue(jobs),
+    findByUser: jest.fn<() => Promise<AiJob[]>>().mockResolvedValue(jobs),
     create: jest.fn(),
     updateStatus: jest.fn(),
     findById: jest.fn(),
@@ -116,15 +116,15 @@ function createMockAiJobRepo(jobs: AiJob[] = sampleAiJobs): jest.Mocked<AiJobRep
   } as unknown as jest.Mocked<AiJobRepo>;
 }
 
-function createMockAuditWriter(): jest.Mocked<AuditEventWriter> {
+function createMockAuditWriter() {
   return {
-    write: jest.fn().mockResolvedValue(undefined),
+    write: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
   } as jest.Mocked<AuditEventWriter>;
 }
 
-function createMockAuditReader(events: AuditEventRecord[] = sampleAuditEvents): jest.Mocked<AuditEventReader> {
+function createMockAuditReader(events: AuditEventRecord[] = sampleAuditEvents) {
   return {
-    findByUser: jest.fn().mockResolvedValue(events),
+    findByUser: jest.fn<() => Promise<AuditEventRecord[]>>().mockResolvedValue(events),
     list: jest.fn(),
   } as unknown as jest.Mocked<AuditEventReader>;
 }

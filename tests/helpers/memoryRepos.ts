@@ -146,6 +146,17 @@ export class MemTenantUserRepo implements TenantUserRepo {
   }): Promise<void> {
     this.users.push({ ...input });
   }
+
+  async createTenantDpo(input: {
+    id: string;
+    tenantId: string;
+    emailHash: string;
+    displayName: string;
+    passwordHash: string;
+  }): Promise<void> {
+    // DPO is stored same as admin for memory testing
+    this.admins.push({ ...input });
+  }
 }
 
 export class MemAuditWriter implements AuditEventWriter {

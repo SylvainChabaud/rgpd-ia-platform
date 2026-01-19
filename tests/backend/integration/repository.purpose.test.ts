@@ -15,7 +15,7 @@ import { PgPurposeRepo } from '@/infrastructure/repositories/PgPurposeRepo';
 import { pool } from '@/infrastructure/db/pg';
 import { withTenantContext } from '@/infrastructure/db/tenantContext';
 import { randomUUID } from 'crypto';
-import { VALIDATION_STATUS } from '@/lib/constants/dpia';
+import { VALIDATION_STATUS, LAWFUL_BASIS } from '@/lib/constants/rgpd';
 
 describe('Repository: PgPurposeRepo', () => {
   let repo: PgPurposeRepo;
@@ -84,7 +84,7 @@ describe('Repository: PgPurposeRepo', () => {
         repo.create('', {
           label: 'Test',
           description: 'Test description',
-          lawfulBasis: 'consent',
+          lawfulBasis: LAWFUL_BASIS.CONSENT,
         })
       ).rejects.toThrow('RGPD VIOLATION: tenantId required');
     });
@@ -94,14 +94,14 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Tenant 1 Purpose',
         description: 'Purpose belonging to tenant 1',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Create purpose in tenant 2
       await repo.create(TENANT_ID_2, {
         label: 'Tenant 2 Purpose',
         description: 'Purpose belonging to tenant 2',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Query tenant 1 - should only see tenant 1's purpose
@@ -122,7 +122,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Tenant 1 Purpose',
         description: 'Purpose belonging to tenant 1',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Try to access from tenant 2 - should return null
@@ -135,7 +135,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Original Label',
         description: 'Original description',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Try to update from tenant 2 - should return null (not found)
@@ -155,7 +155,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Tenant 1 Purpose',
         description: 'Purpose belonging to tenant 1',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Try to delete from tenant 2 - should return false (not found)
@@ -177,7 +177,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Test Purpose',
         description: 'A test purpose for unit tests',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       expect(purpose).toBeDefined();
@@ -194,8 +194,8 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Full Purpose',
         description: 'Purpose with all fields',
-        lawfulBasis: 'legitimate_interest',
-        category: 'marketing',
+        lawfulBasis: LAWFUL_BASIS.LEGITIMATE_INTEREST,
+        category: 'MARKETING',
         riskLevel: 'MEDIUM',
         maxDataClass: 'P2',
         requiresDpia: false,
@@ -203,7 +203,7 @@ describe('Repository: PgPurposeRepo', () => {
         isActive: true,
       });
 
-      expect(purpose.category).toBe('marketing');
+      expect(purpose.category).toBe('MARKETING');
       expect(purpose.riskLevel).toBe('MEDIUM');
       expect(purpose.maxDataClass).toBe('P2');
       expect(purpose.isRequired).toBe(true);
@@ -213,14 +213,14 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Unique Label',
         description: 'First purpose',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       await expect(
         repo.create(TENANT_ID_1, {
           label: 'Unique Label',
           description: 'Duplicate purpose',
-          lawfulBasis: 'consent',
+          lawfulBasis: LAWFUL_BASIS.CONSENT,
         })
       ).rejects.toThrow(/unique|duplicate/i);
     });
@@ -229,13 +229,13 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Same Label',
         description: 'Purpose in tenant 1',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       const purpose2 = await repo.create(TENANT_ID_2, {
         label: 'Same Label',
         description: 'Purpose in tenant 2',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       expect(purpose2).toBeDefined();
@@ -248,7 +248,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Original',
         description: 'Original description',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       const updated = await repo.update(TENANT_ID_1, purpose.id, {
@@ -276,7 +276,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'To Delete',
         description: 'Purpose to delete',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       const deleted = await repo.softDelete(TENANT_ID_1, purpose.id);
@@ -387,7 +387,7 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Analytics Purpose',
         description: 'For analytics',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       const found = await repo.findByLabel(TENANT_ID_1, 'analytics purpose');
@@ -404,14 +404,14 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Active Purpose',
         description: 'Active',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
         isActive: true,
       });
 
-      const inactivePurpose = await repo.create(TENANT_ID_1, {
+      const _inactivePurpose = await repo.create(TENANT_ID_1, {
         label: 'Inactive Purpose',
         description: 'Inactive',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
         isActive: false,
       });
 
@@ -430,7 +430,7 @@ describe('Repository: PgPurposeRepo', () => {
       await repo.create(TENANT_ID_1, {
         label: 'Regular Purpose',
         description: 'Not system',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Create system purpose (from template)
@@ -453,7 +453,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'Consent Test Purpose',
         description: 'For consent counting',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       // Create consents referencing by purpose_id
@@ -478,7 +478,7 @@ describe('Repository: PgPurposeRepo', () => {
       const purpose = await repo.create(TENANT_ID_1, {
         label: 'No Consents Purpose',
         description: 'Has no consents',
-        lawfulBasis: 'consent',
+        lawfulBasis: LAWFUL_BASIS.CONSENT,
       });
 
       const count = await repo.countConsents(TENANT_ID_1, purpose.id);

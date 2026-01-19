@@ -58,7 +58,7 @@ import {
   Shield,
   ShieldCheck,
   AlertCircle,
-  Info,
+  Info as _Info,
   Building2,
   Check,
   AlertTriangle,

@@ -27,7 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert as _Alert, AlertDescription as _AlertDescription } from '@/components/ui/alert'
 import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   ArrowLeft,
@@ -38,7 +38,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Info,
+  Info as _Info,
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { fr } from 'date-fns/locale'

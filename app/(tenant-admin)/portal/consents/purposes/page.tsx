@@ -56,7 +56,7 @@ import {
   XCircle,
   Info,
   Shield,
-  FileCheck,
+  FileCheck as _FileCheck,
   AlertTriangle,
   Building2,
   Sparkles,

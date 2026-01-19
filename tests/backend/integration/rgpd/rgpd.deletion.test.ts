@@ -27,6 +27,39 @@ import { deleteUserData } from "@/app/usecases/rgpd/deleteUserData";
 import { purgeUserData } from "@/app/usecases/rgpd/purgeUserData";
 import { exportUserData } from "@/app/usecases/rgpd/exportUserData";
 import { newId } from "@/shared/ids";
+import * as ExportStorage from "@/infrastructure/storage/ExportStorage";
+import type { ExportStorage as IExportStorage } from "@/app/ports/ExportStorage";
+import type { Logger } from "@/app/ports/Logger";
+
+/**
+ * Wrap ExportStorage module as interface-compliant object
+ * Note: Uses type assertion due to slight differences in EncryptedData types
+ */
+function createExportStorageAdapter(): IExportStorage {
+  // Type assertions needed due to slight differences in type definitions
+  // between infrastructure and port layers
+  return {
+    storeEncryptedBundle: ExportStorage.storeEncryptedBundle as unknown as IExportStorage['storeEncryptedBundle'],
+    readEncryptedBundle: ExportStorage.readEncryptedBundle as unknown as IExportStorage['readEncryptedBundle'],
+    deleteExportBundle: ExportStorage.deleteExportBundle,
+    storeExportMetadata: ExportStorage.storeExportMetadata,
+    getExportMetadataByToken: (token: string) => ExportStorage.getExportMetadataByToken(token) ?? undefined,
+    getExportMetadataByUserId: ExportStorage.getExportMetadataByUserId,
+    deleteExportMetadata: ExportStorage.deleteExportMetadata,
+  };
+}
+
+/**
+ * Create a no-op logger for tests
+ */
+function createTestLogger(): Logger {
+  return {
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {},
+  };
+}
 
 // Test fixtures
 const TENANT_A_ID = newId();
@@ -277,13 +310,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
 
     // WHEN: Execute purge
     const purgeResult = await purgeUserData(
-      rgpdRequestRepo,
-      auditWriter,
-      userRepo,
-      consentRepo,
-      aiJobRepo,
       {
         requestId: deleteResult.requestId,
+      },
+      {
+        rgpdRequestRepo,
+        auditWriter,
+        userRepo,
+        consentRepo,
+        aiJobRepo,
+        exportStorage: createExportStorageAdapter(),
+        logger: createTestLogger(),
       }
     );
 
@@ -397,13 +434,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
 
     // WHEN: Execute purge
     const purgeResult = await purgeUserData(
-      rgpdRequestRepo,
-      auditWriter,
-      userRepo,
-      consentRepo,
-      aiJobRepo,
       {
         requestId: deleteResult.requestId,
+      },
+      {
+        rgpdRequestRepo,
+        auditWriter,
+        userRepo,
+        consentRepo,
+        aiJobRepo,
+        exportStorage: createExportStorageAdapter(),
+        logger: createTestLogger(),
       }
     );
 
@@ -474,14 +515,19 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
 
     const freshAuditWriter2 = new InMemoryAuditEventWriter();
     await purgeUserData(
-      rgpdRequestRepo,
-      freshAuditWriter2,
-      userRepo,
-      consentRepo,
-      aiJobRepo,
       {
-      requestId: deleteResult.requestId,
-    });
+        requestId: deleteResult.requestId,
+      },
+      {
+        rgpdRequestRepo,
+        auditWriter: freshAuditWriter2,
+        userRepo,
+        consentRepo,
+        aiJobRepo,
+        exportStorage: createExportStorageAdapter(),
+        logger: createTestLogger(),
+      }
+    );
 
     // THEN: Deletion completed event created
     const purgeEvents = freshAuditWriter2.events;
@@ -584,13 +630,17 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     // THEN: Should fail
     await expect(
       purgeUserData(
-        rgpdRequestRepo,
-        auditWriter,
-        userRepo,
-        consentRepo,
-        aiJobRepo,
         {
           requestId: deleteResult.requestId,
+        },
+        {
+          rgpdRequestRepo,
+          auditWriter,
+          userRepo,
+          consentRepo,
+          aiJobRepo,
+          exportStorage: createExportStorageAdapter(),
+          logger: createTestLogger(),
         }
       )
     ).rejects.toThrow(/not ready for purge/i);

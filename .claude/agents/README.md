@@ -11,8 +11,20 @@ Ce répertoire contient les agents spécialisés pour le projet.
 | **architecture-guardian** | Validation architecture | Read, Glob, Grep | Nouveaux modules, refactoring |
 | **test-analyst** | Analyse couverture tests | Read, Glob, Grep, Bash | Amélioration qualité tests |
 | **code-reviewer** | Revue qualité code | Read, Glob, Grep | PRs, code review |
+| **const-refactor** | Refactoring constantes hardcodées | Read, Glob, Grep, Edit, Write, Bash | Consolidation constantes par domaine |
 
-## Utilisation
+## Orchestration complète
+
+Pour exécuter **tous les agents en série** avec rapport consolidé, utilisez le slash command :
+
+```bash
+/full-review                      # Analyse les fichiers modifiés
+/full-review src/domain/          # Analyse un dossier spécifique
+```
+
+Voir `.claude/commands/README.md` pour plus de détails sur l'orchestration.
+
+## Utilisation individuelle
 
 ### Via le chat Claude Code
 

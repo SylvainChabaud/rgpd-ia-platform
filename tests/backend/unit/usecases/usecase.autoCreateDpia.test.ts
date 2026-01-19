@@ -34,7 +34,7 @@ describe('autoCreateDpiaForPurpose', () => {
 
   beforeEach(() => {
     mockDpiaRepo = {
-      create: jest.fn().mockResolvedValue({
+      create: jest.fn<() => Promise<{ id: string; tenantId: string; purposeId: string; status: string }>>().mockResolvedValue({
         id: DPIA_ID,
         tenantId: TENANT_ID,
         purposeId: PURPOSE_ID,
@@ -45,7 +45,7 @@ describe('autoCreateDpiaForPurpose', () => {
     } as unknown as jest.Mocked<DpiaRepo>;
 
     mockAuditWriter = {
-      write: jest.fn().mockResolvedValue(undefined),
+      write: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     } as jest.Mocked<AuditEventWriter>;
 
     mockLogger = {

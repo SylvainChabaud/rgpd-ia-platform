@@ -1,9 +1,16 @@
 import { randomUUID } from "crypto";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
-import type { ExportStorage, EncryptedData } from "@/app/ports/ExportStorage";
+import type { EncryptedData } from "@/infrastructure/crypto/encryption";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { EXPORT_MAX_DOWNLOADS } from "@/domain/rgpd/ExportBundle";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+import {
+  getExportMetadataByToken,
+  storeExportMetadata,
+  readEncryptedBundle,
+  deleteExportBundle,
+  deleteExportMetadata,
+} from "@/infrastructure/storage/ExportStorage";
 
 /**
  * Download Export use-case
@@ -29,24 +36,14 @@ export type DownloadExportOutput = {
   remainingDownloads: number;
 };
 
-/**
- * Dependencies for downloadExport
- * Injected from API routes - never instantiated in usecase
- */
-export interface DownloadExportDeps {
-  auditWriter: AuditEventWriter;
-  exportStorage: ExportStorage;
-}
-
 export async function downloadExport(
-  input: DownloadExportInput,
-  deps: DownloadExportDeps
+  auditWriter: AuditEventWriter,
+  input: DownloadExportInput
 ): Promise<DownloadExportOutput> {
-  const { auditWriter, exportStorage } = deps;
   const { downloadToken, requestingUserId, requestingTenantId } = input;
 
   // Find export by token
-  const metadata = exportStorage.getExportMetadataByToken(downloadToken);
+  const metadata = getExportMetadataByToken(downloadToken);
 
   if (!metadata) {
     throw new Error("Export not found or invalid token");
@@ -64,8 +61,8 @@ export async function downloadExport(
   const now = new Date();
   if (metadata.expiresAt < now) {
     // Clean up expired export
-    await exportStorage.deleteExportBundle(metadata.exportId);
-    exportStorage.deleteExportMetadata(metadata.exportId);
+    await deleteExportBundle(metadata.exportId);
+    deleteExportMetadata(metadata.exportId);
 
     throw new Error("Export has expired");
   }
@@ -78,11 +75,11 @@ export async function downloadExport(
   }
 
   // Read encrypted bundle
-  const encryptedData = await exportStorage.readEncryptedBundle(metadata.exportId);
+  const encryptedData = await readEncryptedBundle(metadata.exportId);
 
   // Increment download count
   metadata.downloadCount++;
-  exportStorage.storeExportMetadata(metadata);
+  storeExportMetadata(metadata);
 
   // Emit audit event
   await emitAuditEvent(auditWriter, {

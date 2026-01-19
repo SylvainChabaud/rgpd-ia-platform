@@ -6,12 +6,14 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
-import { purgeUserData } from '@/app/usecases/rgpd/purgeUserData';
+import { purgeUserData, type PurgeUserDataDeps } from '@/app/usecases/rgpd/purgeUserData';
 import type { RgpdRequestRepo } from '@/app/ports/RgpdRequestRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import type { UserRepo } from '@/app/ports/UserRepo';
 import type { ConsentRepo } from '@/app/ports/ConsentRepo';
 import type { AiJobRepo } from '@/app/ports/AiJobRepo';
+import type { ExportStorage } from '@/app/ports/ExportStorage';
+import type { Logger } from '@/app/ports/Logger';
 
 // Note: Export storage tests are handled in integration tests
 // since Jest mock hoisting prevents proper unit testing of the
@@ -23,6 +25,9 @@ describe('purgeUserData', () => {
   let mockUserRepo: jest.Mocked<UserRepo>;
   let mockConsentRepo: jest.Mocked<ConsentRepo>;
   let mockAiJobRepo: jest.Mocked<AiJobRepo>;
+  let mockExportStorage: jest.Mocked<ExportStorage>;
+  let mockLogger: jest.Mocked<Logger>;
+  let deps: PurgeUserDataDeps;
 
   beforeEach(() => {
     mockRgpdRequestRepo = {
@@ -45,6 +50,29 @@ describe('purgeUserData', () => {
     mockAiJobRepo = {
       hardDeleteByUser: jest.fn(),
     } as unknown as jest.Mocked<AiJobRepo>;
+
+    mockExportStorage = {
+      getExportMetadataByUserId: jest.fn().mockReturnValue([]),
+      deleteExportBundle: jest.fn(),
+      deleteExportMetadata: jest.fn(),
+    } as unknown as jest.Mocked<ExportStorage>;
+
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    } as jest.Mocked<Logger>;
+
+    deps = {
+      rgpdRequestRepo: mockRgpdRequestRepo,
+      auditWriter: mockAuditWriter,
+      userRepo: mockUserRepo,
+      consentRepo: mockConsentRepo,
+      aiJobRepo: mockAiJobRepo,
+      exportStorage: mockExportStorage,
+      logger: mockLogger,
+    };
   });
 
   it('should successfully purge user data', async () => {
@@ -67,14 +95,7 @@ describe('purgeUserData', () => {
     mockAiJobRepo.hardDeleteByUser.mockResolvedValue(5);
     mockUserRepo.hardDeleteUserByTenant.mockResolvedValue(1);
 
-    const result = await purgeUserData(
-      mockRgpdRequestRepo,
-      mockAuditWriter,
-      mockUserRepo,
-      mockConsentRepo,
-      mockAiJobRepo,
-      input
-    );
+    const result = await purgeUserData(input, deps);
 
     expect(result.requestId).toBe('request-1');
     expect(result.purgedAt).toBeDefined();
@@ -113,16 +134,7 @@ describe('purgeUserData', () => {
       requestId: '',
     };
 
-    await expect(
-      purgeUserData(
-        mockRgpdRequestRepo,
-        mockAuditWriter,
-        mockUserRepo,
-        mockConsentRepo,
-        mockAiJobRepo,
-        input
-      )
-    ).rejects.toThrow('requestId is required');
+    await expect(purgeUserData(input, deps)).rejects.toThrow('requestId is required');
   });
 
   it('should throw if purge request not found', async () => {
@@ -132,16 +144,7 @@ describe('purgeUserData', () => {
 
     mockRgpdRequestRepo.findPendingPurges.mockResolvedValue([]);
 
-    await expect(
-      purgeUserData(
-        mockRgpdRequestRepo,
-        mockAuditWriter,
-        mockUserRepo,
-        mockConsentRepo,
-        mockAiJobRepo,
-        input
-      )
-    ).rejects.toThrow('Purge request not found or not ready for purge');
+    await expect(purgeUserData(input, deps)).rejects.toThrow('Purge request not found or not ready for purge');
   });
 
   it('should throw if request not in pending purges list', async () => {
@@ -161,16 +164,7 @@ describe('purgeUserData', () => {
 
     mockRgpdRequestRepo.findPendingPurges.mockResolvedValue([otherRequest]);
 
-    await expect(
-      purgeUserData(
-        mockRgpdRequestRepo,
-        mockAuditWriter,
-        mockUserRepo,
-        mockConsentRepo,
-        mockAiJobRepo,
-        input
-      )
-    ).rejects.toThrow('Purge request not found');
+    await expect(purgeUserData(input, deps)).rejects.toThrow('Purge request not found');
   });
 
   it('should perform cascade deletion in correct order', async () => {
@@ -193,14 +187,7 @@ describe('purgeUserData', () => {
     mockAiJobRepo.hardDeleteByUser.mockResolvedValue(0);
     mockUserRepo.hardDeleteUserByTenant.mockResolvedValue(1);
 
-    await purgeUserData(
-      mockRgpdRequestRepo,
-      mockAuditWriter,
-      mockUserRepo,
-      mockConsentRepo,
-      mockAiJobRepo,
-      input
-    );
+    await purgeUserData(input, deps);
 
     // Verify cascade order: consents → ai_jobs → user
     const callOrder = [
@@ -233,14 +220,7 @@ describe('purgeUserData', () => {
     mockAiJobRepo.hardDeleteByUser.mockResolvedValue(0);
     mockUserRepo.hardDeleteUserByTenant.mockResolvedValue(0);
 
-    const result = await purgeUserData(
-      mockRgpdRequestRepo,
-      mockAuditWriter,
-      mockUserRepo,
-      mockConsentRepo,
-      mockAiJobRepo,
-      input
-    );
+    const result = await purgeUserData(input, deps);
 
     expect(result.deletedRecords).toEqual({
       consents: 0,
@@ -270,14 +250,7 @@ describe('purgeUserData', () => {
     mockAiJobRepo.hardDeleteByUser.mockResolvedValue(20);
     mockUserRepo.hardDeleteUserByTenant.mockResolvedValue(1);
 
-    await purgeUserData(
-      mockRgpdRequestRepo,
-      mockAuditWriter,
-      mockUserRepo,
-      mockConsentRepo,
-      mockAiJobRepo,
-      input
-    );
+    await purgeUserData(input, deps);
 
     expect(mockAuditWriter.write).toHaveBeenCalledWith(
       expect.objectContaining({
