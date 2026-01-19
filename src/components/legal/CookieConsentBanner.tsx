@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X, Settings } from 'lucide-react';
+import { COOKIE_MESSAGES } from '@/lib/constants/ui/ui-labels';
 
 /**
  * Component: Cookie Consent Banner
@@ -12,6 +13,8 @@ import { X, Settings } from 'lucide-react';
  * - Analytics/Marketing require explicit opt-in
  * - TTL 12 months (CNIL standard)
  * - Preferences saved in DB + localStorage fallback
+ *
+ * Labels centralized in @/lib/constants/ui/ui-labels.ts
  *
  * LOT 10.3 - Cookie Consent Banner
  */
@@ -162,11 +165,11 @@ export function CookieConsentBanner() {
         setVisible(false);
         setShowSettings(false);
       } else {
-        alert('Erreur lors de la sauvegarde de vos préférences. Veuillez réessayer.');
+        alert(COOKIE_MESSAGES.SAVE_ERROR);
       }
     } catch (error) {
       console.error('Error saving consent:', error);
-      alert('Erreur réseau. Veuillez réessayer.');
+      alert(COOKIE_MESSAGES.NETWORK_ERROR);
     } finally {
       setIsLoading(false);
     }

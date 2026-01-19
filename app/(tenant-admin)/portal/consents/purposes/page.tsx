@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { usePurposes, useDeletePurpose, type Purpose } from '@/lib/api/hooks/useConsents'
+import { useRequestDpiaReview } from '@/lib/api/hooks/useDpia'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +26,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
@@ -49,6 +60,8 @@ import {
   AlertTriangle,
   Building2,
   Sparkles,
+  Clock,
+  RefreshCw,
 } from 'lucide-react'
 import {
   RISK_LEVEL,
@@ -58,6 +71,7 @@ import {
   LAWFUL_BASIS_DESCRIPTIONS,
   CATEGORY_LABELS,
 } from '@/lib/constants/rgpd'
+import { toast } from 'sonner'
 
 /**
  * Purposes List Page - TENANT Admin (LOT 12.2)
@@ -90,9 +104,14 @@ export default function PurposesPage() {
   const [purposeToDelete, setPurposeToDelete] = useState<Purpose | null>(null)
   const [showInactive, setShowInactive] = useState(false)
   const [activeTab, setActiveTab] = useState<TabFilter>(TAB_FILTER.ALL)
+  // Revision request modal state
+  const [showRevisionDialog, setShowRevisionDialog] = useState(false)
+  const [purposeForRevision, setPurposeForRevision] = useState<Purpose | null>(null)
+  const [revisionComments, setRevisionComments] = useState('')
 
-  const { data, isLoading, error } = usePurposes(showInactive)
+  const { data, isLoading, error, refetch } = usePurposes(showInactive)
   const deletePurpose = useDeletePurpose()
+  const requestRevision = useRequestDpiaReview()
 
   const purposes = useMemo(() => data?.purposes || [], [data?.purposes])
 
@@ -125,6 +144,37 @@ export default function PurposesPage() {
           setPurposeToDelete(null)
         },
       })
+    }
+  }
+
+  // Revision request handlers
+  const handleRevisionClick = (purpose: Purpose) => {
+    setPurposeForRevision(purpose)
+    setRevisionComments('')
+    setShowRevisionDialog(true)
+  }
+
+  const handleConfirmRevision = () => {
+    if (purposeForRevision && purposeForRevision.dpiaId && revisionComments.trim().length >= 10) {
+      requestRevision.mutate(
+        { dpiaId: purposeForRevision.dpiaId, revisionComments: revisionComments.trim() },
+        {
+          onSuccess: () => {
+            toast.success('Demande de révision envoyée', {
+              description: 'Le DPO va ré-examiner la DPIA avec vos commentaires.',
+            })
+            setShowRevisionDialog(false)
+            setPurposeForRevision(null)
+            setRevisionComments('')
+            refetch()
+          },
+          onError: (error) => {
+            toast.error('Erreur', {
+              description: error.message || 'Impossible d\'envoyer la demande de révision.',
+            })
+          },
+        }
+      )
     }
   }
 
@@ -313,10 +363,29 @@ export default function PurposesPage() {
                             {purpose.requiresDpia && (
                               <Tooltip>
                                 <TooltipTrigger>
-                                  <FileCheck className="h-4 w-4 text-orange-500" />
+                                  {purpose.dpiaStatus === 'APPROVED' ? (
+                                    <Badge variant="outline" className="gap-1 text-xs border-green-500 text-green-600">
+                                      <CheckCircle className="h-3 w-3" />
+                                      DPIA
+                                    </Badge>
+                                  ) : purpose.dpiaStatus === 'REJECTED' ? (
+                                    <Badge variant="outline" className="gap-1 text-xs border-red-500 text-red-600">
+                                      <XCircle className="h-3 w-3" />
+                                      DPIA
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="gap-1 text-xs border-yellow-500 text-yellow-600">
+                                      <Clock className="h-3 w-3" />
+                                      DPIA
+                                    </Badge>
+                                  )}
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  DPIA (Analyse d&apos;Impact) requise
+                                  {purpose.dpiaStatus === 'APPROVED'
+                                    ? 'DPIA approuvée par le DPO'
+                                    : purpose.dpiaStatus === 'REJECTED'
+                                    ? 'DPIA rejetée - à réviser'
+                                    : 'DPIA en attente de validation DPO'}
                                 </TooltipContent>
                               </Tooltip>
                             )}
@@ -402,6 +471,25 @@ export default function PurposesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {/* Revision request button for rejected DPIAs */}
+                          {purpose.dpiaStatus === 'REJECTED' && purpose.dpiaId && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRevisionClick(purpose)}
+                                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                  Révision
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Demander au DPO de ré-examiner la DPIA
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Link href={`/portal/consents/purposes/${purpose.id}/edit`}>
@@ -454,13 +542,20 @@ export default function PurposesPage() {
           </CardContent>
         </Card>
 
-        {/* DPIA Warning if any high-risk purposes */}
-        {filteredPurposes.some((p: Purpose) => p.requiresDpia) && (
+        {/* DPIA Warning if any pending/rejected DPIA */}
+        {filteredPurposes.some((p: Purpose) => p.requiresDpia && p.dpiaStatus !== 'APPROVED') && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>DPIA requise</strong> — Certaines finalités nécessitent une Analyse d&apos;Impact sur la Protection des Données.
-              Contactez votre DPO avant mise en production.
+              <strong>DPIA non validée</strong> — {
+                filteredPurposes.filter((p: Purpose) => p.dpiaStatus === 'PENDING').length > 0
+                  ? `${filteredPurposes.filter((p: Purpose) => p.dpiaStatus === 'PENDING').length} DPIA en attente de validation DPO.`
+                  : ''
+              } {
+                filteredPurposes.filter((p: Purpose) => p.dpiaStatus === 'REJECTED').length > 0
+                  ? `${filteredPurposes.filter((p: Purpose) => p.dpiaStatus === 'REJECTED').length} DPIA rejetée(s) à réviser.`
+                  : ''
+              } Ces finalités ne doivent pas être utilisées en production.
             </AlertDescription>
           </Alert>
         )}
@@ -487,6 +582,76 @@ export default function PurposesPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Revision Request Dialog */}
+        <Dialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-orange-600" />
+                Demander une révision DPIA
+              </DialogTitle>
+              <DialogDescription>
+                Expliquez les corrections apportées pour que le DPO puisse ré-examiner la DPIA de la finalité
+                &quot;{purposeForRevision?.label}&quot;.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="revisionComments">
+                  Commentaires de révision <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="revisionComments"
+                  value={revisionComments}
+                  onChange={(e) => setRevisionComments(e.target.value)}
+                  placeholder="Décrivez les corrections apportées et les mesures mises en place pour répondre aux remarques du DPO..."
+                  rows={5}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum 10 caractères. {revisionComments.length}/10 minimum
+                </p>
+              </div>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  Une fois envoyée, la DPIA passera en statut &quot;En attente&quot; et le DPO
+                  pourra la ré-examiner avec vos commentaires.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRevisionDialog(false)
+                  setPurposeForRevision(null)
+                  setRevisionComments('')
+                }}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleConfirmRevision}
+                disabled={revisionComments.trim().length < 10 || requestRevision.isPending}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {requestRevision.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Envoi...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Demander révision
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   )

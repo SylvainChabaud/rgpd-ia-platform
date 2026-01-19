@@ -23,32 +23,11 @@ import {
 import { Users, Cpu, ShieldCheck, FileText, AlertCircle, Building2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-
-/**
- * Event type to badge variant mapping
- */
-const eventTypeBadges: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  'user.created': { label: 'Création user', variant: 'default' },
-  'user.updated': { label: 'Modification user', variant: 'secondary' },
-  'user.suspended': { label: 'Suspension user', variant: 'destructive' },
-  'user.reactivated': { label: 'Réactivation user', variant: 'outline' },
-  'consent.granted': { label: 'Consentement accordé', variant: 'default' },
-  'consent.revoked': { label: 'Consentement révoqué', variant: 'destructive' },
-  'ai.invoked': { label: 'Job IA', variant: 'secondary' },
-  'ai.completed': { label: 'Job IA terminé', variant: 'default' },
-  'ai.failed': { label: 'Job IA échoué', variant: 'destructive' },
-  'rgpd.export.requested': { label: 'Export demandé', variant: 'outline' },
-  'rgpd.export.completed': { label: 'Export terminé', variant: 'default' },
-  'rgpd.delete.requested': { label: 'Effacement demandé', variant: 'destructive' },
-  'rgpd.delete.completed': { label: 'Effacement terminé', variant: 'outline' },
-}
-
-/**
- * Get badge config for event type
- */
-function getEventBadge(type: string): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
-  return eventTypeBadges[type] || { label: type, variant: 'secondary' }
-}
+import {
+  getEventBadgeConfig,
+  CONSENT_STATUS_CHART_LABELS,
+  PAGE_LABELS,
+} from '@/lib/constants/ui/ui-labels'
 
 /**
  * Tenant Dashboard Page
@@ -84,9 +63,9 @@ export default function TenantDashboardPage() {
 
   // Prepare chart data for Consents
   const consentsChartData = stats ? [
-    { status: 'Accordés', count: stats.consents.granted },
-    { status: 'Révoqués', count: stats.consents.revoked },
-    { status: 'En attente', count: stats.consents.pending },
+    { status: CONSENT_STATUS_CHART_LABELS.GRANTED, count: stats.consents.granted },
+    { status: CONSENT_STATUS_CHART_LABELS.REVOKED, count: stats.consents.revoked },
+    { status: CONSENT_STATUS_CHART_LABELS.PENDING, count: stats.consents.pending },
   ] : []
 
   // Error state
@@ -232,7 +211,7 @@ export default function TenantDashboardPage() {
               </TableHeader>
               <TableBody>
                 {activityData.events.map((event) => {
-                  const badge = getEventBadge(event.type)
+                  const badge = getEventBadgeConfig(event.type)
                   return (
                     <TableRow key={event.id}>
                       <TableCell className="text-muted-foreground">
@@ -257,7 +236,7 @@ export default function TenantDashboardPage() {
             </Table>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              Aucune activité récente
+              {PAGE_LABELS.ACTIVITY.EMPTY}
             </div>
           )}
         </CardContent>

@@ -1,16 +1,8 @@
 'use client'
 
-// =========================
-// Constants
-// =========================
-
-const CONSENT_STATUS = {
-  GRANTED: 'granted',
-  REVOKED: 'revoked',
-} as const;
-
 import Link from 'next/link'
 import { usePurposes, useConsentMatrix } from '@/lib/api/hooks/useConsents'
+import { CONSENT_STATUS } from '@/shared/consent/constants'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
@@ -86,6 +78,9 @@ export default function ConsentsPage() {
           </p>
         </div>
       </div>
+
+      {/* RGPD Compliance Card - Top of page */}
+      <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_HUB} />
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -231,9 +226,6 @@ export default function ConsentsPage() {
           </Card>
         </Link>
       </div>
-
-      {/* RGPD Compliance Card */}
-      <RgpdComplianceCard variant={COMPLIANCE_CARD_VARIANT.CONSENTS_HUB} />
     </div>
   )
 }

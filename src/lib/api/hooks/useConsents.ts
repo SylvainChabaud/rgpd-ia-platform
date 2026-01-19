@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '../apiClient'
+import { apiClient, apiBlobClient, downloadBlob } from '../apiClient'
 import { toast } from 'sonner'
 import type {
   LawfulBasis,
@@ -44,6 +44,9 @@ export interface Purpose {
   isFromTemplate?: boolean
   isSystem?: boolean
   validationStatus?: ValidationStatus
+  // DPIA status (LOT 12.4)
+  dpiaStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null
+  dpiaId?: string | null
 }
 
 export interface PurposeListResponse {
@@ -305,33 +308,18 @@ export function useConsentHistory(userId: string | null | undefined, params?: Co
 /**
  * Export consent matrix to CSV
  * Returns a function that triggers the download
+ *
+ * Uses centralized apiBlobClient for consistent auth handling.
  */
 export function useExportConsents() {
   return useMutation({
     mutationFn: async () => {
-      // Get auth token
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null
+      // Use centralized blob client with auto-auth handling
+      const defaultFilename = `consents-export-${new Date().toISOString().split('T')[0]}.csv`
+      const { blob, filename } = await apiBlobClient('/consents/export', defaultFilename)
 
-      const response = await fetch('/api/consents/export', {
-        method: 'GET',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to export consents')
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `consents-export-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      // Trigger browser download
+      downloadBlob(blob, filename)
 
       return { success: true }
     },
