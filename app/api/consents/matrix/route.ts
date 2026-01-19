@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
-import { withTenantAdmin } from '@/middleware/rbac';
+import { withTenantAdminOrDpo } from '@/middleware/rbac';
 import { requireContext } from '@/lib/requestContext';
 import { PgPurposeRepo } from '@/infrastructure/repositories/PgPurposeRepo';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
@@ -62,7 +62,7 @@ interface MatrixRow {
  */
 export const GET = withLogging(
   withAuth(
-    withTenantAdmin(
+    withTenantAdminOrDpo(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);

@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
-import { requireContext, isPlatformAdmin, isTenantAdmin } from '@/lib/requestContext';
+import { requireContext, isPlatformAdmin, isTenantAdminOrDpo } from '@/lib/requestContext';
 import { logger } from '@/infrastructure/logging/logger';
 import { internalError, forbiddenError, notFoundError } from '@/lib/errorResponse';
 import { getPool } from '@/infrastructure/db/pool';
@@ -39,11 +39,11 @@ export const GET = withLogging(
         const context = requireContext(req);
         const { id: tenantId } = await params;
 
-        // Security check: TENANT admin can only see their own tenant
+        // Security check: TENANT admin or DPO can only see their own tenant
         if (!isPlatformAdmin(context)) {
-          if (!isTenantAdmin(context)) {
+          if (!isTenantAdminOrDpo(context)) {
             return NextResponse.json(
-              forbiddenError('Tenant admin access required'),
+              forbiddenError('Tenant admin or DPO access required'),
               { status: 403 }
             );
           }

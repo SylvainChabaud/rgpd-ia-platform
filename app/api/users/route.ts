@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
-import { withTenantAdmin } from '@/middleware/rbac';
+import { withTenantAdmin, withTenantAdminOrDpo } from '@/middleware/rbac';
 import { requireContext } from '@/lib/requestContext';
 import { createUser } from '@/app/usecases/users/createUser';
 import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
@@ -52,7 +52,7 @@ const ListUsersQuerySchema = z.object({
  */
 export const GET = withLogging(
   withAuth(
-    withTenantAdmin(
+    withTenantAdminOrDpo(
       async (req: NextRequest) => {
         try {
           const context = requireContext(req);
@@ -167,7 +167,10 @@ export const POST = withLogging(
             actorId: context.userId,
           }, 'User created');
 
-          // RGPD-safe: Do not return email in response
+          // RGPD-safe response:
+          // - Email NEVER returned in clear text (P2 data)
+          // - Email is hashed (SHA-256) before storage
+          // - Only userId (P1) and displayName (P1) are returned
           return NextResponse.json({
             userId: result.userId,
             email: '[REDACTED]',
