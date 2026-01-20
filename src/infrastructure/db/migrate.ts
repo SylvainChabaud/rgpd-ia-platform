@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pool } from "@/infrastructure/db/pg";
+import { logger } from "@/infrastructure/logging/logger";
 
 /**
  * LOT 4.0: Idempotent migration system with version tracking
@@ -45,7 +46,7 @@ export async function runMigrations(
     // Extract version from filename (e.g., "002_lot4.sql" -> 2)
     const match = f.match(/^(\d+)_/);
     if (!match) {
-      console.warn(`Skipping malformed migration filename: ${f}`);
+      logger.warn({ event: 'migration_skip_malformed', filename: f }, 'Skipping malformed migration filename');
       continue;
     }
 
@@ -53,26 +54,28 @@ export async function runMigrations(
 
     // Skip if already applied
     if (appliedVersions.has(version)) {
-      console.log(`Migration ${version} already applied, skipping`);
+      logger.info({ event: 'migration_skip', version }, 'Migration already applied, skipping');
       continue;
     }
 
     // Read and execute migration
-    console.log(`Applying migration ${version}: ${f}`);
+    logger.info({ event: 'migration_start', version, filename: f }, 'Applying migration');
     const sql = readFileSync(join(migrationsDir, f), "utf-8");
 
     try {
       await pool.query(sql);
-      console.log(`Migration ${version} applied successfully`);
+      logger.info({ event: 'migration_success', version }, 'Migration applied successfully');
     } catch (error) {
       // Log error without exposing SQL content (RGPD P1)
-      console.error(`Migration ${version} failed`, {
+      logger.error({
+        event: 'migration_failed',
+        version,
         filename: f,
         error: error instanceof Error ? error.message : String(error),
-      });
+      }, 'Migration failed');
       throw error;
     }
   }
 
-  console.log("All migrations completed");
+  logger.info({ event: 'migrations_completed' }, 'All migrations completed');
 }

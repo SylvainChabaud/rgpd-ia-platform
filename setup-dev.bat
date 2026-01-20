@@ -271,7 +271,8 @@ REM ============================================================================
 echo [Etape 5/14] Creation du Super Admin...
 echo.
 
-call npm run bootstrap:superadmin -- --email %TEST_PLATFORM_ADMIN_EMAIL% --displayName "%TEST_PLATFORM_ADMIN_NAME%" --password %TEST_PLATFORM_ADMIN_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TEST_PLATFORM_ADMIN_PASSWORD%
+call npm run bootstrap:superadmin -- --email %TEST_PLATFORM_ADMIN_EMAIL% --displayName "%TEST_PLATFORM_ADMIN_NAME%"
 
 if errorlevel 1 (
     echo [X] Echec de la creation du Super Admin
@@ -290,14 +291,19 @@ call npm run bootstrap:tenant -- --name "%TENANT1_NAME%" --slug %TENANT1_SLUG%
 if errorlevel 1 goto :tenant_error
 
 echo [Etape 7/14] Creation du Tenant Admin pour %TENANT1_NAME%...
-call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_ADMIN_EMAIL% --displayName "%TENANT1_ADMIN_NAME%" --password %TENANT1_ADMIN_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TENANT1_ADMIN_PASSWORD%
+call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_ADMIN_EMAIL% --displayName "%TENANT1_ADMIN_NAME%"
 if errorlevel 1 goto :admin_error
 
 echo [Etape 8/14] Creation des utilisateurs et DPO pour %TENANT1_NAME%...
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER1_EMAIL% --displayName "%TENANT1_USER1_NAME%" --password %TENANT1_USER1_PASSWORD%
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER2_EMAIL% --displayName "%TENANT1_USER2_NAME%" --password %TENANT1_USER2_PASSWORD%
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER3_EMAIL% --displayName "%TENANT1_USER3_NAME%" --password %TENANT1_USER3_PASSWORD%
-call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_DPO_EMAIL% --displayName "%TENANT1_DPO_NAME%" --password %TENANT1_DPO_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TENANT1_USER1_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER1_EMAIL% --displayName "%TENANT1_USER1_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT1_USER2_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER2_EMAIL% --displayName "%TENANT1_USER2_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT1_USER3_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_USER3_EMAIL% --displayName "%TENANT1_USER3_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT1_DPO_PASSWORD%
+call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT1_SLUG% --email %TENANT1_DPO_EMAIL% --displayName "%TENANT1_DPO_NAME%"
 echo [+] Tenant %TENANT1_NAME% cree avec 3 utilisateurs + 1 DPO
 echo.
 
@@ -310,13 +316,17 @@ call npm run bootstrap:tenant -- --name "%TENANT2_NAME%" --slug %TENANT2_SLUG%
 if errorlevel 1 goto :tenant_error
 
 echo [Etape 10/14] Creation du Tenant Admin pour %TENANT2_NAME%...
-call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_ADMIN_EMAIL% --displayName "%TENANT2_ADMIN_NAME%" --password %TENANT2_ADMIN_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TENANT2_ADMIN_PASSWORD%
+call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_ADMIN_EMAIL% --displayName "%TENANT2_ADMIN_NAME%"
 if errorlevel 1 goto :admin_error
 
 echo [Etape 11/14] Creation des utilisateurs et DPO pour %TENANT2_NAME%...
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER1_EMAIL% --displayName "%TENANT2_USER1_NAME%" --password %TENANT2_USER1_PASSWORD%
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER2_EMAIL% --displayName "%TENANT2_USER2_NAME%" --password %TENANT2_USER2_PASSWORD%
-call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_DPO_EMAIL% --displayName "%TENANT2_DPO_NAME%" --password %TENANT2_DPO_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TENANT2_USER1_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER1_EMAIL% --displayName "%TENANT2_USER1_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT2_USER2_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_USER2_EMAIL% --displayName "%TENANT2_USER2_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT2_DPO_PASSWORD%
+call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT2_SLUG% --email %TENANT2_DPO_EMAIL% --displayName "%TENANT2_DPO_NAME%"
 echo [+] Tenant %TENANT2_NAME% cree avec 2 utilisateurs + 1 DPO
 echo.
 
@@ -329,14 +339,20 @@ call npm run bootstrap:tenant -- --name "%TENANT3_NAME%" --slug %TENANT3_SLUG%
 if errorlevel 1 goto :tenant_error
 
 echo [Etape 13/14] Creation du Tenant Admin pour %TENANT3_NAME%...
-call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_ADMIN_EMAIL% --displayName "%TENANT3_ADMIN_NAME%" --password %TENANT3_ADMIN_PASSWORD%
+set BOOTSTRAP_PASSWORD=%TENANT3_ADMIN_PASSWORD%
+call npm run bootstrap:tenant-admin -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_ADMIN_EMAIL% --displayName "%TENANT3_ADMIN_NAME%"
 if errorlevel 1 goto :admin_error
 
-echo [Etape 14/14] Creation des utilisateurs pour %TENANT3_NAME%...
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER1_EMAIL% --displayName "%TENANT3_USER1_NAME%" --password %TENANT3_USER1_PASSWORD%
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER2_EMAIL% --displayName "%TENANT3_USER2_NAME%" --password %TENANT3_USER2_PASSWORD%
-call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER3_EMAIL% --displayName "%TENANT3_USER3_NAME%" --password %TENANT3_USER3_PASSWORD%
-echo [+] Tenant %TENANT3_NAME% cree avec 3 utilisateurs
+echo [Etape 14/14] Creation des utilisateurs et DPO pour %TENANT3_NAME%...
+set BOOTSTRAP_PASSWORD=%TENANT3_USER1_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER1_EMAIL% --displayName "%TENANT3_USER1_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT3_USER2_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER2_EMAIL% --displayName "%TENANT3_USER2_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT3_USER3_PASSWORD%
+call npm run bootstrap:tenant-user -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_USER3_EMAIL% --displayName "%TENANT3_USER3_NAME%"
+set BOOTSTRAP_PASSWORD=%TENANT3_DPO_PASSWORD%
+call npm run bootstrap:tenant-dpo -- --tenantSlug %TENANT3_SLUG% --email %TENANT3_DPO_EMAIL% --displayName "%TENANT3_DPO_NAME%"
+echo [+] Tenant %TENANT3_NAME% cree avec 3 utilisateurs + 1 DPO
 echo.
 
 REM ============================================================================
@@ -357,7 +373,7 @@ echo   Nettoyage des donnees de simulation existantes
 echo ========================================================================
 echo.
 
-echo [Clean 1/6] Suppression des consentements...
+echo [Clean 1/7] Suppression des consentements...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM consents;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des consents
@@ -365,7 +381,15 @@ if errorlevel 1 (
     echo [+] Consentements supprimes
 )
 
-echo [Clean 2/6] Suppression des finalites...
+echo [Clean 2/7] Suppression de l'historique DPIA...
+docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM dpia_history;" >nul 2>&1
+if errorlevel 1 (
+    echo [!] Echec de la suppression des dpia_history (table peut ne pas exister)
+) else (
+    echo [+] Historique DPIA supprime
+)
+
+echo [Clean 3/7] Suppression des finalites...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM purposes;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des purposes
@@ -373,7 +397,7 @@ if errorlevel 1 (
     echo [+] Finalites supprimees
 )
 
-echo [Clean 3/6] Suppression des jobs IA...
+echo [Clean 4/7] Suppression des jobs IA...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM ai_jobs;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des ai_jobs
@@ -381,7 +405,7 @@ if errorlevel 1 (
     echo [+] Jobs IA supprimes
 )
 
-echo [Clean 4/6] Suppression des requetes RGPD...
+echo [Clean 5/7] Suppression des requetes RGPD...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM rgpd_requests;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des rgpd_requests
@@ -389,7 +413,7 @@ if errorlevel 1 (
     echo [+] Requetes RGPD supprimees
 )
 
-echo [Clean 5/6] Suppression des violations...
+echo [Clean 6/7] Suppression des violations...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM security_incidents;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des security_incidents
@@ -397,7 +421,7 @@ if errorlevel 1 (
     echo [+] Violations supprimees
 )
 
-echo [Clean 6/6] Suppression des evenements d'audit...
+echo [Clean 7/7] Suppression des evenements d'audit...
 docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform -c "DELETE FROM audit_events;" >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec de la suppression des audit_events
@@ -486,7 +510,7 @@ if "%DO_SIMULATION%"=="true" (
     echo Donnees de simulation creees:
     echo   - Finalites de traitement IA (purposes)
     echo   - Consentements utilisateurs (consents)
-    echo   - DPIA - Analyses d'impact Art. 35 (dpias, dpia_risks) - LOT 12.4
+    echo   - DPIA - Analyses d'impact Art. 35 (dpias, dpia_risks, dpia_history) - LOT 12.4
     echo   - Jobs IA (ai_jobs)
     echo   - Requetes RGPD (rgpd_requests)
     echo   - Violations de securite (security_incidents)
