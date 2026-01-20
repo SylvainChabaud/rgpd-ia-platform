@@ -19,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Eye, EyeOff, Key } from 'lucide-react'
 import Link from 'next/link'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 
 /**
  * Create User Page - PLATFORM Admin (LOT 11.2)
@@ -343,15 +344,7 @@ export default function CreateUserPage() {
       </Card>
 
       {/* RGPD Notice */}
-      <Card className="bg-muted/40">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>🔒 RGPD (Art. 5, 25, 32):</strong> L&apos;email est stocké sous forme de
-            hash SHA-256. Le mot de passe est haché avec bcrypt (12 rounds). Aucune donnée
-            sensible n&apos;est loggée. La création est tracée dans l&apos;audit trail.
-          </p>
-        </CardContent>
-      </Card>
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_CREATE} />
     </div>
   )
 }

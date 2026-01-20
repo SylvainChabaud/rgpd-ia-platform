@@ -16,6 +16,10 @@ import {
 } from "@/infrastructure/db/tenantContext";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { randomUUID } from "crypto";
+import {
+  validateSecurityIncidentColumn,
+  validateOrderDirection,
+} from "@/lib/sql/orderValidation";
 import type {
   SecurityIncident,
   CreateSecurityIncidentInput,
@@ -238,8 +242,9 @@ export class PgSecurityIncidentRepo implements SecurityIncidentRepo {
       // Pagination
       const limit = pagination?.limit ?? 50;
       const offset = pagination?.offset ?? 0;
-      const orderBy = pagination?.orderBy ?? "detected_at";
-      const orderDir = pagination?.orderDir ?? "DESC";
+      // SECURITY: Validate ORDER BY column and direction to prevent SQL injection
+      const orderBy = validateSecurityIncidentColumn(pagination?.orderBy);
+      const orderDir = validateOrderDirection(pagination?.orderDir);
 
       // Count total
       const countResult = await client.query(

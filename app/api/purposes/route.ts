@@ -85,8 +85,8 @@ export const GET = withLogging(
 
           // Single batch query instead of N+1 loop
           const dpias = await dpiaRepo.findByPurposeIds(context.tenantId, purposeIds);
-          const dpiaInfoMap = new Map<string, { status: string | null; id: string | null }>(
-            dpias.map(dpia => [dpia.purposeId, { status: dpia.status, id: dpia.id }])
+          const dpiaInfoMap = new Map<string, { status: string | null; id: string | null; rejectionReason: string | null }>(
+            dpias.map(dpia => [dpia.purposeId, { status: dpia.status, id: dpia.id, rejectionReason: dpia.rejectionReason }])
           );
 
           logger.info({
@@ -110,6 +110,7 @@ export const GET = withLogging(
                 requiresDpia: purpose.requiresDpia,
                 dpiaStatus: dpiaInfo?.status ?? null,
                 dpiaId: dpiaInfo?.id ?? null,
+                dpiaRejectionReason: dpiaInfo?.rejectionReason ?? null,
                 isRequired: purpose.isRequired,
                 isActive: purpose.isActive,
                 isFromTemplate: purpose.isFromTemplate,

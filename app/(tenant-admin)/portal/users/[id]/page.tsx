@@ -56,6 +56,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 
 // =========================
 // Constants
@@ -722,6 +723,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* RGPD Notice */}
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_DETAIL} />
     </div>
   )
 }

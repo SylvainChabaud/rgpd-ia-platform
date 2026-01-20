@@ -1,12 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { apiClient } from '@/lib/api/apiClient'
 import { Shield, CheckCircle2, Calendar, UserCheck, AlertTriangle, Download, AlertCircle, TrendingUp } from 'lucide-react'
 import { format, addYears } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { sanitizeHtmlClient } from '@/lib/sanitizeHtml.client'
 
 /**
  * DPIA Gateway LLM Page (Art. 35 RGPD)
@@ -86,6 +88,12 @@ export default function DPIAPage() {
         risksCount: number
       }>('/docs/dpia'),
   })
+
+  // Sanitize HTML content to prevent XSS
+  const sanitizedContent = useMemo(() => {
+    if (!data?.content) return '';
+    return sanitizeHtmlClient(data.content);
+  }, [data?.content]);
 
   const handleDownloadPDF = async () => {
     try {
@@ -442,7 +450,7 @@ export default function DPIAPage() {
             `}</style>
             <div
               className="dpia-content"
-              dangerouslySetInnerHTML={{ __html: data?.content || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
             />
           </CardContent>
         </Card>

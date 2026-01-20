@@ -7,6 +7,7 @@ import {
   useExportConsents,
   type ConsentMatrixParams,
 } from '@/lib/api/hooks/useConsents'
+import { CONSENT_FILTER_OPTIONS, CONSENT_STATUS_LABELS, type ConsentFilterOption } from '@/shared/consent/constants'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -60,21 +61,13 @@ import {
  * - Export is RGPD-safe (P1/P2 only)
  */
 
-// Status filter constants (local to this page)
-const STATUS_FILTER = {
-  ALL: 'all',
-  GRANTED: 'granted',
-  REVOKED: 'revoked',
-  PENDING: 'pending',
-} as const;
-
-type StatusFilter = (typeof STATUS_FILTER)[keyof typeof STATUS_FILTER];
+// Using centralized consent filter options from @/shared/consent/constants
 
 export default function ConsentMatrixPage() {
   const [page, setPage] = useState(0)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(STATUS_FILTER.ALL)
+  const [statusFilter, setStatusFilter] = useState<ConsentFilterOption>(CONSENT_FILTER_OPTIONS.ALL)
 
   const limit = 20
 
@@ -109,7 +102,7 @@ export default function ConsentMatrixPage() {
   const resetFilters = () => {
     setSearchInput('')
     setSearchQuery('')
-    setStatusFilter(STATUS_FILTER.ALL)
+    setStatusFilter(CONSENT_FILTER_OPTIONS.ALL)
     setPage(0)
   }
 
@@ -125,14 +118,7 @@ export default function ConsentMatrixPage() {
   }
 
   const getStatusLabel = (status: 'granted' | 'revoked' | 'pending') => {
-    switch (status) {
-      case 'granted':
-        return 'Accordé'
-      case 'revoked':
-        return 'Révoqué'
-      case 'pending':
-        return 'En attente'
-    }
+    return CONSENT_STATUS_LABELS[status] || status
   }
 
   if (isLoading) {
@@ -233,15 +219,15 @@ export default function ConsentMatrixPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as StatusFilter)
+                  setStatusFilter(e.target.value as ConsentFilterOption)
                   setPage(0)
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value={STATUS_FILTER.ALL}>Tous les statuts</option>
-                <option value={STATUS_FILTER.GRANTED}>Accordé</option>
-                <option value={STATUS_FILTER.REVOKED}>Révoqué</option>
-                <option value={STATUS_FILTER.PENDING}>En attente</option>
+                <option value={CONSENT_FILTER_OPTIONS.ALL}>Tous les statuts</option>
+                <option value={CONSENT_FILTER_OPTIONS.GRANTED}>Accordé</option>
+                <option value={CONSENT_FILTER_OPTIONS.REVOKED}>Révoqué</option>
+                <option value={CONSENT_FILTER_OPTIONS.PENDING}>En attente</option>
               </select>
             </div>
 

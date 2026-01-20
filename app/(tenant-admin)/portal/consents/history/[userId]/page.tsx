@@ -3,18 +3,10 @@
 import { useState, useMemo, use } from 'react'
 import Link from 'next/link'
 import { useConsentHistory, usePurposes, type ConsentHistoryParams } from '@/lib/api/hooks/useConsents'
-
-// =========================
-// Constants
-// =========================
+import { CONSENT_SOURCE_LABELS } from '@/shared/consent/constants'
 
 const FILTER_ALL = '';
 
-const CONSENT_SOURCE = {
-  USER: 'user',
-  ADMIN: 'admin',
-  SYSTEM: 'system',
-} as const;
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -289,7 +281,7 @@ export default function ConsentHistoryPage({ params }: ConsentHistoryPageProps) 
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">
-                          {entry.source === CONSENT_SOURCE.USER ? 'Utilisateur' : entry.source === CONSENT_SOURCE.ADMIN ? 'Admin' : 'Système'}
+                          {CONSENT_SOURCE_LABELS[entry.source as keyof typeof CONSENT_SOURCE_LABELS] || entry.source}
                         </Badge>
                       </TableCell>
                     </TableRow>

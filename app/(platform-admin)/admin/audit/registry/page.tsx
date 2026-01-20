@@ -1,12 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { apiClient } from '@/lib/api/apiClient'
 import { FileText, CheckCircle2, Calendar, UserCheck, BookOpen, Download, AlertTriangle, Shield } from 'lucide-react'
 import { format, addMonths } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { sanitizeHtmlClient } from '@/lib/sanitizeHtml.client'
 
 /**
  * Registre des Traitements Page (Art. 30 RGPD)
@@ -63,6 +65,12 @@ export default function RegistryPage() {
         treatmentsCount: number
       }>('/docs/registre'),
   })
+
+  // Sanitize HTML content to prevent XSS
+  const sanitizedContent = useMemo(() => {
+    if (!data?.content) return '';
+    return sanitizeHtmlClient(data.content);
+  }, [data?.content]);
 
   const handleDownloadPDF = async () => {
     try {
@@ -381,7 +389,7 @@ export default function RegistryPage() {
             `}</style>
             <div
               className="registre-content"
-              dangerouslySetInnerHTML={{ __html: data?.content || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
             />
           </CardContent>
         </Card>

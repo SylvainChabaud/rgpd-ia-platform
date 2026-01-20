@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 import { z } from 'zod'
 
 /**
@@ -257,6 +258,9 @@ export default function CreateUserPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* RGPD Notice */}
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_CREATE} />
     </div>
   )
 }

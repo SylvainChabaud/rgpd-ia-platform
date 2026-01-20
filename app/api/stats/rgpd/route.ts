@@ -61,6 +61,7 @@ export const GET = withLogging(
         const pool = getPool();
 
         // Fetch RGPD stats per day (exports, deletions, contests, oppositions, suspensions)
+        // SECURITY: Use parameterized queries with make_interval() to prevent SQL injection
         const [exportsResult, deletionsResult, contestsResult, oppositionsResult, suspensionsResult] = await Promise.all([
           // Exports
           pool.query(
@@ -69,11 +70,12 @@ export const GET = withLogging(
               DATE(created_at) as date,
               COUNT(*) as count
             FROM rgpd_requests
-            WHERE created_at >= NOW() - INTERVAL '${query.days} days'
+            WHERE created_at >= NOW() - make_interval(days => $1)
               AND type = 'EXPORT'
             GROUP BY DATE(created_at)
             ORDER BY date ASC
-            `
+            `,
+            [query.days]
           ),
 
           // Deletions
@@ -83,11 +85,12 @@ export const GET = withLogging(
               DATE(created_at) as date,
               COUNT(*) as count
             FROM rgpd_requests
-            WHERE created_at >= NOW() - INTERVAL '${query.days} days'
+            WHERE created_at >= NOW() - make_interval(days => $1)
               AND type = 'DELETE'
             GROUP BY DATE(created_at)
             ORDER BY date ASC
-            `
+            `,
+            [query.days]
           ),
 
           // Contests (Art. 22)
@@ -97,10 +100,11 @@ export const GET = withLogging(
               DATE(created_at) as date,
               COUNT(*) as count
             FROM user_disputes
-            WHERE created_at >= NOW() - INTERVAL '${query.days} days'
+            WHERE created_at >= NOW() - make_interval(days => $1)
             GROUP BY DATE(created_at)
             ORDER BY date ASC
-            `
+            `,
+            [query.days]
           ),
 
           // Oppositions (Art. 21)
@@ -110,10 +114,11 @@ export const GET = withLogging(
               DATE(created_at) as date,
               COUNT(*) as count
             FROM user_oppositions
-            WHERE created_at >= NOW() - INTERVAL '${query.days} days'
+            WHERE created_at >= NOW() - make_interval(days => $1)
             GROUP BY DATE(created_at)
             ORDER BY date ASC
-            `
+            `,
+            [query.days]
           ),
 
           // Suspensions (Art. 18)
@@ -123,10 +128,11 @@ export const GET = withLogging(
               DATE(data_suspended_at) as date,
               COUNT(*) as count
             FROM users
-            WHERE data_suspended_at >= NOW() - INTERVAL '${query.days} days'
+            WHERE data_suspended_at >= NOW() - make_interval(days => $1)
             GROUP BY DATE(data_suspended_at)
             ORDER BY date ASC
-            `
+            `,
+            [query.days]
           ),
         ]);
 

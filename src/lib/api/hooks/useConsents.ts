@@ -47,6 +47,7 @@ export interface Purpose {
   // DPIA status (LOT 12.4)
   dpiaStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null
   dpiaId?: string | null
+  dpiaRejectionReason?: string | null
 }
 
 export interface PurposeListResponse {

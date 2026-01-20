@@ -28,6 +28,8 @@ import { purgeUserData } from "@/app/usecases/rgpd/purgeUserData";
 import { exportUserData } from "@/app/usecases/rgpd/exportUserData";
 import { newId } from "@/shared/ids";
 import * as ExportStorage from "@/infrastructure/storage/ExportStorage";
+import { AesEncryptionService } from "@/infrastructure/crypto/AesEncryptionService";
+import { FileExportStorageService } from "@/infrastructure/storage/FileExportStorageService";
 import type { ExportStorage as IExportStorage } from "@/app/ports/ExportStorage";
 import type { Logger } from "@/app/ports/Logger";
 
@@ -392,11 +394,15 @@ describe("LOT 5.2 - RGPD Deletion (BLOCKER)", () => {
     });
 
     // Create export
+    const encryptionService = new AesEncryptionService();
+    const exportStorageService = new FileExportStorageService();
     const exportResult = await exportUserData(
       consentRepo,
       aiJobRepo,
       auditWriter,
       auditEventReader,
+      encryptionService,
+      exportStorageService,
       {
         tenantId: TENANT_A_ID,
         userId: exportUserId,

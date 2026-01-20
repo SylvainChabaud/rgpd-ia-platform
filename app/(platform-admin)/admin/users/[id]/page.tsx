@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ArrowLeft, Edit, Pause, Play, Trash2, User } from 'lucide-react'
 import { useState } from 'react'
+import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
 
 /**
  * User Details Page - PLATFORM Admin (LOT 11.2)
@@ -228,15 +229,7 @@ export default function UserDetailsPage() {
       </Card>
 
       {/* RGPD Notice */}
-      <Card className="bg-muted/40">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>🔒 RGPD:</strong> Seules les données P1 (métadonnées publiques) sont affichées.
-            L&apos;email n&apos;est pas accessible (Art. 15, 34 - seuls User, DPO et Système y ont accès).
-            Le hash email et le mot de passe ne sont jamais exposés. Toutes les actions sont auditées.
-          </p>
-        </CardContent>
-      </Card>
+      <RgpdNotice variant={RGPD_NOTICE_VARIANT.USER_DETAIL} />
 
       {/* Danger Zone */}
       <Card className="border-destructive">
