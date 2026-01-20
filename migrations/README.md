@@ -31,6 +31,11 @@
 | **021** | `021_additional_purpose_templates.sql` | LOT 12.2 | Templates additionnels |
 | **022** | `022_critical_purpose_templates.sql` | LOT 12.2 | Templates critiques (santé, juridique) |
 | **023** | `023_professional_purpose_templates.sql` | LOT 12.2 | Templates professionnels |
+| **024** | `024_email_encrypted.sql` | LOT 1.6 | Email chiffré AES-256 (notifications RGPD) |
+| **025** | `025_user_suspensions.sql` | LOT 12.3 | Suspensions utilisateur (Art. 18) |
+| **026** | `026_dpias.sql` | LOT 12.4 | DPIA (Art. 35) + risques |
+| **028** | `028_dpia_revision_request.sql` | LOT 12.4 | Demandes de révision DPIA |
+| **029** | `029_dpia_history.sql` | LOT 12.4 | Historique échanges DPO/Tenant Admin |
 
 ---
 
@@ -260,12 +265,15 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | EPIC | Besoins DB | Couvert ? | Migration requise |
 |------|------------|-----------|-------------------|
 | **EPIC 1-7** | Socle, users, audit, consents, ai_jobs, RGPD | ✅ Oui | — |
+| **LOT 1.6** | Email chiffré AES-256 (notifications) | ✅ Oui | `024_email_encrypted.sql` ✅ |
 | **LOT 4.0** | RLS (Row-Level Security) + tenant isolation | ✅ Oui | 004-013 ✅ |
 | **EPIC 8** | Anonymisation (PII masking) | ✅ Oui | — (implémenté en app) |
 | **EPIC 9** | Registre violations (incidents) | ✅ Oui | `014_incidents.sql` ✅ |
 | **EPIC 10** | RGPD/Legal (CGU, disputes, cookies) | ✅ Oui | `015_cgu_disputes_cookies.sql` + `016_epic10_legal_extensions.sql` ✅ |
 | **EPIC 11** | Back Office Super Admin | ✅ Oui | `017_tenant_suspension.sql` + `018_normalize_user_roles.sql` ✅ |
-| **EPIC 12** | Back Office Tenant Admin | ✅ Oui | `019-023_purposes*.sql` ✅ |
+| **LOT 12.2** | Purposes + Templates | ✅ Oui | `019-023_purposes*.sql` ✅ |
+| **LOT 12.3** | Suspensions utilisateur (Art. 18) | ✅ Oui | `025_user_suspensions.sql` ✅ |
+| **LOT 12.4** | DPIA (Art. 35) + Workflow DPO | ✅ Oui | `026_dpias.sql` + `028-029_dpia_*.sql` ✅ |
 | **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
 
 ### Migrations futures prévues
@@ -367,6 +375,110 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 
 **Voir** : `migrations/018_normalize_user_roles.sql` pour les détails
 
+#### `024_email_encrypted.sql` (LOT 1.6) ✅ IMPLÉMENTÉ
+
+**LOT** : 1.6
+**Description** : Email chiffré AES-256-GCM pour notifications RGPD
+
+**Problème résolu** :
+- Email stocké uniquement en hash SHA-256 (irréversible)
+- Impossible d'afficher l'email à l'utilisateur (Art. 15)
+- Impossible de notifier les utilisateurs (Art. 34)
+
+**Solution - Double stockage** :
+- `email_hash` (existant) → authentification (lookup rapide)
+- `email_encrypted` (nouveau) → affichage/notification (AES-256-GCM)
+
+**Règles d'accès FULL RGPD** :
+- User : voit son email uniquement
+- Tenant Admin : NON (displayName suffit)
+- Platform Admin : NON (délègue au DPO)
+- DPO : OUI (obligation légale Art. 34, 37-39)
+- Système : OUI (notifications automatiques)
+
+**Voir** : `migrations/024_email_encrypted.sql` pour les détails
+
+#### `025_user_suspensions.sql` (LOT 12.3) ✅ IMPLÉMENTÉ
+
+**LOT** : 12.3
+**Description** : Table pour les suspensions de traitement utilisateur (Art. 18 RGPD)
+
+**Table créée** :
+- `user_suspensions` — Historique des suspensions de traitement
+
+**Fonctionnalités clés** :
+- Limitation temporaire du traitement des données personnelles
+- Statuts : `ACTIVE` (en cours) ou `LIFTED` (levée)
+- Traçabilité : qui a créé/levé la suspension
+- Tenant isolation via RLS
+
+**Voir** : `migrations/025_user_suspensions.sql` pour les détails
+
+#### `026_dpias.sql` (LOT 12.4) ✅ IMPLÉMENTÉ
+
+**LOT** : 12.4
+**Description** : DPIA (Data Protection Impact Assessment) - Art. 35 RGPD
+
+**Tables créées** :
+- `dpias` — Analyses d'impact (workflow: PENDING → APPROVED/REJECTED)
+- `dpia_risks` — Risques identifiés pour chaque DPIA
+
+**Types ENUM créés** :
+- `dpia_status` : PENDING, APPROVED, REJECTED
+- `dpia_risk_level` : LOW, MEDIUM, HIGH, CRITICAL
+- `dpia_likelihood` / `dpia_impact` : LOW, MEDIUM, HIGH
+
+**Fonctionnalités clés** :
+- Workflow de validation DPO (Art. 38.3)
+- Évaluation des risques (probabilité × impact)
+- Mesures de sécurité documentées
+- Classification des données traitées
+- Tenant isolation via RLS
+
+**Voir** : `migrations/026_dpias.sql` pour le schéma complet
+
+#### `028_dpia_revision_request.sql` (LOT 12.4) ✅ IMPLÉMENTÉ
+
+**LOT** : 12.4
+**Description** : Demandes de révision pour DPIA rejetées
+
+**Colonnes ajoutées** :
+- `revision_requested_at` — Timestamp de la demande de révision
+- `revision_requested_by` — Tenant Admin qui a demandé la révision
+- `revision_comments` — Commentaires expliquant les corrections
+
+**Workflow** :
+```
+REJECTED → Tenant requests revision → PENDING → DPO re-validates
+```
+
+**Voir** : `migrations/028_dpia_revision_request.sql` pour les détails
+
+#### `029_dpia_history.sql` (LOT 12.4) ✅ IMPLÉMENTÉ
+
+**LOT** : 12.4
+**Description** : Historique des échanges DPO/Tenant Admin sur les DPIA
+
+**Table créée** :
+- `dpia_history` — Audit trail des actions DPIA
+
+**Type ENUM créé** :
+- `dpia_history_action` : CREATED, APPROVED, REJECTED, REVISION_REQUESTED
+
+**Colonnes clés** :
+- `dpia_id` — Lien vers la DPIA
+- `action` — Type d'action
+- `actor_id` / `actor_role` — Qui a effectué l'action
+- `comments` — Commentaires DPO
+- `rejection_reason` — Motif de rejet (si applicable)
+
+**RGPD Compliance** :
+- Art. 5.2 : Accountability - toutes les décisions sont traçables
+- Art. 35 : Documentation DPIA obligatoire
+- Tenant isolation via RLS
+
+**Voir** : `migrations/029_dpia_history.sql` pour le schéma complet
+
 ---
 
 ## 📐 Classification des données (rappel)
@@ -374,8 +486,8 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | Niveau | Description | Tables concernées |
 |--------|-------------|-------------------|
 | 🟢 **P0** | Données publiques | — |
-| 🟡 **P1** | Métadonnées techniques | `tenants`, `audit_events`, `ai_jobs`, `bootstrap_state` |
-| 🟠 **P2** | Données personnelles | `users`, `consents`, `rgpd_requests` |
+| 🟡 **P1** | Métadonnées techniques | `tenants`, `audit_events`, `ai_jobs`, `bootstrap_state`, `dpias`, `dpia_risks`, `dpia_history`, `purposes`, `purpose_templates` |
+| 🟠 **P2** | Données personnelles | `users`, `consents`, `rgpd_requests`, `user_suspensions`, `cookie_consents`, `user_disputes`, `user_oppositions` |
 | 🔴 **P3** | Données sensibles | **Jamais stockées en DB** (prompts, outputs IA) |
 
 ---
