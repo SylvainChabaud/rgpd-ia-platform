@@ -2,6 +2,7 @@ import { requireAuth } from "@/app/http/requireAuth";
 import { toErrorResponse } from "@/app/http/errorResponse";
 import { downloadExport } from "@/app/usecases/rgpd/downloadExport";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
+import { FileExportStorageService } from "@/infrastructure/storage/FileExportStorageService";
 import { tenantContextRequiredError } from "@/lib/errorResponse";
 
 /**
@@ -48,8 +49,9 @@ export const POST = requireAuth(async ({ request, actor }) => {
     }
 
     const auditWriter = new InMemoryAuditEventWriter();
+    const exportStorage = new FileExportStorageService();
 
-    const result = await downloadExport(auditWriter, {
+    const result = await downloadExport(auditWriter, exportStorage, {
       downloadToken: body.downloadToken,
       requestingUserId: actor.actorId,
       requestingTenantId: actor.tenantId,

@@ -3,23 +3,19 @@ import type { ConsentRepo } from "@/app/ports/ConsentRepo";
 import type { AiJobRepo } from "@/app/ports/AiJobRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
 import type { AuditEventReader } from "@/app/ports/AuditEventReader";
+import type { EncryptionService } from "@/app/ports/EncryptionService";
+import type { ExportStorageService } from "@/app/ports/ExportStorageService";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import type {
   ExportBundle,
   ExportData,
   ExportMetadata,
   ExportAuditEvent,
+  ExportConsent,
+  ExportAiJob,
 } from "@/domain/rgpd/ExportBundle";
 import { EXPORT_VERSION } from "@/domain/rgpd/ExportBundle";
 import { RGPD_EXPORT_RETENTION_DAYS } from "@/domain/retention/RetentionPolicy";
-import {
-  encrypt,
-  generateExportPassword,
-} from "@/infrastructure/crypto/encryption";
-import {
-  storeEncryptedBundle,
-  storeExportMetadata,
-} from "@/infrastructure/storage/ExportStorage";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 /**
@@ -52,6 +48,8 @@ export async function exportUserData(
   aiJobRepo: AiJobRepo,
   auditWriter: AuditEventWriter,
   auditEventReader: AuditEventReader,
+  encryptionService: EncryptionService,
+  exportStorage: ExportStorageService,
   input: ExportUserDataInput
 ): Promise<ExportUserDataOutput> {
   const { tenantId, userId } = input;
@@ -64,16 +62,42 @@ export async function exportUserData(
   // Generate export ID and metadata
   const exportId = randomUUID();
   const downloadToken = randomUUID();
-  const password = generateExportPassword();
+  const password = encryptionService.generateExportPassword();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + RGPD_EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
   // Step 1: Collect user data (tenant-scoped via repositories)
-  const [consents, aiJobs, auditEventsRaw] = await Promise.all([
+  const [consentsRaw, aiJobsRaw, auditEventsRaw] = await Promise.all([
     consentRepo.findByUser(tenantId, userId),
     aiJobRepo.findByUser(tenantId, userId),
     auditEventReader.findByUser(tenantId, userId, 1000),
   ]);
+
+  // Map consents to domain export format
+  const consents: ExportConsent[] = consentsRaw.map((c) => ({
+    id: c.id,
+    tenantId: c.tenantId,
+    userId: c.userId,
+    purpose: c.purpose,
+    purposeId: c.purposeId,
+    granted: c.granted,
+    grantedAt: c.grantedAt,
+    revokedAt: c.revokedAt,
+    createdAt: c.createdAt,
+  }));
+
+  // Map AI jobs to domain export format
+  const aiJobs: ExportAiJob[] = aiJobsRaw.map((job) => ({
+    id: job.id,
+    tenantId: job.tenantId,
+    userId: job.userId,
+    purpose: job.purpose,
+    modelRef: job.modelRef,
+    status: job.status,
+    createdAt: job.createdAt,
+    startedAt: job.startedAt,
+    completedAt: job.completedAt,
+  }));
 
   // Map audit events to export format
   const auditEvents: ExportAuditEvent[] = auditEventsRaw.map((event) => ({
@@ -102,10 +126,10 @@ export async function exportUserData(
 
   // Step 3: Encrypt bundle
   const bundleJson = JSON.stringify(bundle, null, 2);
-  const encrypted = encrypt(bundleJson, password);
+  const encrypted = encryptionService.encrypt(bundleJson, password);
 
   // Step 4: Store encrypted bundle
-  const filePath = await storeEncryptedBundle(exportId, encrypted);
+  const filePath = await exportStorage.storeEncryptedBundle(exportId, encrypted);
 
   // Step 5: Store metadata
   const metadata: ExportMetadata = {
@@ -118,7 +142,7 @@ export async function exportUserData(
     downloadCount: 0,
     filePath,
   };
-  storeExportMetadata(metadata);
+  exportStorage.storeExportMetadata(metadata);
 
   // Step 6: Emit audit event (P1 only)
   await emitAuditEvent(auditWriter, {

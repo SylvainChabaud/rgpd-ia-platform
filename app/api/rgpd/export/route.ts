@@ -24,6 +24,8 @@ import { PgConsentRepo } from '@/infrastructure/repositories/PgConsentRepo';
 import { PgAiJobRepo } from '@/infrastructure/repositories/PgAiJobRepo';
 import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { PgAuditEventReader } from '@/infrastructure/audit/PgAuditEventReader';
+import { AesEncryptionService } from '@/infrastructure/crypto/AesEncryptionService';
+import { FileExportStorageService } from '@/infrastructure/storage/FileExportStorageService';
 import { logger } from '@/infrastructure/logging/logger';
 
 export const POST = withLogging(
@@ -46,6 +48,8 @@ export const POST = withLogging(
           const aiJobRepo = new PgAiJobRepo();
           const auditWriter = new PgAuditEventWriter();
           const auditEventReader = new PgAuditEventReader();
+          const encryptionService = new AesEncryptionService();
+          const exportStorage = new FileExportStorageService();
 
           // Execute export use-case
           const result = await exportUserData(
@@ -53,6 +57,8 @@ export const POST = withLogging(
             aiJobRepo,
             auditWriter,
             auditEventReader,
+            encryptionService,
+            exportStorage,
             {
               tenantId: context.tenantId,
               userId: context.userId,

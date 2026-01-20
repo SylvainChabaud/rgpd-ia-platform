@@ -19,6 +19,8 @@ import type { ConsentRepo, Consent } from '@/app/ports/ConsentRepo';
 import type { AiJobRepo, AiJob } from '@/app/ports/AiJobRepo';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import type { AuditEventReader, AuditEventRecord } from '@/app/ports/AuditEventReader';
+import type { EncryptionService, EncryptedData } from '@/app/ports/EncryptionService';
+import type { ExportStorageService } from '@/app/ports/ExportStorageService';
 import { RGPD_EXPORT_RETENTION_DAYS } from '@/domain/retention/RetentionPolicy';
 
 // =============================================================================
@@ -129,6 +131,39 @@ function createMockAuditReader(events: AuditEventRecord[] = sampleAuditEvents) {
   } as unknown as jest.Mocked<AuditEventReader>;
 }
 
+function createMockEncryptionService(): jest.Mocked<EncryptionService> {
+  const mockEncryptedData: EncryptedData = {
+    ciphertext: 'mock-ciphertext-base64',
+    iv: 'mock-iv-base64',
+    authTag: 'mock-authtag-base64',
+    salt: 'mock-salt-base64',
+  };
+  return {
+    encrypt: jest.fn<() => EncryptedData>().mockReturnValue(mockEncryptedData),
+    decrypt: jest.fn<() => string>().mockReturnValue('{}'),
+    generateExportPassword: jest.fn<() => string>().mockReturnValue('mock-password-base64'),
+  };
+}
+
+function createMockExportStorageService(): jest.Mocked<ExportStorageService> {
+  return {
+    storeEncryptedBundle: jest.fn<() => Promise<string>>().mockResolvedValue('/mock/path/export.enc'),
+    readEncryptedBundle: jest.fn<() => Promise<EncryptedData>>().mockResolvedValue({
+      ciphertext: 'mock-ciphertext-base64',
+      iv: 'mock-iv-base64',
+      authTag: 'mock-authtag-base64',
+      salt: 'mock-salt-base64',
+    }),
+    deleteExportBundle: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    storeExportMetadata: jest.fn<() => void>(),
+    getExportMetadata: jest.fn<() => null>().mockReturnValue(null),
+    getExportMetadataByToken: jest.fn<() => null>().mockReturnValue(null),
+    getExportMetadataByUserId: jest.fn<() => []>().mockReturnValue([]),
+    deleteExportMetadata: jest.fn<() => void>(),
+    cleanupExpiredExports: jest.fn<() => Promise<number>>().mockResolvedValue(0),
+  };
+}
+
 // =============================================================================
 // TESTS
 // =============================================================================
@@ -138,6 +173,8 @@ describe('exportUserData', () => {
   let mockAiJobRepo: jest.Mocked<AiJobRepo>;
   let mockAuditWriter: jest.Mocked<AuditEventWriter>;
   let mockAuditReader: jest.Mocked<AuditEventReader>;
+  let mockEncryptionService: jest.Mocked<EncryptionService>;
+  let mockExportStorageService: jest.Mocked<ExportStorageService>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -146,6 +183,8 @@ describe('exportUserData', () => {
     mockAiJobRepo = createMockAiJobRepo();
     mockAuditWriter = createMockAuditWriter();
     mockAuditReader = createMockAuditReader();
+    mockEncryptionService = createMockEncryptionService();
+    mockExportStorageService = createMockExportStorageService();
   });
 
   describe('Successful export generation', () => {
@@ -157,6 +196,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -177,6 +218,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -191,6 +234,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -205,6 +250,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -219,6 +266,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -227,6 +276,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -241,6 +292,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -249,6 +302,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -263,6 +318,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -271,6 +328,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -288,6 +347,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -316,6 +377,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('tenantId and userId are required');
@@ -330,6 +393,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('tenantId and userId are required');
@@ -344,6 +409,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('tenantId and userId are required');
@@ -359,6 +426,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -379,6 +448,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -399,6 +470,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -419,6 +492,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -439,6 +514,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -453,6 +530,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -467,6 +546,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -481,6 +562,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -502,6 +585,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -518,6 +603,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -534,6 +621,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -552,6 +641,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -572,6 +663,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('Database connection failed');
@@ -587,6 +680,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('AI job query failed');
@@ -602,6 +697,8 @@ describe('exportUserData', () => {
           mockAiJobRepo,
           mockAuditWriter,
           mockAuditReader,
+          mockEncryptionService,
+          mockExportStorageService,
           input
         )
       ).rejects.toThrow('Audit query failed');
@@ -617,6 +714,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -632,6 +731,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -649,6 +750,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 
@@ -665,6 +768,8 @@ describe('exportUserData', () => {
         mockAiJobRepo,
         mockAuditWriter,
         mockAuditReader,
+        mockEncryptionService,
+        mockExportStorageService,
         input
       );
 

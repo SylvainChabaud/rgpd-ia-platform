@@ -22,11 +22,8 @@ import { PgAuditEventReader } from "@/infrastructure/audit/PgAuditEventReader";
 import { InMemoryAuditEventWriter } from "@/app/audit/InMemoryAuditEventWriter";
 import { exportUserData } from "@/app/usecases/rgpd/exportUserData";
 import { downloadExport } from "@/app/usecases/rgpd/downloadExport";
-import { decrypt } from "@/infrastructure/crypto/encryption";
-import {
-  getExportMetadataByToken,
-  cleanupExpiredExports,
-} from "@/infrastructure/storage/ExportStorage";
+import { AesEncryptionService } from "@/infrastructure/crypto/AesEncryptionService";
+import { FileExportStorageService } from "@/infrastructure/storage/FileExportStorageService";
 import type { ExportBundle } from "@/domain/rgpd/ExportBundle";
 import { EXPORT_MAX_DOWNLOADS } from "@/domain/rgpd/ExportBundle";
 import { newId } from "@/shared/ids";
@@ -36,6 +33,9 @@ const TENANT_A_ID = newId();
 const TENANT_B_ID = newId();
 const USER_A_ID = newId();
 const USER_B_ID = newId();
+
+// Shared instances for cleanup
+const sharedExportStorage = new FileExportStorageService();
 
 /**
  * Cleanup: delete all test data using SECURITY DEFINER function
@@ -49,12 +49,12 @@ async function cleanup() {
     const tenantIds = existingTenants.rows.map((row) => row.id);
     await pool.query("SELECT cleanup_test_data($1::UUID[])", [tenantIds]);
   }
-  
+
   // Second: cleanup by current test IDs
   await pool.query("SELECT cleanup_test_data($1::UUID[])", [[TENANT_A_ID, TENANT_B_ID]]);
 
   // Cleanup export files
-  await cleanupExpiredExports();
+  await sharedExportStorage.cleanupExpiredExports();
 }
 
 /**
@@ -88,6 +88,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
   const consentRepo = new PgConsentRepo();
   const aiJobRepo = new PgAiJobRepo();
   const auditWriter = new InMemoryAuditEventWriter();
+  const encryptionService = new AesEncryptionService();
+  const exportStorage = new FileExportStorageService();
 
   test("BLOCKER: Export contains only user scope data (tenant isolation)", async () => {
     // GIVEN: User A in Tenant A has consents and jobs
@@ -117,6 +119,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -130,13 +134,13 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
     expect(result.expiresAt).toBeInstanceOf(Date);
 
     // THEN: Download export and decrypt
-    const downloadResult = await downloadExport(auditWriter, {
+    const downloadResult = await downloadExport(auditWriter, exportStorage, {
       downloadToken: result.downloadToken,
       requestingUserId: USER_A_ID,
       requestingTenantId: TENANT_A_ID,
     });
 
-    const decrypted = decrypt(downloadResult.encryptedData, result.password);
+    const decrypted = encryptionService.decrypt(downloadResult.encryptedData, result.password);
     const bundle: ExportBundle = JSON.parse(decrypted);
 
     // CRITICAL: Export must contain ONLY user A data (tenant isolation)
@@ -160,6 +164,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -167,7 +173,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
     );
 
     // WHEN: Attempt to download
-    const downloadResult = await downloadExport(auditWriter, {
+    const downloadResult = await downloadExport(auditWriter, exportStorage, {
       downloadToken: result.downloadToken,
       requestingUserId: USER_A_ID,
       requestingTenantId: TENANT_A_ID,
@@ -180,11 +186,11 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
 
     // THEN: Decryption with WRONG password should fail
     expect(() => {
-      decrypt(downloadResult.encryptedData, "wrong-password");
+      encryptionService.decrypt(downloadResult.encryptedData, "wrong-password");
     }).toThrow();
 
     // THEN: Decryption with CORRECT password should succeed
-    const decrypted = decrypt(downloadResult.encryptedData, result.password);
+    const decrypted = encryptionService.decrypt(downloadResult.encryptedData, result.password);
     const bundle = JSON.parse(decrypted);
     expect(bundle.userId).toBe(USER_A_ID);
   });
@@ -196,6 +202,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -203,14 +211,14 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
     );
 
     // WHEN: Manually expire the export (simulate TTL)
-    const metadata = getExportMetadataByToken(result.downloadToken);
+    const metadata = exportStorage.getExportMetadataByToken(result.downloadToken);
     if (metadata) {
       metadata.expiresAt = new Date(Date.now() - 1000); // Expired 1 second ago
     }
 
     // THEN: Download should fail with expiration error
     await expect(
-      downloadExport(auditWriter, {
+      downloadExport(auditWriter, exportStorage, {
         downloadToken: result.downloadToken,
         requestingUserId: USER_A_ID,
         requestingTenantId: TENANT_A_ID,
@@ -225,6 +233,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -233,7 +243,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
 
     // WHEN: Download multiple times (up to limit)
     for (let i = 0; i < EXPORT_MAX_DOWNLOADS; i++) {
-      const downloadResult = await downloadExport(auditWriter, {
+      const downloadResult = await downloadExport(auditWriter, exportStorage, {
         downloadToken: result.downloadToken,
         requestingUserId: USER_A_ID,
         requestingTenantId: TENANT_A_ID,
@@ -246,7 +256,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
 
     // THEN: Next download should fail with limit error
     await expect(
-      downloadExport(auditWriter, {
+      downloadExport(auditWriter, exportStorage, {
         downloadToken: result.downloadToken,
         requestingUserId: USER_A_ID,
         requestingTenantId: TENANT_A_ID,
@@ -261,6 +271,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -270,7 +282,7 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
     // WHEN: User B (different user, different tenant) attempts to download
     // THEN: Should be rejected
     await expect(
-      downloadExport(auditWriter, {
+      downloadExport(auditWriter, exportStorage, {
         downloadToken: result.downloadToken,
         requestingUserId: USER_B_ID,
         requestingTenantId: TENANT_B_ID,
@@ -288,6 +300,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       freshAuditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -328,6 +342,8 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
       aiJobRepo,
       auditWriter,
       new PgAuditEventReader(),
+      encryptionService,
+      exportStorage,
       {
         tenantId: TENANT_A_ID,
         userId: USER_A_ID,
@@ -335,13 +351,13 @@ describe("LOT 5.1 - RGPD Export (BLOCKER)", () => {
     );
 
     // THEN: Download and decrypt
-    const downloadResult = await downloadExport(auditWriter, {
+    const downloadResult = await downloadExport(auditWriter, exportStorage, {
       downloadToken: result.downloadToken,
       requestingUserId: USER_A_ID,
       requestingTenantId: TENANT_A_ID,
     });
 
-    const decrypted = decrypt(downloadResult.encryptedData, result.password);
+    const decrypted = encryptionService.decrypt(downloadResult.encryptedData, result.password);
     const bundle: ExportBundle = JSON.parse(decrypted);
 
     // CRITICAL: Bundle must have stable structure

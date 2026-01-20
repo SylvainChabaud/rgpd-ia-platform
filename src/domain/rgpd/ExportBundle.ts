@@ -5,10 +5,46 @@
  * Purpose: RGPD right to access & data portability (Art. 15, 20 RGPD)
  *
  * LOT 5.1 — Export RGPD (bundle chiffré + TTL)
+ *
+ * NOTE: Domain types are PURE - no imports from app/ or infrastructure/
  */
 
-import type { Consent } from "@/app/ports/ConsentRepo";
-import type { AiJob } from "@/app/ports/AiJobRepo";
+/**
+ * Domain type for exported consent data
+ * Mirrors ConsentRepo.Consent but lives in domain layer
+ */
+export type ExportConsent = {
+  readonly id: string;
+  readonly tenantId: string;
+  readonly userId: string;
+  readonly purpose: string;
+  readonly purposeId: string | null;
+  readonly granted: boolean;
+  readonly grantedAt: Date | null;
+  readonly revokedAt: Date | null;
+  readonly createdAt: Date;
+};
+
+/**
+ * AI Job status (domain-level definition)
+ */
+export type ExportAiJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+
+/**
+ * Domain type for exported AI job data
+ * Mirrors AiJobRepo.AiJob but lives in domain layer
+ */
+export type ExportAiJob = {
+  readonly id: string;
+  readonly tenantId: string;
+  readonly userId: string | null;
+  readonly purpose: string;
+  readonly modelRef: string | null;
+  readonly status: ExportAiJobStatus;
+  readonly createdAt: Date;
+  readonly startedAt: Date | null;
+  readonly completedAt: Date | null;
+};
 
 /**
  * RGPD Export Bundle Structure
@@ -29,8 +65,8 @@ export type ExportBundle = {
 };
 
 export type ExportData = {
-  consents: Consent[];
-  aiJobs: AiJob[];
+  consents: ExportConsent[];
+  aiJobs: ExportAiJob[];
   auditEvents: ExportAuditEvent[];
 };
 

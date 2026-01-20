@@ -1,16 +1,10 @@
 import { randomUUID } from "crypto";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
-import type { EncryptedData } from "@/infrastructure/crypto/encryption";
+import type { EncryptedData } from "@/app/ports/EncryptionService";
+import type { ExportStorageService } from "@/app/ports/ExportStorageService";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { EXPORT_MAX_DOWNLOADS } from "@/domain/rgpd/ExportBundle";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
-import {
-  getExportMetadataByToken,
-  storeExportMetadata,
-  readEncryptedBundle,
-  deleteExportBundle,
-  deleteExportMetadata,
-} from "@/infrastructure/storage/ExportStorage";
 
 /**
  * Download Export use-case
@@ -38,12 +32,13 @@ export type DownloadExportOutput = {
 
 export async function downloadExport(
   auditWriter: AuditEventWriter,
+  exportStorage: ExportStorageService,
   input: DownloadExportInput
 ): Promise<DownloadExportOutput> {
   const { downloadToken, requestingUserId, requestingTenantId } = input;
 
   // Find export by token
-  const metadata = getExportMetadataByToken(downloadToken);
+  const metadata = exportStorage.getExportMetadataByToken(downloadToken);
 
   if (!metadata) {
     throw new Error("Export not found or invalid token");
@@ -61,8 +56,8 @@ export async function downloadExport(
   const now = new Date();
   if (metadata.expiresAt < now) {
     // Clean up expired export
-    await deleteExportBundle(metadata.exportId);
-    deleteExportMetadata(metadata.exportId);
+    await exportStorage.deleteExportBundle(metadata.exportId);
+    exportStorage.deleteExportMetadata(metadata.exportId);
 
     throw new Error("Export has expired");
   }
@@ -75,11 +70,11 @@ export async function downloadExport(
   }
 
   // Read encrypted bundle
-  const encryptedData = await readEncryptedBundle(metadata.exportId);
+  const encryptedData = await exportStorage.readEncryptedBundle(metadata.exportId);
 
   // Increment download count
   metadata.downloadCount++;
-  storeExportMetadata(metadata);
+  exportStorage.storeExportMetadata(metadata);
 
   // Emit audit event
   await emitAuditEvent(auditWriter, {
