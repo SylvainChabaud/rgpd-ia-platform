@@ -24,6 +24,7 @@ import { z, ZodError } from 'zod';
 import { getPool } from '@/infrastructure/db/pool';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { autoCreateDpiaForPurpose } from '@/app/usecases/dpia/autoCreateDpiaForPurpose';
+import { RISK_LEVEL } from '@/lib/constants/rgpd';
 
 /**
  * Schema for adopting a template
@@ -94,12 +95,17 @@ export const POST = withLogging(
             );
           }
 
+          // RGPD Art. 22.2.c / Art. 35: HIGH/CRITICAL risk purposes require explicit consent
+          // Force isRequired=true for DPIA-requiring purposes to ensure user consent before AI tool usage
+          const isHighRisk = template.riskLevel === RISK_LEVEL.HIGH || template.riskLevel === RISK_LEVEL.CRITICAL;
+          const effectiveIsRequired = isHighRisk ? true : body.isRequired;
+
           // Create purpose from template
           const purpose = await purposeRepo.createFromTemplate(context.tenantId, {
             templateId: template.id,
             label: body.label,
             description: body.description,
-            isRequired: body.isRequired,
+            isRequired: effectiveIsRequired,
           });
 
           // Emit audit event

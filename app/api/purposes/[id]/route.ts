@@ -23,6 +23,7 @@ import { logger } from '@/infrastructure/logging/logger';
 import { internalError, notFoundError, validationError, conflictError, tenantContextRequiredError } from '@/lib/errorResponse';
 import { z, ZodError } from 'zod';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
+import { RISK_LEVEL } from '@/lib/constants/rgpd';
 
 /**
  * Schema for updating a purpose
@@ -78,6 +79,9 @@ export const GET = withLogging(
               createdAt: purpose.createdAt.toISOString(),
               updatedAt: purpose.updatedAt.toISOString(),
               consentCount,
+              // RGPD fields (LOT 12.2)
+              riskLevel: purpose.riskLevel,
+              requiresDpia: purpose.requiresDpia,
             },
           });
         } catch (error: unknown) {
@@ -131,11 +135,22 @@ export const PATCH = withLogging(
             }
           }
 
+          // Get current purpose to check risk level
+          const currentPurpose = await purposeRepo.findById(context.tenantId, purposeId);
+          if (!currentPurpose) {
+            return NextResponse.json(notFoundError('Purpose'), { status: 404 });
+          }
+
+          // RGPD Art. 22.2.c / Art. 35: HIGH/CRITICAL risk purposes require mandatory consent
+          // Force isRequired=true for DPIA-requiring purposes
+          const isHighRisk = currentPurpose.riskLevel === RISK_LEVEL.HIGH || currentPurpose.riskLevel === RISK_LEVEL.CRITICAL;
+          const effectiveIsRequired = isHighRisk ? true : body.isRequired;
+
           // Update purpose
           const purpose = await purposeRepo.update(context.tenantId, purposeId, {
             label: body.label,
             description: body.description,
-            isRequired: body.isRequired,
+            isRequired: effectiveIsRequired,
             isActive: body.isActive,
           });
 

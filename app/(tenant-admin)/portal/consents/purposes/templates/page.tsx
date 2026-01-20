@@ -67,6 +67,7 @@ import {
   Brain,
   ExternalLink,
   Briefcase,
+  Lock,
 } from 'lucide-react'
 
 /**
@@ -111,9 +112,16 @@ export default function TemplatesCatalogPage() {
     setSelectedTemplate(template)
     setCustomLabel(template.name)
     setCustomDescription(template.description)
-    setIsRequired(false)
+    // RGPD Art. 22.2.c / Art. 35: Force isRequired for HIGH/CRITICAL risk purposes
+    const isHighRisk = template.riskLevel === RISK_LEVEL.HIGH || template.riskLevel === RISK_LEVEL.CRITICAL
+    setIsRequired(isHighRisk)
     setShowAdoptDialog(true)
   }
+
+  // Check if selected template requires forced consent (HIGH/CRITICAL risk)
+  const isRequiredLocked = selectedTemplate
+    ? selectedTemplate.riskLevel === RISK_LEVEL.HIGH || selectedTemplate.riskLevel === RISK_LEVEL.CRITICAL
+    : false
 
   const handleConfirmAdopt = () => {
     if (!selectedTemplate) return
@@ -485,17 +493,25 @@ export default function TemplatesCatalogPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className={`flex items-center justify-between rounded-lg border p-4 ${isRequiredLocked ? 'bg-muted/50' : ''}`}>
                   <div className="space-y-0.5">
-                    <Label htmlFor="required">Consentement obligatoire</Label>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="required">Consentement obligatoire</Label>
+                      {isRequiredLocked && (
+                        <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      L&apos;utilisateur doit accepter pour utiliser le service
+                      {isRequiredLocked
+                        ? 'Obligatoire pour les finalités à risque élevé (RGPD Art. 22.2.c / Art. 35)'
+                        : 'L\'utilisateur doit accepter pour utiliser le service'}
                     </p>
                   </div>
                   <Switch
                     id="required"
                     checked={isRequired}
                     onCheckedChange={setIsRequired}
+                    disabled={isRequiredLocked}
                   />
                 </div>
               </div>

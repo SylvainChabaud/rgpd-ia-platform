@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RgpdNotice, RGPD_NOTICE_VARIANT } from '@/components/rgpd/RgpdNotice'
-import { ArrowLeft, ShieldCheck, Save, AlertCircle } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, Save, AlertCircle, Lock } from 'lucide-react'
+import { RISK_LEVEL, type RiskLevel } from '@/lib/constants/rgpd'
 
 /**
  * Edit Purpose Page - TENANT Admin (LOT 12.2)
@@ -37,9 +38,11 @@ interface EditPurposePageProps {
  * Uses controlled components initialized with data values
  */
 function EditPurposeForm({ purpose, purposeId }: {
-  purpose: { label: string; description: string; isRequired: boolean; isActive: boolean }
+  purpose: { label: string; description: string; isRequired: boolean; isActive: boolean; riskLevel?: RiskLevel }
   purposeId: string
 }) {
+  // RGPD Art. 22.2.c / Art. 35: HIGH/CRITICAL risk purposes require mandatory consent
+  const isRequiredLocked = purpose.riskLevel === RISK_LEVEL.HIGH || purpose.riskLevel === RISK_LEVEL.CRITICAL
   const router = useRouter()
   const updatePurpose = useUpdatePurpose(purposeId)
 
@@ -130,17 +133,25 @@ function EditPurposeForm({ purpose, purposeId }: {
       </div>
 
       {/* Is Required */}
-      <div className="flex items-center justify-between rounded-lg border p-4">
+      <div className={`flex items-center justify-between rounded-lg border p-4 ${isRequiredLocked ? 'bg-muted/50' : ''}`}>
         <div className="space-y-0.5">
-          <Label htmlFor="isRequired" className="text-base">Consentement obligatoire</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="isRequired" className="text-base">Consentement obligatoire</Label>
+            {isRequiredLocked && (
+              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
-            Si activé, les utilisateurs devront accepter cette finalité pour utiliser la plateforme
+            {isRequiredLocked
+              ? 'Obligatoire pour les finalités à risque élevé (RGPD Art. 22.2.c / Art. 35)'
+              : 'Si activé, les utilisateurs devront accepter cette finalité pour utiliser la plateforme'}
           </p>
         </div>
         <Switch
           id="isRequired"
           checked={isRequired}
           onCheckedChange={setIsRequired}
+          disabled={isRequiredLocked}
         />
       </div>
 
