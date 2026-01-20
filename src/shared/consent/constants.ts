@@ -58,3 +58,31 @@ export const CONSENT_FILTER_OPTIONS = {
 } as const;
 
 export type ConsentFilterOption = (typeof CONSENT_FILTER_OPTIONS)[keyof typeof CONSENT_FILTER_OPTIONS];
+
+// =========================
+// Consent Source
+// =========================
+
+/**
+ * Source of consent action
+ * - USER: Action initiated by the user
+ * - ADMIN: Action initiated by an admin
+ * - SYSTEM: Action initiated automatically by the system
+ */
+export const CONSENT_SOURCE = {
+  USER: 'user',
+  ADMIN: 'admin',
+  SYSTEM: 'system',
+} as const;
+
+export type ConsentSource = (typeof CONSENT_SOURCE)[keyof typeof CONSENT_SOURCE];
+
+// =========================
+// Consent Source Labels (French)
+// =========================
+
+export const CONSENT_SOURCE_LABELS: Record<ConsentSource, string> = {
+  [CONSENT_SOURCE.USER]: 'Utilisateur',
+  [CONSENT_SOURCE.ADMIN]: 'Admin',
+  [CONSENT_SOURCE.SYSTEM]: 'Système',
+};

@@ -15,6 +15,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { marked } from 'marked';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 export const metadata = {
   title: 'Politique de Confidentialité - Plateforme IA RGPD',
@@ -26,8 +27,9 @@ export default async function PolitiqueConfidentialitePage() {
   const filePath = join(process.cwd(), 'docs', 'legal', 'politique-confidentialite.md');
   const markdown = await readFile(filePath, 'utf-8');
 
-  // Convertir en HTML avec marked
-  const html = await marked(markdown);
+  // Convertir en HTML avec marked et sanitizer pour prévenir XSS
+  const rawHtml = await marked(markdown);
+  const html = sanitizeHtml(rawHtml);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

@@ -125,7 +125,7 @@ export const NAV_LABELS = {
 
   // DPO specific (LOT 12.4)
   DPIA: 'DPIA',
-  REGISTRE: 'Registre Art. 30',
+  REGISTRE: 'Registre des Traitements',
 
   // User menu
   MY_ACCOUNT: 'Mon compte',

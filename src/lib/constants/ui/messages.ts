@@ -47,6 +47,7 @@ export const API_ERROR_MESSAGES = {
   DPIA_CREATE_FAILED: 'Failed to create DPIA',
   DPIA_VALIDATE_FAILED: 'Failed to validate DPIA',
   DPIA_UPDATE_FAILED: 'Failed to update DPIA',
+  DPIA_FETCH_FAILED: 'Failed to fetch DPIA',
 } as const;
 
 // =========================

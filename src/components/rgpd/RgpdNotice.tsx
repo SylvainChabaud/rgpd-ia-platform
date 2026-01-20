@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card'
 export const RGPD_NOTICE_VARIANT = {
   USER_EDIT: 'user-edit',
   USER_CREATE: 'user-create',
+  USER_DETAIL: 'user-detail',
   TENANT_EDIT: 'tenant-edit',
   TENANT_CREATE: 'tenant-create',
   DATA_EXPORT: 'data-export',
@@ -38,6 +39,7 @@ interface RgpdNoticeProps {
 const NOTICE_CONTENT: Record<RgpdNoticeVariant, string> = {
   [RGPD_NOTICE_VARIANT.USER_EDIT]: `La modification d'un utilisateur est tracée dans l'audit trail. Seules les données P1 peuvent être modifiées (displayName, role). L'email n'est pas accessible (Art. 15, 34 - seuls User, DPO et Système y ont accès).`,
   [RGPD_NOTICE_VARIANT.USER_CREATE]: `La création d'un utilisateur est tracée dans l'audit trail. Le mot de passe est haché avec bcrypt (12 rounds). L'email est chiffré AES-256-GCM.`,
+  [RGPD_NOTICE_VARIANT.USER_DETAIL]: `Seules les données P1 (métadonnées publiques) sont affichées. L'email n'est pas accessible (Art. 15, 34 - seuls User, DPO et Système y ont accès). Le hash email et le mot de passe ne sont jamais exposés. Toutes les actions sont auditées.`,
   [RGPD_NOTICE_VARIANT.TENANT_EDIT]: `La modification d'un tenant est tracée dans l'audit trail. Le slug est immuable (identifiant unique).`,
   [RGPD_NOTICE_VARIANT.TENANT_CREATE]: `La création d'un tenant est tracée dans l'audit trail. Aucune donnée sensible n'est stockée à cette étape (uniquement métadonnées P1).`,
   [RGPD_NOTICE_VARIANT.DATA_EXPORT]: `Les exports de données sont chiffrés (AES-256) et disponibles pendant 7 jours après génération. Seul l'utilisateur concerné peut télécharger son export (maximum 3 téléchargements). L'administrateur peut uniquement consulter le statut des demandes. Politique de rétention (Art. 5.1.e) : Les exports de plus de 7 jours doivent être purgés pour garantir la conformité RGPD.`,

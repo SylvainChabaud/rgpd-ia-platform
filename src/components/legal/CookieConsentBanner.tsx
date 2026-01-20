@@ -64,12 +64,12 @@ function blockAnalyticsScript() {
 
 function loadMarketingScript() {
   // TODO: Load marketing scripts if applicable.
-  console.log('Marketing cookies enabled');
+  // Marketing scripts will be loaded here when configured
 }
 
 function blockMarketingScript() {
   // TODO: Block marketing scripts if applicable.
-  console.log('Marketing cookies disabled');
+  // Marketing scripts will be blocked here when configured
 }
 
 function getCookie(name: string): string | null {
@@ -124,8 +124,7 @@ export function CookieConsentBanner() {
         // Erreur, afficher banner par sécurité
         setVisible(true);
       }
-    } catch (error) {
-      console.error('Error checking consent:', error);
+    } catch {
       // En cas d'erreur, afficher banner par sécurité
       setVisible(true);
     }
@@ -167,8 +166,7 @@ export function CookieConsentBanner() {
       } else {
         alert(COOKIE_MESSAGES.SAVE_ERROR);
       }
-    } catch (error) {
-      console.error('Error saving consent:', error);
+    } catch {
       alert(COOKIE_MESSAGES.NETWORK_ERROR);
     } finally {
       setIsLoading(false);
