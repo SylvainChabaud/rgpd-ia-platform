@@ -3,7 +3,8 @@ import { ACTOR_ROLE } from '@/shared/actorRole';
 import { authenticateRequest } from '@/app/middleware/auth';
 import { requirePermission } from '@/app/middleware/rbac';
 import { PgDpiaRepo } from '@/infrastructure/repositories/PgDpiaRepo';
-import { toPublicDpia } from '@/domain/dpia';
+import { PgDpiaHistoryRepo } from '@/infrastructure/repositories/PgDpiaHistoryRepo';
+import { toPublicDpia, DPIA_HISTORY_ACTION } from '@/domain/dpia';
 import { logger } from '@/infrastructure/logging/logger';
 
 /**
@@ -77,6 +78,8 @@ export async function POST(
     }
 
     const dpiaRepo = new PgDpiaRepo();
+    const historyRepo = new PgDpiaHistoryRepo();
+
     const dpia = await dpiaRepo.requestRevision(
       tenantId,
       dpiaId,
@@ -87,6 +90,16 @@ export async function POST(
     if (!dpia) {
       return NextResponse.json({ error: 'DPIA not found' }, { status: 404 });
     }
+
+    // Record history entry for revision request
+    await historyRepo.create({
+      dpiaId,
+      tenantId,
+      action: DPIA_HISTORY_ACTION.REVISION_REQUESTED,
+      actorId: authResult.user.id,
+      actorRole: authResult.user.role,
+      comments: body.revisionComments,
+    });
 
     // Audit log (P1 data only)
     logger.info({

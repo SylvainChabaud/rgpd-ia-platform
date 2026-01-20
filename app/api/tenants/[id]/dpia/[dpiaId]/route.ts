@@ -3,7 +3,8 @@ import { ACTOR_ROLE } from '@/shared/actorRole';
 import { authenticateRequest } from '@/app/middleware/auth';
 import { requirePermission } from '@/app/middleware/rbac';
 import { PgDpiaRepo } from '@/infrastructure/repositories/PgDpiaRepo';
-import { toPublicDpia, DPIA_STATUS } from '@/domain/dpia';
+import { PgDpiaHistoryRepo } from '@/infrastructure/repositories/PgDpiaHistoryRepo';
+import { toPublicDpia, DPIA_STATUS, DPIA_HISTORY_ACTION } from '@/domain/dpia';
 import { logger } from '@/infrastructure/logging/logger';
 
 /**
@@ -159,6 +160,7 @@ export async function PATCH(
     }
 
     const dpiaRepo = new PgDpiaRepo();
+    const historyRepo = new PgDpiaHistoryRepo();
 
     let dpia;
 
@@ -181,6 +183,21 @@ export async function PATCH(
       );
 
       if (dpia) {
+        // Record history entry for DPO validation
+        const historyAction = body.status === DPIA_STATUS.APPROVED
+          ? DPIA_HISTORY_ACTION.APPROVED
+          : DPIA_HISTORY_ACTION.REJECTED;
+
+        await historyRepo.create({
+          dpiaId,
+          tenantId,
+          action: historyAction,
+          actorId: authResult.user.id,
+          actorRole: authResult.user.role,
+          comments: body.dpoComments || null,
+          rejectionReason: body.status === DPIA_STATUS.REJECTED ? body.rejectionReason : undefined,
+        });
+
         // Audit log for validation (P1 data only)
         logger.info({
           event: body.status === DPIA_STATUS.APPROVED ? 'dpia.approved' : 'dpia.rejected',
