@@ -400,3 +400,68 @@ export async function downloadDpiaPdf(tenantId: string, dpiaId: string): Promise
   );
   downloadBlob(blob, filename);
 }
+
+// ============================================
+// History Types & Hook
+// ============================================
+
+export interface DpiaHistoryEntry {
+  id: string;
+  dpiaId: string;
+  action: 'CREATED' | 'APPROVED' | 'REJECTED' | 'REVISION_REQUESTED';
+  actorId: string;
+  actorRole: string;
+  actorDisplayName: string | null;
+  comments: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+}
+
+export interface DpiaHistoryResponse {
+  history: DpiaHistoryEntry[];
+  total: number;
+}
+
+/**
+ * Get DPIA workflow history
+ * LOT 12.4 - Historique des échanges DPO/Tenant Admin
+ *
+ * Access:
+ * - DPO: Can view history for their tenant's DPIAs
+ * - TENANT_ADMIN: Can view history for their tenant's DPIAs
+ * - SUPERADMIN: Can view history for all DPIAs (must pass tenantId explicitly)
+ *
+ * @param dpiaId - The DPIA ID to fetch history for
+ * @param overrideTenantId - Optional tenant ID override (for SUPERADMIN cross-tenant access)
+ */
+export function useDpiaHistory(dpiaId: string | null | undefined, overrideTenantId?: string) {
+  const user = useAuthStore((state) => state.user);
+  // Use override if provided (for SUPERADMIN), otherwise use user's tenantId
+  const tenantId = overrideTenantId || user?.tenantId;
+
+  return useQuery({
+    queryKey: ['dpia', 'history', tenantId, dpiaId],
+    queryFn: async () => {
+      if (!tenantId) {
+        throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
+      }
+
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
+
+      const response = await fetch(`/api/tenants/${tenantId}/dpia/${dpiaId}/history`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || API_ERROR_MESSAGES.DPIA_FETCH_FAILED);
+      }
+
+      return response.json() as Promise<DpiaHistoryResponse>;
+    },
+    enabled: !!dpiaId && !!tenantId,
+    staleTime: DPIA_STALE_TIME_MS,
+  });
+}

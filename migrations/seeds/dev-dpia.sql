@@ -5,6 +5,7 @@
 -- Ce fichier contient des donnees de demonstration pour LOT 12.4:
 -- - dpias: analyses d'impact pour les purposes a risque eleve
 -- - dpia_risks: risques identifies pour chaque DPIA
+-- - dpia_history: historique des echanges DPO/Tenant Admin (si migration 029 appliquee)
 --
 -- Usage:
 --   - Utilise par setup-dev.bat (developpement manuel)
@@ -364,6 +365,168 @@ BEGIN
                  2, NOW() - INTERVAL '5 days')
             ON CONFLICT DO NOTHING;
         END IF;
+    END IF;
+
+    -- ==========================================================================
+    -- DPIA History entries (if table exists - migration 029)
+    -- ==========================================================================
+    -- Check if dpia_history table exists before inserting
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'dpia_history') THEN
+        DECLARE
+            v_dpo_id UUID;
+            v_admin_id UUID;
+        BEGIN
+            -- Get DPO and Admin IDs for ACME
+            SELECT id INTO v_dpo_id FROM users
+            WHERE email_hash = encode(sha256('dpo@acme.local'::bytea), 'hex') LIMIT 1;
+
+            SELECT id INTO v_admin_id FROM users
+            WHERE email_hash = encode(sha256('admin@acme.local'::bytea), 'hex') LIMIT 1;
+
+            -- Get DPIA IDs for history entries
+            -- DPIA 1 - APPROVED: History shows CREATED -> APPROVED
+            SELECT id INTO v_dpia_id_1 FROM dpias
+            WHERE tenant_id = v_acme_tenant_id AND title LIKE '%Profilage comportemental%' LIMIT 1;
+
+            IF v_dpia_id_1 IS NOT NULL AND v_admin_id IS NOT NULL THEN
+                -- Entry: CREATED
+                INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                VALUES (
+                    gen_random_uuid(),
+                    v_dpia_id_1,
+                    v_acme_tenant_id,
+                    'CREATED',
+                    v_admin_id,
+                    'TENANT_ADMIN',
+                    'DPIA soumise pour validation DPO.',
+                    NOW() - INTERVAL '30 days'
+                )
+                ON CONFLICT DO NOTHING;
+
+                -- Entry: APPROVED
+                IF v_dpo_id IS NOT NULL THEN
+                    INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                    VALUES (
+                        gen_random_uuid(),
+                        v_dpia_id_1,
+                        v_acme_tenant_id,
+                        'APPROVED',
+                        v_dpo_id,
+                        'DPO',
+                        'DPIA approuvee apres revue des mesures de securite. Recommandation: audit trimestriel.',
+                        NOW() - INTERVAL '20 days'
+                    )
+                    ON CONFLICT DO NOTHING;
+                END IF;
+            END IF;
+
+            -- DPIA 2 - PENDING: History shows only CREATED
+            SELECT id INTO v_dpia_id_2 FROM dpias
+            WHERE tenant_id = v_acme_tenant_id AND title LIKE '%Scoring predictif%' LIMIT 1;
+
+            IF v_dpia_id_2 IS NOT NULL AND v_admin_id IS NOT NULL THEN
+                INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                VALUES (
+                    gen_random_uuid(),
+                    v_dpia_id_2,
+                    v_acme_tenant_id,
+                    'CREATED',
+                    v_admin_id,
+                    'TENANT_ADMIN',
+                    'DPIA critique - decision automatisee Art. 22. Attente validation DPO.',
+                    NOW() - INTERVAL '15 days'
+                )
+                ON CONFLICT DO NOTHING;
+            END IF;
+
+            -- DPIA 3 - APPROVED: History shows CREATED -> APPROVED
+            SELECT id INTO v_dpia_id_3 FROM dpias
+            WHERE tenant_id = v_acme_tenant_id AND title LIKE '%Detection fraude%' LIMIT 1;
+
+            IF v_dpia_id_3 IS NOT NULL AND v_admin_id IS NOT NULL THEN
+                INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                VALUES (
+                    gen_random_uuid(),
+                    v_dpia_id_3,
+                    v_acme_tenant_id,
+                    'CREATED',
+                    v_admin_id,
+                    'TENANT_ADMIN',
+                    'DPIA pour detection fraude transactionnelle.',
+                    NOW() - INTERVAL '45 days'
+                )
+                ON CONFLICT DO NOTHING;
+
+                IF v_dpo_id IS NOT NULL THEN
+                    INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                    VALUES (
+                        gen_random_uuid(),
+                        v_dpia_id_3,
+                        v_acme_tenant_id,
+                        'APPROVED',
+                        v_dpo_id,
+                        'DPO',
+                        'Approuve pour interet legitime de prevention fraude. Mesures adequates.',
+                        NOW() - INTERVAL '40 days'
+                    )
+                    ON CONFLICT DO NOTHING;
+                END IF;
+            END IF;
+
+            -- DPIA 4 - REJECTED: History shows CREATED -> REJECTED -> REVISION_REQUESTED
+            SELECT id INTO v_dpia_id_4 FROM dpias
+            WHERE tenant_id = v_acme_tenant_id AND title LIKE '%Analyse sentiments%' LIMIT 1;
+
+            IF v_dpia_id_4 IS NOT NULL AND v_admin_id IS NOT NULL THEN
+                INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                VALUES (
+                    gen_random_uuid(),
+                    v_dpia_id_4,
+                    v_acme_tenant_id,
+                    'CREATED',
+                    v_admin_id,
+                    'TENANT_ADMIN',
+                    'DPIA soumise pour analyse des sentiments dans les communications.',
+                    NOW() - INTERVAL '25 days'
+                )
+                ON CONFLICT DO NOTHING;
+
+                IF v_dpo_id IS NOT NULL THEN
+                    INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role,
+                                              rejection_reason, comments, created_at)
+                    VALUES (
+                        gen_random_uuid(),
+                        v_dpia_id_4,
+                        v_acme_tenant_id,
+                        'REJECTED',
+                        v_dpo_id,
+                        'DPO',
+                        'Mesures de securite insuffisantes pour donnees P2. Base legale "interet legitime" non justifiee pour analyse de contenu de communications.',
+                        'Recommandation: obtenir consentement explicite et renforcer les mesures techniques.',
+                        NOW() - INTERVAL '10 days'
+                    )
+                    ON CONFLICT DO NOTHING;
+                END IF;
+
+                -- Tenant Admin requests revision
+                INSERT INTO dpia_history (id, dpia_id, tenant_id, action, actor_id, actor_role, comments, created_at)
+                VALUES (
+                    gen_random_uuid(),
+                    v_dpia_id_4,
+                    v_acme_tenant_id,
+                    'REVISION_REQUESTED',
+                    v_admin_id,
+                    'TENANT_ADMIN',
+                    'Nous avons renforce les mesures de securite et obtenu le consentement explicite. Demande de re-evaluation.',
+                    NOW() - INTERVAL '5 days'
+                )
+                ON CONFLICT DO NOTHING;
+            END IF;
+
+            RAISE NOTICE 'DPIA history seed completed';
+        END;
+    ELSE
+        RAISE NOTICE 'Table dpia_history not found - skipping history seed (run migration 029 first)';
     END IF;
 
     RAISE NOTICE 'DPIA seed completed successfully';
