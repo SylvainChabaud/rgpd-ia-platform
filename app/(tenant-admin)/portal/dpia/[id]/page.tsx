@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
@@ -26,7 +25,6 @@ import {
 } from '@/components/ui/table';
 import {
   FileCheck,
-  ArrowLeft,
   AlertCircle,
   Clock,
   CheckCircle,
@@ -34,8 +32,6 @@ import {
   FileDown,
   Shield,
   AlertTriangle,
-  RefreshCw,
-  MessageSquare,
 } from 'lucide-react';
 import {
   RiskLevelBadgeFull,
@@ -43,6 +39,7 @@ import {
   ImpactBadge,
 } from '@/components/ui/rgpd-badges';
 import { useDpiaDetail, useValidateDpia, downloadDpiaPdf } from '@/lib/api/hooks/useDpia';
+import { DpiaHistoryTimeline } from '@/components/dpia/DpiaHistoryTimeline';
 import { useAuthStore } from '@/lib/auth/authStore';
 import { ACTOR_ROLE } from '@/shared/actorRole';
 import { toast } from 'sonner';
@@ -53,7 +50,6 @@ import {
   DPIA_MIN_REJECTION_REASON_LENGTH,
 } from '@/lib/constants/dpia';
 import { TOAST_MESSAGES, LOADING_MESSAGES, ERROR_STATES, FALLBACK_TEXT } from '@/lib/constants/ui/messages';
-import { PORTAL_ROUTES } from '@/lib/constants/routes';
 import { DEFAULT_LOCALE } from '@/shared/locale';
 
 /**
@@ -155,9 +151,9 @@ export default function DpiaDetailPage() {
                   {ERROR_STATES.NOT_FOUND.description}
                 </p>
               </div>
-              <Link href={PORTAL_ROUTES.DPIA}>
-                <Button variant="outline">{ERROR_STATES.BACK_TO_LIST}</Button>
-              </Link>
+              <Button variant="outline" onClick={() => router.back()}>
+                {ERROR_STATES.BACK_TO_LIST}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -173,21 +169,14 @@ export default function DpiaDetailPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href={PORTAL_ROUTES.DPIA}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <FileCheck className="h-8 w-8" />
-              {dpia.title}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Finalité : {dpia.purposeLabel || FALLBACK_TEXT.NOT_AVAILABLE}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <FileCheck className="h-8 w-8" />
+            {dpia.title}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Finalité : {dpia.purposeLabel || FALLBACK_TEXT.NOT_AVAILABLE}
+          </p>
         </div>
         <div className="flex gap-2">
           {dpia.status === DPIA_STATUS.APPROVED && (
@@ -220,54 +209,8 @@ export default function DpiaDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Rejection Reason (if rejected) */}
-      {dpia.status === DPIA_STATUS.REJECTED && dpia.rejectionReason && (
-        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20">
-          <CardHeader>
-            <CardTitle className="text-red-700 dark:text-red-400 flex items-center gap-2">
-              <XCircle className="h-5 w-5" />
-              Motif de rejet
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{dpia.rejectionReason}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Revision Request Info (if pending with revision comments) */}
-      {dpia.status === DPIA_STATUS.PENDING && dpia.revisionRequestedAt && dpia.revisionComments && (
-        <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
-          <CardHeader>
-            <CardTitle className="text-orange-700 dark:text-orange-400 flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" />
-              Demande de révision
-            </CardTitle>
-            <CardDescription>
-              Demandée le {new Date(dpia.revisionRequestedAt).toLocaleDateString(DEFAULT_LOCALE)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <MessageSquare className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                  Commentaires du Tenant Admin :
-                </p>
-                <p className="mt-1 text-sm">{dpia.revisionComments}</p>
-              </div>
-            </div>
-            {isDpo && (
-              <div className="pt-3 border-t border-orange-200">
-                <p className="text-sm text-orange-700 dark:text-orange-400">
-                  <strong>Note :</strong> Le Tenant Admin a demandé une révision suite à un rejet précédent.
-                  Veuillez ré-examiner la DPIA en tenant compte des corrections apportées.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* DPIA History Timeline - Unified exchange history */}
+      <DpiaHistoryTimeline dpiaId={dpiaId} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Description Section */}
@@ -370,20 +313,6 @@ export default function DpiaDetailPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* DPO Comments */}
-      {dpia.dpoComments && (
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
-          <CardHeader>
-            <CardTitle className="text-blue-700 dark:text-blue-400">
-              Avis du DPO
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{dpia.dpoComments}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Validation Actions (DPO only, pending status) */}
       {canValidate && (

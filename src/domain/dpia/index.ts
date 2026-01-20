@@ -85,3 +85,15 @@ export {
   toRegistreCsvRow,
   toPublicRegistreEntry,
 } from './RegistreEntry';
+
+// DPIA History entity and types
+export {
+  // Constants
+  DPIA_HISTORY_ACTION,
+  DPIA_HISTORY_ACTION_LABELS,
+  DPIA_HISTORY_ACTION_COLORS,
+  // Types
+  type DpiaHistoryAction,
+  type DpiaHistoryEntry,
+  type CreateDpiaHistoryInput,
+} from './DpiaHistory';

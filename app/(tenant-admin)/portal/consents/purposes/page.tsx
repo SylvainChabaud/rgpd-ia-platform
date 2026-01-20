@@ -37,7 +37,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RgpdComplianceCard, COMPLIANCE_CARD_VARIANT } from '@/components/rgpd/RgpdComplianceCard'
 import {
   Tooltip,
@@ -56,12 +56,13 @@ import {
   XCircle,
   Info,
   Shield,
-  FileCheck as _FileCheck,
+  FileCheck,
   AlertTriangle,
   Building2,
   Sparkles,
   Clock,
   RefreshCw,
+  History,
 } from 'lucide-react'
 import {
   RISK_LEVEL,
@@ -471,6 +472,26 @@ export default function PurposesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {/* View DPIA button for purposes with DPIA (Art. 35 - Accountability) */}
+                          {purpose.requiresDpia && purpose.dpiaId && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link href={`/portal/dpia/${purpose.dpiaId}`}>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                  >
+                                    <FileCheck className="h-4 w-4 mr-1" />
+                                    DPIA
+                                  </Button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Voir la DPIA et l&apos;historique des échanges
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                           {/* Revision request button for rejected DPIAs */}
                           {purpose.dpiaStatus === 'REJECTED' && purpose.dpiaId && (
                             <Tooltip>
@@ -597,6 +618,16 @@ export default function PurposesPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              {/* Raison du rejet par le DPO */}
+              {purposeForRevision?.dpiaRejectionReason && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Raison du rejet par le DPO</AlertTitle>
+                  <AlertDescription className="mt-2 text-sm whitespace-pre-wrap">
+                    {purposeForRevision.dpiaRejectionReason}
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="revisionComments">
                   Commentaires de révision <span className="text-destructive">*</span>

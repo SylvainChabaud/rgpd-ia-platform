@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { ArrowLeft, Edit, Pause, Play, Trash2, Users, Activity } from 'lucide-react'
+import { ArrowLeft, Edit, Pause, Play, Trash2, Users, Activity, FileCheck, History } from 'lucide-react'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -306,6 +306,31 @@ export default function TenantDetailsPage() {
           </Card>
         </div>
       )}
+
+      {/* DPIA Section - Link to tenant's DPIAs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5" />
+            Analyses d&apos;Impact (DPIA)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Consulter les DPIA et l&apos;historique des échanges DPO/Tenant Admin
+              </p>
+            </div>
+            <Link href={`/admin/tenants/${tenantId}/dpia`}>
+              <Button variant="outline">
+                <History className="mr-2 h-4 w-4" />
+                Voir les DPIA
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Danger Zone */}
       {!isDeleted && (
