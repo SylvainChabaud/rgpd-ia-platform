@@ -77,14 +77,19 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 ├── src/
 │   ├── ai/                 # Gateway LLM (providers, enforcement, PII)
 │   │   └── gateway/        # Gateway centralisé + useCasePolicy
-│   ├── domain/             # Logique métier (use cases, entities)
+│   ├── app/                # Application layer (use cases, ports)
+│   │   ├── usecases/       # Use cases métier
+│   │   └── ports/          # Interfaces d'abstraction (Clean Architecture)
+│   ├── domain/             # Logique métier (entities, value objects)
 │   │   ├── data-classification/  # Classification P0-P3 (Art. 9 RGPD)
 │   │   ├── retention/      # Politiques de rétention
 │   │   └── rgpd/           # Entités RGPD
-│   ├── infrastructure/     # Repositories, services externes
+│   ├── infrastructure/     # Repositories, services externes (adapters)
 │   │   ├── db/             # PostgreSQL + tenantContext (RLS)
-│   │   └── pii/            # Détection/masquage PII
+│   │   ├── pii/            # Détection/masquage PII
+│   │   └── security/       # Services sécurité (hashing, encryption)
 │   ├── lib/                # Utilitaires partagés
+│   │   └── pdf/            # Générateur PDF partagé (DPIA, Registre)
 │   └── middleware/         # Middlewares (auth, tenant, etc.)
 ├── tests/                  # Tests (unitaires, intégration, RGPD)
 ├── scripts/
@@ -220,7 +225,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 - **Chiffrement** : AES-256-GCM au repos, TLS 1.3 en transit
 - **Classification** : Données P0-P3 avec rejet automatique des données P3 (Art. 9)
 - **Pseudonymisation PII** : Détection et masking automatique avant LLM (EPIC 8)
-- **Anonymisation IP** : Logs > 7j anonymisés automatiquement (EPIC 8)
+- **Anonymisation IP** : Adresses IP anonymisées (dernier octet masqué) dans les logs et consentements
+- **Clean Architecture** : Ports/Adapters pour injection de dépendances (ex: `PasswordHasher`)
 
 ### Défense en profondeur (RLS)
 
@@ -265,13 +271,15 @@ pnpm test -- --watch
 
 ### Couverture de tests actuelle
 
-**✅ Objectif 80% atteint : 82.39% (branches)**
-- **Test Suites** : 57 passed (59 total)
-- **Tests** : 822 passed (840 total)
-- **Statements** : 89.9%
-- **Branches** : **82.39%**
-- **Functions** : 91.69%
-- **Lines** : 90.91%
+**✅ Objectif 80% atteint : ~83% (branches)**
+- **Test Suites** : 59+ passed
+- **Tests** : 850+ passed
+- **Statements** : ~90%
+- **Branches** : **~83%**
+- **Functions** : ~92%
+- **Lines** : ~91%
+
+> Note: Tests ajoutés pour `BcryptPasswordHasher` (13 tests) et `markdownPdfGenerator` (15 tests) lors du full-review 2026-01-20.
 
 ### Catégories de tests
 

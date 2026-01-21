@@ -29,6 +29,7 @@ Detect French PII in text:
 - **IPv4**: Last octet zeroing (`192.168.1.42` → `192.168.1.0`)
 - **IPv6**: Last 64 bits zeroing (`2001:db8::1` → `2001:db8:0:0::`)
 - CNIL Recommendation compliance
+- **Usage** : Logs, consentements cookies (`/api/consents/cookies`), audit events
 
 ### ✅ PII Log Scanner
 
@@ -316,5 +317,5 @@ To add new PII types:
 
 ---
 
-**Last Updated**: 2025-12-27
-**Status**: ✅ Production-ready (110/110 tests passing)
+**Last Updated**: 2026-01-20
+**Status**: ✅ Production-ready (110+ tests passing)

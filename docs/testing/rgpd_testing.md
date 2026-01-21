@@ -144,6 +144,41 @@ Fichiers tests :
 - `rgpd.no-cross-tenant.test.ts`
 
 ---
+
+### Sécurité — Art. 32 (Hachage mots de passe)
+
+- Test format bcrypt (`$2a$` ou `$2b$`) — 1 test
+- Test non-présence du mot de passe en clair — 1 test
+- Test génération de hashes différents (salt) — 1 test
+- Test configuration salt rounds — 2 tests
+- Test vérification correcte — 1 test
+- Test rejet mot de passe incorrect — 2 tests
+- Test gestion `__DISABLED__` hash — 1 test
+- Test caractères spéciaux et unicode — 2 tests
+- Test longueur maximum (72 bytes bcrypt) — 1 test
+
+**Total** : 13 tests (Art. 32 - Sécurité du traitement)
+
+Fichier test : `tests/backend/unit/infrastructure/bcrypt-password-hasher.test.ts`
+
+---
+
+### LOT 10.4/10.5 — Export PDF RGPD
+
+- Test conversion markdown vers texte (code blocks, inline code) — 4 tests
+- Test suppression formatage (bold, italic, headers) — 3 tests
+- Test conversion listes et liens — 3 tests
+- Test gestion emojis et images — 2 tests
+- Test thèmes PDF (DPIA purple, Registre blue) — 2 tests
+- Test génération PDF (format, header %PDF-) — 2 tests
+- Test métadonnées et notice confidentialité — 2 tests
+- Test contenu long avec pagination — 1 test
+
+**Total** : 15 tests (LOT 10.4/10.5 - Export documentation RGPD)
+
+Fichier test : `tests/backend/unit/lib/markdownPdfGenerator.test.ts`
+
+---
 ## 4. Tests critiques transverses (bloquants)
 
 ### A. Test « no‑bypass Gateway LLM »
@@ -236,6 +271,6 @@ Ces preuves alimentent le **dossier d’audit EPIC 7**.
 
 **Document normatif — une fonctionnalité non testée RGPD est non livrable.**
 
-**Dernière mise à jour** : 2026-01-01 (ajout EPIC 8)  
-**Statut** : ✅ À jour (EPICs 1-8)
+**Dernière mise à jour** : 2026-01-20 (ajout tests Art. 32 sécurité, LOT 10.4/10.5 PDF)
+**Statut** : ✅ À jour (EPICs 1-10, LOT 10.4/10.5)
 

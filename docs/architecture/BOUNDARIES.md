@@ -194,24 +194,82 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 - Exécution **locale** et contrôlée par un administrateur système
 
 ### Contraintes strictes
-- La CLI **n’implémente aucune logique métier**
+- La CLI **n'implémente aucune logique métier**
 - Elle appelle exclusivement des **use-cases applicatifs**
 - Aucun accès direct à la base de données ou aux providers
-- Aucune exposition réseau (pas d’endpoint HTTP)
+- Aucune exposition réseau (pas d'endpoint HTTP)
+- **Injection de dépendances** : Les services infrastructure sont injectés via ports (ex: `PasswordHasher`)
 
 ### Interdictions
 - ❌ Génération ou stockage de secrets en clair
 - ❌ Logs contenant des données personnelles
 - ❌ Appels directs à la Gateway LLM
+- ❌ Import direct de modules infrastructure dans les use-cases (utiliser les ports)
 
 ---
 
-## 11. Infrastructure (transverse)
+## 11. Ports & Adapters (Clean Architecture)
+
+📌 Pattern **obligatoire** pour l'injection de dépendances et le découplage infrastructure.
+
+### Structure
+```
+src/app/ports/           # Interfaces (ports)
+├── PasswordHasher.ts    # Hachage mots de passe
+├── EncryptionService.ts # Chiffrement données
+├── ExportStorage.ts     # Stockage exports
+└── ...
+
+src/infrastructure/      # Implémentations (adapters)
+├── security/
+│   └── BcryptPasswordHasher.ts
+├── encryption/
+│   └── AesEncryptionService.ts
+└── ...
+```
+
+### Règles
+- Les **use-cases** dépendent uniquement des **ports** (interfaces)
+- Les **adapters** (infrastructure) implémentent les ports
+- L'injection se fait au point d'entrée (API routes, CLI)
+- En tests, utiliser des **mocks** ou **memory adapters**
+
+### Exemple : PasswordHasher
+
+```typescript
+// Port (src/app/ports/PasswordHasher.ts)
+export interface PasswordHasher {
+  hash(password: string): Promise<string>;
+  verify(password: string, hash: string): Promise<boolean>;
+}
+
+// Use case (ne dépend que du port)
+export class CreateUserUseCase {
+  constructor(
+    private readonly userRepo: UserRepo,
+    private readonly passwordHasher: PasswordHasher // ✅ Port injecté
+  ) {}
+}
+
+// CLI (injection de l'adapter)
+const passwordHasher = new BcryptPasswordHasher(); // ✅ Adapter
+const useCase = new CreateUserUseCase(userRepo, passwordHasher);
+```
+
+### Anti-patterns interdits
+- ❌ `import { BcryptPasswordHasher } from '@/infrastructure'` dans un use-case
+- ❌ `await import()` dynamique d'un module infrastructure
+- ❌ Dépendance directe à bcrypt/argon2 dans la couche application
+
+---
+
+## 12. Infrastructure (transverse)
 
 ### Rôle autorisé
 - Sécurité OS et réseau
 - TLS, pare-feu, supervision
 - Gestion des secrets (Vault, équivalent)
+- **Adapters** : implémentations des ports applicatifs
 
 ### Interdictions
 - ❌ Décisions métier
@@ -219,7 +277,7 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 
 ---
 
-## 12. Exemples de violations courantes (à éviter)
+## 13. Exemples de violations courantes (à éviter)
 
 - ❌ Frontend appelant un LLM
 - ❌ API stockant un prompt « pour debug »
@@ -227,21 +285,23 @@ Ce document est **normatif**. Toute violation constitue un **défaut d’archite
 - ❌ Logs contenant des payloads utilisateurs
 - ❌ Runtime IA avec accès internet libre
 - ❌ CLI accédant directement à la DB
+- ❌ Use-case important directement un adapter infrastructure
 
 ---
 
-## 13. Checklist de validation (à chaque PR)
+## 14. Checklist de validation (à chaque PR)
 
 - [x] Aucun appel IA hors Gateway LLM ✅
 - [x] Aucune donnée sensible en clair dans les logs ✅
 - [x] Isolation tenant respectée ✅
 - [x] Responsabilités de couche respectées ✅ **FIXED 2025-12-30** (use-cases → repositories uniquement)
 - [x] CLI conforme aux frontières définies ✅
+- [x] Ports/Adapters respectés (pas d'import infra dans use-cases) ✅ **FIXED 2026-01-20**
 - [x] Tests associés présents ✅
 
 ---
 
-## 14. Références internes
+## 15. Références internes
 
 - EPIC 1 — Socle applicatif sécurisé
 - EPIC 2 — Durcissement serveur & réseau
