@@ -1,5 +1,7 @@
 import { test as setup } from '@playwright/test'
 import path from 'path'
+import { AUTH_ROUTES } from '@/lib/constants/routes'
+import { TEST_PLATFORM_ADMIN, E2E_TIMEOUTS } from '../constants'
 
 /**
  * Global Auth Setup
@@ -17,20 +19,20 @@ const authFile = path.join(__dirname, '../.auth/platform-admin.json')
 
 setup('authenticate as PLATFORM admin', async ({ page }) => {
   // Navigate to login
-  await page.goto('/login')
+  await page.goto(AUTH_ROUTES.LOGIN)
 
   // Fill login form
-  await page.fill('input[type="email"]', 'admin@platform.local')
-  await page.fill('input[type="password"]', 'AdminPass123!')
-  
+  await page.fill('input[type="email"]', TEST_PLATFORM_ADMIN.email)
+  await page.fill('input[type="password"]', TEST_PLATFORM_ADMIN.password)
+
   // Submit form
   await page.click('button[type="submit"]')
-  
+
   // Wait for redirect to dashboard
-  await page.waitForURL('/', { timeout: 10000 })
+  await page.waitForURL('/', { timeout: E2E_TIMEOUTS.ELEMENT })
 
   // Verify we're logged in
-  await page.waitForSelector('nav', { timeout: 5000 })
+  await page.waitForSelector('nav', { timeout: E2E_TIMEOUTS.SELECTOR })
 
   // Save authenticated state
   await page.context().storageState({ path: authFile })

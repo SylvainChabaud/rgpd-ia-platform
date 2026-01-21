@@ -2,8 +2,9 @@
  * Unit Tests: API Client
  *
  * Coverage:
- * - JWT auto-injection
- * - 401 auto-logout
+ * - credentials: 'include' for httpOnly cookies
+ * - 401 auto-refresh + retry
+ * - 401 auto-logout if refresh fails
  * - Error handling (RGPD-safe messages)
  * - Network error handling
  */
@@ -24,16 +25,13 @@ delete (window as any).location
 describe('APIClient - Unit Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    sessionStorage.clear()
-    useAuthStore.getState().logout()
+    // Reset store state
+    useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
     ;(global.fetch as jest.Mock).mockClear()
   })
 
-  describe('JWT Token Injection', () => {
-    it('should attach JWT token from sessionStorage', async () => {
-      const mockToken = 'test-jwt-token'
-      sessionStorage.setItem('auth_token', mockToken)
-
+  describe('Credentials Include (httpOnly Cookies)', () => {
+    it('should include credentials in all requests', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({ data: 'success' }),
@@ -44,25 +42,9 @@ describe('APIClient - Unit Tests', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         '/api/tenants',
         expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${mockToken}`,
-          }),
+          credentials: 'include',
         })
       )
-    })
-
-    it('should NOT include Authorization header if no token', async () => {
-      sessionStorage.removeItem('auth_token')
-
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => ({ data: 'success' }),
-      })
-
-      await apiClient('/tenants')
-
-      const [, options] = (global.fetch as jest.Mock).mock.calls[0]
-      expect(options.headers.Authorization).toBeUndefined()
     })
 
     it('should set Content-Type to application/json', async () => {
@@ -82,12 +64,56 @@ describe('APIClient - Unit Tests', () => {
         })
       )
     })
+
+    it('should NOT include Authorization header (using cookies instead)', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: 'success' }),
+      })
+
+      await apiClient('/tenants')
+
+      const [, options] = (global.fetch as jest.Mock).mock.calls[0]
+      expect(options.headers.Authorization).toBeUndefined()
+    })
   })
 
-  describe('401 Unauthorized Handling', () => {
-    it('should auto-logout on 401 response', async () => {
-      // Setup authenticated state
-      useAuthStore.getState().login('test-token', {
+  describe('401 Unauthorized - Token Refresh', () => {
+    it('should try to refresh token on 401 and retry request', async () => {
+      // First request returns 401
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
+        // Refresh token succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+        })
+        // Retry request succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: 'success after refresh' }),
+        })
+
+      const result = await apiClient('/tenants')
+
+      expect(result).toEqual({ data: 'success after refresh' })
+
+      // Should have called: original request, refresh, retry
+      expect(global.fetch).toHaveBeenCalledTimes(3)
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        '/api/auth/refresh',
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+        })
+      )
+    })
+
+    it('should auto-logout if refresh also returns 401', async () => {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -97,37 +123,43 @@ describe('APIClient - Unit Tests', () => {
 
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
 
-      // Mock 401 response
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        ok: false,
-        status: 401,
-      })
+      // First request returns 401
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
+        // Refresh token also fails
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
 
       await expect(apiClient('/tenants')).rejects.toThrow('Non authentifié')
 
       // Should auto-logout
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
 
-    it('should attempt redirect to login on 401', async () => {
-      // Note: Actual redirect testing is skipped due to jsdom limitation
-      // (cannot mock window.location.href assignment without triggering navigation error)
-      // The redirect behavior is validated in browser E2E tests
-      
-      ;(global.fetch as jest.Mock).mockResolvedValue({
-        ok: false,
-        status: 401,
+    it('should auto-logout if refresh fails with network error', async () => {
+      useAuthStore.getState().login({
+        id: 'user-123',
+        displayName: 'John',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
       })
 
+      // First request returns 401
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
+        // Refresh fails with network error
+        .mockRejectedValueOnce(new Error('Network error'))
+
       await expect(apiClient('/tenants')).rejects.toThrow('Non authentifié')
-      
-      // Verify auto-logout happened (which is the critical security feature)
-      expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('auth_token')).toBeNull()
-      
-      // Redirect to /backoffice/login happens but cannot be tested in jsdom
-      // This is covered by the auto-logout test above and E2E tests
     })
   })
 
@@ -235,6 +267,7 @@ describe('APIClient - Unit Tests', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(mockBody),
+          credentials: 'include',
         })
       )
     })
@@ -287,8 +320,6 @@ describe('APIClient - Unit Tests', () => {
 
   describe('Custom Headers', () => {
     it('should merge custom headers with defaults', async () => {
-      sessionStorage.setItem('auth_token', 'test-token')
-
       ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({ data: 'success' }),
@@ -305,9 +336,9 @@ describe('APIClient - Unit Tests', () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            Authorization: 'Bearer test-token',
             'X-Custom-Header': 'custom-value',
           }),
+          credentials: 'include',
         })
       )
     })

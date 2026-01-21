@@ -17,6 +17,7 @@
 
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
+import { PgPurgeRepo } from "@/infrastructure/repositories/PgPurgeRepo";
 import {
   executeTenantPurgeJob,
   purgeAiJobs,
@@ -29,6 +30,7 @@ import { newId } from "@/shared/ids";
 
 const TENANT_ID = newId();
 const USER_ID = newId();
+const purgeRepo = new PgPurgeRepo();
 
 /**
  * Helper: Create AI job with specific age
@@ -144,7 +146,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       await createAiJobWithAge(TENANT_ID, USER_ID, 30); // Valid
 
       // WHEN: Running automated purge job
-      const purgedCount = await purgeAiJobs(TENANT_ID, policy, false);
+      const purgedCount = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
       // THEN: Expired data should be purged
       expect(purgedCount).toBe(2); // 2 expired jobs
@@ -164,7 +166,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
 
       // WHEN: Running purge
       const policy = getDefaultRetentionPolicy();
-      const purgedCount = await purgeAiJobs(TENANT_ID, policy, false);
+      const purgedCount = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
       // THEN: Nothing should be purged
       expect(purgedCount).toBe(0);
@@ -181,17 +183,17 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       const policy = getDefaultRetentionPolicy();
 
       // WHEN: Running purge first time
-      const purged1 = await purgeAiJobs(TENANT_ID, policy, false);
+      const purged1 = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
       expect(purged1).toBe(1);
 
       // WHEN: Running purge second time
-      const purged2 = await purgeAiJobs(TENANT_ID, policy, false);
+      const purged2 = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
       // THEN: No additional deletions (idempotent)
       expect(purged2).toBe(0);
 
       // WHEN: Running purge third time
-      const purged3 = await purgeAiJobs(TENANT_ID, policy, false);
+      const purged3 = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
       // THEN: Still no deletions
       expect(purged3).toBe(0);
@@ -238,7 +240,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       expect(beforeCount).toBe(2); // Should have exactly 2 jobs (fresh start)
 
       // WHEN: Running purge with custom policy
-      const purgedCount = await purgeAiJobs(TENANT_ID, customPolicy, false);
+      const purgedCount = await purgeAiJobs(TENANT_ID, customPolicy, purgeRepo, false);
 
       // THEN: 40-day-old job should be purged (1 job older than 30 days)
       expect(purgedCount).toBe(1);
@@ -256,7 +258,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
 
       // WHEN: Running purge in dry-run mode
       const policy = getDefaultRetentionPolicy();
-      const purgedCount = await purgeAiJobs(TENANT_ID, policy, true); // dryRun = true
+      const purgedCount = await purgeAiJobs(TENANT_ID, policy, purgeRepo, true); // dryRun = true
 
       // THEN: No actual deletion
       const afterCount = await countAiJobs(TENANT_ID);
@@ -275,7 +277,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       await createAiJobWithAge(TENANT_ID, USER_ID, 30); // Valid
 
       // WHEN: Executing tenant purge job (simulating cron)
-      const result = await executeTenantPurgeJob(TENANT_ID);
+      const result = await executeTenantPurgeJob(TENANT_ID, purgeRepo);
 
       // THEN: Expired data should be purged
       expect(result.aiJobsPurged).toBeGreaterThanOrEqual(2);
@@ -295,7 +297,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
       try {
         // WHEN: Running purge on empty tenant
         const policy = getDefaultRetentionPolicy();
-        const purgedCount = await purgeAiJobs(emptyTenantId, policy, false);
+        const purgedCount = await purgeAiJobs(emptyTenantId, policy, purgeRepo, false);
 
         // THEN: Should succeed with 0 purged
         expect(purgedCount).toBe(0);
@@ -332,7 +334,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
 
         // WHEN: Purging only main tenant
         const policy = getDefaultRetentionPolicy();
-        await purgeAiJobs(TENANT_ID, policy, false);
+        await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
         // THEN: Other tenant's data should NOT be affected
         const afterOther = await countAiJobs(otherTenantId);
@@ -361,7 +363,7 @@ describe("Automated Retention Cleanup (Art. 5(1)(e) RGPD)", () => {
 
       // WHEN: Automated retention enforcement
       const policy = getDefaultRetentionPolicy();
-      const purgedCount = await purgeAiJobs(TENANT_ID, policy, false);
+      const purgedCount = await purgeAiJobs(TENANT_ID, policy, purgeRepo, false);
 
       // THEN: Data should be deleted (storage limitation)
       expect(purgedCount).toBe(1); // 1 job purged

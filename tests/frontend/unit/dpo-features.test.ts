@@ -20,16 +20,21 @@ import {
   getRiskLevelLabel,
 } from '@/lib/api/hooks/useRegistre';
 import {
-  getDpiaStatusLabel,
-  getDpiaStatusColor,
-  getRiskLevelBadgeColor,
-} from '@/lib/api/hooks/useDpia';
+  DPIA_STATUS_LABELS,
+  DPIA_STATUS_BADGE_STYLES,
+  DPIA_RISK_BADGE_STYLES,
+} from '@/lib/constants/dpia';
+
+// Mock fetch for logout API calls
+global.fetch = jest.fn();
 
 describe('DPO Features - Frontend LOT 12.4', () => {
   beforeEach(() => {
-    sessionStorage.clear();
+    jest.clearAllMocks();
     localStorage.clear();
-    useAuthStore.getState().logout();
+    // Reset store state directly (token is in httpOnly cookie, not accessible from JS)
+    useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false });
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
   });
 
   // ===========================================================================
@@ -53,7 +58,7 @@ describe('DPO Features - Frontend LOT 12.4', () => {
         tenantId: 'tenant-abc',
       };
 
-      useAuthStore.getState().login('token', dpoUser);
+      useAuthStore.getState().login(dpoUser);
 
       const state = useAuthStore.getState();
       expect(state.user?.role).toBe(ACTOR_ROLE.DPO);
@@ -70,7 +75,7 @@ describe('DPO Features - Frontend LOT 12.4', () => {
         tenantId: 'tenant-xyz',
       };
 
-      useAuthStore.getState().login('dpo-token', dpoUser);
+      useAuthStore.getState().login(dpoUser);
 
       // Serialize state to check for PII
       const stateSnapshot = JSON.stringify(useAuthStore.getState());
@@ -122,7 +127,7 @@ describe('DPO Features - Frontend LOT 12.4', () => {
       expect(getLawfulBasisLabel('consent')).toContain('Consentement');
       expect(getLawfulBasisLabel('contract')).toContain('contrat');
       expect(getLawfulBasisLabel('legal_obligation')).toContain('Obligation');
-      expect(getLawfulBasisLabel('legitimate_interest')).toContain('legitime');
+      expect(getLawfulBasisLabel('legitimate_interest')).toContain('gitime'); // "légitime" - accent-agnostic
       expect(getLawfulBasisLabel('vital_interest')).toContain('vitaux');
       expect(getLawfulBasisLabel('public_interest')).toContain('public');
     });
@@ -167,23 +172,23 @@ describe('DPO Features - Frontend LOT 12.4', () => {
   // DPIA Helper Functions Tests
   // ===========================================================================
 
-  describe('Art. 35 - DPIA Helper Functions', () => {
-    it('[DPIA-001] getDpiaStatusLabel returns French status labels', () => {
-      expect(getDpiaStatusLabel('PENDING')).toMatch(/attente|pending/i);
-      expect(getDpiaStatusLabel('APPROVED')).toMatch(/approuv|approv/i);
-      expect(getDpiaStatusLabel('REJECTED')).toMatch(/rejet/i);
+  describe('Art. 35 - DPIA Constants (Labels & Styles)', () => {
+    it('[DPIA-001] DPIA_STATUS_LABELS contains French status labels', () => {
+      expect(DPIA_STATUS_LABELS.PENDING).toMatch(/attente|pending/i);
+      expect(DPIA_STATUS_LABELS.APPROVED).toMatch(/approuv|approv/i);
+      expect(DPIA_STATUS_LABELS.REJECTED).toMatch(/rejet/i);
     });
 
-    it('[DPIA-002] getDpiaStatusLabel handles unknown status gracefully', () => {
-      const unknownStatus = 'UNKNOWN_STATUS';
-      const result = getDpiaStatusLabel(unknownStatus);
-      expect(result).toBe(unknownStatus);
+    it('[DPIA-002] DPIA_STATUS_LABELS returns undefined for unknown status', () => {
+      const unknownStatus = 'UNKNOWN_STATUS' as keyof typeof DPIA_STATUS_LABELS;
+      const result = DPIA_STATUS_LABELS[unknownStatus];
+      expect(result).toBeUndefined();
     });
 
-    it('[DPIA-003] getDpiaStatusColor returns appropriate CSS classes', () => {
-      const pendingColor = getDpiaStatusColor('PENDING');
-      const approvedColor = getDpiaStatusColor('APPROVED');
-      const rejectedColor = getDpiaStatusColor('REJECTED');
+    it('[DPIA-003] DPIA_STATUS_BADGE_STYLES returns appropriate CSS classes', () => {
+      const pendingColor = DPIA_STATUS_BADGE_STYLES.PENDING;
+      const approvedColor = DPIA_STATUS_BADGE_STYLES.APPROVED;
+      const rejectedColor = DPIA_STATUS_BADGE_STYLES.REJECTED;
 
       // Pending should be yellow/amber
       expect(pendingColor).toMatch(/yellow|amber|warning/i);
@@ -193,11 +198,11 @@ describe('DPO Features - Frontend LOT 12.4', () => {
       expect(rejectedColor).toMatch(/red|error|destructive/i);
     });
 
-    it('[DPIA-004] getRiskLevelBadgeColor returns appropriate CSS classes', () => {
-      const lowColor = getRiskLevelBadgeColor('LOW');
-      const mediumColor = getRiskLevelBadgeColor('MEDIUM');
-      const highColor = getRiskLevelBadgeColor('HIGH');
-      const criticalColor = getRiskLevelBadgeColor('CRITICAL');
+    it('[DPIA-004] DPIA_RISK_BADGE_STYLES returns appropriate CSS classes', () => {
+      const lowColor = DPIA_RISK_BADGE_STYLES.LOW;
+      const mediumColor = DPIA_RISK_BADGE_STYLES.MEDIUM;
+      const highColor = DPIA_RISK_BADGE_STYLES.HIGH;
+      const criticalColor = DPIA_RISK_BADGE_STYLES.CRITICAL;
 
       expect(lowColor).toContain('green');
       expect(mediumColor).toContain('yellow');
@@ -309,10 +314,10 @@ describe('DPO Features - Frontend LOT 12.4', () => {
   // ===========================================================================
 
   describe('Frontend Security - DPO Features', () => {
-    it('[SEC-001] DPO token MUST be stored in sessionStorage only', () => {
-      const dpoToken = 'dpo-jwt-token-12345';
-
-      useAuthStore.getState().login(dpoToken, {
+    it('[SEC-001] DPO token MUST be in httpOnly cookie (not accessible from JS)', () => {
+      // Token is now stored in httpOnly cookie by the server
+      // Frontend can only store user metadata (P1 data)
+      useAuthStore.getState().login({
         id: 'dpo-sec-test',
         displayName: 'Security DPO',
         scope: ACTOR_SCOPE.TENANT,
@@ -320,16 +325,21 @@ describe('DPO Features - Frontend LOT 12.4', () => {
         tenantId: 'tenant-sec',
       });
 
-      // Token in sessionStorage (cleared on browser close)
-      expect(sessionStorage.getItem('auth_token')).toBe(dpoToken);
+      // User metadata is accessible
+      expect(useAuthStore.getState().user?.id).toBe('dpo-sec-test');
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
 
-      // Token NOT in localStorage (persistent)
+      // Token NOT in localStorage (stored in httpOnly cookie)
       const allLocalStorage = JSON.stringify(localStorage);
-      expect(allLocalStorage).not.toContain(dpoToken);
+      expect(allLocalStorage).not.toContain('jwt');
+      expect(allLocalStorage).not.toContain('token');
+
+      // Token NOT in sessionStorage either
+      expect(sessionStorage.getItem('auth_token')).toBeNull();
     });
 
-    it('[SEC-002] DPO logout MUST clear all session data', () => {
-      useAuthStore.getState().login('dpo-token', {
+    it('[SEC-002] DPO logout MUST call API and clear all session data', async () => {
+      useAuthStore.getState().login({
         id: 'dpo-logout-test',
         displayName: 'Logout DPO',
         scope: ACTOR_SCOPE.TENANT,
@@ -338,15 +348,21 @@ describe('DPO Features - Frontend LOT 12.4', () => {
       });
 
       // Verify data exists
-      expect(sessionStorage.getItem('auth_token')).toBeTruthy();
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
 
-      // Logout
-      useAuthStore.getState().logout();
+      // Mock logout API
+      (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
 
-      // ALL DPO data cleared
-      expect(sessionStorage.getItem('auth_token')).toBeNull();
-      expect(useAuthStore.getState().token).toBeNull();
+      // Logout (async - calls API to clear httpOnly cookie)
+      await useAuthStore.getState().logout();
+
+      // API called with credentials to clear httpOnly cookie
+      expect(global.fetch).toHaveBeenCalledWith('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      // ALL DPO data cleared from state
       expect(useAuthStore.getState().user).toBeNull();
       expect(useAuthStore.getState().isAuthenticated).toBe(false);
     });
@@ -354,8 +370,8 @@ describe('DPO Features - Frontend LOT 12.4', () => {
     it('[SEC-003] Frontend MUST NOT log DPIA sensitive data', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      // Simulate DPO login
-      useAuthStore.getState().login('dpo-secret-token', {
+      // Simulate DPO login (no token passed - it's in httpOnly cookie)
+      useAuthStore.getState().login({
         id: 'dpo-log-test',
         displayName: 'Log Test DPO',
         scope: ACTOR_SCOPE.TENANT,
@@ -363,10 +379,11 @@ describe('DPO Features - Frontend LOT 12.4', () => {
         tenantId: 'tenant-log',
       });
 
-      // Frontend should NOT log tokens
-      expect(consoleSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('dpo-secret-token')
-      );
+      // Frontend should NOT log any auth-related secrets
+      const allCalls = consoleSpy.mock.calls.flat().join(' ');
+      expect(allCalls).not.toContain('token');
+      expect(allCalls).not.toContain('jwt');
+      expect(allCalls).not.toContain('Bearer');
 
       consoleSpy.mockRestore();
     });

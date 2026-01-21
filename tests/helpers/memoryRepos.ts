@@ -4,6 +4,9 @@ import type { BootstrapStateRepo } from "@/app/ports/BootstrapStateRepo";
 import type { PlatformUserRepo } from "@/app/ports/PlatformUserRepo";
 import type { Tenant, TenantRepo } from "@/app/ports/TenantRepo";
 import type { TenantUserRepo } from "@/app/ports/TenantUserRepo";
+import type { PasswordHasher } from "@/app/ports/PasswordHasher";
+import type { User, UserRepo, UserDataStatus } from "@/app/ports/UserRepo";
+import { createHash, randomBytes } from "crypto";
 
 export class MemBootstrapState implements BootstrapStateRepo {
   private boot = false;
@@ -164,5 +167,221 @@ export class MemAuditWriter implements AuditEventWriter {
 
   async write(event: AuditEvent): Promise<void> {
     this.events.push(event);
+  }
+}
+
+export class MemPasswordHasher implements PasswordHasher {
+  async hash(password: string): Promise<string> {
+    const salt = randomBytes(16).toString("hex");
+    const hash = createHash("sha256").update(salt + password).digest("hex");
+    return `${salt}:${hash}`;
+  }
+
+  async verify(password: string, hash: string): Promise<boolean> {
+    const [salt, storedHash] = hash.split(":");
+    const computedHash = createHash("sha256").update(salt + password).digest("hex");
+    return computedHash === storedHash;
+  }
+}
+
+/**
+ * In-memory UserRepo implementation for unit tests
+ * Implements all required methods from UserRepo interface
+ */
+export class MemUserRepo implements UserRepo {
+  readonly users: User[] = [];
+
+  async findByEmailHash(emailHash: string): Promise<User | null> {
+    return this.users.find(u => u.emailHash === emailHash && !u.deletedAt) ?? null;
+  }
+
+  async findById(userId: string): Promise<User | null> {
+    return this.users.find(u => u.id === userId && !u.deletedAt) ?? null;
+  }
+
+  async listByTenant(tenantId: string, limit = 20, offset = 0): Promise<User[]> {
+    return this.users
+      .filter(u => u.tenantId === tenantId && !u.deletedAt)
+      .slice(offset, offset + limit);
+  }
+
+  async listSuspendedByTenant(tenantId: string): Promise<User[]> {
+    if (!tenantId) throw new Error("RGPD VIOLATION: tenantId required");
+    return this.users.filter(
+      u => u.tenantId === tenantId && u.dataSuspended && !u.deletedAt
+    );
+  }
+
+  async createUser(user: Omit<User, "createdAt" | "deletedAt">): Promise<void> {
+    this.users.push({
+      ...user,
+      createdAt: new Date(),
+      deletedAt: null,
+    });
+  }
+
+  async createUserWithEmail(
+    user: Omit<User, "createdAt" | "deletedAt">,
+    _email: string
+  ): Promise<void> {
+    await this.createUser(user);
+  }
+
+  async getDecryptedEmail(_userId: string): Promise<string | null> {
+    return null; // Not implemented for memory repo
+  }
+
+  async updateUser(
+    userId: string,
+    updates: { displayName?: string; role?: string }
+  ): Promise<void> {
+    const user = this.users.find(u => u.id === userId);
+    if (user) {
+      if (updates.displayName) user.displayName = updates.displayName;
+      if (updates.role) user.role = updates.role;
+    }
+  }
+
+  async softDeleteUser(userId: string): Promise<void> {
+    const user = this.users.find(u => u.id === userId);
+    if (user) user.deletedAt = new Date();
+  }
+
+  async softDeleteUserByTenant(tenantId: string, userId: string): Promise<number> {
+    const user = this.users.find(
+      u => u.id === userId && u.tenantId === tenantId && !u.deletedAt
+    );
+    if (user) {
+      user.deletedAt = new Date();
+      return 1;
+    }
+    return 0;
+  }
+
+  async hardDeleteUserByTenant(tenantId: string, userId: string): Promise<number> {
+    const idx = this.users.findIndex(
+      u => u.id === userId && u.tenantId === tenantId
+    );
+    if (idx >= 0) {
+      this.users.splice(idx, 1);
+      return 1;
+    }
+    return 0;
+  }
+
+  async updateDataSuspension(
+    userId: string,
+    suspended: boolean,
+    reason?: string
+  ): Promise<User> {
+    const user = this.users.find(u => u.id === userId);
+    if (!user) throw new Error("User not found");
+    user.dataSuspended = suspended;
+    user.dataSuspendedAt = suspended ? new Date() : null;
+    user.dataSuspendedReason = suspended ? (reason ?? null) : null;
+    return user;
+  }
+
+  async listFiltered(options: {
+    limit?: number;
+    offset?: number;
+    tenantId?: string;
+    role?: string;
+    status?: UserDataStatus;
+  }): Promise<User[]> {
+    let filtered = this.users.filter(u => !u.deletedAt);
+
+    if (options.tenantId) {
+      filtered = filtered.filter(u => u.tenantId === options.tenantId);
+    }
+    if (options.role) {
+      filtered = filtered.filter(u => u.role === options.role);
+    }
+    if (options.status === "suspended") {
+      filtered = filtered.filter(u => u.dataSuspended);
+    } else if (options.status === "active") {
+      filtered = filtered.filter(u => !u.dataSuspended);
+    }
+
+    const offset = options.offset ?? 0;
+    const limit = options.limit ?? 20;
+    return filtered.slice(offset, offset + limit);
+  }
+
+  async listFilteredByTenant(options: {
+    tenantId: string;
+    limit?: number;
+    offset?: number;
+    role?: string;
+    status?: UserDataStatus;
+    search?: string;
+    sortBy?: "name" | "createdAt" | "role";
+    sortOrder?: "asc" | "desc";
+  }): Promise<User[]> {
+    let filtered = this.users.filter(
+      u => u.tenantId === options.tenantId && !u.deletedAt
+    );
+
+    if (options.role) {
+      filtered = filtered.filter(u => u.role === options.role);
+    }
+    if (options.status === "suspended") {
+      filtered = filtered.filter(u => u.dataSuspended);
+    } else if (options.status === "active") {
+      filtered = filtered.filter(u => !u.dataSuspended);
+    }
+    if (options.search) {
+      const search = options.search.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.displayName.toLowerCase().includes(search)
+      );
+    }
+
+    // Sort
+    const sortBy = options.sortBy ?? "createdAt";
+    const sortOrder = options.sortOrder ?? "desc";
+    filtered.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === "name") {
+        cmp = a.displayName.localeCompare(b.displayName);
+      } else if (sortBy === "role") {
+        cmp = a.role.localeCompare(b.role);
+      } else {
+        cmp = a.createdAt.getTime() - b.createdAt.getTime();
+      }
+      return sortOrder === "asc" ? cmp : -cmp;
+    });
+
+    const offset = options.offset ?? 0;
+    const limit = options.limit ?? 50;
+    return filtered.slice(offset, offset + limit);
+  }
+
+  async countByTenant(options: {
+    tenantId: string;
+    role?: string;
+    status?: UserDataStatus;
+    search?: string;
+  }): Promise<number> {
+    let filtered = this.users.filter(
+      u => u.tenantId === options.tenantId && !u.deletedAt
+    );
+
+    if (options.role) {
+      filtered = filtered.filter(u => u.role === options.role);
+    }
+    if (options.status === "suspended") {
+      filtered = filtered.filter(u => u.dataSuspended);
+    } else if (options.status === "active") {
+      filtered = filtered.filter(u => !u.dataSuspended);
+    }
+    if (options.search) {
+      const search = options.search.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.displayName.toLowerCase().includes(search)
+      );
+    }
+
+    return filtered.length;
   }
 }

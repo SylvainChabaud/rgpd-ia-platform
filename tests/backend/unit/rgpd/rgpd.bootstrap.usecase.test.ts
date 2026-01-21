@@ -14,6 +14,7 @@ import {
   MemPlatformUsers,
   MemTenantRepo,
   MemTenantUserRepo,
+  MemPasswordHasher,
 } from '@tests/helpers/memoryRepos';
 import { policyEngine } from "@/app/auth/policyEngine";
 
@@ -21,8 +22,9 @@ test("bootstrap superadmin is non-replayable", async () => {
   const state = new MemBootstrapState();
   const users = new MemPlatformUsers();
   const audit = new MemAuditWriter();
+  const passwordHasher = new MemPasswordHasher();
 
-  const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
+  const uc = new CreatePlatformSuperAdminUseCase(state, users, audit, passwordHasher);
 
   const res1 = await uc.execute({
     email: "admin@example.com",
@@ -79,7 +81,8 @@ test("tenant admin requires existing tenant and correct scope", async () => {
   const tenants = new MemTenantRepo();
   const tenantUsers = new MemTenantUserRepo();
   const audit = new MemAuditWriter();
-  const uc = new CreateTenantAdminUseCase(tenants, tenantUsers, audit, policyEngine);
+  const passwordHasher = new MemPasswordHasher();
+  const uc = new CreateTenantAdminUseCase(tenants, tenantUsers, audit, policyEngine, passwordHasher);
   const tenantUc = new CreateTenantUseCase(tenants, audit, policyEngine);
 
   await expect(

@@ -57,6 +57,15 @@ class MemUserRepo implements UserRepo {
   async getDecryptedEmail(): Promise<string | null> {
     return null;
   }
+  async listFiltered() {
+    return [];
+  }
+  async listFilteredByTenant() {
+    return [];
+  }
+  async countByTenant() {
+    return 0;
+  }
 }
 
 function createUser(overrides: Partial<User> = {}): User {

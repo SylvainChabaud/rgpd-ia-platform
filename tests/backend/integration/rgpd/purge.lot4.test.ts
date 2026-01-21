@@ -13,6 +13,7 @@
 import { pool } from "@/infrastructure/db/pg";
 import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import { PgTenantRepo } from "@/infrastructure/repositories/PgTenantRepo";
+import { PgPurgeRepo } from "@/infrastructure/repositories/PgPurgeRepo";
 import {
   executePurgeJob,
   executeTenantPurgeJob,
@@ -24,6 +25,11 @@ import {
   calculateCutoffDate,
 } from "@/domain/retention/RetentionPolicy";
 import { randomUUID } from "node:crypto";
+
+// Repository instances for tests
+const tenantRepo = new PgTenantRepo();
+const purgeRepo = new PgPurgeRepo();
+const deps = { tenantRepo, purgeRepo };
 
 const TENANT_A_ID = randomUUID();
 const TENANT_B_ID = randomUUID();
@@ -153,7 +159,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     const policy = getDefaultRetentionPolicy();
 
     await expect(
-      purgeAiJobs("", policy, false)
+      purgeAiJobs("", policy, purgeRepo, false)
     ).rejects.toThrow(/RGPD VIOLATION: tenantId required/);
   });
 
@@ -171,7 +177,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     expect(parseInt(beforeCount.rows[0].count)).toBe(2); // 1 old + 1 recent
 
     // Execute purge
-    const purged = await purgeAiJobs(TENANT_A_ID, policy, false);
+    const purged = await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, false);
 
     // Should purge 1 old job only
     expect(purged).toBe(1);
@@ -190,7 +196,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     const policy = getDefaultRetentionPolicy();
 
     // Purge tenant A only
-    await purgeAiJobs(TENANT_A_ID, policy, false);
+    await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, false);
 
     // Verify tenant B data untouched (with tenant context)
     const tenantBCount = await withTenantContext(pool, TENANT_B_ID, async (client) => {
@@ -210,15 +216,15 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     const policy = getDefaultRetentionPolicy();
 
     // First purge
-    const purged1 = await purgeAiJobs(TENANT_A_ID, policy, false);
+    const purged1 = await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, false);
     expect(purged1).toBe(1); // 1 old job purged
 
     // Second purge (should purge 0, since already purged)
-    const purged2 = await purgeAiJobs(TENANT_A_ID, policy, false);
+    const purged2 = await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, false);
     expect(purged2).toBe(0); // idempotent
 
     // Third purge (still 0)
-    const purged3 = await purgeAiJobs(TENANT_A_ID, policy, false);
+    const purged3 = await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, false);
     expect(purged3).toBe(0); // idempotent
   });
 
@@ -239,7 +245,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     const countBefore = parseInt(beforeCount.rows[0].count);
 
     // Dry run purge
-    const dryRunPurged = await purgeAiJobs(TENANT_A_ID, policy, true);
+    const dryRunPurged = await purgeAiJobs(TENANT_A_ID, policy, purgeRepo, true);
     expect(dryRunPurged).toBe(1); // would purge 1
 
     // Count after dry run (should be unchanged) (with tenant context)
@@ -260,7 +266,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     await setupTestData();
 
     // Execute purge for tenant A only
-    const result = await executeTenantPurgeJob(TENANT_A_ID);
+    const result = await executeTenantPurgeJob(TENANT_A_ID, purgeRepo);
 
     expect(result.aiJobsPurged).toBe(1); // 1 old job purged
     expect(result.dryRun).toBe(false);
@@ -281,7 +287,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     await setupTestData();
 
     // Execute full purge (all tenants)
-    const result = await executePurgeJob(new PgTenantRepo());
+    const result = await executePurgeJob(deps);
 
     // Should purge old jobs from both tenants (2 total)
     // Note: platform context query needed to see cross-tenant data
@@ -300,7 +306,7 @@ describe("LOT 4.1 BLOCKER: Purge job execution", () => {
     });
 
     // Execute purge
-    await executePurgeJob(new PgTenantRepo());
+    await executePurgeJob(deps);
 
     // Verify consent still exists (no auto-purge) - with tenant context
     const consentCount = await withTenantContext(pool, TENANT_A_ID, async (client) => {

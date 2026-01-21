@@ -16,7 +16,7 @@ import {
   type CreateIncidentDeps,
 } from '@/app/usecases/incident/CreateIncidentUseCase';
 import type { SecurityIncident, CreateSecurityIncidentInput, IncidentSeverity, IncidentType } from '@/domain/incident/SecurityIncident';
-import type { SecurityIncidentRepo, PaginatedResult } from '@/domain/incident/SecurityIncidentRepo';
+import type { SecurityIncidentRepo, PaginatedResult } from '@/app/ports/SecurityIncidentRepo';
 
 // =============================================================================
 // MOCKS

@@ -93,6 +93,18 @@ class MemUserRepo implements UserRepo {
   async getDecryptedEmail(_userId: string): Promise<string | null> {
     return null;
   }
+
+  async listFiltered(): Promise<User[]> {
+    return [];
+  }
+
+  async listFilteredByTenant(): Promise<User[]> {
+    return [];
+  }
+
+  async countByTenant(): Promise<number> {
+    return 0;
+  }
 }
 
 class MemPasswordHasher implements PasswordHasher {

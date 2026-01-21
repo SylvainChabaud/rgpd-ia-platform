@@ -18,26 +18,18 @@
  */
 
 import { test, expect, Page } from '@playwright/test'
+import { AUTH_ROUTES, PORTAL_ROUTES, ADMIN_ROUTES } from '@/lib/constants/routes'
+import {
+  TEST_PLATFORM_ADMIN,
+  TEST_TENANT_ADMIN_ACME,
+  TEST_TENANT_ADMIN_TECHCORP,
+  E2E_TIMEOUTS,
+} from './constants'
 
-// Test tenant admin credentials (from setup-dev.bat / seed-test-data.ts)
-const TENANT_ADMIN_ACME = {
-  email: 'admin@acme.local',
-  password: 'Admin1234',
-  displayName: 'Admin ACME',
-  tenantSlug: 'acme',
-}
-
-const _TENANT_ADMIN_TECHCORP = {
-  email: 'admin@techcorp.local',
-  password: 'Admin1234',
-  displayName: 'Admin TechCorp',
-  tenantSlug: 'techcorp',
-}
-
-const PLATFORM_ADMIN = {
-  email: 'admin@platform.local',
-  password: 'AdminPass123!',
-}
+// Alias for backward compatibility with existing test code
+const TENANT_ADMIN_ACME = TEST_TENANT_ADMIN_ACME
+const _TENANT_ADMIN_TECHCORP = TEST_TENANT_ADMIN_TECHCORP
+const PLATFORM_ADMIN = TEST_PLATFORM_ADMIN
 
 /**
  * Helper: Login as Tenant Admin
@@ -46,7 +38,7 @@ async function loginAsTenantAdmin(
   page: Page,
   credentials: { email: string; password: string }
 ): Promise<void> {
-  await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 30000 })
+  await page.goto(AUTH_ROUTES.LOGIN, { waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUTS.NAVIGATION })
 
   // Clear any existing session
   await page.evaluate(() => {
@@ -54,14 +46,14 @@ async function loginAsTenantAdmin(
     localStorage.clear()
   })
 
-  await page.waitForSelector('input[type="email"]', { timeout: 10000 })
+  await page.waitForSelector('input[type="email"]', { timeout: E2E_TIMEOUTS.ELEMENT })
   await page.fill('input[type="email"]', credentials.email)
   await page.fill('input[type="password"]', credentials.password)
   await page.click('button[type="submit"]')
 
   // Wait for redirect to portal dashboard
-  await page.waitForURL('/portal/dashboard', {
-    timeout: 30000,
+  await page.waitForURL(PORTAL_ROUTES.DASHBOARD, {
+    timeout: E2E_TIMEOUTS.NAVIGATION,
     waitUntil: 'domcontentloaded',
   })
 }
@@ -70,20 +62,20 @@ async function loginAsTenantAdmin(
  * Helper: Login as Platform Admin
  */
 async function loginAsPlatformAdmin(page: Page): Promise<void> {
-  await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 30000 })
+  await page.goto(AUTH_ROUTES.LOGIN, { waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUTS.NAVIGATION })
 
   await page.evaluate(() => {
     sessionStorage.clear()
     localStorage.clear()
   })
 
-  await page.waitForSelector('input[type="email"]', { timeout: 10000 })
+  await page.waitForSelector('input[type="email"]', { timeout: E2E_TIMEOUTS.ELEMENT })
   await page.fill('input[type="email"]', PLATFORM_ADMIN.email)
   await page.fill('input[type="password"]', PLATFORM_ADMIN.password)
   await page.click('button[type="submit"]')
 
-  // Platform admin should redirect to /admin, not /portal
-  await page.waitForURL('/', { timeout: 30000, waitUntil: 'domcontentloaded' })
+  // Platform admin should redirect to / (admin root), not /portal
+  await page.waitForURL('/', { timeout: E2E_TIMEOUTS.NAVIGATION, waitUntil: 'domcontentloaded' })
 }
 
 test.describe('LOT 12.0 - Tenant Dashboard', () => {
@@ -94,7 +86,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await loginAsTenantAdmin(page, TENANT_ADMIN_ACME)
 
       // Verify URL
-      expect(page.url()).toContain('/portal/dashboard')
+      expect(page.url()).toContain(PORTAL_ROUTES.DASHBOARD)
 
       // Verify dashboard title
       await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
@@ -109,22 +101,22 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await loginAsTenantAdmin(page, TENANT_ADMIN_ACME)
 
       // Navigate to /portal
-      await page.goto('/portal')
+      await page.goto(PORTAL_ROUTES.BASE)
 
       // Should redirect to /portal/dashboard
-      await page.waitForURL('/portal/dashboard', { timeout: 10000 })
-      expect(page.url()).toContain('/portal/dashboard')
+      await page.waitForURL(PORTAL_ROUTES.DASHBOARD, { timeout: E2E_TIMEOUTS.ELEMENT })
+      expect(page.url()).toContain(PORTAL_ROUTES.DASHBOARD)
     })
 
     test('E2E-TD-003: Unauthenticated user redirected to /login', async ({
       page,
     }) => {
       // Try to access dashboard directly without login
-      await page.goto('/portal/dashboard')
+      await page.goto(PORTAL_ROUTES.DASHBOARD)
 
       // Should redirect to login
-      await page.waitForURL('/login', { timeout: 10000 })
-      expect(page.url()).toContain('/login')
+      await page.waitForURL(AUTH_ROUTES.LOGIN, { timeout: E2E_TIMEOUTS.ELEMENT })
+      expect(page.url()).toContain(AUTH_ROUTES.LOGIN)
     })
 
     test('E2E-TD-004: Platform Admin redirected away from /portal', async ({
@@ -133,11 +125,11 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await loginAsPlatformAdmin(page)
 
       // Try to access portal (should redirect to /admin)
-      await page.goto('/portal/dashboard')
+      await page.goto(PORTAL_ROUTES.DASHBOARD)
 
       // Platform admin should be redirected to /admin
-      await page.waitForURL('/admin', { timeout: 10000 })
-      expect(page.url()).toContain('/admin')
+      await page.waitForURL(ADMIN_ROUTES.BASE, { timeout: E2E_TIMEOUTS.ELEMENT })
+      expect(page.url()).toContain(ADMIN_ROUTES.BASE)
     })
   })
 
@@ -149,7 +141,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
     test('E2E-TD-005: Dashboard displays 4 KPI widgets', async ({ page }) => {
       // Wait for widgets to load (not skeleton)
       await page.waitForSelector('[data-testid="stats-widget"]', {
-        timeout: 10000,
+        timeout: E2E_TIMEOUTS.ELEMENT,
       }).catch(() => {
         // Fallback: look for Card components
       })
@@ -165,7 +157,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       page,
     }) => {
       // Wait for loading to complete
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Check that widgets contain numbers (not loading skeletons)
       const widgets = page.locator('text=/\\d+/')
@@ -199,7 +191,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
 
     test('E2E-TD-008: Charts section renders (Recharts)', async ({ page }) => {
       // Wait for page load
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Check for chart titles
       await expect(page.getByText('Jobs IA')).toBeVisible()
@@ -229,7 +221,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
 
     test('E2E-TD-010: Activity feed shows event badges', async ({ page }) => {
       // Wait for activity data to load
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Check for event type badges (should have at least some)
       const badges = page.locator('[class*="badge"], [data-slot="badge"]')
@@ -243,7 +235,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
 
     test('E2E-TD-011: Activity feed shows only P1 data', async ({ page }) => {
       // Wait for activity data to load
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Check table headers - should be P1 metadata only
       await expect(page.getByText('Date')).toBeVisible()
@@ -264,20 +256,13 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       // Login as ACME admin
       await loginAsTenantAdmin(page, TENANT_ADMIN_ACME)
 
-      // Get auth token from session
-      const token = await page.evaluate(() =>
-        sessionStorage.getItem('auth_token')
-      )
-      expect(token).toBeTruthy()
+      // Verify we're logged in (token is in httpOnly cookie, not accessible via JS)
+      await expect(page.locator('nav')).toBeVisible()
 
       // Try to access TechCorp's stats via API
+      // httpOnly cookie is automatically included with page.request
       const response = await page.request.get(
-        '/api/tenants/techcorp-tenant-id/stats',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        '/api/tenants/techcorp-tenant-id/stats'
       )
 
       // Should be 403 Forbidden (cross-tenant access blocked)
@@ -291,7 +276,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await loginAsTenantAdmin(page, TENANT_ADMIN_ACME)
 
       // Wait for page load
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Should see ACME-related content
       const content = await page.content()
@@ -318,7 +303,7 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await page.reload()
 
       // Wait for error state
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
       // Should show generic error message
       await expect(page.getByText('Erreur de chargement')).toBeVisible()
@@ -381,13 +366,10 @@ test.describe('LOT 12.0 - Tenant Dashboard', () => {
       await page.click('text=Déconnexion')
 
       // Should redirect to login
-      await page.waitForURL('/login', { timeout: 10000 })
+      await page.waitForURL(AUTH_ROUTES.LOGIN, { timeout: E2E_TIMEOUTS.ELEMENT })
 
-      // JWT should be cleared
-      const token = await page.evaluate(() =>
-        sessionStorage.getItem('auth_token')
-      )
-      expect(token).toBeNull()
+      // Verify we're on login page (httpOnly cookie cleared server-side)
+      await expect(page.locator('input[type="email"]')).toBeVisible()
     })
   })
 })

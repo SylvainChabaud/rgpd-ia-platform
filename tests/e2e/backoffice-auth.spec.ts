@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test'
-import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { AUTH_ROUTES } from '@/lib/constants/routes'
+import {
+  TEST_PLATFORM_ADMIN,
+  TEST_TENANT_ADMIN,
+  E2E_TIMEOUTS,
+  BASE_URL,
+  LEGACY_STORAGE_KEYS,
+} from './constants'
 
 /**
  * E2E Tests - LOT 11.0 (Back Office Auth Flow)
@@ -12,30 +19,19 @@ import { ACTOR_SCOPE } from '@/shared/actorScope'
  * 5. Routes protégées sans auth → Redirection login
  *
  * RGPD Compliance:
- * - JWT stocké sessionStorage (cleared on close)
+ * - JWT stocké dans httpOnly cookie (XSS-safe, non accessible via JS)
  * - Pas de données sensibles en localStorage
  * - Error messages RGPD-safe
  */
 
-// Mock users (à adapter selon votre DB de test)
-const PLATFORM_ADMIN = {
-  email: 'admin@platform.local',
-  password: 'AdminPass123!',
-  displayName: 'Admin Platform',
-  scope: ACTOR_SCOPE.PLATFORM,
-}
-
-const TENANT_ADMIN = {
-  email: 'admin@tenant1.local',
-  password: 'TenantPass123!',
-  displayName: 'Admin Tenant',
-  scope: ACTOR_SCOPE.TENANT,
-}
+// Alias for backward compatibility with existing test code
+const PLATFORM_ADMIN = TEST_PLATFORM_ADMIN
+const TENANT_ADMIN = TEST_TENANT_ADMIN
 
 test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
   test.beforeEach(async ({ page }) => {
     // Clear storage avant chaque test
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
     await page.evaluate(() => {
       sessionStorage.clear()
       localStorage.clear()
@@ -44,7 +40,7 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
 
   test('E2E-AUTH-001: Login PLATFORM scope → Dashboard accessible', async ({ page }) => {
     // Navigate to login
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
 
     // Fill login form
     await page.fill('input[type="email"]', PLATFORM_ADMIN.email)
@@ -54,10 +50,10 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     await page.click('button[type="submit"]')
 
     // Wait for navigation with increased timeout
-    await page.waitForURL('/', { timeout: 30000, waitUntil: 'domcontentloaded' })
+    await page.waitForURL('/', { timeout: E2E_TIMEOUTS.NAVIGATION, waitUntil: 'domcontentloaded' })
 
     // Assertions
-    expect(page.url()).toBe('http://localhost:3000/')
+    expect(page.url()).toBe(`${BASE_URL}/`)
 
     // Sidebar visible (PLATFORM scope)
     await expect(page.locator('nav')).toBeVisible()
@@ -67,22 +63,23 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     // User menu displays displayName (P1 data only)
     await expect(page.getByText(PLATFORM_ADMIN.displayName)).toBeVisible()
 
-    // JWT présent dans sessionStorage
-    const token = await page.evaluate(() => sessionStorage.getItem('auth_token'))
-    expect(token).toBeTruthy()
+    // JWT is in httpOnly cookie (XSS-safe, not accessible via JS)
+    // Verify token is NOT in sessionStorage (old pattern)
+    const token = await page.evaluate((key) => sessionStorage.getItem(key), LEGACY_STORAGE_KEYS.AUTH_TOKEN)
+    expect(token).toBeNull()
 
     // Pas d'email dans localStorage (RGPD)
-    const userData = await page.evaluate(() => localStorage.getItem('auth_user'))
-    if (userData) {
-      const user = JSON.parse(userData)
-      expect(user.email).toBeUndefined() // Email NOT stored (P2 data)
-      expect(user.displayName).toBeTruthy() // displayName OK (P1)
+    const authStorage = await page.evaluate((key) => localStorage.getItem(key), LEGACY_STORAGE_KEYS.AUTH_STORAGE)
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage)
+      expect(parsed.state?.user?.email).toBeUndefined() // Email NOT stored (P2 data)
+      expect(parsed.state?.user?.displayName).toBeTruthy() // displayName OK (P1)
     }
   })
 
   test('E2E-AUTH-002: Login TENANT scope → Redirection refusée', async ({ page }) => {
     // Navigate to login
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
 
     // Fill login form avec TENANT user
     await page.fill('input[type="email"]', TENANT_ADMIN.email)
@@ -92,7 +89,7 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     await page.click('button[type="submit"]')
 
     // Wait for error toast ou redirection
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(E2E_TIMEOUTS.SHORT_WAIT)
 
     // Assertions
     // Option 1: Toast error affiché
@@ -100,39 +97,39 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     const isToastVisible = await errorToast.isVisible().catch(() => false)
 
     // Option 2: Pas de redirection vers dashboard (doit rester sur login)
-    expect(page.url()).toContain('/login')
+    expect(page.url()).toContain(AUTH_ROUTES.LOGIN)
 
     // Doit rester sur login ou être redirigé ailleurs
-    const isStillOnLogin = page.url().includes('/login')
+    const isStillOnLogin = page.url().includes(AUTH_ROUTES.LOGIN)
     expect(isStillOnLogin || isToastVisible).toBeTruthy()
   })
 
   test('E2E-AUTH-003: Logout → Redirection login + JWT cleared', async ({ page }) => {
     // Login first
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
     await page.fill('input[type="email"]', PLATFORM_ADMIN.email)
     await page.fill('input[type="password"]', PLATFORM_ADMIN.password)
     await page.click('button[type="submit"]')
     await page.waitForURL('/')
 
     // Open user menu and logout
-    await page.click('button:has-text("Admin Platform")')
+    await page.click(`button:has-text("${PLATFORM_ADMIN.displayName}")`)
     await page.click('text=Déconnexion')
 
-    // Wait for navigation to /backoffice/login (as per Sidebar.tsx)
-    await page.waitForURL('/login', { timeout: 15000, waitUntil: 'domcontentloaded' })
+    // Wait for navigation to login
+    await page.waitForURL(AUTH_ROUTES.LOGIN, { timeout: E2E_TIMEOUTS.LOGOUT, waitUntil: 'domcontentloaded' })
 
     // Assertions
-    expect(page.url()).toContain('/login')
+    expect(page.url()).toContain(AUTH_ROUTES.LOGIN)
 
-    // JWT cleared from sessionStorage
-    const token = await page.evaluate(() => sessionStorage.getItem('auth_token'))
-    expect(token).toBeNull()
+    // httpOnly cookie cleared by server (cannot verify from JS)
+    // Verify we're on login page and session is cleared
+    await expect(page.locator('input[type="email"]')).toBeVisible()
   })
 
   test('E2E-AUTH-004: Session persistée après F5 reload', async ({ page }) => {
     // Login first
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
     await page.fill('input[type="email"]', PLATFORM_ADMIN.email)
     await page.fill('input[type="password"]', PLATFORM_ADMIN.password)
     await page.click('button[type="submit"]')
@@ -142,21 +139,20 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     await page.reload()
 
     // Wait for layout
-    await page.waitForSelector('nav', { timeout: 5000 })
+    await page.waitForSelector('nav', { timeout: E2E_TIMEOUTS.SELECTOR })
 
     // Assertions
-    expect(page.url()).toBe('http://localhost:3000/')
+    expect(page.url()).toBe(`${BASE_URL}/`)
     await expect(page.locator('nav')).toBeVisible()
     await expect(page.getByText(PLATFORM_ADMIN.displayName)).toBeVisible()
 
-    // JWT toujours présent
-    const token = await page.evaluate(() => sessionStorage.getItem('auth_token'))
-    expect(token).toBeTruthy()
+    // Session still valid (httpOnly cookie persists across reload)
+    // Verified by UI state - user still logged in
   })
 
   test('E2E-AUTH-005: Routes protégées sans auth → Redirection login', async ({ page }) => {
     // Clear auth first
-    await page.goto('/login')
+    await page.goto(AUTH_ROUTES.LOGIN)
     await page.evaluate(() => {
       sessionStorage.clear()
       localStorage.clear()
@@ -165,19 +161,19 @@ test.describe('Back Office - Auth Flow (LOT 11.0)', () => {
     // Try accessing protected routes (LOT 11.0-11.3 implemented)
     const protectedRoutes = [
       '/',
-      '/tenants',  // LOT 11.1 ✅
-      '/audit',    // LOT 11.3 ✅
+      '/tenants',  // LOT 11.1
+      '/audit',    // LOT 11.3
     ]
 
     for (const route of protectedRoutes) {
       await page.goto(route)
 
       // Wait for client-side redirect (layout.tsx checks auth and redirects)
-      await page.waitForURL('**/login', { timeout: 15000, waitUntil: 'domcontentloaded' })
+      await page.waitForURL('**/login', { timeout: E2E_TIMEOUTS.LOGOUT, waitUntil: 'domcontentloaded' })
 
       // Should be redirected to login
       const currentUrl = page.url()
-      expect(currentUrl).toContain('/login')
+      expect(currentUrl).toContain(AUTH_ROUTES.LOGIN)
     }
   })
 })

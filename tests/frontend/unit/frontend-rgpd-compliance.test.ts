@@ -13,11 +13,16 @@ import { useAuthStore, AuthUser } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
 import { apiClient } from '@/lib/api/apiClient'
 
+// Mock fetch for logout and refresh API calls
+global.fetch = jest.fn()
+
 describe('RGPD Compliance - Frontend LOT 11.0', () => {
   beforeEach(() => {
-    sessionStorage.clear()
+    jest.clearAllMocks()
     localStorage.clear()
-    useAuthStore.getState().logout()
+    // Reset store state directly (token is in httpOnly cookie, not accessible from JS)
+    useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false })
+    ;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
   })
 
   describe('Art. 5 - Minimisation des données (P1 ONLY)', () => {
@@ -30,7 +35,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       }
 
-      useAuthStore.getState().login('token', user)
+      useAuthStore.getState().login(user)
 
       const state = useAuthStore.getState()
 
@@ -51,7 +56,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
     })
 
     it('[RGPD-002] localStorage MUST NOT contain JWT tokens', () => {
-      useAuthStore.getState().login('secret-jwt-token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -61,14 +66,14 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
 
       const allStorage = JSON.stringify(localStorage)
 
-      // JWT MUST NOT be in localStorage (security + RGPD)
-      expect(allStorage).not.toContain('secret-jwt-token')
+      // JWT MUST NOT be in localStorage (token is in httpOnly cookie)
       expect(allStorage).not.toContain('Bearer')
       expect(allStorage).not.toContain('eyJ') // JWT prefix
+      expect(allStorage).not.toContain('token')
     })
 
     it('[RGPD-003] localStorage MUST contain ONLY P1 metadata', () => {
-      useAuthStore.getState().login('token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John Doe',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -83,7 +88,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       expect(persisted.state.user.id).toBe('user-123')
       expect(persisted.state.user.displayName).toBe('John Doe')
 
-      // NO token
+      // NO token (stored in httpOnly cookie, not accessible from JS)
       expect(persisted.state.token).toBeUndefined()
 
       // NO P2/P3 data
@@ -91,10 +96,10 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       expect(persisted.state.user.password).toBeUndefined()
     })
 
-    it('[RGPD-004] sessionStorage MUST contain JWT (cleared on browser close)', () => {
-      const token = 'jwt-token-example'
-
-      useAuthStore.getState().login(token, {
+    it('[RGPD-004] JWT token MUST be in httpOnly cookie (XSS protection)', () => {
+      // Token is now in httpOnly cookie, set by the server
+      // Frontend cannot access it directly (XSS protection)
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -102,14 +107,16 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       })
 
-      // Token in sessionStorage (auto-cleared)
-      expect(sessionStorage.getItem('auth_token')).toBe(token)
-
-      // Simulate browser close (sessionStorage cleared)
-      sessionStorage.clear()
-
-      // Token gone
+      // Token NOT in sessionStorage (old pattern)
       expect(sessionStorage.getItem('auth_token')).toBeNull()
+
+      // Token NOT in localStorage
+      const allStorage = JSON.stringify(localStorage)
+      expect(allStorage).not.toContain('eyJ') // JWT prefix
+
+      // Only user metadata in state (P1 data)
+      expect(useAuthStore.getState().user?.id).toBe('user-123')
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
     })
   })
 
@@ -118,12 +125,12 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       const initialState = useAuthStore.getState()
 
       expect(initialState.isAuthenticated).toBe(false)
-      expect(initialState.token).toBeNull()
       expect(initialState.user).toBeNull()
+      // Token is in httpOnly cookie, not accessible from JS
     })
 
-    it('[RGPD-006] Logout MUST clear ALL sensitive data', () => {
-      useAuthStore.getState().login('token', {
+    it('[RGPD-006] Logout MUST clear ALL sensitive data', async () => {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -132,43 +139,59 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Verify data exists
-      expect(sessionStorage.getItem('auth_token')).toBeTruthy()
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
 
-      // Logout
-      useAuthStore.getState().logout()
+      // Mock logout API
+      ;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+
+      // Logout (calls API to clear httpOnly cookie)
+      await useAuthStore.getState().logout()
 
       // ALL data cleared
-      expect(sessionStorage.getItem('auth_token')).toBeNull()
-      expect(useAuthStore.getState().token).toBeNull()
       expect(useAuthStore.getState().user).toBeNull()
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
+
+      // API called with credentials to clear httpOnly cookie
+      expect(global.fetch).toHaveBeenCalledWith('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
     })
 
-    it('[RGPD-007] checkAuth MUST logout if no token (fail-secure)', () => {
-      // Setup authenticated state
+    it('[RGPD-007] checkAuth MUST logout if server returns 401 (fail-secure)', async () => {
+      // Setup authenticated state (user metadata only)
       useAuthStore.setState({
-        token: 'fake-token',
+        user: {
+          id: 'user-123',
+          displayName: 'John',
+          scope: ACTOR_SCOPE.PLATFORM,
+          role: 'admin',
+          tenantId: null,
+        },
         isAuthenticated: true,
+        isLoading: false,
       })
 
-      // Clear sessionStorage (simulate expired session)
-      sessionStorage.clear()
+      // Mock /api/auth/me returns 401 (token expired in httpOnly cookie)
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: false, status: 401 })
+        // Mock refresh also fails
+        .mockResolvedValueOnce({ ok: false, status: 401 })
 
       // Check auth
-      useAuthStore.getState().checkAuth()
+      await useAuthStore.getState().checkAuth()
 
       // MUST logout (fail-secure)
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(useAuthStore.getState().token).toBeNull()
+      expect(useAuthStore.getState().user).toBeNull()
     })
   })
 
   describe('Art. 32 - Sécurité des traitements', () => {
-    it('[RGPD-008] JWT token MUST be in sessionStorage (NOT localStorage)', () => {
-      const sensitiveToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sensitive'
-
-      useAuthStore.getState().login(sensitiveToken, {
+    it('[RGPD-008] JWT token MUST be in httpOnly cookie (NOT accessible from JS)', () => {
+      // Token is set by the server in httpOnly cookie
+      // Frontend can only store user metadata
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -176,15 +199,18 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       })
 
-      // Token in sessionStorage (CORRECT - auto-cleared)
-      expect(sessionStorage.getItem('auth_token')).toBe(sensitiveToken)
+      // Token NOT in sessionStorage (old pattern)
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
 
-      // Token NOT in localStorage (VIOLATION if present)
+      // Token NOT in localStorage (httpOnly cookie provides better XSS protection)
       const allLocalStorage = JSON.stringify(localStorage)
-      expect(allLocalStorage).not.toContain(sensitiveToken)
+      expect(allLocalStorage).not.toContain('eyJ') // JWT prefix
+
+      // Only user metadata accessible
+      expect(useAuthStore.getState().user?.id).toBe('user-123')
     })
 
-    it('[RGPD-009] Error messages MUST be RGPD-safe (no sensitive data)', () => {
+    it('[RGPD-009] Error messages MUST be RGPD-safe (no sensitive data)', async () => {
       // This is tested in apiClient.test.ts
       // Validates that error messages don't leak:
       // - Database connection strings
@@ -193,7 +219,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       // - User emails or passwords
 
       // Mock error response
-      global.fetch = jest.fn().mockResolvedValue({
+      ;(global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         status: 500,
         json: async () => ({
@@ -203,14 +229,14 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Should NOT expose sensitive data
-      expect(apiClient('/tenants')).rejects.toMatchObject({
+      await expect(apiClient('/tenants')).rejects.toMatchObject({
         message: 'Erreur serveur',
       })
     })
 
     it('[RGPD-010] Auto-logout on 401 MUST prevent session fixation', async () => {
       // Setup authenticated session
-      useAuthStore.getState().login('old-token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -221,12 +247,12 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
 
       // Mock 401 response (token expired or invalid)
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 401,
-      })
+      // First call returns 401, refresh also fails with 401
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: false, status: 401 })
+        .mockResolvedValueOnce({ ok: false, status: 401 })
 
-      // API call triggers auto-logout
+      // API call triggers auto-logout (after refresh fails)
       try {
         await apiClient('/tenants')
       } catch {
@@ -235,7 +261,6 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
 
       // Session cleared (prevent session fixation attack)
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
-      expect(sessionStorage.getItem('auth_token')).toBeNull()
     })
   })
 
@@ -263,7 +288,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       //   tenantId: null,
       //   email: 'john@example.com', // FORBIDDEN - would fail TS
       // }
-      
+
       // Verify email is not in AuthUser type
       type AuthUserKeys = keyof AuthUser
       const hasEmail: AuthUserKeys extends 'email' ? true : false = false
@@ -271,7 +296,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
     })
 
     it('[RGPD-012] NO email addresses in frontend state', () => {
-      useAuthStore.getState().login('token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John Doe',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -288,7 +313,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
     })
 
     it('[RGPD-013] NO password hashes in frontend state', () => {
-      useAuthStore.getState().login('token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -316,7 +341,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null, // MUST be null for PLATFORM scope
       }
 
-      useAuthStore.getState().login('token', platformAdmin)
+      useAuthStore.getState().login(platformAdmin)
 
       const state = useAuthStore.getState()
       expect(state.user?.scope).toBe(ACTOR_SCOPE.PLATFORM)
@@ -332,7 +357,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: 'tenant-abc', // MUST be set for TENANT scope
       }
 
-      useAuthStore.getState().login('token', tenantAdmin)
+      useAuthStore.getState().login(tenantAdmin)
 
       const state = useAuthStore.getState()
       expect(state.user?.scope).toBe(ACTOR_SCOPE.TENANT)
@@ -345,7 +370,7 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       // Mock console.log to intercept logs
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
 
-      useAuthStore.getState().login('secret-token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -353,16 +378,19 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       })
 
-      // Frontend should NOT log JWT tokens
-      expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('secret-token'))
+      // Frontend should NOT log any auth-related secrets
+      const allCalls = consoleSpy.mock.calls.flat().join(' ')
+      expect(allCalls).not.toContain('token')
+      expect(allCalls).not.toContain('jwt')
+      expect(allCalls).not.toContain('Bearer')
 
       consoleSpy.mockRestore()
     })
   })
 
   describe('RGPD Right to Erasure (Art. 17) - Frontend Impact', () => {
-    it('[RGPD-017] Logout MUST erase ALL user data from frontend', () => {
-      useAuthStore.getState().login('token', {
+    it('[RGPD-017] Logout MUST erase ALL user data from frontend', async () => {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John Doe',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -371,25 +399,26 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       })
 
       // Verify data exists
-      expect(sessionStorage.getItem('auth_token')).toBeTruthy()
       expect(localStorage.getItem('auth-storage')).toBeTruthy()
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
 
-      // Logout (simulate erasure)
-      useAuthStore.getState().logout()
+      // Mock logout API
+      ;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+
+      // Logout (calls API to clear httpOnly cookie)
+      await useAuthStore.getState().logout()
 
       // ALL data erased
-      expect(sessionStorage.getItem('auth_token')).toBeNull()
-
-      // User metadata removed from state (localStorage still has empty state)
+      // User metadata removed from state
       const state = useAuthStore.getState()
       expect(state.user).toBeNull()
-      expect(state.token).toBeNull()
+      expect(state.isAuthenticated).toBe(false)
     })
   })
 
   describe('RGPD Data Minimization - Frontend Storage Limits', () => {
     it('[RGPD-018] Frontend storage MUST contain <1KB of user data', () => {
-      useAuthStore.getState().login('token', {
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John Doe',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -404,10 +433,9 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
       expect(sizeInBytes).toBeLessThan(1024)
     })
 
-    it('[RGPD-019] sessionStorage JWT MUST be valid JWT format', () => {
-      const validJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.test'
-
-      useAuthStore.getState().login(validJWT, {
+    it('[RGPD-019] JWT token MUST NOT be accessible from frontend (httpOnly cookie)', () => {
+      // Token is in httpOnly cookie, set by server
+      useAuthStore.getState().login({
         id: 'user-123',
         displayName: 'John',
         scope: ACTOR_SCOPE.PLATFORM,
@@ -415,10 +443,15 @@ describe('RGPD Compliance - Frontend LOT 11.0', () => {
         tenantId: null,
       })
 
-      const storedToken = sessionStorage.getItem('auth_token')
+      // Token NOT in sessionStorage (old pattern)
+      expect(sessionStorage.getItem('auth_token')).toBeNull()
 
-      // Valid JWT format (3 parts separated by dots)
-      expect(storedToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/)
+      // Token NOT in localStorage
+      const allStorage = JSON.stringify(localStorage)
+      expect(allStorage).not.toContain('eyJ') // JWT prefix
+
+      // User is authenticated (token is in httpOnly cookie, verified server-side)
+      expect(useAuthStore.getState().isAuthenticated).toBe(true)
     })
   })
 

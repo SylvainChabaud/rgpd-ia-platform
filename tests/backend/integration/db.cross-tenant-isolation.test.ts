@@ -17,6 +17,7 @@ import {
   MemAuditWriter,
   MemTenantRepo,
   MemTenantUserRepo,
+  MemPasswordHasher,
 } from '@tests/helpers/memoryRepos';
 import { policyEngine } from "@/app/auth/policyEngine";
 
@@ -26,11 +27,13 @@ test("RGPD BLOCKER: tenant A cannot access tenant B data (use-case level)", asyn
   const audit = new MemAuditWriter();
 
   const createTenant = new CreateTenantUseCase(tenants, audit, policyEngine);
+  const passwordHasher = new MemPasswordHasher();
   const createTenantAdmin = new CreateTenantAdminUseCase(
     tenants,
     tenantUsers,
     audit,
-    policyEngine
+    policyEngine,
+    passwordHasher
   );
   const assertTenantScope = new AssertTenantScopeUseCase();
 

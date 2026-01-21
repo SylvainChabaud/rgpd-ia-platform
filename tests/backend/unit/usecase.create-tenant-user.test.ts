@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { CreateTenantUserUseCase } from '@/app/usecases/bootstrap/CreateTenantUserUseCase';
-import { MemTenantRepo, MemTenantUserRepo, MemAuditWriter } from '../../helpers/memoryRepos';
+import { MemTenantRepo, MemTenantUserRepo, MemAuditWriter, MemPasswordHasher } from '../../helpers/memoryRepos';
 import { ForbiddenError, InvalidTenantError, ValidationError } from '@/shared/errors';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
 import type { RequestContext } from '@/app/context/RequestContext';
@@ -36,6 +36,7 @@ describe('UseCase: CreateTenantUserUseCase', () => {
   let tenantUserRepo: MemTenantUserRepo;
   let auditWriter: MemAuditWriter;
   let policyEngine: MockPolicyEngine;
+  let passwordHasher: MemPasswordHasher;
 
   const mockContext: RequestContext = {
     actorScope: ACTOR_SCOPE.PLATFORM,
@@ -48,12 +49,14 @@ describe('UseCase: CreateTenantUserUseCase', () => {
     tenantUserRepo = new MemTenantUserRepo();
     auditWriter = new MemAuditWriter();
     policyEngine = new MockPolicyEngine();
+    passwordHasher = new MemPasswordHasher();
 
     usecase = new CreateTenantUserUseCase(
       tenantRepo,
       tenantUserRepo,
       auditWriter,
-      policyEngine
+      policyEngine,
+      passwordHasher
     );
   });
 
