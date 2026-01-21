@@ -62,7 +62,6 @@ import {
   Sparkles,
   Clock,
   RefreshCw,
-  History,
 } from 'lucide-react'
 import {
   RISK_LEVEL,

@@ -74,19 +74,9 @@ export default function RegistryPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      // Get authentication token from sessionStorage
-      const token = sessionStorage.getItem('auth_token')
-
-      if (!token) {
-        alert('Session expirée. Veuillez vous reconnecter.')
-        window.location.href = '/login'
-        return
-      }
-
+      // Fetch with httpOnly cookie authentication
       const response = await fetch('/api/docs/registre/export', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       })
 
       if (!response.ok) {

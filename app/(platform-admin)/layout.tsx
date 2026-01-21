@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { AUTH_ROUTES, PORTAL_ROUTES } from '@/lib/constants/routes'
 import { PlatformSidebar } from './_components/PlatformSidebar'
 
 /**
@@ -17,7 +18,7 @@ import { PlatformSidebar } from './_components/PlatformSidebar'
  *
  * RGPD Compliance:
  * - No sensitive data in layout
- * - Auth check respects session storage (auto-cleared on browser close)
+ * - JWT token in httpOnly cookie (XSS-safe)
  *
  * Routes:
  * - /admin/* - Protected (requires PLATFORM auth)
@@ -28,17 +29,16 @@ export default function PlatformAdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const { isAuthenticated, checkAuth, user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Restore session from sessionStorage
-    checkAuth()
-    // Allow state to settle before checking auth (using requestAnimationFrame to avoid cascading renders)
-    requestAnimationFrame(() => {
+    // Verify session with backend (token is in httpOnly cookie)
+    const verifyAuth = async () => {
+      await checkAuth()
       setIsLoading(false)
-    })
+    }
+    verifyAuth()
   }, [checkAuth])
 
   useEffect(() => {
@@ -47,21 +47,21 @@ export default function PlatformAdminLayout({
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-      router.push('/login')
+      router.push(AUTH_ROUTES.LOGIN)
       return
     }
 
     // Check PLATFORM scope - redirect other scopes to their interfaces
     if (user?.scope === ACTOR_SCOPE.TENANT) {
-      router.push('/portal')
+      router.push(PORTAL_ROUTES.BASE)
       return
     }
 
     if (user?.scope !== ACTOR_SCOPE.PLATFORM) {
-      router.push('/login')
+      router.push(AUTH_ROUTES.LOGIN)
       return
     }
-  }, [isLoading, isAuthenticated, router, pathname, user])
+  }, [isLoading, isAuthenticated, router, user])
 
   // Show loading while checking auth
   if (isLoading || !isAuthenticated) {

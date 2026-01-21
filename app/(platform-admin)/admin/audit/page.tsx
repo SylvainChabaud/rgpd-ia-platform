@@ -90,21 +90,17 @@ export default function AuditTrailPage() {
         queryParams.append('eventType', filters.eventType)
       }
 
-      // Get token from sessionStorage
-      const token = sessionStorage.getItem('auth_token')
-      if (!token) {
-        alert('Session expirée. Veuillez vous reconnecter.')
-        return
-      }
-
-      // Fetch CSV with authentication
+      // Fetch CSV with authentication (httpOnly cookie)
       const response = await fetch(`/api/audit/export?${queryParams.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert('Session expirée. Veuillez vous reconnecter.')
+          window.location.href = '/login'
+          return
+        }
         const error = await response.json().catch(() => ({ message: 'Erreur lors de l\'export' }))
         alert(error.message || 'Erreur lors de l\'export')
         return

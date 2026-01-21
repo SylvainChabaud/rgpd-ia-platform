@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { AUTH_ROUTES, ADMIN_ROUTES, PORTAL_ROUTES } from '@/lib/constants/routes'
 
 /**
  * Frontend User Layout - End User Routes (/app/*)
@@ -16,7 +17,7 @@ import { ACTOR_SCOPE } from '@/shared/actorScope'
  *
  * RGPD Compliance:
  * - No sensitive data in layout
- * - Auth check respects session storage (auto-cleared on browser close)
+ * - JWT token in httpOnly cookie (XSS-safe)
  * - User-scoped data only
  * - Cookie Banner integration (LOT 13.0)
  *
@@ -32,30 +33,29 @@ export default function FrontendLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const { isAuthenticated, checkAuth, user } = useAuthStore()
 
   useEffect(() => {
-    // Restore session from sessionStorage
+    // Verify session with backend (token is in httpOnly cookie)
     checkAuth()
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-      router.push('/login')
+      router.push(AUTH_ROUTES.LOGIN)
       return
     }
 
     // Check MEMBER scope - redirect other scopes to their interfaces
     if (user?.scope === ACTOR_SCOPE.PLATFORM) {
-      router.push('/admin')
+      router.push(ADMIN_ROUTES.BASE)
       return
     }
 
     if (user?.scope === ACTOR_SCOPE.TENANT) {
-      router.push('/portal')
+      router.push(PORTAL_ROUTES.BASE)
       return
     }
-  }, [isAuthenticated, checkAuth, router, pathname, user])
+  }, [isAuthenticated, checkAuth, router, user])
 
   // Show loading while checking auth
   if (!isAuthenticated) {

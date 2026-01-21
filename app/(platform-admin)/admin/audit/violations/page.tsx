@@ -95,19 +95,9 @@ export default function ViolationsPage() {
       if (filters.severity && filters.severity !== FILTER_ALL) params.append('severity', filters.severity)
       if (filters.resolved && filters.resolved !== FILTER_ALL) params.append('resolved', filters.resolved)
 
-      // Get authentication token from sessionStorage (same as apiClient)
-      const token = sessionStorage.getItem('auth_token')
-
-      if (!token) {
-        alert('Session expirée. Veuillez vous reconnecter.')
-        window.location.href = '/login'
-        return
-      }
-
+      // Fetch with httpOnly cookie authentication
       const response = await fetch(`/api/incidents/export?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       })
 
       if (!response.ok) {

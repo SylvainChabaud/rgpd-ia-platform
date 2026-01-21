@@ -96,12 +96,8 @@ export default function TenantDpiaListPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin', 'tenant', tenantId, 'dpias'],
     queryFn: async () => {
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

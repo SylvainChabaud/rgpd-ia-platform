@@ -40,14 +40,14 @@ type LoginFormData = z.infer<typeof loginSchema>
  * - MEMBER → /app (End User)
  *
  * Security:
- * - JWT token stored in sessionStorage (auto-cleared on browser close)
+ * - JWT token stored in httpOnly cookie (XSS-safe)
  * - No credentials stored in state or localStorage
  * - Scope-based routing enforced
  *
  * RGPD Compliance:
  * - No email/password logged or stored
  * - Error messages RGPD-safe (no sensitive data exposed)
- * - Only P1 user data (id, displayName, scope) persisted
+ * - Only P1 user data (id, displayName, scope) persisted locally for display
  */
 export default function LoginPage() {
   const router = useRouter()
@@ -77,10 +77,11 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      // Call login API
+      // Call login API (token is set in httpOnly cookie by server)
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       })
 
@@ -93,8 +94,8 @@ export default function LoginPage() {
 
       const result = (await response.json()) as LoginResponse
 
-      // Store JWT and user info
-      login(result.token, result.user)
+      // Store user info locally (token is in httpOnly cookie)
+      login(result.user)
 
       // Redirect based on scope
       const redirectPath = getRedirectPath(result.user.scope)

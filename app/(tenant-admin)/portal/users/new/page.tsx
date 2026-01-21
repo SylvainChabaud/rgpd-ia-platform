@@ -52,13 +52,40 @@ export default function CreateUserPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [showPassword, setShowPassword] = useState(false)
 
+  // Generate secure password using crypto API (cryptographically secure)
   const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%'
-    let password = ''
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+    const lowercase = 'abcdefghjkmnpqrstuvwxyz'
+    const digits = '23456789'
+    const special = '!@#$%^&*'
+    const all = uppercase + lowercase + digits + special
+
+    // Cryptographically secure random index generator
+    const secureRandomIndex = (max: number): number => {
+      const randomBytes = new Uint32Array(1)
+      crypto.getRandomValues(randomBytes)
+      return randomBytes[0] % max
     }
-    setFormData({ ...formData, password })
+
+    // Ensure at least one of each required character type
+    const chars: string[] = []
+    chars.push(uppercase[secureRandomIndex(uppercase.length)])
+    chars.push(lowercase[secureRandomIndex(lowercase.length)])
+    chars.push(digits[secureRandomIndex(digits.length)])
+    chars.push(special[secureRandomIndex(special.length)])
+
+    // Fill remaining characters (total 12 chars)
+    for (let i = 0; i < 8; i++) {
+      chars.push(all[secureRandomIndex(all.length)])
+    }
+
+    // Shuffle using Fisher-Yates with crypto random
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = secureRandomIndex(i + 1)
+      ;[chars[i], chars[j]] = [chars[j], chars[i]]
+    }
+
+    setFormData({ ...formData, password: chars.join('') })
     setShowPassword(true)
   }
 

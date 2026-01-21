@@ -90,7 +90,7 @@ export default function CreateUserPage() {
     }
   }
 
-  // Generate secure password
+  // Generate secure password using crypto API (cryptographically secure)
   const handleGeneratePassword = () => {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     const lowercase = 'abcdefghijklmnopqrstuvwxyz'
@@ -98,25 +98,32 @@ export default function CreateUserPage() {
     const special = '!@#$%^&*()-_=+[]{}|;:,.<>?'
     const all = uppercase + lowercase + digits + special
 
+    // Cryptographically secure random index generator
+    const secureRandomIndex = (max: number): number => {
+      const randomBytes = new Uint32Array(1)
+      crypto.getRandomValues(randomBytes)
+      return randomBytes[0] % max
+    }
+
     // Ensure at least one of each required character type
-    let password = ''
-    password += uppercase[Math.floor(Math.random() * uppercase.length)]
-    password += lowercase[Math.floor(Math.random() * lowercase.length)]
-    password += digits[Math.floor(Math.random() * digits.length)]
-    password += special[Math.floor(Math.random() * special.length)]
+    const chars: string[] = []
+    chars.push(uppercase[secureRandomIndex(uppercase.length)])
+    chars.push(lowercase[secureRandomIndex(lowercase.length)])
+    chars.push(digits[secureRandomIndex(digits.length)])
+    chars.push(special[secureRandomIndex(special.length)])
 
     // Fill remaining characters (total 16 chars)
     for (let i = 0; i < 12; i++) {
-      password += all[Math.floor(Math.random() * all.length)]
+      chars.push(all[secureRandomIndex(all.length)])
     }
 
-    // Shuffle password
-    password = password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('')
+    // Shuffle using Fisher-Yates with crypto random
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = secureRandomIndex(i + 1)
+      ;[chars[i], chars[j]] = [chars[j], chars[i]]
+    }
 
-    setValue('password', password)
+    setValue('password', chars.join(''))
     setPasswordStrength(5)
   }
 
