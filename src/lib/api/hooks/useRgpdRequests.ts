@@ -112,15 +112,12 @@ export function useRgpdPurgeExpiredExports() {
         throw new Error('Tenant ID required');
       }
 
-      // Use fetch directly for DELETE method
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/rgpd/exports/expired`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -222,14 +219,12 @@ export function useRgpdPurgeExpiredDeletions() {
         throw new Error('Tenant ID required');
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/rgpd/deletions/expired`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -326,14 +321,12 @@ export function useRgpdPurgeExpiredSuspensions() {
         throw new Error('Tenant ID required');
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/rgpd/suspensions/expired`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -429,14 +422,12 @@ export function useRgpdPurgeExpiredOppositions() {
         throw new Error('Tenant ID required');
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/rgpd/oppositions/expired`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -532,14 +523,12 @@ export function useRgpdPurgeExpiredContests() {
         throw new Error('Tenant ID required');
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/rgpd/contests/expired`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -597,14 +586,9 @@ export async function downloadRgpdCsv(
   const queryString = queryParams.toString();
   const endpoint = `/tenants/${tenantId}/rgpd/csv${queryString ? `?${queryString}` : ''}`;
 
-  // Get token from session storage (key: auth_token as per authStore)
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
   const response = await fetch(`/api${endpoint}`, {
     method: 'GET',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    credentials: 'include',
   });
 
   if (!response.ok) {

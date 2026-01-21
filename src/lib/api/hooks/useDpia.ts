@@ -197,14 +197,12 @@ export function useCreateDpia() {
         throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(input),
       });
 
@@ -241,14 +239,12 @@ export function useValidateDpia() {
         throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia/${dpiaId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(input),
       });
 
@@ -282,14 +278,12 @@ export function useUpdateDpia() {
         throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia/${dpiaId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(input),
       });
 
@@ -327,14 +321,12 @@ export function useRequestDpiaReview() {
         throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia/${dpiaId}/request-review`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({ revisionComments }),
       });
 
@@ -353,34 +345,6 @@ export function useRequestDpiaReview() {
       queryClient.invalidateQueries({ queryKey: ['purposes', tenantId] });
     },
   });
-}
-
-// ============================================
-// Helper Functions
-// ============================================
-
-/**
- * Get DPIA status label in French
- * @deprecated Use DPIA_STATUS_LABELS from @/lib/constants/dpia instead
- */
-export function getDpiaStatusLabel(status: string): string {
-  return DPIA_STATUS_LABELS[status as keyof typeof DPIA_STATUS_LABELS] || status;
-}
-
-/**
- * Get DPIA status badge color
- * @deprecated Use DPIA_STATUS_BADGE_STYLES from @/lib/constants/dpia instead
- */
-export function getDpiaStatusColor(status: string): string {
-  return DPIA_STATUS_BADGE_STYLES[status as keyof typeof DPIA_STATUS_BADGE_STYLES] || 'bg-gray-100 text-gray-800 border-gray-200';
-}
-
-/**
- * Get risk level badge color
- * @deprecated Use DPIA_RISK_BADGE_STYLES from @/lib/constants/dpia instead
- */
-export function getRiskLevelBadgeColor(riskLevel: string): string {
-  return DPIA_RISK_BADGE_STYLES[riskLevel] || 'bg-gray-100 text-gray-800';
 }
 
 // ============================================
@@ -446,12 +410,8 @@ export function useDpiaHistory(dpiaId: string | null | undefined, overrideTenant
         throw new Error(API_ERROR_MESSAGES.TENANT_REQUIRED);
       }
 
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null;
-
       const response = await fetch(`/api/tenants/${tenantId}/dpia/${dpiaId}/history`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

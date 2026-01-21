@@ -22,75 +22,144 @@ export interface AuthUser {
  * Authentication State
  */
 interface AuthState {
-  token: string | null
   user: AuthUser | null
   isAuthenticated: boolean
-  login: (token: string, user: AuthUser) => void
-  logout: () => void
-  checkAuth: () => void
+  isLoading: boolean
+  login: (user: AuthUser) => void
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
+  refreshToken: () => Promise<boolean>
 }
 
 /**
  * Authentication Store (Zustand)
  *
- * RGPD Compliance:
- * - JWT token stored in sessionStorage (auto-cleared on browser close)
- * - Only user metadata persisted in localStorage (NO token)
- * - No sensitive data (email, password) stored
+ * SECURITY (httpOnly cookies):
+ * - JWT token stored in httpOnly cookie (not accessible via JavaScript)
+ * - Refresh token also in httpOnly cookie
+ * - User metadata persisted in localStorage for display only
+ * - Auto-refresh when access token expires
  *
- * Security:
- * - Token NOT persisted (sessionStorage only)
- * - Auto-logout on token missing
+ * RGPD Compliance:
+ * - No sensitive data (email, password) stored
+ * - Only P1 user metadata persisted
  */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      token: null,
       user: null,
       isAuthenticated: false,
+      isLoading: false,
 
       /**
        * Login action
-       * Stores JWT in sessionStorage and user info in state
+       * Called after successful login API response
+       * Token is already in httpOnly cookie, just store user info
        */
-      login: (token: string, user: AuthUser) => {
-        // Store token in sessionStorage (cleared on browser close)
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('auth_token', token)
-        }
-        set({ token, user, isAuthenticated: true })
+      login: (user: AuthUser) => {
+        set({ user, isAuthenticated: true, isLoading: false })
       },
 
       /**
        * Logout action
-       * Clears token and user info
+       * Calls backend to clear httpOnly cookies
        */
-      logout: () => {
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('auth_token')
+      logout: async () => {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include',
+          })
+        } catch {
+          // Ignore errors, clear local state anyway
         }
-        set({ token: null, user: null, isAuthenticated: false })
+        set({ user: null, isAuthenticated: false, isLoading: false })
       },
 
       /**
        * Check authentication status
-       * Called on app load to restore session
+       * Called on app load to verify session with backend
        */
-      checkAuth: () => {
-        if (typeof window !== 'undefined') {
-          const token = sessionStorage.getItem('auth_token')
-          if (!token) {
-            get().logout()
-          } else {
-            // Token exists, restore auth state
-            set({ token, isAuthenticated: true })
+      checkAuth: async () => {
+        // Skip if already loading
+        if (get().isLoading) return
+
+        set({ isLoading: true })
+
+        try {
+          // Try to get user info from /api/auth/me
+          const response = await fetch('/api/auth/me', {
+            method: 'GET',
+            credentials: 'include',
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            set({
+              user: data.user,
+              isAuthenticated: true,
+              isLoading: false
+            })
+            return
           }
+
+          // If 401, try to refresh the token
+          if (response.status === 401) {
+            const refreshed = await get().refreshToken()
+            if (refreshed) {
+              // Retry checkAuth after successful refresh
+              set({ isLoading: false })
+              await get().checkAuth()
+              return
+            }
+          }
+
+          // Not authenticated
+          set({ user: null, isAuthenticated: false, isLoading: false })
+        } catch {
+          // Network error - assume not authenticated
+          set({ user: null, isAuthenticated: false, isLoading: false })
+        }
+      },
+
+      /**
+       * Refresh access token using refresh token
+       * Returns true if refresh was successful
+       */
+      refreshToken: async () => {
+        try {
+          const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            // Update user info if returned
+            if (data.user) {
+              set({
+                user: {
+                  id: data.user.id,
+                  displayName: get().user?.displayName || '',
+                  scope: data.user.scope,
+                  role: data.user.role,
+                  tenantId: data.user.tenantId,
+                },
+                isAuthenticated: true
+              })
+            }
+            return true
+          }
+
+          return false
+        } catch {
+          return false
         }
       },
     }),
     {
       name: 'auth-storage',
-      // Only persist user info, NOT token (security best practice)
+      // Only persist user info (for display), NOT authentication state
       partialize: (state) => ({ user: state.user }),
     }
   )

@@ -150,8 +150,12 @@ function sanitizeAttributes(tagName: string, attributesStr: string): string {
  * @returns Sanitized HTML string
  */
 export function sanitizeHtml(html: string): string {
+  // SECURITY: Remove null bytes first (can be used to bypass tag detection)
+  // Reference: https://owasp.org/www-community/xss-filter-evasion-cheatsheet
+  let result = html.replace(/\0/g, '');
+
   // Remove script tags and their content
-  let result = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  result = result.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
   // Remove style tags and their content
   result = result.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');

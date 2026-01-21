@@ -31,18 +31,50 @@ export interface BlobDownloadResult {
 }
 
 /**
+ * Try to refresh the access token
+ * Returns true if refresh was successful
+ *
+ * SECURITY: Logs failures for debugging (without sensitive data)
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      // Log refresh failure for debugging (no sensitive data)
+      console.warn('[Auth] Token refresh failed:', {
+        status: response.status,
+        statusText: response.statusText,
+      })
+    }
+
+    return response.ok
+  } catch (error) {
+    // Log network error for debugging (message only, no sensitive data)
+    console.error('[Auth] Token refresh error:', {
+      message: error instanceof Error ? error.message : 'Network error',
+    })
+    return false
+  }
+}
+
+/**
  * API Client - Centralized fetch wrapper
  *
  * Features:
- * - Auto-attach JWT token from sessionStorage
- * - Auto-logout on 401 (unauthorized)
+ * - JWT token sent via httpOnly cookie (credentials: 'include')
+ * - Auto-refresh on 401 (token expired)
+ * - Auto-logout on refresh failure
  * - Typed responses
  * - Centralized error handling
  * - RGPD-compliant error messages (no sensitive data exposed)
  *
  * Security:
  * - Same-origin requests (/api) - no CORS issues
- * - JWT token from sessionStorage (not localStorage)
+ * - JWT in httpOnly cookie (XSS-safe, not accessible via JavaScript)
  * - Auto-redirect to login on authentication failure
  *
  * @param endpoint - API endpoint (e.g., "/tenants", "/users/123")
@@ -56,17 +88,9 @@ export async function apiClient<T>(
   options?: RequestInit,
   timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<T> {
-  // SECURITY NOTE: JWT stored in sessionStorage for CSRF protection.
-  // sessionStorage is cleared on tab close (vs localStorage persistence).
-  // Application uses strict CSP and React's automatic XSS escaping to mitigate risks.
-  // Alternative: httpOnly cookies with SameSite=Strict for better XSS protection.
-  const token =
-    typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null
-
-  // Build headers with JWT token
+  // Build headers (no manual token - handled by httpOnly cookie)
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
     ...options?.headers,
   }
 
@@ -76,19 +100,36 @@ export async function apiClient<T>(
 
   try {
     // Make request to backend API (same origin, no CORS)
-    const response = await fetch(`/api${endpoint}`, {
+    // credentials: 'include' sends httpOnly cookies
+    let response = await fetch(`/api${endpoint}`, {
       ...options,
       headers,
       signal: controller.signal,
+      credentials: 'include',
     })
 
-    // Handle 401 Unauthorized: Auto logout and redirect to login
+    // Handle 401 Unauthorized: Try to refresh token first
     if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
+      const refreshed = await tryRefreshToken()
+
+      if (refreshed) {
+        // Retry the original request after successful refresh
+        response = await fetch(`/api${endpoint}`, {
+          ...options,
+          headers,
+          signal: controller.signal,
+          credentials: 'include',
+        })
       }
-      throw new ApiError(401, API_ERROR_MESSAGES.UNAUTHENTICATED)
+
+      // If still 401 after refresh (or refresh failed), logout
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          useAuthStore.getState().logout()
+          window.location.href = '/login'
+        }
+        throw new ApiError(401, API_ERROR_MESSAGES.UNAUTHENTICATED)
+      }
     }
 
     // Handle other errors
@@ -133,8 +174,9 @@ export async function apiClient<T>(
  * API Client for Blob downloads - Centralized fetch wrapper for file downloads
  *
  * Features:
- * - Auto-attach JWT token from sessionStorage
- * - Auto-logout on 401 (unauthorized)
+ * - JWT token sent via httpOnly cookie (credentials: 'include')
+ * - Auto-refresh on 401 (token expired)
+ * - Auto-logout on refresh failure
  * - Returns blob with filename from Content-Disposition header
  * - Triggers browser download automatically
  *
@@ -147,28 +189,33 @@ export async function apiBlobClient(
   endpoint: string,
   defaultFilename: string
 ): Promise<BlobDownloadResult> {
-  // Get JWT token from sessionStorage (client-side only)
-  const token =
-    typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null
-
-  // Build headers with JWT token (no Content-Type for blob requests)
-  const headers: HeadersInit = {
-    ...(token && { Authorization: `Bearer ${token}` }),
-  }
-
   try {
-    const response = await fetch(`/api${endpoint}`, {
+    // Make request with httpOnly cookie
+    let response = await fetch(`/api${endpoint}`, {
       method: 'GET',
-      headers,
+      credentials: 'include',
     })
 
-    // Handle 401 Unauthorized: Auto logout and redirect to login
+    // Handle 401 Unauthorized: Try to refresh token first
     if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
+      const refreshed = await tryRefreshToken()
+
+      if (refreshed) {
+        // Retry the original request after successful refresh
+        response = await fetch(`/api${endpoint}`, {
+          method: 'GET',
+          credentials: 'include',
+        })
       }
-      throw new ApiError(401, API_ERROR_MESSAGES.UNAUTHENTICATED)
+
+      // If still 401 after refresh (or refresh failed), logout
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          useAuthStore.getState().logout()
+          window.location.href = '/login'
+        }
+        throw new ApiError(401, API_ERROR_MESSAGES.UNAUTHENTICATED)
+      }
     }
 
     // Handle other errors
