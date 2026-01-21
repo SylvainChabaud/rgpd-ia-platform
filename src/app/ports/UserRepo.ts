@@ -141,4 +141,51 @@ export interface UserRepo {
     suspended: boolean,
     reason?: string
   ): Promise<User>;
+
+  /**
+   * List users with filters (cross-tenant for PLATFORM scope)
+   * LOT 11.2 - Super Admin user management
+   *
+   * @param options - Filter options
+   * @returns Filtered users
+   */
+  listFiltered(options: {
+    limit?: number;
+    offset?: number;
+    tenantId?: string;
+    role?: string;
+    status?: UserDataStatus;
+  }): Promise<User[]>;
+
+  /**
+   * List users in a tenant with advanced filters
+   * LOT 12.1 - Enhanced user management
+   *
+   * @param options - Filter and sort options
+   * @returns Filtered users in tenant
+   */
+  listFilteredByTenant(options: {
+    tenantId: string;
+    limit?: number;
+    offset?: number;
+    role?: string;
+    status?: UserDataStatus;
+    search?: string;
+    sortBy?: 'name' | 'createdAt' | 'role';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<User[]>;
+
+  /**
+   * Count users in a tenant with filters
+   * LOT 12.1 - Pagination support
+   *
+   * @param options - Filter options
+   * @returns Count of matching users
+   */
+  countByTenant(options: {
+    tenantId: string;
+    role?: string;
+    status?: UserDataStatus;
+    search?: string;
+  }): Promise<number>;
 }

@@ -30,11 +30,5 @@ export {
   DETECTION_SOURCE,
 } from "./SecurityIncident";
 
-// Repository Port
-export {
-  type SecurityIncidentRepo,
-  type IncidentFilters,
-  type PaginationOptions,
-  type PaginatedResult,
-  type UpdateSecurityIncidentInput,
-} from "./SecurityIncidentRepo";
+// Repository Port - MOVED to @/app/ports/SecurityIncidentRepo
+// Import from "@/app/ports/SecurityIncidentRepo" instead
