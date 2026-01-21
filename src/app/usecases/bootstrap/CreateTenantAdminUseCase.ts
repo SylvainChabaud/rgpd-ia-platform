@@ -13,6 +13,7 @@ import type { RequestContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
 import type { PolicyEngine } from "@/app/auth/policyEngine";
+import type { PasswordHasher } from "@/app/ports/PasswordHasher";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 
 const InputSchema = z.object({
@@ -27,7 +28,8 @@ export class CreateTenantAdminUseCase {
     private readonly tenants: TenantRepo,
     private readonly tenantUsers: TenantUserRepo,
     private readonly audit: AuditEventWriter,
-    private readonly policy: PolicyEngine
+    private readonly policy: PolicyEngine,
+    private readonly passwordHasher: PasswordHasher
   ) {}
 
   async execute(
@@ -59,10 +61,7 @@ export class CreateTenantAdminUseCase {
     // If password provided (development), hash it; otherwise disable login (production)
     let passwordHash = DISABLED_PASSWORD_HASH;
     if (password) {
-      // Use SHA256 hasher (same as authenticateUser)
-      const { Sha256PasswordHasher } = await import("@/infrastructure/security/Sha256PasswordHasher");
-      const hasher = new Sha256PasswordHasher();
-      passwordHash = await hasher.hash(password);
+      passwordHash = await this.passwordHasher.hash(password);
     }
 
     await this.tenantUsers.createTenantAdmin({

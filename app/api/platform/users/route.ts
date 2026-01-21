@@ -16,10 +16,7 @@ import { withLogging } from '@/infrastructure/logging/middleware';
 import { withAuth } from '@/middleware/auth';
 import { requireContext } from '@/lib/requestContext';
 import { createUser } from '@/app/usecases/users/createUser';
-import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
-import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHasher';
-import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
-import { logger } from '@/infrastructure/logging/logger';
+import { createUserDependencies } from '@/app/dependencies';
 import { internalError, validationError, conflictError, forbiddenError } from '@/lib/errorResponse';
 import { validateBody, PaginationSchema, validateQuery } from '@/lib/validation';
 import { createUserSchema } from '@/lib/validation/userSchemas';
@@ -71,9 +68,9 @@ export const GET = withLogging(
           const role = searchParams.get('role') || undefined;
           const status = searchParams.get('status') as 'active' | 'suspended' | undefined;
 
-          // Fetch filtered users
-          const userRepo = new PgUserRepo();
-          const users = await userRepo.listFiltered({
+          // Fetch filtered users (via factory - BOUNDARIES.md section 11)
+          const deps = createUserDependencies();
+          const users = await deps.userRepo.listFiltered({
             limit: query.limit,
             offset: query.offset,
             tenantId,
@@ -81,7 +78,7 @@ export const GET = withLogging(
             status,
           });
 
-          logger.info({
+          deps.logger.info({
             actorId: context.userId,
             count: users.length,
             tenantId,
@@ -105,7 +102,8 @@ export const GET = withLogging(
           });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logger.error({ error: errorMessage }, 'GET /api/platform/users error');
+          const deps = createUserDependencies();
+          deps.logger.error({ error: errorMessage }, 'GET /api/platform/users error');
           return NextResponse.json(internalError(), { status: 500 });
         }
       }
@@ -127,6 +125,8 @@ export const POST = withLogging(
           const body = await validateBody(req, createUserSchema);
 
           // Create user (tenantId from body, not from context)
+          // Dependencies via factory (BOUNDARIES.md section 11)
+          const deps = createUserDependencies();
           const result = await createUser(
             {
               tenantId: body.tenantId,
@@ -137,13 +137,13 @@ export const POST = withLogging(
               actorId: context.userId,
             },
             {
-              userRepo: new PgUserRepo(),
-              passwordHasher: new Sha256PasswordHasher(),
-              auditEventWriter: new PgAuditEventWriter(),
+              userRepo: deps.userRepo,
+              passwordHasher: deps.passwordHasher,
+              auditEventWriter: deps.auditEventWriter,
             }
           );
 
-          logger.info({
+          deps.logger.info({
             userId: result.userId,
             tenantId: body.tenantId,
             actorId: context.userId,
@@ -159,7 +159,8 @@ export const POST = withLogging(
           }, { status: 201 });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logger.error({ error: errorMessage }, 'POST /api/platform/users error');
+          const deps = createUserDependencies();
+          deps.logger.error({ error: errorMessage }, 'POST /api/platform/users error');
 
           if (error instanceof ZodError) {
             return NextResponse.json(validationError(error.issues), { status: 400 });

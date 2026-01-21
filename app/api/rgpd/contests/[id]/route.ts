@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stubAuthProvider } from '@/app/auth/stubAuthProvider';
+import { z } from 'zod';
 import { resolveDispute } from '@/app/usecases/dispute/resolveDispute';
-import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
-import { InMemoryAuditEventWriter } from '@/app/audit/InMemoryAuditEventWriter';
-import { tenantContextRequiredError } from '@/lib/errorResponse';
+import { createDisputeDependencies } from '@/app/dependencies';
+import { tenantContextRequiredError, forbiddenError, validationError } from '@/lib/errorResponse';
+import { logError } from '@/shared/logger';
+import { withAuth, requireUser } from '@/middleware/auth';
 
 /**
  * PATCH /api/rgpd/contests/:id - Resolve dispute (admin only)
@@ -18,42 +19,28 @@ import { tenantContextRequiredError } from '@/lib/errorResponse';
  * LOT 10.6 — Droits complémentaires Art. 22
  */
 
-type ResolveDisputeBody = {
-  status: 'resolved' | 'rejected';
-  adminResponse: string;
-};
+const ResolveDisputeBodySchema = z.object({
+  status: z.enum(['resolved', 'rejected']),
+  adminResponse: z.string().min(1, 'adminResponse is required'),
+});
 
-export async function PATCH(
+async function patchHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Authentication
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const match = authHeader.match(/^Bearer\s+(.+)$/);
-    if (!match) {
-      return NextResponse.json({ error: 'Invalid auth header' }, { status: 401 });
-    }
-
-    const actor = await stubAuthProvider.validateAuth(match[1]);
-    if (!actor) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    const user = requireUser(request);
 
     // RBAC: Admin only
-    if (!actor.roles.includes('TENANT_ADMIN') && !actor.roles.includes('SUPER_ADMIN')) {
+    if (user.role !== 'TENANT_ADMIN' && user.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
-        { error: 'Forbidden: Admin role required' },
+        forbiddenError('Admin role required'),
         { status: 403 }
       );
     }
 
     // Tenant context required
-    if (!actor.tenantId) {
+    if (!user.tenantId) {
       return NextResponse.json(
         tenantContextRequiredError(),
         { status: 403 }
@@ -61,25 +48,28 @@ export async function PATCH(
     }
 
     const { id: disputeId } = await params;
-    const body = (await request.json()) as ResolveDisputeBody;
+    const rawBody = await request.json();
 
-    // Validation
-    if (!body.status || !body.adminResponse) {
+    // Validation with Zod
+    const parsed = ResolveDisputeBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'status and adminResponse are required' },
+        validationError(parsed.error.issues.map(i => i.message).join(', ')),
         { status: 400 }
       );
     }
 
-    const disputeRepo = new PgDisputeRepo();
-    const auditWriter = new InMemoryAuditEventWriter();
+    const { status, adminResponse } = parsed.data;
 
-    const result = await resolveDispute(disputeRepo, auditWriter, {
-      tenantId: actor.tenantId,
+    // Dependencies via factory (BOUNDARIES.md section 11)
+    const deps = createDisputeDependencies();
+
+    const result = await resolveDispute(deps.disputeRepo, deps.auditEventWriter, {
+      tenantId: user.tenantId,
       disputeId,
-      status: body.status,
-      adminResponse: body.adminResponse,
-      reviewedBy: actor.actorId,
+      status,
+      adminResponse,
+      reviewedBy: user.userId,
     });
 
     return NextResponse.json(
@@ -96,10 +86,14 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error resolving dispute:', error);
+    logError('rgpd.contests.resolve_error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+
+export const PATCH = withAuth(patchHandler);

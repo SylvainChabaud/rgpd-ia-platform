@@ -16,6 +16,7 @@ import { logInfo } from "@/shared/logger";
 import { platformContext, systemContext } from "@/app/context/RequestContext";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { policyEngine } from "@/app/auth/policyEngine";
+import { BcryptPasswordHasher } from "@/infrastructure/security/BcryptPasswordHasher";
 
 const program = new Command();
 
@@ -63,7 +64,8 @@ program
     const state = new PgBootstrapStateRepo();
     const users = new PgPlatformUserRepo();
     const audit = new PgAuditEventWriter();
-    const uc = new CreatePlatformSuperAdminUseCase(state, users, audit);
+    const passwordHasher = new BcryptPasswordHasher();
+    const uc = new CreatePlatformSuperAdminUseCase(state, users, audit, passwordHasher);
     // SECURITY: Read password from env var, never from CLI args (shell history exposure)
     const password = process.env.BOOTSTRAP_PASSWORD;
     const res = await uc.execute({ ...opts, password });
@@ -104,11 +106,13 @@ program
     const tenants = new PgTenantRepo();
     const tenantUsers = new PgTenantUserRepo();
     const audit = new PgAuditEventWriter();
+    const passwordHasher = new BcryptPasswordHasher();
     const uc = new CreateTenantAdminUseCase(
       tenants,
       tenantUsers,
       audit,
-      policyEngine
+      policyEngine,
+      passwordHasher
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     // SECURITY: Read password from env var, never from CLI args (shell history exposure)
@@ -132,11 +136,13 @@ program
     const tenants = new PgTenantRepo();
     const tenantUsers = new PgTenantUserRepo();
     const audit = new PgAuditEventWriter();
+    const passwordHasher = new BcryptPasswordHasher();
     const uc = new CreateTenantUserUseCase(
       tenants,
       tenantUsers,
       audit,
-      policyEngine
+      policyEngine,
+      passwordHasher
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     // SECURITY: Read password from env var, never from CLI args (shell history exposure)
@@ -160,11 +166,13 @@ program
     const tenants = new PgTenantRepo();
     const tenantUsers = new PgTenantUserRepo();
     const audit = new PgAuditEventWriter();
+    const passwordHasher = new BcryptPasswordHasher();
     const uc = new CreateTenantDpoUseCase(
       tenants,
       tenantUsers,
       audit,
-      policyEngine
+      policyEngine,
+      passwordHasher
     );
     const ctx = resolveBootstrapContext(opts.platformActorId);
     // SECURITY: Read password from env var, never from CLI args (shell history exposure)

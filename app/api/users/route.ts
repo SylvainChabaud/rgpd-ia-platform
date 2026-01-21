@@ -17,10 +17,7 @@ import { withAuth } from '@/middleware/auth';
 import { withTenantAdmin, withTenantAdminOrDpo } from '@/middleware/rbac';
 import { requireContext } from '@/lib/requestContext';
 import { createUser } from '@/app/usecases/users/createUser';
-import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
-import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHasher';
-import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
-import { logger } from '@/infrastructure/logging/logger';
+import { createUserDependencies } from '@/app/dependencies';
 import { internalError, validationError, conflictError } from '@/lib/errorResponse';
 import { validateBody, CreateUserSchema } from '@/lib/validation';
 import { ZodError, z } from 'zod';
@@ -77,9 +74,9 @@ export const GET = withLogging(
             return NextResponse.json(validationError({}), { status: 400 });
           }
 
-          // Fetch users with filters
-          const userRepo = new PgUserRepo();
-          const users = await userRepo.listFilteredByTenant({
+          // Fetch users with filters (via factory - BOUNDARIES.md section 11)
+          const deps = createUserDependencies();
+          const users = await deps.userRepo.listFilteredByTenant({
             tenantId: context.tenantId!,
             limit: query.limit,
             offset: query.offset,
@@ -91,14 +88,14 @@ export const GET = withLogging(
           });
 
           // Get total count for pagination
-          const total = await userRepo.countByTenant({
+          const total = await deps.userRepo.countByTenant({
             tenantId: context.tenantId!,
             role: query.role,
             status: query.status,
             search: query.search,
           });
 
-          logger.info({
+          deps.logger.info({
             tenantId: context.tenantId,
             count: users.length,
             filters: { role: query.role, status: query.status, search: query.search ? '[REDACTED]' : undefined },
@@ -123,7 +120,8 @@ export const GET = withLogging(
           });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logger.error({ error: errorMessage }, 'GET /api/users error');
+          const deps = createUserDependencies();
+          deps.logger.error({ error: errorMessage }, 'GET /api/users error');
           return NextResponse.json(internalError(), { status: 500 });
         }
       }
@@ -144,7 +142,8 @@ export const POST = withLogging(
           // Validate request body
           const body = await validateBody(req, CreateUserSchema);
 
-          // Create user
+          // Create user (via factory - BOUNDARIES.md section 11)
+          const deps = createUserDependencies();
           const result = await createUser(
             {
               tenantId: context.tenantId!,
@@ -155,13 +154,13 @@ export const POST = withLogging(
               actorId: context.userId,
             },
             {
-              userRepo: new PgUserRepo(),
-              passwordHasher: new Sha256PasswordHasher(),
-              auditEventWriter: new PgAuditEventWriter(),
+              userRepo: deps.userRepo,
+              passwordHasher: deps.passwordHasher,
+              auditEventWriter: deps.auditEventWriter,
             }
           );
 
-          logger.info({
+          deps.logger.info({
             userId: result.userId,
             tenantId: context.tenantId,
             actorId: context.userId,
@@ -179,7 +178,8 @@ export const POST = withLogging(
           }, { status: 201 });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logger.error({ error: errorMessage }, 'POST /api/users error');
+          const deps = createUserDependencies();
+          deps.logger.error({ error: errorMessage }, 'POST /api/users error');
 
           if (error instanceof ZodError) {
             return NextResponse.json(validationError(error.issues), { status: 400 });

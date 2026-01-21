@@ -9,6 +9,7 @@ import { logEvent } from "@/shared/logger";
 import type { BootstrapStateRepo } from "@/app/ports/BootstrapStateRepo";
 import type { PlatformUserRepo } from "@/app/ports/PlatformUserRepo";
 import type { AuditEventWriter } from "@/app/ports/AuditEventWriter";
+import type { PasswordHasher } from "@/app/ports/PasswordHasher";
 import { systemContext } from "@/app/context/RequestContext";
 import { emitAuditEvent } from "@/app/audit/emitAuditEvent";
 import { DISABLED_PASSWORD_HASH } from "@/shared/security/password";
@@ -24,7 +25,8 @@ export class CreatePlatformSuperAdminUseCase {
   constructor(
     private readonly bootstrapState: BootstrapStateRepo,
     private readonly platformUsers: PlatformUserRepo,
-    private readonly audit: AuditEventWriter
+    private readonly audit: AuditEventWriter,
+    private readonly passwordHasher: PasswordHasher
   ) {}
 
   async execute(raw: unknown): Promise<{ platformUserId: string }> {
@@ -51,10 +53,7 @@ export class CreatePlatformSuperAdminUseCase {
     // If password provided (development), hash it; otherwise disable login (production)
     let passwordHash = DISABLED_PASSWORD_HASH;
     if (password) {
-      // Use SHA256 hasher (same as authenticateUser)
-      const { Sha256PasswordHasher } = await import("@/infrastructure/security/Sha256PasswordHasher");
-      const hasher = new Sha256PasswordHasher();
-      passwordHash = await hasher.hash(password);
+      passwordHash = await this.passwordHasher.hash(password);
     }
 
     await this.platformUsers.createSuperAdmin({

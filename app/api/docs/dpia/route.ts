@@ -13,10 +13,16 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { marked } from 'marked';
 import { authenticateRequest } from '@/app/middleware/auth';
-import { emitAuditEvent } from '@/infrastructure/audit/auditService';
+import { createAuditDependencies } from '@/app/dependencies';
+import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
 import { ACTOR_ROLE } from '@/shared/actorRole';
+import type { ActorScope } from '@/shared/actorScope';
 
 export async function GET(request: NextRequest) {
+  // Dependencies (via factory - BOUNDARIES.md section 11)
+  // Initialize ONCE at the start to avoid duplicate instantiation
+  const deps = createAuditDependencies();
+
   try {
     // Authentication
     const authResult = await authenticateRequest(request);
@@ -63,10 +69,12 @@ export async function GET(request: NextRequest) {
     };
 
     // Audit event
-    await emitAuditEvent({
-      eventType: 'docs.dpia.accessed',
+    await emitAuditEvent(deps.auditEventWriter, {
+      id: crypto.randomUUID(),
+      eventName: 'docs.dpia.accessed',
+      actorScope: user.scope as ActorScope,
       actorId: user.id,
-      tenantId: user.tenantId,
+      tenantId: user.tenantId ?? undefined,
       metadata: {
         accessedAt: new Date().toISOString(),
         riskLevel: response.riskLevel,
@@ -75,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('Error fetching DPIA:', error);
+    deps.logger.error({ event: 'docs.dpia.fetch_error', error: error instanceof Error ? error.message : 'Unknown error' }, 'Error fetching DPIA');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
