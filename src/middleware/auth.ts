@@ -4,6 +4,11 @@
  *
  * Verifies JWT token and attaches user context to request
  *
+ * SECURITY:
+ * - Reads JWT from httpOnly cookie (primary) or Authorization header (fallback)
+ * - Cookie-based auth prevents XSS token theft
+ * - Header fallback maintained for API clients and backwards compatibility
+ *
  * RGPD compliance:
  * - JWT contains only P1 data (userId, tenantId, scope, role)
  * - Failed auth attempts logged without sensitive data
@@ -15,6 +20,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJwt } from '@/lib/jwt';
 import { unauthorizedError } from '@/lib/errorResponse';
+import { logWarn } from '@/shared/logger';
+
+/**
+ * Request with authenticated user context
+ */
+export type NextRequestWithUser = NextRequest & {
+  user: {
+    userId: string;
+    tenantId: string | null;
+    scope: string;
+    role: string;
+  };
+};
 
 /**
  * Authentication middleware wrapper
@@ -28,26 +46,27 @@ export function withAuth<T extends NextHandler>(
 ): T {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (async (req: NextRequest, context?: any) => {
-    // Extract Authorization header
-    const authHeader = req.headers.get('Authorization');
+    // 1. Try to get token from httpOnly cookie (preferred - XSS-safe)
+    let token = req.cookies.get('auth_token')?.value;
 
-    if (!authHeader) {
+    // 2. Fallback to Authorization header (for API clients, backwards compatibility)
+    if (!token) {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const match = authHeader.match(/^Bearer\s+(.+)$/);
+        if (match) {
+          token = match[1];
+        }
+      }
+    }
+
+    // No token found in cookie or header
+    if (!token) {
       return NextResponse.json(
         unauthorizedError('No token provided'),
         { status: 401 }
       );
     }
-
-    // Parse Bearer token
-    const match = authHeader.match(/^Bearer\s+(.+)$/);
-    if (!match) {
-      return NextResponse.json(
-        unauthorizedError('Invalid Authorization header format'),
-        { status: 401 }
-      );
-    }
-
-    const token = match[1];
 
     try {
       // Verify and decode JWT
@@ -79,6 +98,19 @@ export function withAuth<T extends NextHandler>(
  * Attaches user context if token present, but doesn't require it
  * Use for public endpoints that have optional auth features
  */
+/**
+ * Extract user from authenticated request
+ * Use in handlers wrapped with withAuth
+ * Throws if user context is not present
+ */
+export function requireUser(req: NextRequest): NextRequestWithUser['user'] {
+  const user = (req as NextRequest & { user?: unknown }).user as NextRequestWithUser['user'] | undefined;
+  if (!user) {
+    throw new Error('User context not found. Ensure handler is wrapped with withAuth.');
+  }
+  return user;
+}
+
 export function withOptionalAuth<T extends NextHandler>(
   handler: T
 ): T {
@@ -98,7 +130,15 @@ export function withOptionalAuth<T extends NextHandler>(
             scope: payload.scope,
             role: payload.role,
           };
-        } catch {
+        } catch (error) {
+          // SECURITY: Log failed token verification attempts (RGPD-safe: no token logged)
+          logWarn({
+            event: 'auth.token_verification_failed',
+            meta: {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              path: req.nextUrl.pathname,
+            },
+          });
           // Invalid token, continue without auth
         }
       }

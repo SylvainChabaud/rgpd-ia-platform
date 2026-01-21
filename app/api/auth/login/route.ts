@@ -16,41 +16,36 @@ import { withLogging } from '@/infrastructure/logging/middleware';
 import { withRateLimit } from '@/middleware/rateLimit';
 import { validateBody, LoginRequestSchema } from '@/lib/validation';
 import { validationError, internalError } from '@/lib/errorResponse';
-import { signJwt } from '@/lib/jwt';
+import { signJwt, signRefreshToken, TOKEN_EXPIRATION } from '@/lib/jwt';
 import { authenticateUser } from '@/app/usecases/auth/authenticateUser';
-import { PgUserRepo } from '@/infrastructure/repositories/PgUserRepo';
-import { PgTenantRepo } from '@/infrastructure/repositories/PgTenantRepo';
-import { Sha256PasswordHasher } from '@/infrastructure/security/Sha256PasswordHasher';
-import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
-import { logger } from '@/infrastructure/logging/logger';
+import { createAuthDependencies } from '@/app/dependencies';
 import { ZodError } from 'zod';
+import { AUTH_COOKIES, REFRESH_TOKEN_PATH, AUTH_ERROR_MESSAGES } from '@/shared/auth/constants';
 
 export const POST = withLogging(
   withRateLimit({ maxRequests: 10, windowMs: 60000 })(
     async (req: NextRequest) => {
+      // Dependencies (via factory - BOUNDARIES.md section 11)
+      // Initialize ONCE at the start to avoid duplicate instantiation
+      const deps = createAuthDependencies();
+
       try {
         // Validate request body
         const body = await validateBody(req, LoginRequestSchema);
 
-        // Dependencies
-        const userRepo = new PgUserRepo();
-        const tenantRepo = new PgTenantRepo();
-        const passwordHasher = new Sha256PasswordHasher();
-        const auditWriter = new PgAuditEventWriter();
-
         // Authenticate user
         const user = await authenticateUser(
-          userRepo,
-          passwordHasher,
-          auditWriter,
-          tenantRepo,
+          deps.userRepo,
+          deps.passwordHasher,
+          deps.auditEventWriter,
+          deps.tenantRepo,
           {
             email: body.email,
             password: body.password,
           }
         );
 
-        // Generate JWT
+        // Generate access token (15 min)
         const token = signJwt({
           userId: user.userId,
           tenantId: user.tenantId,
@@ -58,8 +53,16 @@ export const POST = withLogging(
           role: user.role,
         });
 
-        // Return token and user info
-        return NextResponse.json({
+        // Generate refresh token (7 days)
+        const refreshToken = signRefreshToken({
+          userId: user.userId,
+          tenantId: user.tenantId,
+          scope: user.scope,
+          role: user.role,
+        });
+
+        // Create response with token and user info
+        const response = NextResponse.json({
           token,
           user: {
             id: user.userId,
@@ -69,6 +72,30 @@ export const POST = withLogging(
             tenantId: user.tenantId,
           },
         });
+
+        // Set HTTP-only cookie for access token (short-lived: 15 min)
+        // SECURITY: httpOnly prevents XSS attacks from reading the token
+        // sameSite: 'lax' allows the cookie to be sent on same-site requests
+        // secure: true in production (HTTPS only)
+        response.cookies.set(AUTH_COOKIES.ACCESS_TOKEN, token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: TOKEN_EXPIRATION.ACCESS_TOKEN_SECONDS,
+        });
+
+        // Set HTTP-only cookie for refresh token (long-lived: 7 days)
+        // Used only by /api/auth/refresh endpoint
+        response.cookies.set(AUTH_COOKIES.REFRESH_TOKEN, refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: REFRESH_TOKEN_PATH, // Restricted to refresh endpoint only
+          maxAge: TOKEN_EXPIRATION.REFRESH_TOKEN_SECONDS,
+        });
+
+        return response;
       } catch (error) {
         if (error instanceof ZodError) {
           return NextResponse.json(
@@ -80,21 +107,21 @@ export const POST = withLogging(
         if (error instanceof Error) {
           if (error.message === 'Invalid credentials') {
             return NextResponse.json(
-              { error: 'Authentication failed', message: 'Invalid credentials' },
+              { error: 'Authentication failed', message: AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS },
               { status: 401 }
             );
           }
 
           if (error.message === 'Account suspended') {
             return NextResponse.json(
-              { error: 'Account suspended', message: 'Your account has been suspended. Please contact support.' },
+              { error: 'Account suspended', message: AUTH_ERROR_MESSAGES.ACCOUNT_SUSPENDED },
               { status: 403 }
             );
           }
 
           if (error.message === 'Tenant suspended') {
             return NextResponse.json(
-              { error: 'Tenant suspended', message: 'Your organization account has been suspended. Please contact support.' },
+              { error: 'Tenant suspended', message: AUTH_ERROR_MESSAGES.TENANT_SUSPENDED },
               { status: 403 }
             );
           }
@@ -102,7 +129,7 @@ export const POST = withLogging(
 
         // Internal error (don't expose details)
         // SECURITY: Use logger instead of console.error to avoid exposing stack traces
-        logger.error({
+        deps.logger.error({
           event: 'auth.login.error',
           error: error instanceof Error ? error.message : 'Unknown error',
         }, 'Login error');

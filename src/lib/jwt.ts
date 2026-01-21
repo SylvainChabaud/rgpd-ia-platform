@@ -26,7 +26,11 @@ export interface JwtPayload {
 }
 
 const JWT_ALGORITHM = 'HS256';
-const JWT_EXPIRATION_SECONDS = 24 * 60 * 60; // 24 hours
+const ACCESS_TOKEN_EXPIRATION_SECONDS = 15 * 60; // 15 minutes
+const REFRESH_TOKEN_EXPIRATION_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+// Legacy: kept for backwards compatibility during migration
+const JWT_EXPIRATION_SECONDS = ACCESS_TOKEN_EXPIRATION_SECONDS;
 
 /**
  * Get JWT secret from environment
@@ -41,16 +45,31 @@ function getJwtSecret(): string {
 }
 
 /**
- * Sign JWT token
+ * Sign access JWT token (short-lived: 15 minutes)
  * Returns base64url-encoded JWT
  */
 export function signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
+  return signJwtWithExpiration(payload, ACCESS_TOKEN_EXPIRATION_SECONDS);
+}
+
+/**
+ * Sign refresh JWT token (long-lived: 7 days)
+ * Returns base64url-encoded JWT
+ */
+export function signRefreshToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
+  return signJwtWithExpiration(payload, REFRESH_TOKEN_EXPIRATION_SECONDS);
+}
+
+/**
+ * Internal: Sign JWT with custom expiration
+ */
+function signJwtWithExpiration(payload: Omit<JwtPayload, 'iat' | 'exp'>, expirationSeconds: number): string {
   const now = Math.floor(Date.now() / 1000);
 
   const fullPayload: JwtPayload = {
     ...payload,
     iat: now,
-    exp: now + JWT_EXPIRATION_SECONDS,
+    exp: now + expirationSeconds,
   };
 
   const header = {
@@ -67,6 +86,14 @@ export function signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
 
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
+
+/**
+ * Get token expiration constants (for cookie maxAge)
+ */
+export const TOKEN_EXPIRATION = {
+  ACCESS_TOKEN_SECONDS: ACCESS_TOKEN_EXPIRATION_SECONDS,
+  REFRESH_TOKEN_SECONDS: REFRESH_TOKEN_EXPIRATION_SECONDS,
+} as const;
 
 /**
  * Verify and decode JWT token
