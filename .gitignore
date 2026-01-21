@@ -72,6 +72,10 @@ logs/
 .claude/settings.local.json
 CLAUDE.local.md
 
+# UI Tester agent outputs (screenshots, reports, traces)
+.claude/agents/ui-tester/outputs/*
+!.claude/agents/ui-tester/outputs/.gitkeep
+
 # Local development files
 claude-code-from-scratch-starter/
 prompts/

@@ -16,6 +16,42 @@ scope: project
 - Secrets manager en production.
 - Jamais dans les commits, même anciens.
 
+## Génération de valeurs aléatoires
+
+**Interdit** : `Math.random()` pour IDs, tokens, identifiants.
+
+**Obligatoire** : `crypto.randomBytes()` ou équivalent cryptographique.
+
+```typescript
+// ❌ INTERDIT - prévisible
+const id = `anon-${Date.now()}-${Math.random().toString(36)}`;
+
+// ✅ CORRECT - cryptographiquement sûr
+import { randomBytes } from 'crypto';
+const id = `anon-${Date.now()}-${randomBytes(8).toString('hex')}`;
+```
+
+## Parsing de cookies (anti-ReDoS)
+
+**Interdit** : Regex complexes pour parser les cookies.
+
+**Obligatoire** : Parsing par split simple (safe).
+
+```typescript
+// ❌ INTERDIT - vulnérable ReDoS
+const value = cookieHeader.match(/consent_id=([^;]+)/)?.[1];
+
+// ✅ CORRECT - safe
+function getCookieValue(header: string | null, name: string): string | undefined {
+  if (!header) return undefined;
+  for (const cookie of header.split(';')) {
+    const [key, ...valueParts] = cookie.trim().split('=');
+    if (key === name) return valueParts.join('=');
+  }
+  return undefined;
+}
+```
+
 ## Emails de test
 
 Uniquement ces domaines autorisés :
@@ -79,9 +115,22 @@ await pool.query(`SELECT * FROM users WHERE id = '${userId}'`);
 ## Authentification
 
 - JWT avec expiration courte (15 min access, 7 jours refresh).
-- Hachage des mots de passe (bcrypt/argon2).
+- Hachage des mots de passe (bcrypt via `PasswordHasher` port, 12 salt rounds).
 - Hachage des emails (SHA-256) pour le stockage.
 - Rate limiting sur `/api/auth/*`.
+- **Logging des échecs d'authentification** (RGPD-safe: sans token ni mot de passe).
+
+```typescript
+// Logging obligatoire pour les échecs d'auth
+logWarn({
+  event: 'auth.token_verification_failed',
+  meta: {
+    error: error.message,  // Message d'erreur uniquement
+    path: req.nextUrl.pathname,  // Chemin de la requête
+    // JAMAIS: token, password, credentials
+  },
+});
+```
 
 ## Headers de sécurité
 

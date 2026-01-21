@@ -1,0 +1,489 @@
+# Scénarios de test - Tenant Admin / RGPD
+name: "Tenant Admin - RGPD"
+description: "Tests RGPD du backoffice tenant admin (consentements, finalités, droits)"
+priority: critical
+tags: [tenant-admin, rgpd]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+  - purposes_configured: true
+
+scenarios:
+  # ============================================
+  # CONSENTEMENTS - ACCÈS ET NAVIGATION
+  # ============================================
+
+  - id: TADM-R001
+    name: "Accès page Consentements"
+    description: "Navigation vers la gestion des consentements"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+    expected:
+      - url_contains: "/portal/consents"
+      - text_visible: "Configuration et suivi des consentements RGPD"
+
+  - id: TADM-R002
+    name: "Statistiques consentements"
+    description: "Indicateurs de consentements visibles"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+    expected:
+      - text_visible: "Finalités configurées"
+      - text_visible: "Consentements accordés"
+      - text_visible: "Consentements révoqués"
+      - text_visible: "En attente"
+
+  # ============================================
+  # FINALITÉS DE TRAITEMENT
+  # ============================================
+
+  - id: TADM-R010
+    name: "Accès liste des finalités"
+    description: "Navigation vers la page des finalités"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+    expected:
+      - url_contains: "/portal/consents/purposes"
+      - text_visible: "Finalités de traitement"
+      - text_visible: "finalité(s) configurée(s)"
+
+  - id: TADM-R011
+    name: "Finalité critique avec tags visibles"
+    description: "Vérification des tags Requis et DPIA"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+      - screenshot: "purposes-list.png"
+    expected:
+      - text_visible: "{{purposes.health_data.name}}"
+      - element_visible:
+          text: "Requis"
+          type: "button"
+      - element_visible:
+          text: "DPIA"
+          type: "button"
+      - text_visible: "Critique"
+      - text_visible: "Consentement"
+
+  - id: TADM-R012
+    name: "Filtrage par type - Templates système"
+    description: "Filtre onglet templates système"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+      - click: "Templates système"
+    expected:
+      - element_visible:
+          text: "Système"
+          type: "button"
+
+  # ============================================
+  # CATALOGUE DE TEMPLATES
+  # ============================================
+
+  - id: TADM-R020
+    name: "Accès catalogue templates"
+    description: "Navigation vers le catalogue"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+      - click: "Catalogue templates"
+      - wait_for: "Catalogue de templates"
+    expected:
+      - url_contains: "/templates"
+      - text_visible: "Templates de finalités pré-validés RGPD"
+      - text_visible: "Conforme RGPD"
+
+  - id: TADM-R021
+    name: "Templates critiques avec DPIA requise"
+    description: "Vérification des templates à risque critique"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click: "Catalogue templates"
+      - wait_for: "Catalogue de templates"
+      - screenshot: "templates-catalog.png"
+    expected:
+      - text_visible: "DPIA requise"
+      - text_visible: "Critique"
+      - text_visible: "Adopter ce template"
+
+  - id: TADM-R022
+    name: "Adoption d'un template - Dialog"
+    description: "Ouverture du dialog d'adoption"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click: "Catalogue templates"
+      - wait_for: "Catalogue de templates"
+      - click_first: "Adopter ce template"
+      - wait_for: "Adopter"
+    expected:
+      - dialog_visible: true
+      - text_visible: "Personnalisez le libellé"
+      - text_visible: "Ces champs sont immuables"
+      - element_visible:
+          text: "Confirmer l'adoption"
+          type: "button"
+
+  # ============================================
+  # DPIA - ANALYSE D'IMPACT (Art. 35)
+  # ============================================
+
+  - id: TADM-R030
+    name: "Accès DPIA depuis finalité"
+    description: "Lien vers la DPIA depuis la liste"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+      - click_link: "DPIA"
+      - wait_for: "DPIA:"
+    expected:
+      - url_contains: "/portal/dpia/"
+      - text_visible: "DPIA:"
+      - text_visible: "Risque critique"
+
+  - id: TADM-R031
+    name: "DPIA - Approbation DPO visible"
+    description: "Statut d'approbation par le DPO (Art. 35)"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+      - click_link: "DPIA"
+      - wait_for: "DPIA:"
+      - screenshot: "dpia-detail.png"
+    expected:
+      - text_visible: "Approuvée par le DPO"
+      - text_visible: "Marie Dubois (DPO)"
+      - text_visible: "Historique des échanges"
+
+  - id: TADM-R032
+    name: "DPIA - Évaluation des risques"
+    description: "Tableau des risques documentés (Art. 35.7.c)"
+    priority: high
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click_link: "DPIA"
+      - wait_for: "Evaluation des risques"
+    expected:
+      - text_visible: "Art. 35.7.c RGPD"
+      - text_visible: "Probabilité"
+      - text_visible: "Impact"
+      - text_visible: "Atténuation"
+
+  - id: TADM-R033
+    name: "DPIA - Export PDF"
+    description: "Bouton d'export PDF disponible"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click_link: "DPIA"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # CONSENTEMENT OBLIGATOIRE (Art. 6, 7, 9)
+  # ============================================
+
+  - id: TADM-R040
+    name: "Finalité avec consentement obligatoire"
+    description: "Tag Requis visible sur finalité critique (Art. 9)"
+    priority: critical
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "{{purposes.health_data.name}}"
+    expected:
+      - element_visible:
+          text: "Requis"
+          near: "{{purposes.health_data.name}}"
+      - text_visible: "Consentement"
+
+  - id: TADM-R041
+    name: "Switch consentement obligatoire désactivé pour critique"
+    description: "Impossible de désactiver pour risque critique"
+    priority: critical
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click: "Catalogue templates"
+      - wait_for: "Catalogue de templates"
+      - click_first: "Adopter ce template"
+      - wait_for: "Consentement obligatoire"
+    expected:
+      - element_attribute:
+          selector: "switch"
+          attribute: "disabled"
+          value: true
+
+  # ============================================
+  # DROITS RGPD - PAGE PRINCIPALE
+  # ============================================
+
+  - id: TADM-R050
+    name: "Accès page RGPD"
+    description: "Navigation vers la gestion RGPD"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - url_contains: "/portal/rgpd"
+      - text_visible: "Suivi des demandes d'exercice des droits RGPD"
+
+  - id: TADM-R051
+    name: "Statistiques RGPD visibles"
+    description: "Indicateurs par type de demande"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - screenshot: "rgpd-dashboard.png"
+    expected:
+      - text_visible: "Exports"
+      - text_visible: "Art. 15 & 20"
+      - text_visible: "Effacements"
+      - text_visible: "Art. 17"
+      - text_visible: "Suspensions"
+      - text_visible: "Art. 18"
+      - text_visible: "Oppositions"
+      - text_visible: "Art. 21"
+      - text_visible: "Contestations"
+      - text_visible: "Art. 22"
+
+  # ============================================
+  # ART. 15 & 20 - DROIT D'ACCÈS & PORTABILITÉ
+  # ============================================
+
+  - id: TADM-R060
+    name: "Accès demandes d'export"
+    description: "Liste des demandes d'export (Art. 15 & 20)"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Demandes d'export"
+      - wait_for: "Demandes d'export"
+    expected:
+      - url_contains: "/portal/rgpd/exports"
+      - text_visible: "Art. 15 (Droit d'accès)"
+      - text_visible: "Art. 20 (Portabilité)"
+
+  - id: TADM-R061
+    name: "Export - Informations de sécurité"
+    description: "Mention du chiffrement et délai"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - text_visible: "chiffrés"
+      - text_visible: "7 jours"
+
+  # ============================================
+  # ART. 17 - DROIT À L'OUBLI
+  # ============================================
+
+  - id: TADM-R070
+    name: "Accès demandes d'effacement"
+    description: "Liste des demandes de suppression (Art. 17)"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Demandes d'effacement"
+      - wait_for: "effacement"
+    expected:
+      - url_contains: "/portal/rgpd/deletions"
+      - text_visible: "Art. 17"
+      - text_visible: "Droit à l'oubli"
+
+  - id: TADM-R071
+    name: "Effacement - Délai de purge"
+    description: "Information sur la période de rétention (30 jours)"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - text_visible: "30 jours"
+      - text_visible: "purgées"
+
+  # ============================================
+  # ART. 18 - DROIT À LA LIMITATION
+  # ============================================
+
+  - id: TADM-R080
+    name: "Accès suspensions de traitement"
+    description: "Liste des suspensions (Art. 18)"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Suspensions de traitement"
+      - wait_for: "Suspensions"
+    expected:
+      - url_contains: "/portal/rgpd/suspensions"
+      - text_visible: "Art. 18"
+      - text_visible: "Droit à la limitation"
+
+  - id: TADM-R081
+    name: "Suspension - Impact IA mentionné"
+    description: "Information sur l'arrêt du traitement IA"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - text_visible: "ne sont plus traitées par l'IA"
+
+  # ============================================
+  # ART. 21 - DROIT D'OPPOSITION
+  # ============================================
+
+  - id: TADM-R090
+    name: "Accès oppositions au traitement"
+    description: "Liste des oppositions (Art. 21)"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Oppositions au traitement"
+      - wait_for: "Oppositions"
+    expected:
+      - url_contains: "/portal/rgpd/oppositions"
+      - text_visible: "Art. 21"
+      - text_visible: "Droit d'opposition"
+
+  # ============================================
+  # ART. 22 - DÉCISIONS AUTOMATISÉES
+  # ============================================
+
+  - id: TADM-R100
+    name: "Accès contestations IA"
+    description: "Liste des contestations de décisions automatisées (Art. 22)"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Contestations IA"
+      - wait_for: "Contestations"
+    expected:
+      - url_contains: "/portal/rgpd/contests"
+      - text_visible: "Art. 22"
+      - text_visible: "Décisions automatisées"
+
+  - id: TADM-R101
+    name: "Contestation - Révision humaine"
+    description: "Mention du droit à révision humaine"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - text_visible: "révision humaine"
+
+  # ============================================
+  # EXPORT CSV
+  # ============================================
+
+  - id: TADM-R110
+    name: "Export CSV disponible"
+    description: "Bouton d'export CSV présent"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - element_visible:
+          text: "Exporter CSV"
+          type: "button"
+
+  # ============================================
+  # MATRICE DES CONSENTEMENTS
+  # ============================================
+
+  - id: TADM-R120
+    name: "Accès matrice des consentements"
+    description: "Navigation vers la matrice"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Matrice des consentements"
+      - wait_for: "Matrice"
+    expected:
+      - url_contains: "/portal/consents/matrix"
+      - text_visible: "Matrice des consentements"

@@ -12,6 +12,7 @@ Ce répertoire contient les agents spécialisés pour le projet.
 | **test-analyst** | Analyse couverture tests | Read, Glob, Grep, Bash | Amélioration qualité tests |
 | **code-reviewer** | Revue qualité code | Read, Glob, Grep | PRs, code review |
 | **const-refactor** | Refactoring constantes hardcodées | Read, Glob, Grep, Edit, Write, Bash | Consolidation constantes par domaine |
+| **ui-tester** | Tests UI via chrome-devtools MCP | Read, Glob, Grep, Bash + MCP | Tests visuels, performance, débogage |
 
 ## Orchestration complète
 
@@ -44,6 +45,49 @@ Pour invoquer manuellement un agent :
 ```
 
 Puis sélectionnez l'agent à invoquer.
+
+### Agent UI Tester
+
+L'agent `ui-tester` est spécial car il utilise Chrome DevTools MCP pour l'automatisation navigateur.
+
+**Prérequis :**
+- Serveur de dev lancé (`npm run dev`)
+- Chrome disponible
+- Données de test seedées (`npm run db:seed`)
+
+**Modes d'exécution :**
+
+```bash
+# Test manuel (ad-hoc)
+@ui-tester Teste la page de login avec admin@platform.local
+
+# Exécution d'un scénario par ID
+@ui-tester Exécute le scénario AUTH-001
+
+# Exécution par fichier YAML
+@ui-tester Exécute tous les scénarios de auth.yaml
+
+# Exécution par tag
+@ui-tester Exécute les scénarios avec le tag [security]
+
+# Test de performance
+@ui-tester Analyse les performances de /portal/dashboard
+
+# Test responsive
+@ui-tester Teste le dashboard en vue mobile (375x667)
+```
+
+**Scénarios disponibles :**
+
+| Fichier | Domaine | Nb scénarios |
+|---------|---------|--------------|
+| `auth.yaml` | Authentification | 15 |
+| `consents.yaml` | Finalités/DPIA | 15 |
+| `rgpd.yaml` | Droits RGPD | 14 |
+| `admin.yaml` | Dashboard admin | 12 |
+| `portal.yaml` | Dashboard tenant | 14 |
+
+Voir [ui-tester/README.md](ui-tester/README.md) pour la documentation complète.
 
 ## Format des agents
 

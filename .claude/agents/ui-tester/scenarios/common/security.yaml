@@ -1,0 +1,106 @@
+# Scénarios de test - Sécurité (commun à tous les backoffices)
+name: "Sécurité"
+description: "Tests de sécurité transverses"
+priority: critical
+tags: [security, common]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+
+scenarios:
+  # ============================================
+  # RATE LIMITING
+  # ============================================
+
+  - id: SEC-001
+    name: "Login - Rate limiting"
+    description: "Blocage après 10 tentatives"
+    priority: high
+    tags: [security]
+    steps:
+      - navigate: "/login"
+      - repeat: 11
+        steps:
+          - fill_form:
+              email: "{{users.invalid.email}}"
+              password: "{{users.invalid.password}}"
+          - click: "Connexion"
+          - wait: 500
+    expected:
+      - network_request:
+          url: "/api/auth/login"
+          status: 429
+      - header_present: "X-RateLimit-Remaining"
+
+  # ============================================
+  # HEADERS DE SÉCURITÉ
+  # ============================================
+
+  - id: SEC-010
+    name: "Headers de sécurité présents"
+    description: "Vérification des headers HTTP"
+    priority: high
+    tags: [security]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+    expected:
+      - response_header:
+          name: "X-Content-Type-Options"
+          value: "nosniff"
+      - response_header:
+          name: "X-Frame-Options"
+          value_contains: "DENY"
+      - response_header:
+          name: "X-XSS-Protection"
+          value: "1; mode=block"
+      - response_header:
+          name: "Strict-Transport-Security"
+          value_contains: "max-age"
+
+  # ============================================
+  # PROTECTION DES LOGS
+  # ============================================
+
+  - id: SEC-020
+    name: "Pas de credentials dans les logs console"
+    description: "RGPD - Pas de données sensibles loggées"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "{{users.platform_admin.email}}"
+          password: "{{users.platform_admin.password}}"
+      - click: "Connexion"
+    expected:
+      - console_not_contains: "{{users.platform_admin.password}}"
+      - console_not_contains: "Admin1234"
+
+  # ============================================
+  # ISOLATION DES SCOPES
+  # ============================================
+
+  - id: SEC-030
+    name: "Route admin avec scope TENANT"
+    description: "Accès refusé cross-scope"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - navigate: "/admin"
+    expected:
+      - url_not_contains: "/admin"
+      - text_visible: "Accès refusé"
+
+  - id: SEC-031
+    name: "Route portal avec scope PLATFORM"
+    description: "Admin plateforme ne voit pas le portail tenant"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - navigate: "/portal"
+    expected:
+      - url_not_contains: "/portal"
+      - text_visible: "Accès refusé"

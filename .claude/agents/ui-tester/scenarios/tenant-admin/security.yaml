@@ -1,0 +1,72 @@
+# Scénarios de test - Tenant Admin / Sécurité
+name: "Tenant Admin - Sécurité"
+description: "Tests de sécurité spécifiques au backoffice tenant admin"
+priority: critical
+tags: [tenant-admin, security]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+
+scenarios:
+  # ============================================
+  # ISOLATION DES SCOPES
+  # ============================================
+
+  - id: TADM-S001
+    name: "Pas d'accès aux routes admin"
+    description: "Tenant admin ne voit pas le backoffice plateforme"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - navigate: "/admin"
+    expected:
+      - url_not_contains: "/admin"
+      - text_visible: "Accès refusé"
+
+  - id: TADM-S002
+    name: "Pas d'accès aux données d'autres tenants"
+    description: "Isolation stricte des données"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      # Tentative d'accès à un autre tenant via manipulation d'URL
+      - navigate: "/portal/users?tenantId={{tenants.techcorp.slug}}"
+    expected:
+      # Doit rester sur les données du tenant acme
+      - no_data_from: "{{tenants.techcorp.slug}}"
+
+  - id: TADM-S003
+    name: "Utilisateurs du même tenant uniquement"
+    description: "Isolation tenant - pas de cross-tenant"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Utilisateurs"
+      - wait_for: "Utilisateurs"
+    expected:
+      # Seuls les utilisateurs du tenant acme sont visibles
+      - text_visible: "{{users.member.display_name}}"
+      # Pas d'utilisateurs d'autres tenants
+      - text_not_visible: "techcorp"
+
+  # ============================================
+  # AUDIT DES ACTIONS
+  # ============================================
+
+  - id: TADM-S010
+    name: "Actions tenant admin auditées"
+    description: "Les actions du tenant admin sont tracées"
+    priority: high
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Activité récente"
+    expected:
+      - text_visible: "Activité récente"
+      - audit_event_logged: "auth.login.success"

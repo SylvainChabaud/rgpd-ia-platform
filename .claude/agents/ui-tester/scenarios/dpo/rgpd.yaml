@@ -1,0 +1,138 @@
+# Scénarios de test - DPO / RGPD
+name: "DPO - RGPD"
+description: "Tests RGPD spécifiques au rôle DPO (validation, approbation)"
+priority: critical
+tags: [dpo, rgpd]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+  - user_role: "DPO"
+
+scenarios:
+  # ============================================
+  # APPROBATION DPIA (Art. 35)
+  # ============================================
+
+  - id: DPO-R001
+    name: "DPO peut approuver une DPIA"
+    description: "Bouton d'approbation visible pour le DPO"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Approuver"
+          type: "button"
+      - text_visible: "Statut"
+
+  - id: DPO-R002
+    name: "DPO peut demander une révision"
+    description: "Bouton de demande de révision visible"
+    priority: high
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Demander une révision"
+          type: "button"
+
+  - id: DPO-R003
+    name: "Historique des échanges DPIA"
+    description: "Le DPO peut voir et ajouter des commentaires"
+    priority: high
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "Historique des échanges"
+    expected:
+      - text_visible: "Historique des échanges"
+      - element_visible:
+          type: "textarea"
+
+  - id: DPO-R004
+    name: "DPO peut exporter DPIA en PDF"
+    description: "Export PDF pour documentation légale"
+    priority: high
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # SUIVI DES CONTESTATIONS (Art. 22)
+  # ============================================
+
+  - id: DPO-R010
+    name: "DPO peut voir les contestations IA"
+    description: "Accès aux demandes de révision humaine"
+    priority: critical
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Contestations IA"
+      - wait_for: "Contestations"
+    expected:
+      - url_contains: "/portal/rgpd/contests"
+      - text_visible: "Art. 22"
+      - text_visible: "Décisions automatisées"
+      - text_visible: "révision humaine"
+
+  # ============================================
+  # AUDIT ET TRAÇABILITÉ
+  # ============================================
+
+  - id: DPO-R020
+    name: "DPO peut voir l'activité récente"
+    description: "Accès aux événements d'audit du tenant"
+    priority: high
+    tags: [rgpd, audit]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Dashboard"
+      - wait_for: "Activité récente"
+    expected:
+      - text_visible: "Activité récente"
+      - column_visible: "Date"
+      - column_visible: "Type"
+      - column_visible: "Acteur"
+
+  # ============================================
+  # EXPORTS RGPD
+  # ============================================
+
+  - id: DPO-R030
+    name: "DPO peut exporter les données RGPD"
+    description: "Accès au bouton d'export CSV"
+    priority: medium
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - element_visible:
+          text: "Exporter CSV"
+          type: "button"

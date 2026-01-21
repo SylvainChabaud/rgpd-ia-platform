@@ -1,0 +1,182 @@
+# Scénarios de test - DPO / Fonctionnel
+name: "DPO - Fonctionnel"
+description: "Tests fonctionnels du backoffice DPO (Data Protection Officer)"
+priority: high
+tags: [dpo, functional]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+  - user_role: "DPO"
+
+scenarios:
+  # ============================================
+  # DASHBOARD DPO
+  # ============================================
+
+  - id: DPO-F001
+    name: "Accès dashboard DPO"
+    description: "Page d'accueil DPO"
+    priority: critical
+    steps:
+      - login_as: "{{users.dpo}}"
+      - wait_for: "Dashboard"
+      - screenshot: "dpo-dashboard.png"
+    expected:
+      - url_contains: "/portal"
+      - text_visible: "Dashboard"
+      - text_visible: "DPO"
+
+  - id: DPO-F002
+    name: "Navigation sidebar DPO"
+    description: "Liens de navigation disponibles pour le DPO (inclut DPIA et Registre)"
+    priority: high
+    steps:
+      - login_as: "{{users.dpo}}"
+      - wait_for: "Dashboard"
+    expected:
+      - link_visible: "Dashboard"
+      - link_visible: "Utilisateurs"
+      - link_visible: "Consentements"
+      - link_visible: "DPIA"
+      - link_visible: "Registre des Traitements"
+      - link_visible: "RGPD"
+      - text_visible: "DPO"
+
+  - id: DPO-F003
+    name: "Menu utilisateur DPO"
+    description: "Dropdown avec déconnexion"
+    priority: medium
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "{{users.dpo.display_name}}"
+    expected:
+      - text_visible: "Déconnexion"
+
+  # ============================================
+  # ACCÈS AUX DPIA
+  # ============================================
+
+  - id: DPO-F010
+    name: "Accès direct page DPIA"
+    description: "Le DPO peut accéder à la liste des DPIA"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+    expected:
+      - url_contains: "/portal/dpia"
+      - text_visible: "Analyses d'Impact (DPIA)"
+      - text_visible: "Art. 35 RGPD"
+
+  - id: DPO-F011
+    name: "Détails DPIA"
+    description: "Accès aux détails d'une DPIA"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "DPIA:"
+    expected:
+      - url_contains: "/portal/dpia/"
+      - text_visible: "DPIA:"
+      - text_visible: "Evaluation des risques"
+      - text_visible: "Historique des échanges"
+
+  - id: DPO-F012
+    name: "Export PDF DPIA"
+    description: "Le DPO peut exporter une DPIA en PDF"
+    priority: high
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "DPIA"
+      - wait_for: "Analyses d'Impact"
+      - click_first: "Voir"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # REGISTRE DES TRAITEMENTS (Art. 30)
+  # ============================================
+
+  - id: DPO-F015
+    name: "Accès registre des traitements"
+    description: "Le DPO peut accéder au registre Art. 30"
+    priority: critical
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Registre des Traitements"
+      - wait_for: "Registre"
+    expected:
+      - url_contains: "/portal/registre"
+      - text_visible: "Registre des Traitements"
+      - text_visible: "Art. 30 RGPD"
+
+  - id: DPO-F016
+    name: "Export PDF registre"
+    description: "Le DPO peut exporter le registre en PDF"
+    priority: high
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Registre des Traitements"
+      - wait_for: "Registre"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # SUIVI DES DEMANDES RGPD
+  # ============================================
+
+  - id: DPO-F020
+    name: "Accès page RGPD"
+    description: "Le DPO peut accéder à la page RGPD"
+    priority: high
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      - url_contains: "/portal/rgpd"
+      - text_visible: "Suivi des demandes"
+
+  - id: DPO-F021
+    name: "Vue des demandes d'export"
+    description: "Le DPO peut voir les demandes d'export (Art. 15 & 20)"
+    priority: high
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Demandes d'export"
+      - wait_for: "Demandes d'export"
+    expected:
+      - text_visible: "Art. 15"
+      - text_visible: "Art. 20"
+
+  - id: DPO-F022
+    name: "Vue des demandes d'effacement"
+    description: "Le DPO peut voir les demandes d'effacement (Art. 17)"
+    priority: high
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+      - click: "Demandes d'effacement"
+      - wait_for: "effacement"
+    expected:
+      - text_visible: "Art. 17"
+      - text_visible: "Droit à l'oubli"

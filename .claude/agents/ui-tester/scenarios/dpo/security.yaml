@@ -1,0 +1,135 @@
+# Scénarios de test - DPO / Sécurité
+name: "DPO - Sécurité"
+description: "Tests de sécurité spécifiques au rôle DPO"
+priority: critical
+tags: [dpo, security]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+  - user_role: "DPO"
+
+scenarios:
+  # ============================================
+  # ISOLATION DES SCOPES
+  # ============================================
+
+  - id: DPO-S001
+    name: "DPO - Pas d'accès aux routes admin plateforme"
+    description: "Le DPO ne peut pas accéder au backoffice super admin"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - navigate: "/admin"
+    expected:
+      - url_not_contains: "/admin"
+      - text_visible: "Accès refusé"
+
+  - id: DPO-S002
+    name: "DPO - Isolation tenant stricte"
+    description: "Le DPO ne voit que les données de son tenant"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "RGPD"
+      - wait_for: "Gestion RGPD"
+    expected:
+      # Pas de données d'autres tenants
+      - text_not_visible: "techcorp"
+      - no_cross_tenant_data: true
+
+  - id: DPO-S003
+    name: "DPO - Pas d'accès aux données d'autres tenants via URL"
+    description: "Manipulation d'URL ne permet pas d'accéder à d'autres tenants"
+    priority: critical
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - navigate: "/portal/rgpd?tenantId={{tenants.techcorp.slug}}"
+    expected:
+      - no_data_from: "{{tenants.techcorp.slug}}"
+
+  # ============================================
+  # PERMISSIONS DPO
+  # ============================================
+
+  - id: DPO-S010
+    name: "DPO - Accès lecture aux DPIA"
+    description: "Le DPO peut lire toutes les DPIA du tenant"
+    priority: high
+    tags: [security]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - wait_for: "Liste des finalités"
+    expected:
+      - element_visible:
+          text: "DPIA"
+          type: "link"
+
+  - id: DPO-S011
+    name: "DPO - Peut approuver les DPIA"
+    description: "Le DPO a le bouton d'approbation"
+    priority: high
+    tags: [security, rgpd]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click_link: "DPIA"
+      - wait_for: "DPIA:"
+    expected:
+      - element_visible:
+          text: "Approuver"
+          type: "button"
+
+  - id: DPO-S012
+    name: "DPO - Ne peut pas créer de tenant"
+    description: "Le DPO n'a pas accès à la gestion des tenants"
+    priority: high
+    tags: [security]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - wait_for: "Dashboard"
+    expected:
+      - link_not_visible: "Tenants"
+      - text_not_visible: "Nouveau tenant"
+
+  # ============================================
+  # AUDIT DES ACTIONS DPO
+  # ============================================
+
+  - id: DPO-S020
+    name: "Actions DPO auditées"
+    description: "Les actions du DPO sont tracées dans l'audit"
+    priority: high
+    tags: [security, rgpd, audit]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Dashboard"
+      - wait_for: "Activité récente"
+    expected:
+      - text_visible: "Activité récente"
+      - audit_event_logged: "auth.login.success"
+
+  - id: DPO-S021
+    name: "Approbation DPIA auditée"
+    description: "L'approbation d'une DPIA génère un événement d'audit"
+    priority: critical
+    tags: [security, rgpd, audit]
+    steps:
+      - login_as: "{{users.dpo}}"
+      - click: "Consentements"
+      - wait_for: "Gestion des Consentements"
+      - click: "Finalités de traitement"
+      - click_link: "DPIA"
+      - wait_for: "DPIA:"
+    expected:
+      - text_visible: "Historique des échanges"
+      # Les actions passées sont visibles dans l'historique

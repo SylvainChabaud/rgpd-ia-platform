@@ -20,6 +20,27 @@ Référence : `docs/data/DATA_CLASSIFICATION.md`
 - Email : hashé (SHA-256) pour stockage, chiffré (AES-256) si besoin de déchiffrement.
 - Chiffrement au repos et en transit (TLS 1.3).
 - Clés de chiffrement en variable d'environnement.
+- Mots de passe : bcrypt avec 12 salt rounds (via port `PasswordHasher`).
+
+## Anonymisation des adresses IP (Art. 32)
+
+**Obligatoire** : Les adresses IP sont des données personnelles (PII). Anonymisation avant stockage/logging.
+
+```typescript
+// Masquage du dernier octet IPv4
+function anonymizeIp(ip: string | null): string | undefined {
+  if (!ip) return undefined;
+  const firstIp = ip.split(',')[0].trim();  // X-Forwarded-For
+  const ipv4Parts = firstIp.split('.');
+  if (ipv4Parts.length === 4) {
+    ipv4Parts[3] = '0';  // 192.168.1.42 → 192.168.1.0
+    return ipv4Parts.join('.');
+  }
+  return undefined;  // IPv6 → ne pas stocker
+}
+```
+
+**Usages** : Consentements cookies, logs analytics, audit events.
 
 ## Données P2+ : audit obligatoire
 

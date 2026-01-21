@@ -1,0 +1,167 @@
+# Scénarios de test - Super Admin / RGPD
+name: "Super Admin - RGPD"
+description: "Tests RGPD au niveau plateforme (monitoring, configuration, incidents)"
+priority: high
+tags: [super-admin, rgpd]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "PLATFORM"
+
+scenarios:
+  # ============================================
+  # MONITORING RGPD PLATEFORME
+  # ============================================
+
+  - id: SADM-R001
+    name: "Vue globale des demandes RGPD"
+    description: "Le super admin peut voir les stats RGPD de tous les tenants"
+    priority: high
+    tags: [rgpd, monitoring]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Dashboard Super Admin"
+    expected:
+      - text_visible: "Exports RGPD"
+      - text_visible: "Incidents"
+
+  - id: SADM-R002
+    name: "Statistiques RGPD par tenant"
+    description: "Indicateurs RGPD dans la liste des tenants"
+    priority: medium
+    tags: [rgpd, monitoring]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Tenants"
+      - wait_for: "Gestion des tenants"
+    expected:
+      - text_visible: "{{tenants.acme.name}}"
+      # Les stats sont visibles dans la liste
+
+  # ============================================
+  # AUDIT PLATEFORME
+  # ============================================
+
+  - id: SADM-R010
+    name: "Accès aux logs d'audit plateforme"
+    description: "Le super admin peut voir tous les événements d'audit"
+    priority: critical
+    tags: [rgpd, audit]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Audit & Monitoring"
+      - wait_for: "Audit"
+    expected:
+      - url_contains: "/admin/audit"
+      - text_visible: "Audit"
+      - column_visible: "Date"
+      - column_visible: "Type"
+      - column_visible: "Acteur"
+
+  - id: SADM-R011
+    name: "Événements d'audit cross-tenant visibles"
+    description: "Le super admin voit les événements de tous les tenants"
+    priority: high
+    tags: [rgpd, audit]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Audit & Monitoring"
+      - wait_for: "Audit"
+    expected:
+      - text_visible: "auth.login.success"
+      # Événements de différents tenants visibles
+
+  - id: SADM-R012
+    name: "Filtrage des événements d'audit"
+    description: "Possibilité de filtrer par type d'événement"
+    priority: medium
+    tags: [rgpd, audit]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Audit & Monitoring"
+      - wait_for: "Audit"
+    expected:
+      - element_visible:
+          type: "combobox"
+      # Ou autre mécanisme de filtrage
+
+  # ============================================
+  # INCIDENTS DE SÉCURITÉ
+  # ============================================
+
+  - id: SADM-R020
+    name: "Vue des incidents de sécurité"
+    description: "Le super admin peut voir les incidents RGPD"
+    priority: critical
+    tags: [rgpd, security]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Dashboard Super Admin"
+    expected:
+      - text_visible: "Incidents"
+
+  # ============================================
+  # CONFIGURATION RGPD PLATEFORME
+  # ============================================
+
+  - id: SADM-R030
+    name: "Pas de gestion directe des données utilisateurs"
+    description: "Le super admin ne gère pas les données RGPD individuelles"
+    priority: high
+    tags: [rgpd, security]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - wait_for: "Dashboard Super Admin"
+    expected:
+      # Le super admin n'a pas accès aux données personnelles des utilisateurs
+      - link_not_visible: "Demandes d'export"
+      - link_not_visible: "Demandes d'effacement"
+      # Il gère la plateforme, pas les données individuelles
+
+  # ============================================
+  # PAGES LÉGALES (ACCESSIBLES SANS AUTH)
+  # ============================================
+
+  - id: SADM-R040
+    name: "Pages légales accessibles publiquement"
+    description: "CGU accessibles sans authentification"
+    priority: high
+    tags: [rgpd, legal]
+    steps:
+      - clear_session: true
+      - navigate: "/cgu"
+      - wait_for: "Conditions"
+    expected:
+      - text_visible: "Conditions"
+      - no_login_required: true
+
+  - id: SADM-R041
+    name: "Page Privacy accessible"
+    description: "Politique de confidentialité accessible"
+    priority: high
+    tags: [rgpd, legal]
+    steps:
+      - clear_session: true
+      - navigate: "/politique-confidentialite"
+      - wait_for: "Confidentialité"
+    expected:
+      - text_visible: "Confidentialité"
+      - text_visible: "RGPD"
+      - no_login_required: true
+
+  - id: SADM-R042
+    name: "Page Informations RGPD accessible"
+    description: "Informations RGPD accessibles sans authentification"
+    priority: high
+    tags: [rgpd, legal]
+    steps:
+      - clear_session: true
+      - navigate: "/informations-rgpd"
+      - wait_for: "RGPD"
+    expected:
+      - text_visible: "RGPD"
+      - text_visible: "droits"
+      - no_login_required: true

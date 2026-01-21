@@ -1,0 +1,285 @@
+# Scénarios de test - Super Admin / Fonctionnel
+name: "Super Admin - Fonctionnel"
+description: "Tests fonctionnels du backoffice administrateur plateforme"
+priority: high
+tags: [super-admin, functional]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "PLATFORM"
+
+scenarios:
+  # ============================================
+  # DASHBOARD PRINCIPAL
+  # ============================================
+
+  - id: SADM-F001
+    name: "Accès dashboard super admin"
+    description: "Page d'accueil admin"
+    priority: critical
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - wait_for: "Dashboard Super Admin"
+      - screenshot: "super-admin-dashboard.png"
+    expected:
+      - url_contains: "/admin"
+      - text_visible: "Dashboard Super Admin"
+      - text_visible: "Vue d'ensemble de la plateforme"
+
+  - id: SADM-F002
+    name: "Statistiques globales visibles"
+    description: "Widgets de statistiques plateforme"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Dashboard"
+    expected:
+      - text_visible: "Tenants Actifs"
+      - text_visible: "Tenants Suspendus"
+      - text_visible: "Utilisateurs Actifs"
+      - text_visible: "Jobs IA"
+      - text_visible: "Exports RGPD"
+      - text_visible: "Incidents"
+
+  - id: SADM-F003
+    name: "Graphiques d'activité"
+    description: "Charts Jobs IA et comparaison"
+    priority: medium
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Activité IA"
+    expected:
+      - text_visible: "Activité IA"
+      - text_visible: "30 derniers jours"
+      - text_visible: "Jobs IA (succès vs échecs)"
+
+  # ============================================
+  # NAVIGATION SIDEBAR
+  # ============================================
+
+  - id: SADM-F010
+    name: "Navigation sidebar complète"
+    description: "Tous les liens de navigation présents"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - wait_for: "Dashboard"
+    expected:
+      - link_visible: "Dashboard"
+      - link_visible: "Tenants"
+      - link_visible: "Utilisateurs"
+      - link_visible: "Audit & Monitoring"
+
+  - id: SADM-F011
+    name: "Menu utilisateur"
+    description: "Dropdown avec nom et déconnexion"
+    priority: medium
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "{{users.platform_admin.display_name}}"
+    expected:
+      - text_visible: "Déconnexion"
+
+  # ============================================
+  # GESTION DES TENANTS
+  # ============================================
+
+  - id: SADM-F020
+    name: "Liste des tenants"
+    description: "Affichage de tous les tenants"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Tenants"
+      - wait_for: "Gestion des tenants"
+    expected:
+      - url_contains: "/admin/tenants"
+      - text_visible: "Gestion des tenants"
+      - text_visible: "{{tenants.acme.name}}"
+
+  - id: SADM-F021
+    name: "Détails tenant"
+    description: "Informations d'un tenant"
+    priority: medium
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Tenants"
+      - wait_for: "Gestion des tenants"
+      - click: "{{tenants.acme.name}}"
+    expected:
+      - text_visible: "{{tenants.acme.name}}"
+      - text_visible: "Utilisateurs"
+      - text_visible: "Statut"
+
+  - id: SADM-F022
+    name: "Création tenant - Formulaire"
+    description: "Accès au formulaire de création"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Tenants"
+      - wait_for: "Gestion des tenants"
+      - click: "Nouveau tenant"
+    expected:
+      - text_visible: "Créer un tenant"
+      - element_visible:
+          type: "textbox"
+          label: "Nom"
+      - element_visible:
+          type: "textbox"
+          label: "Slug"
+
+  # ============================================
+  # GESTION DES UTILISATEURS
+  # ============================================
+
+  - id: SADM-F030
+    name: "Liste des utilisateurs plateforme"
+    description: "Affichage des admins plateforme"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Utilisateurs"
+      - wait_for: "Utilisateurs"
+    expected:
+      - url_contains: "/admin/users"
+      - text_visible: "{{users.platform_admin.display_name}}"
+
+  # ============================================
+  # AUDIT & MONITORING
+  # ============================================
+
+  - id: SADM-F040
+    name: "Page Audit & Monitoring"
+    description: "Accès aux logs d'audit"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Audit & Monitoring"
+      - wait_for: "Audit"
+    expected:
+      - url_contains: "/admin/audit"
+      - text_visible: "Audit"
+
+  - id: SADM-F041
+    name: "Événements d'audit visibles"
+    description: "Liste des événements récents"
+    priority: medium
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Audit & Monitoring"
+      - wait_for: "Audit"
+    expected:
+      - text_visible: "auth.login.success"
+      - column_visible: "Date"
+      - column_visible: "Type"
+      - column_visible: "Acteur"
+
+  # ============================================
+  # REGISTRE DES TRAITEMENTS (Art. 30)
+  # Navigation: Dashboard > Conformité RGPD > Registre
+  # ============================================
+
+  - id: SADM-F050
+    name: "Accès registre des traitements"
+    description: "Registre des traitements (Art. 30 RGPD)"
+    priority: critical
+    tags: [rgpd]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Conformité RGPD"
+      - click: "Registre des traitements (Art. 30)"
+      - wait_for: "Registre"
+    expected:
+      - url_contains: "/admin/audit/registry"
+      - text_visible: "Registre des Traitements"
+      - text_visible: "Art. 30 RGPD"
+
+  - id: SADM-F051
+    name: "Export PDF registre"
+    description: "Bouton d'export PDF disponible"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - navigate: "/admin/audit/registry"
+      - wait_for: "Registre"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # DPIA PLATEFORME (Art. 35)
+  # Navigation: Dashboard > Conformité RGPD > DPIA
+  # ============================================
+
+  - id: SADM-F060
+    name: "Accès DPIA plateforme"
+    description: "DPIA Gateway LLM (Art. 35 RGPD)"
+    priority: critical
+    tags: [rgpd, dpia]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Conformité RGPD"
+      - click: "DPIA Gateway LLM (Art. 35)"
+      - wait_for: "DPIA Gateway LLM"
+    expected:
+      - url_contains: "/admin/audit/dpia"
+      - text_visible: "DPIA Gateway LLM"
+      - text_visible: "Art. 35 RGPD"
+
+  - id: SADM-F061
+    name: "Export PDF DPIA"
+    description: "Bouton d'export PDF DPIA disponible"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - navigate: "/admin/audit/dpia"
+      - wait_for: "DPIA Gateway LLM"
+    expected:
+      - element_visible:
+          text: "Exporter PDF"
+          type: "button"
+
+  # ============================================
+  # VIOLATIONS & INCIDENTS (Art. 33-34)
+  # Navigation: Dashboard > Conformité RGPD > Violations
+  # ============================================
+
+  - id: SADM-F070
+    name: "Accès violations"
+    description: "Liste des violations/incidents (Art. 33-34 RGPD)"
+    priority: critical
+    tags: [rgpd, security]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Conformité RGPD"
+      - click: "Registre des violations (Art. 33)"
+      - wait_for: "Violations"
+    expected:
+      - url_contains: "/admin/audit/violations"
+      - text_visible: "Violations"
+      - text_visible: "Incidents de sécurité"
+
+  - id: SADM-F071
+    name: "Création nouvelle violation"
+    description: "Formulaire de déclaration d'incident"
+    priority: high
+    tags: [rgpd, security]
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - navigate: "/admin/audit/violations"
+      - wait_for: "Violations"
+      - click: "Déclarer une violation"
+    expected:
+      - url_contains: "/admin/audit/violations/new"
+      - text_visible: "Déclarer une violation"
+      - element_visible:
+          type: "textbox"
+          label: "Description"

@@ -1,0 +1,184 @@
+# Scénarios de test - Authentification (commun à tous les backoffices)
+name: "Authentification"
+description: "Tests de login, logout et gestion de session"
+priority: critical
+tags: [auth, security, common]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+
+scenarios:
+  # ============================================
+  # LOGIN - Cas nominaux
+  # ============================================
+
+  - id: AUTH-001
+    name: "Login Platform Admin - Succès"
+    description: "Connexion avec credentials valides (scope PLATFORM)"
+    priority: critical
+    backoffice: super-admin
+    steps:
+      - navigate: "/login"
+      - wait_for: "Connexion"
+      - screenshot: "login-page.png"
+      - fill_form:
+          email: "{{users.platform_admin.email}}"
+          password: "{{users.platform_admin.password}}"
+      - click: "Connexion"
+      - wait_for: "Dashboard"
+      - screenshot: "admin-dashboard.png"
+    expected:
+      - url_contains: "/admin"
+      - text_visible: "Dashboard Super Admin"
+      - no_console_errors: true
+      - network_request:
+          url: "/api/auth/login"
+          status: 200
+
+  - id: AUTH-002
+    name: "Login Tenant Admin - Succès"
+    description: "Connexion avec credentials valides (scope TENANT)"
+    priority: critical
+    backoffice: tenant-admin
+    steps:
+      - navigate: "/login"
+      - wait_for: "Connexion"
+      - fill_form:
+          email: "{{users.tenant_admin.email}}"
+          password: "{{users.tenant_admin.password}}"
+      - click: "Connexion"
+      - wait_for: "Dashboard"
+    expected:
+      - url_contains: "/portal"
+      - text_visible: "Tenant Admin"
+      - no_console_errors: true
+
+  - id: AUTH-003
+    name: "Login DPO - Succès"
+    description: "Connexion DPO"
+    priority: critical
+    backoffice: dpo
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "{{users.dpo.email}}"
+          password: "{{users.dpo.password}}"
+      - click: "Connexion"
+      - wait_for: "Dashboard"
+    expected:
+      - url_contains: "/portal"
+      - text_visible: "DPO"
+
+  - id: AUTH-004
+    name: "Login Member - Succès"
+    description: "Connexion utilisateur simple"
+    priority: high
+    backoffice: user
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "{{users.member.email}}"
+          password: "{{users.member.password}}"
+      - click: "Connexion"
+      - wait_for: "Dashboard"
+    expected:
+      - url_contains: "/app"
+
+  # ============================================
+  # LOGIN - Cas d'erreur
+  # ============================================
+
+  - id: AUTH-010
+    name: "Login - Credentials invalides"
+    description: "Message d'erreur générique (pas de leak d'info)"
+    priority: critical
+    tags: [security]
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "{{users.invalid.email}}"
+          password: "{{users.invalid.password}}"
+      - click: "Connexion"
+      - wait_for: "{{error_messages.invalid_credentials}}"
+    expected:
+      - url_is: "/login"
+      - text_visible: "{{error_messages.invalid_credentials}}"
+      - network_request:
+          url: "/api/auth/login"
+          status: 401
+      # RGPD: Message générique, pas d'info sur l'existence du compte
+      - text_not_visible: "Utilisateur non trouvé"
+      - text_not_visible: "Mot de passe incorrect"
+
+  - id: AUTH-011
+    name: "Login - Email invalide (format)"
+    description: "Validation côté client"
+    priority: medium
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "not-an-email"
+          password: "SomePassword123"
+      - click: "Connexion"
+    expected:
+      - text_visible: "Email invalide"
+      - no_network_request: "/api/auth/login"
+
+  - id: AUTH-012
+    name: "Login - Mot de passe trop court"
+    description: "Validation côté client (min 8 caractères)"
+    priority: medium
+    steps:
+      - navigate: "/login"
+      - fill_form:
+          email: "test@example.com"
+          password: "short"
+      - click: "Connexion"
+    expected:
+      - text_visible: "8 caractères"
+
+  # ============================================
+  # LOGOUT
+  # ============================================
+
+  - id: AUTH-020
+    name: "Logout - Déconnexion complète"
+    description: "JWT supprimé, redirection login"
+    priority: critical
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - wait_for: "Dashboard"
+      - click: "{{users.platform_admin.display_name}}"
+      - click: "Déconnexion"
+      - wait_for: "Connexion"
+    expected:
+      - url_is: "/login"
+      - session_storage_empty: "authStore"
+
+  # ============================================
+  # SESSION & PROTECTION DES ROUTES
+  # ============================================
+
+  - id: AUTH-030
+    name: "Route protégée sans auth"
+    description: "Redirection vers login"
+    priority: critical
+    steps:
+      - clear_session: true
+      - navigate: "/admin"
+    expected:
+      - url_contains: "/login"
+
+  - id: AUTH-031
+    name: "Session persistée après reload"
+    description: "JWT conservé en sessionStorage"
+    priority: high
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - wait_for: "Dashboard"
+      - reload_page: true
+      - wait_for: "Dashboard"
+    expected:
+      - url_contains: "/admin"
+      - text_visible: "Dashboard"

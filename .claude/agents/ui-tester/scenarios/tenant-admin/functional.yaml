@@ -1,0 +1,153 @@
+# Scénarios de test - Tenant Admin / Fonctionnel
+name: "Tenant Admin - Fonctionnel"
+description: "Tests fonctionnels du backoffice tenant admin"
+priority: high
+tags: [tenant-admin, functional]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "TENANT"
+
+scenarios:
+  # ============================================
+  # DASHBOARD TENANT
+  # ============================================
+
+  - id: TADM-F001
+    name: "Accès dashboard tenant"
+    description: "Page d'accueil tenant admin"
+    priority: critical
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - wait_for: "Dashboard"
+      - screenshot: "tenant-dashboard.png"
+    expected:
+      - url_contains: "/portal"
+      - text_visible: "Dashboard"
+      - text_visible: "Vue d'ensemble de votre organisation"
+
+  - id: TADM-F002
+    name: "Statistiques tenant visibles"
+    description: "Widgets de statistiques du tenant"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Dashboard"
+    expected:
+      - text_visible: "Utilisateurs actifs"
+      - text_visible: "Jobs IA ce mois"
+      - text_visible: "Consentements actifs"
+      - text_visible: "Exports RGPD"
+
+  - id: TADM-F003
+    name: "Graphiques d'activité tenant"
+    description: "Charts Jobs IA et consentements"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Jobs IA"
+    expected:
+      - text_visible: "Jobs IA"
+      - text_visible: "30 derniers jours"
+      - text_visible: "Consentements"
+
+  - id: TADM-F004
+    name: "Activité récente"
+    description: "Liste des derniers événements"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Dashboard"
+      - wait_for: "Activité récente"
+    expected:
+      - text_visible: "Activité récente"
+      - text_visible: "50 derniers événements"
+
+  # ============================================
+  # NAVIGATION SIDEBAR
+  # ============================================
+
+  - id: TADM-F010
+    name: "Navigation sidebar tenant"
+    description: "Tous les liens de navigation présents"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - wait_for: "Dashboard"
+    expected:
+      - link_visible: "Dashboard"
+      - link_visible: "Utilisateurs"
+      - link_visible: "Consentements"
+      - link_visible: "RGPD"
+      - text_visible: "Tenant Admin"
+      # Note: DPIA and Registre are DPO-only (see dpo/functional.yaml)
+
+  - id: TADM-F011
+    name: "Menu utilisateur tenant"
+    description: "Dropdown avec déconnexion"
+    priority: medium
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "{{users.tenant_admin.display_name}}"
+    expected:
+      - text_visible: "Déconnexion"
+
+  # ============================================
+  # GESTION DES UTILISATEURS
+  # ============================================
+
+  - id: TADM-F020
+    name: "Liste des utilisateurs du tenant"
+    description: "Affichage des membres du tenant"
+    priority: high
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - click: "Utilisateurs"
+      - wait_for: "Utilisateurs"
+    expected:
+      - url_contains: "/portal/users"
+      - text_visible: "Gestion des utilisateurs"
+
+  # ============================================
+  # RESPONSIVE DESIGN
+  # ============================================
+  # Note: DPIA (Art. 35) and Registre (Art. 30) are DPO-only features
+  # See dpo/functional.yaml for those scenarios
+
+  - id: TADM-F060
+    name: "Dashboard responsive - Mobile"
+    description: "Affichage correct sur mobile"
+    priority: medium
+    tags: [responsive]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - resize_viewport:
+          width: 375
+          height: 667
+      - click: "Dashboard"
+      - screenshot: "tenant-mobile.png"
+    expected:
+      - no_horizontal_scroll: true
+      - text_visible: "Dashboard"
+
+  # ============================================
+  # PERFORMANCE
+  # ============================================
+
+  - id: TADM-F070
+    name: "Performance dashboard"
+    description: "Temps de chargement acceptable"
+    priority: medium
+    tags: [performance]
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - performance_start_trace: true
+      - click: "Dashboard"
+      - wait_for: "Dashboard"
+      - performance_stop_trace: true
+    expected:
+      - lcp_under: 2500
+      - cls_under: 0.1

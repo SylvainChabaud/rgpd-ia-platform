@@ -1,0 +1,119 @@
+# Données de test pour l'agent UI Tester
+# IMPORTANT: Ne jamais utiliser de vraies données personnelles
+
+# Configuration
+config:
+  base_url: "http://localhost:3000"
+  timeout: 10000
+  viewport:
+    width: 1920
+    height: 1080
+
+# Utilisateurs de test
+users:
+  platform_admin:
+    email: "admin@platform.local"
+    password: "Admin1234"
+    role: "SUPERADMIN"
+    scope: "PLATFORM"
+    display_name: "Platform Administrator"
+    expected_redirect: "/admin"
+
+  tenant_admin:
+    email: "admin@acme.local"
+    password: "Admin1234"
+    role: "TENANT_ADMIN"
+    scope: "TENANT"
+    display_name: "Tenant Administrator"
+    tenant_slug: "acme"
+    expected_redirect: "/portal"
+
+  dpo:
+    email: "dpo@acme.local"
+    password: "Dpo12345"
+    role: "DPO"
+    scope: "TENANT"
+    display_name: "Marie Dubois (DPO)"
+    tenant_slug: "acme"
+    expected_redirect: "/portal"
+
+  member:
+    email: "alice@acme.local"
+    password: "User1234"
+    role: "MEMBER"
+    scope: "TENANT"
+    display_name: "Alice Martin"
+    tenant_slug: "acme"
+    expected_redirect: "/app"
+
+  invalid:
+    email: "wrong@example.com"
+    password: "WrongPassword123"
+
+# Tenants de test
+tenants:
+  acme:
+    name: "Acme Corp"
+    slug: "acme"
+    status: "active"
+
+  techcorp:
+    name: "TechCorp"
+    slug: "techcorp"
+    status: "active"
+
+# Finalités de test
+purposes:
+  health_data:
+    name: "Analyse de données de santé par IA"
+    risk_level: "critical"
+    legal_basis: "consent"
+    requires_dpia: true
+    consent_required: true
+    tags: ["Requis", "DPIA"]
+
+  classification:
+    name: "Classification automatique"
+    risk_level: "low"
+    legal_basis: "legitimate_interest"
+    requires_dpia: false
+    consent_required: false
+
+# Routes à tester
+routes:
+  public:
+    - "/login"
+    - "/legal/cgu"
+    - "/legal/privacy"
+
+  admin:
+    - "/admin"
+    - "/admin/dashboard"
+    - "/admin/tenants"
+    - "/admin/users"
+    - "/admin/audit"
+
+  portal:
+    - "/portal"
+    - "/portal/dashboard"
+    - "/portal/users"
+    - "/portal/consents"
+    - "/portal/consents/purposes"
+    - "/portal/consents/purposes/templates"
+    - "/portal/consents/matrix"
+    - "/portal/rgpd"
+    - "/portal/rgpd/exports"
+
+# Seuils de performance (Core Web Vitals)
+performance:
+  lcp_threshold: 2500  # ms
+  fid_threshold: 100   # ms
+  cls_threshold: 0.1
+  ttfb_threshold: 800  # ms
+
+# Messages d'erreur attendus
+error_messages:
+  invalid_credentials: "Email ou mot de passe incorrect"
+  session_expired: "Session expirée"
+  access_denied: "Accès refusé"
+  rate_limited: "Trop de tentatives"

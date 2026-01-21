@@ -15,10 +15,20 @@ export const METHOD = withLogging(
   withAuth(
     withRateLimit(config)(
       async (req: NextRequest, { params }?: RouteParams) => {
-        // 1. Extract context
+        // 1. Extract user with requireUser()
+        const user = requireUser(req);
+
         // 2. Parse params/query
-        // 3. Validate request
-        // 4. Check authorization
+        const { id } = await params;
+
+        // 3. Validate request body (Zod)
+        const body = await validateBody(req, Schema);
+
+        // 4. Check authorization (scope, tenant)
+        if (user.scope !== ACTOR_SCOPE.PLATFORM) {
+          return forbidden();
+        }
+
         // 5. Execute business logic
         // 6. Return response
       }
@@ -28,6 +38,7 @@ export const METHOD = withLogging(
 ```
 
 - Ordre middleware : `withLogging` → `withAuth` → `withRateLimit` → handler.
+- **`requireUser(req)`** : Obligatoire pour extraire le user context (type-safe).
 - Params dynamiques : `const { id } = await params;` (pas de destructuring direct).
 - JSDoc obligatoire avec LOT reference et notes RGPD.
 
@@ -93,22 +104,55 @@ export interface OperationInput {
   // autres champs
 }
 
-export async function operation(
-  input: OperationInput,
-  deps: { repo: Repo; auditEventWriter: AuditEventWriter }
-): Promise<Output> {
-  if (!input.tenantId) {
-    throw new Error('RGPD VIOLATION: tenantId required');
+export class OperationUseCase {
+  constructor(
+    private readonly repo: Repo,
+    private readonly auditEventWriter: AuditEventWriter,
+    private readonly passwordHasher: PasswordHasher // Via port interface
+  ) {}
+
+  async execute(input: OperationInput): Promise<Output> {
+    if (!input.tenantId) {
+      throw new Error('RGPD VIOLATION: tenantId required');
+    }
+    // logique métier
+    await this.auditEventWriter.write({ ... });
+    return result;
   }
-  // logique métier
-  await deps.auditEventWriter.write({ ... });
-  return result;
 }
 ```
 
 - `tenantId` obligatoire dans tous les inputs.
-- Dépendances injectées en objet `deps`.
+- **Dépendances injectées via constructeur** (ports uniquement).
 - Audit event émis pour chaque opération utilisateur.
+
+## Ports & Adapters (Clean Architecture)
+
+**Use cases ne dépendent que des ports (interfaces)** :
+
+```typescript
+// ✅ CORRECT - Dépend du port
+import type { PasswordHasher } from '@/app/ports/PasswordHasher';
+
+export class CreateUserUseCase {
+  constructor(private readonly passwordHasher: PasswordHasher) {}
+}
+
+// ❌ INTERDIT - Import direct d'infrastructure
+import { BcryptPasswordHasher } from '@/infrastructure/security/BcryptPasswordHasher';
+```
+
+**Injection au point d'entrée (API routes, CLI)** :
+
+```typescript
+// app/api/users/route.ts
+import { BcryptPasswordHasher } from '@/infrastructure/security/BcryptPasswordHasher';
+
+const passwordHasher = new BcryptPasswordHasher();
+const useCase = new CreateUserUseCase(userRepo, audit, passwordHasher);
+```
+
+Ports disponibles : `PasswordHasher`, `EncryptionService`, `ExportStorage`, etc.
 
 ## Repositories (src/infrastructure/)
 

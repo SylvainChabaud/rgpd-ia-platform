@@ -6,11 +6,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-block-destructive.ts"
+            "command": "npx tsx .claude/hooks/pretooluse-block-destructive.ts"
           },
           {
             "type": "command",
-            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-block-dangerous.ts"
+            "command": "npx tsx .claude/hooks/pretooluse-block-dangerous.ts"
           }
         ]
       }
@@ -20,7 +20,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx tsx \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-quality-gate.ts"
+            "command": "npx tsx .claude/hooks/stop-quality-gate.ts"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "happy notify -t \"Claude Code\" -p \"Claude attend ta reponse\""
           }
         ]
       }
