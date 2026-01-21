@@ -1,8 +1,8 @@
 # Matrice de Corrélation FRONT ↔ BACK
 
-**Date** : 2026-01-01  
-**Version** : 2.0  
-**Objectif** : Garantir la cohérence entre les fonctionnalités FRONT et les endpoints BACK pour les EPICs 10-13.
+**Date** : 2026-01-21
+**Version** : 2.2
+**Objectif** : Garantir la cohérence entre les fonctionnalités FRONT et les endpoints BACK pour les EPICs 11-14.
 
 ---
 
@@ -273,9 +273,9 @@ Tous les endpoints requis sont implémentés :
 - [x] **RGPD oppositions list** ✅ EPIC 10/LOT 10.6
 - [x] **RGPD disputes list** ✅ EPIC 10/LOT 10.6
 - [x] **Dispute resolution endpoint** ✅ EPIC 10/LOT 10.6
-- [ ] **Violations registry endpoints** → EPIC 9 (frontend dashboard uniquement)
+- [x] **Violations registry endpoints** ✅ `/api/incidents/*` (CRUD, stats, export)
 
-**Statut EPIC 12** : ✅ **97% des prérequis backend satisfaits** (violations = nice-to-have)
+**Statut EPIC 12** : ✅ **100% des prérequis backend satisfaits**
 
 ### 5.3 Avant Développement EPIC 11 (Super Admin)
 
@@ -344,9 +344,9 @@ Tous les endpoints requis sont implémentés :
    - 180 tests passing
    - Cookie consent, CGU, Art. 18/21/22, pages légales
 
-**Total Backend** : ✅ **492+ tests** | ✅ **33 LOTs** | ✅ **10 EPICs**
+**Total Backend** : ✅ **720+ tests** | ✅ **42 LOTs** | ✅ **12 EPICs**
 
-➡️ **EPIC 11-13 Frontend : Prêt à démarrer (100% prérequis satisfaits)**
+➡️ **EPIC 11-12 Frontend : ✅ TERMINÉS** | **EPIC 13 : TODO**
 
 ### 6.4 Score RGPD Après Implémentation EPIC 10
 
@@ -359,14 +359,13 @@ Tous les endpoints requis sont implémentés :
 | Transparence (Art. 13-14) | 0% | **100%** |
 | **Global Backend** | **~76%** | **~96%** |
 
-**Conformité RGPD** : ✅ **43/45 articles** (96%)
+**Conformité RGPD** : ✅ **44/45 articles** (98%)
 
-**Articles restants (2)** :
-- Art. 12 : Exercice facilité des droits (interfaces frontend EPIC 13)
-- Art. 23 : Restrictions légales (cas particuliers)
+**Article restant (1)** :
+- Art. 23 : Restrictions légales (cas particuliers - non applicable)
 
 ---
 
-**Document mis à jour le 2026-01-05**  
-**Version 2.1**  
+**Document mis à jour le 2026-01-21**
+**Version 2.2**  
 **Auteur** : Équipe Plateforme RGPD-IA

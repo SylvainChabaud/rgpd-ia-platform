@@ -522,7 +522,7 @@ npm run test:lot4     # Tests LOT 4 uniquement
 ✅ EPIC 10 : RGPD Legal & Compliance (Backend + Docs)
 ✅ EPIC 11 : Back Office Super Admin (Frontend PLATFORM)
 
-🟡 EPIC 12 : Back Office Tenant Admin (Frontend TENANT) — EN COURS (LOT 12.0-12.2 ✅)
+✅ EPIC 12 : Back Office Tenant Admin (Frontend TENANT) — TERMINÉ (LOT 12.0-12.4 ✅, 63 tests UI)
 🚧 EPIC 13 : Front User (Frontend utilisateur final)
 🚧 EPIC 14 : Sécurité & Gouvernance RGPD Plateforme
 🚧 EPIC 15 : Catalogue Outils IA (Gestion Platform Admin)
@@ -545,7 +545,7 @@ npm run test:lot4     # Tests LOT 4 uniquement
 - Tests : Validation RGPD automatique
 
 **Prochaines étapes** :
-- EPIC 12 : Back Office Tenant Admin (LOT 12.0-12.2 ✅, LOT 12.3-12.4 en cours)
+- ~~EPIC 12 : Back Office Tenant Admin~~ ✅ **TERMINÉ** (LOT 12.0-12.4 ✅, 63 tests UI)
 - EPIC 13 : Front User (interface utilisateur final)
 - EPIC 14 : Sécurité & Gouvernance RGPD Plateforme (monitoring, escalades)
 - EPIC 15 : Catalogue Outils IA (gestion des outils IA par le Platform Admin)

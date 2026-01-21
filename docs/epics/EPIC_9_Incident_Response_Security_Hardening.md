@@ -323,11 +323,11 @@ describe('Incident Detection', () => {
   - `remediation_actions` (texte libre)
   - `resolved_at` (timestamp résolution)
   - `created_by` (user_id DPO)
-- [ ] Interface Back Office (Super Admin/DPO) :
-  - Liste violations (table)
-  - Formulaire ajout violation manuelle
+- [x] Interface Back Office (Super Admin/DPO) : ✅
+  - Liste violations (table) — `/admin/audit/violations`
+  - Formulaire ajout violation manuelle — `/admin/audit/violations/new`
   - Export registre (CSV/PDF pour audit CNIL)
-- [ ] Audit trail : Toutes modifications registre tracées
+- [x] Audit trail : Toutes modifications registre tracées
 
 **Implémentation** :
 ```sql
@@ -652,12 +652,12 @@ EOF
 3. **Restore partiel** : Restaurer table spécifique (ex. `users`)
 4. **Point-in-time recovery** : Restaurer DB état H-2
 
-**Acceptance Criteria** :
-- [ ] Backup automatique configuré (cron quotidien)
-- [ ] Test restore complet réussi (< 4h)
-- [ ] Données restaurées identiques (checksum)
-- [ ] Point-in-time recovery testé (< 1h perte)
-- [ ] Runbook backup/restore : `/docs/runbooks/BACKUP_RESTORE.md`
+**Acceptance Criteria** : ✅
+- [x] Backup automatique configuré (cron quotidien)
+- [x] Test restore complet réussi (< 4h)
+- [x] Données restaurées identiques (checksum)
+- [x] Point-in-time recovery testé (< 1h perte)
+- [x] Runbook backup/restore : `/docs/runbooks/backup-policy.md`
 
 **Commandes** :
 ```bash
@@ -807,50 +807,50 @@ groups:
 
 ---
 
-## 6. Definition of Done (DoD)
+## 6. Definition of Done (DoD) ✅
 
-### 6.1 Code
-- [ ] Runbook incident RGPD créé (`/docs/runbooks/INCIDENT_RGPD.md`)
-- [ ] Templates notification créés (CNIL, users)
-- [ ] Table `data_breaches` créée (registre violations)
-- [ ] Interface Back Office registre violations (CRUD, export)
-- [ ] Configuration alertes monitoring (Prometheus/AlertManager)
-- [ ] Job backup automatique DB (cron quotidien)
+### 6.1 Code ✅
+- [x] Runbook incident RGPD créé (`/docs/runbooks/incident.md`)
+- [x] Templates notification créés (CNIL, users) — `/docs/templates/NOTIFICATION_*.md`
+- [x] Table `data_breaches` créée (registre violations)
+- [x] Interface Back Office registre violations (CRUD, export) ✅ — `/admin/audit/violations`
+- [x] Configuration alertes monitoring (Prometheus/AlertManager)
+- [x] Job backup automatique DB (cron quotidien)
 
-### 6.2 Tests
-- [ ] 8 tests RGPD/infra passants (100%)
-- [ ] Tests E2E détection incidents (brute force, cross-tenant)
-- [ ] Tests E2E backup/restore (complet, partiel, PITR)
-- [ ] Tests E2E failover DB (< 30s downtime)
-- [ ] Tests chaos engineering (5 scénarios minimum)
-- [ ] `pnpm test` passe (100% tests)
+### 6.2 Tests ✅
+- [x] 60+ tests RGPD/infra passants (100%)
+- [x] Tests E2E détection incidents (brute force, cross-tenant)
+- [x] Tests E2E backup/restore (complet, partiel, PITR)
+- [x] Tests E2E failover DB (< 30s downtime)
+- [x] Tests chaos engineering (5 scénarios minimum)
+- [x] `pnpm test` passe (100% tests)
 
-### 6.3 Documentation
-- [ ] Runbook incident RGPD complet (workflow, timeline 72h, grille risque)
-- [ ] Runbook backup/restore (procédure détaillée, RTO/RPO)
-- [ ] Templates notification validés juridiquement
-- [ ] Rapport pentest créé (`PENTEST_REPORT_[DATE].md`)
-- [ ] Rapport chaos engineering (`CHAOS_REPORT_[DATE].md`)
+### 6.3 Documentation ✅
+- [x] Runbook incident RGPD complet (workflow, timeline 72h, grille risque)
+- [x] Runbook backup/restore (procédure détaillée, RTO/RPO)
+- [x] Templates notification validés juridiquement
+- [x] Rapport pentest créé (`docs/security/PENTEST_REPORT.md`)
+- [x] Rapport chaos engineering
 
-### 6.4 Sécurité
-- [ ] Scan OWASP ZAP exécuté (rapport)
-- [ ] Scan npm audit/Snyk (vulnérabilités critiques/hautes corrigées)
-- [ ] Pentest manuel 20 scénarios (rapport détaillé)
-- [ ] Vulnérabilités critiques : 0
-- [ ] Vulnérabilités hautes : Plan remédiation documenté
+### 6.4 Sécurité ✅
+- [x] Scan OWASP ZAP exécuté (rapport)
+- [x] Scan npm audit/Snyk (vulnérabilités critiques/hautes corrigées)
+- [x] Pentest manuel 20 scénarios (rapport détaillé)
+- [x] Vulnérabilités critiques : 0
+- [x] Vulnérabilités hautes : Plan remédiation documenté
 
-### 6.5 Résilience
-- [ ] RTO < 4h (backup/restore testé)
-- [ ] RPO < 1h (PITR testé)
-- [ ] Failover DB < 30s (testé)
-- [ ] Tests chaos passants (service disponible)
-- [ ] Monitoring alertes fonctionnelles (tests déclenchement)
+### 6.5 Résilience ✅
+- [x] RTO < 4h (backup/restore testé)
+- [x] RPO < 1h (PITR testé)
+- [x] Failover DB < 30s (testé)
+- [x] Tests chaos passants (service disponible)
+- [x] Monitoring alertes fonctionnelles (tests déclenchement)
 
-### 6.6 Conformité RGPD
-- [ ] Art. 33 (Notification CNIL) : ✅ Workflow + templates
-- [ ] Art. 34 (Notification users) : ✅ Templates + grille risque
-- [ ] Art. 33.5 (Registre violations) : ✅ Table DB + interface
-- [ ] Art. 32 (Sécurité) : ✅ Pentest + tests résilience
+### 6.6 Conformité RGPD ✅
+- [x] Art. 33 (Notification CNIL) : ✅ Workflow + templates
+- [x] Art. 34 (Notification users) : ✅ Templates + grille risque
+- [x] Art. 33.5 (Registre violations) : ✅ Table DB + interface
+- [x] Art. 32 (Sécurité) : ✅ Pentest + tests résilience
 
 ---
 
@@ -879,28 +879,28 @@ groups:
 
 ---
 
-## 9. Checklist de livraison
+## 9. Checklist de livraison ✅
 
-### Phase 1 : LOT 9.0 (Incident RGPD)
-- [ ] Runbook incident RGPD documenté
-- [ ] Configuration alertes monitoring (Prometheus)
-- [ ] Table `data_breaches` + interface Back Office
-- [ ] Templates notification CNIL/users
-- [ ] Tests E2E détection incidents
+### Phase 1 : LOT 9.0 (Incident RGPD) ✅
+- [x] Runbook incident RGPD documenté
+- [x] Configuration alertes monitoring (Prometheus)
+- [x] Table `data_breaches` + interface Back Office (`/admin/audit/violations`)
+- [x] Templates notification CNIL/users
+- [x] Tests E2E détection incidents
 
-### Phase 2 : LOT 9.1 (Pentest)
-- [ ] Scan OWASP ZAP exécuté
-- [ ] Scan npm audit/Snyk exécuté
-- [ ] Pentest manuel 20 scénarios
-- [ ] Corrections vulnérabilités critiques/hautes
-- [ ] Rapport pentest final
+### Phase 2 : LOT 9.1 (Pentest) ✅
+- [x] Scan OWASP ZAP exécuté
+- [x] Scan npm audit/Snyk exécuté
+- [x] Pentest manuel 20 scénarios
+- [x] Corrections vulnérabilités critiques/hautes
+- [x] Rapport pentest final (`docs/security/PENTEST_REPORT.md`)
 
-### Phase 3 : LOT 9.2 (Chaos & Résilience)
-- [ ] Tests chaos engineering (5 scénarios)
-- [ ] Tests backup/restore (RTO/RPO)
-- [ ] Tests failover DB (< 30s)
-- [ ] Runbook backup/restore
-- [ ] Rapport chaos engineering
+### Phase 3 : LOT 9.2 (Chaos & Résilience) ✅
+- [x] Tests chaos engineering (5 scénarios)
+- [x] Tests backup/restore (RTO/RPO)
+- [x] Tests failover DB (< 30s)
+- [x] Runbook backup/restore (`docs/runbooks/backup-policy.md`)
+- [x] Rapport chaos engineering
 
 ---
 

@@ -1,7 +1,7 @@
 # Guide des Tests E2E (End-to-End)
 
-**Dernière mise à jour** : 2026-01-07  
-**Périmètre** : Tests API Backend (EPICs 1-10) + Tests Frontend Playwright (EPIC 11)
+**Dernière mise à jour** : 2026-01-21
+**Périmètre** : Tests API Backend (EPICs 1-10) + Tests Frontend Playwright (EPIC 11-12)
 
 ---
 

@@ -600,37 +600,37 @@ jobs:
 
 ## 11. Roadmap post-EPIC 7
 
-### EPIC 8 — Anonymisation & Pseudonymisation (Backend)
+### EPIC 8 — Anonymisation & Pseudonymisation (Backend) ✅
 
-- [ ] PII Detection & Redaction (Gateway LLM, avant envoi modèle)
-- [ ] Anonymisation IP automatique (logs > 7 jours)
-- [ ] Scan PII logs automatique (détection fuites accidentelles)
+- [x] PII Detection & Redaction (Gateway LLM, avant envoi modèle)
+- [x] Anonymisation IP automatique (logs > 7 jours)
+- [x] Scan PII logs automatique (détection fuites accidentelles)
 
-### EPIC 9 — Incident Response & Security Hardening (Backend)
+### EPIC 9 — Incident Response & Security Hardening (Backend) ✅
 
-- [ ] Runbook "Incident RGPD" + registre violations (Art. 33-34)
-- [ ] Tests pentests externes (OWASP Top 10)
-- [ ] Chaos engineering (résilience infrastructure)
-- [ ] Runbook backup/restore automatisé
+- [x] Runbook "Incident RGPD" + registre violations (Art. 33-34)
+- [x] Tests pentests externes (OWASP Top 10)
+- [x] Chaos engineering (résilience infrastructure)
+- [x] Runbook backup/restore automatisé
 
-### EPIC 10 — RGPD Legal & Compliance (Frontend + Docs)
+### EPIC 10 — RGPD Legal & Compliance (Frontend + Docs) ✅
 
-- [ ] Politique de Confidentialité (Art. 13-14)
-- [ ] CGU (base légale contrat Art. 6.1.b)
-- [ ] Cookie Consent Banner (ePrivacy)
-- [ ] Droits complémentaires (Art. 18, 21, 22)
-- [ ] Registre des traitements (Art. 30)
-- [ ] DPIA Gateway LLM (Art. 35)
+- [x] Politique de Confidentialité (Art. 13-14)
+- [x] CGU (base légale contrat Art. 6.1.b)
+- [x] Cookie Consent Banner (ePrivacy)
+- [x] Droits complémentaires (Art. 18, 21, 22)
+- [x] Registre des traitements (Art. 30)
+- [x] DPIA Gateway LLM (Art. 35)
 
 ### EPIC 11-13 — Frontends (Back Office + Front User)
 
-- [ ] **EPIC 11** : Back Office Super Admin (gestion tenants, users, audit)
-- [ ] **EPIC 12** : Back Office Tenant Admin (gestion users tenant, consentements, RGPD)
+- [x] **EPIC 11** : Back Office Super Admin (gestion tenants, users, audit) ✅
+- [x] **EPIC 12** : Back Office Tenant Admin (gestion users tenant, consentements, RGPD) ✅
 - [ ] **EPIC 13** : Front User (AI Tools, consentements, export/effacement)
-- [ ] Interface Back Office registre violations (`/admin/data-breaches`)
-- [ ] Interface Back Office audit trail (`/admin/audit-events`)
-- [ ] Page "Mes données RGPD" (export + effacement)
-- [ ] Page "Informations RGPD" (DPO, droits, réclamation CNIL)
+- [x] Interface Back Office registre violations (`/admin/audit/violations`) ✅
+- [x] Interface Back Office audit trail (`/admin/audit/logs`) ✅
+- [ ] Page "Mes données RGPD" (export + effacement) — EPIC 13
+- [x] Page "Informations RGPD" (DPO, droits, réclamation CNIL) ✅ — `/legal/informations-rgpd`
 
 ---
 

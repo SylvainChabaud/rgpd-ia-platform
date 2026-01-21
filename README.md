@@ -21,7 +21,7 @@ Cette plateforme permet aux entreprises d'utiliser des services LLM (OpenAI, Oll
 
 ## �️ Je suis perdu(e), par où commencer ?
 
-**Le projet est devenu gros (492+ tests, 33 LOTs, 10 EPICs).** 
+**Le projet est devenu gros (783+ tests, 42 LOTs, 12 EPICs).** 
 
 📖 **Lire d'abord** : [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) — Explique simplement :
 - **Scripts/** : Qui les utilise ? Quand ?
@@ -194,9 +194,10 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 | **Anonymisation** | ✅ 100% | 110 tests | EPIC 8 complet |
 | **Security & Incidents** | ✅ 100% | 60 tests | EPIC 9 complet |
 | **Legal & Compliance** | ✅ 100% | 180 tests | EPIC 10 complet |
-| **Couverture globale** | ✅ 96% | 43/45 articles | Production-ready |
+| **Back Office** | ✅ 100% | 63 tests UI | EPIC 11-12 complet |
+| **Couverture globale** | ✅ 98% | 44/45 articles | Production-ready |
 
-**Articles conformes (43/45)**
+**Articles conformes (44/45)**
 - ✅ **Art. 5** : Tous principes (minimisation, retention, intégrité) - 100%
 - ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke, CGU acceptance - 100%
 - ✅ **Art. 13-14** : Transparence, information (Politique confidentialité, pages légales) - 100%

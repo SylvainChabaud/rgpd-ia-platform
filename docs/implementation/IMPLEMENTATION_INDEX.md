@@ -2,8 +2,8 @@
 
 > **Objectif** : Table de correspondance exhaustive entre LOTs (TASKS.md), fichiers implémentés et tests RGPD.
 
-**Dernière mise à jour** : 2026-01-13
-**Status global** : ✅ EPICs 1-11 TERMINÉS | 🟡 EPIC 12 EN COURS (LOT 12.0-12.2 ✅, LOT 12.3-12.4 ❌)
+**Dernière mise à jour** : 2026-01-21
+**Status global** : ✅ EPICs 1-12 TERMINÉS (LOT 12.0-12.4 ✅)
 
 ---
 
@@ -22,9 +22,9 @@
 | **EPIC 9** | 9.0-9.2 (3 LOTs) | [LOT9_IMPLEMENTATION.md](LOT9_IMPLEMENTATION.md) | ✅ 100% | 60 |
 | **EPIC 10** | 10.0-10.7 (8 LOTs) | [LOT10_IMPLEMENTATION.md](LOT10_IMPLEMENTATION.md) | ✅ 100% | 180 |
 | **EPIC 11** | 11.0-11.3 (4 LOTs) | [LOT11.0-11.1_IMPLEMENTATION.md](LOT11.0-11.1_IMPLEMENTATION.md), [LOT11.2_IMPLEMENTATION.md](LOT11.2_IMPLEMENTATION.md), [LOT11.3_IMPLEMENTATION.md](LOT11.3_IMPLEMENTATION.md) | ✅ **VALIDÉ** | 139 |
-| **EPIC 12** | 12.0-12.2 (3/5 LOTs) | [LOT12.0_IMPLEMENTATION.md](LOT12.0_IMPLEMENTATION.md), [LOT12.1_IMPLEMENTATION.md](LOT12.1_IMPLEMENTATION.md), [LOT12.2_IMPLEMENTATION.md](LOT12.2_IMPLEMENTATION.md) | 🟡 **EN COURS** | ~50 |
+| **EPIC 12** | 12.0-12.4 (5/5 LOTs) | [LOT12.0_IMPLEMENTATION.md](LOT12.0_IMPLEMENTATION.md), [LOT12.1_IMPLEMENTATION.md](LOT12.1_IMPLEMENTATION.md), [LOT12.2_IMPLEMENTATION.md](LOT12.2_IMPLEMENTATION.md), [LOT12.3_IMPLEMENTATION.md](LOT12.3_IMPLEMENTATION.md), [LOT12.4_IMPLEMENTATION.md](LOT12.4_IMPLEMENTATION.md) | ✅ **TERMINÉ** | ~113 |
 
-**Total** : **40 LOTs implémentés** (37 EPICs 1-11 + 3 EPIC 12), **720+ tests** (191 fichiers)
+**Total** : **42 LOTs implémentés** (37 EPICs 1-11 + 5 EPIC 12), **783+ tests** (191 fichiers + 63 UI tests)
 
 > **Source** : Code source analysé le 2026-01-13
 > - **Migrations** : 23 fichiers SQL (001-023) + 3 seeds
@@ -954,10 +954,11 @@ grep "LOT" migrations/*.sql
 
 ---
 
-## EPIC 12 — Back-Office Tenant Admin 🟡
+## EPIC 12 — Back-Office Tenant Admin ✅
 
-> **Statut** : 3/5 LOTs terminés (12.0, 12.1, 12.2 ✅ | 12.3, 12.4 ❌ TODO)
+> **Statut** : 5/5 LOTs terminés (12.0, 12.1, 12.2, 12.3, 12.4 ✅)
 > **Dépendances** : EPIC 11 (terminé)
+> **Tests UI** : 63/63 passants (100%) — Platform Admin (29), Tenant Admin (8), DPO (26)
 
 ### LOT 12.0 — Dashboard Tenant + Activity Feed ✅ **TERMINÉ**
 
@@ -1034,25 +1035,53 @@ grep "LOT" migrations/*.sql
 
 ---
 
-### LOT 12.3 — RGPD Management ❌ **TODO**
+### LOT 12.3 — RGPD Management ✅ **TERMINÉ**
 
-**Scope prévu** :
-- [ ] Dashboard demandes RGPD (export, suppression, opposition)
-- [ ] Workflow validation demandes
-- [ ] Automatisation réponses RGPD
-- [ ] Traçabilité complète
+**Fichiers implémentés** :
+- `app/(tenant-admin)/portal/rgpd/page.tsx` — Dashboard RGPD
+- `app/(tenant-admin)/portal/rgpd/exports/page.tsx` — Demandes d'export (Art. 15/20)
+- `app/(tenant-admin)/portal/rgpd/deletions/page.tsx` — Demandes d'effacement (Art. 17)
+- `app/api/tenants/[id]/rgpd/exports/route.ts` — API exports
+- `app/api/tenants/[id]/rgpd/deletions/route.ts` — API deletions
+- `src/lib/api/hooks/useRgpdRequests.ts` — Hook React Query
+
+**Fonctionnalités** :
+- [x] Dashboard demandes RGPD (export, suppression, opposition)
+- [x] Workflow validation demandes
+- [x] Automatisation réponses RGPD
+- [x] Traçabilité complète
+
+**Tests** : ~15 tests
+**Document** : [LOT12.3_IMPLEMENTATION.md](LOT12.3_IMPLEMENTATION.md)
 
 ---
 
-### LOT 12.4 — Fonctionnalités DPO ❌ **TODO**
+### LOT 12.4 — Fonctionnalités DPO ✅ **TERMINÉ**
 
-**Scope prévu** :
-- [ ] Vue consolidée conformité tenant
-- [ ] Alertes proactives
-- [ ] Rapports périodiques
-- [ ] Interface DPO dédiée
+**Fichiers implémentés** :
+- `app/(tenant-admin)/portal/dpia/page.tsx` — Liste DPIA tenant
+- `app/(tenant-admin)/portal/dpia/[id]/page.tsx` — Détails DPIA + validation DPO
+- `app/(tenant-admin)/portal/registre/page.tsx` — Registre Art. 30
+- `app/api/tenants/[id]/dpia/route.ts` — API DPIA
+- `app/api/tenants/[id]/registre/route.ts` — API registre
+- `src/lib/api/hooks/useDpia.ts` — Hook DPIA
+- `src/lib/api/hooks/useRegistre.ts` — Hook Registre
 
-> **Note** : EPIC 12 LOTs 12.3-12.4 sont planifiés. Les fonctionnalités de protection avancées (escalades, monitoring conformité cross-tenant) sont dans **EPIC 14**.
+**Fonctionnalités** :
+- [x] Vue consolidée conformité tenant
+- [x] DPIA (Art. 35) — Création, validation DPO, export PDF
+- [x] Registre des traitements (Art. 30) — Auto-généré, export PDF/CSV
+- [x] Sidebar conditionnelle DPO (menus DPIA + Registre)
+- [x] Workflow approbation/rejet DPIA
+
+**Tests UI** : 63/63 passants (100%)
+- Platform Admin : 29 tests (17 Functional + 2 Security + 10 RGPD)
+- Tenant Admin : 8 tests (3 Functional + 4 Security + 1 RGPD)
+- DPO : 26 tests (11 Functional + 7 RGPD + 8 Security)
+
+**Document** : [LOT12.4_IMPLEMENTATION.md](LOT12.4_IMPLEMENTATION.md)
+
+> **Note** : EPIC 12 est **TERMINÉ**. Les fonctionnalités de protection avancées (escalades, monitoring conformité cross-tenant) sont dans **EPIC 14**.
 
 ---
 
@@ -1100,7 +1129,7 @@ grep "LOT" migrations/*.sql
 ---
 
 **Maintenu par** : Claude Code
-**Dernière mise à jour** : 2026-01-13  
-**Version** : 1.3
+**Dernière mise à jour** : 2026-01-21
+**Version** : 1.4
 
-**Statut actuel** : ✅ **EPICs 1-11 VALIDÉS** — 670 tests passing — Production-ready backend
+**Statut actuel** : ✅ **EPICs 1-12 VALIDÉS** — 783+ tests passing (720 backend + 63 UI) — Production-ready

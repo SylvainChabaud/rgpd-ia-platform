@@ -2,10 +2,10 @@
 
 > **Accueil de la documentation RGPD** : Tous les documents permettant de comprendre et vérifier la conformité de la plateforme RGPD-IA aux exigences légales (RGPD, ePrivacy).
 
-**Dernière mise à jour** : 2026-01-05
-**Version** : 3.0 (EPIC 10 intégré)
-**Conformité globale** : ✅ ~96% (43/45 articles)
-**Status** : ✅ Production-ready backend + Security + Legal | ⚠️ Frontend partiel (cookies + pages légales OK)
+**Dernière mise à jour** : 2026-01-21
+**Version** : 3.1 (EPIC 12 intégré)
+**Conformité globale** : ✅ ~98% (44/45 articles)
+**Status** : ✅ Production-ready backend + Security + Legal + Back Office (EPIC 11-12) | ⚠️ Front User (EPIC 13) TODO
 
 ---
 
@@ -269,7 +269,7 @@ Besoin de vérifier un article spécifique ? Consultez :
 | **Art. 33-34** | Violations CNIL | docs/runbooks/incident.md + EPIC 9 | ✅ 100% |
 | **Art. 35** | DPIA | dpia.md | ✅ 100% |
 | **Cookies** | Directive ePrivacy | RGPD_MATRICE_CONFORMITE.md (Chapitre X) | ✅ 100% |
-| **Art. 1-99** | Vue exhaustive | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ✅ ~95% |
+| **Art. 1-99** | Vue exhaustive | RGPD_MATRICE_CONFORMITE.md (Annexe A) | ✅ ~98% |
 | **Front vs Back** | Cohérence implémentation | RGPD_MATRICE_CONFORMITE.md (Annexe B) | ✅ 100% |
 
 ---

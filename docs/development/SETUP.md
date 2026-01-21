@@ -389,5 +389,5 @@ Password: devpass
 
 ---
 
-**Dernière mise à jour**: 2026-01-09
-**Version du guide**: 1.0.0
+**Dernière mise à jour**: 2026-01-21
+**Version du guide**: 1.1.0

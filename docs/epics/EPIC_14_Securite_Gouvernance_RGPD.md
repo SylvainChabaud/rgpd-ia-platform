@@ -19,12 +19,12 @@ EPIC 11 (Back Office Super Admin) ─────┐
          LOT 11.0-11.3 ✅              │
                                        ├──▶ EPIC 14 (Sécurité & Gouvernance)
 EPIC 12 (Back Office Tenant Admin) ────┘           LOT 14.0
-         LOT 12.0-12.4 (12.4 = API escalade)
+         LOT 12.0-12.4 ✅ (terminé)
 ```
 
 **Problème initial** : Les fonctionnalités de protection plateforme (escalades, monitoring conformité) nécessitent :
 1. Le dashboard Super Admin (EPIC 11 - ✅ terminé)
-2. L'API d'escalade côté tenant/DPO (EPIC 12 LOT 12.4 - à faire)
+2. L'API d'escalade côté tenant/DPO (EPIC 12 LOT 12.4 - ✅ terminé)
 
 **Solution** : Créer EPIC 14 qui dépend des deux, évitant ainsi les dépendances circulaires.
 
@@ -199,7 +199,7 @@ interface ComplianceIssue {
 
 | LOT | Description | Durée estimée | Dépendances |
 |-----|-------------|---------------|-------------|
-| **LOT 14.0** | Monitoring Conformité + Escalades + Actions | 5 jours | LOT 11.3 ✅, LOT 12.4 |
+| **LOT 14.0** | Monitoring Conformité + Escalades + Actions | 5 jours | LOT 11.3 ✅, LOT 12.4 ✅ |
 
 **Total EPIC 14** : ~5 jours (1 semaine)
 
@@ -238,7 +238,7 @@ interface ComplianceIssue {
 |------|-----|------------------|
 | **EPIC 11** | LOT 11.1 | API suspension tenant (réutilisée) |
 | **EPIC 11** | LOT 11.3 | Dashboard existant (widget ajouté) |
-| **EPIC 12** | LOT 12.4 | API escalade côté tenant + bouton UI |
+| **EPIC 12** | LOT 12.4 ✅ | API escalade côté tenant + bouton UI |
 
 ### 4.2 Flux de données
 
@@ -321,7 +321,7 @@ interface ComplianceIssue {
 
 **Prérequis EPIC 14** :
 - EPIC 11 ✅ TERMINÉ (dashboard Super Admin)
-- EPIC 12 LOT 12.4 (API escalade côté tenant)
+- EPIC 12 LOT 12.4 ✅ TERMINÉ (API escalade côté tenant)
 
 **Après complétion EPIC 14** :
 1. **Monitoring avancé** : Alerting email/SMS pour incidents critiques

@@ -2,7 +2,7 @@
 
 > **Objectif** : Comprendre simplement qui fait quoi, quand et pourquoi.
 
-**Dernière mise à jour** : 2026-01-13
+**Dernière mise à jour** : 2026-01-21
 
 ---
 
@@ -205,10 +205,13 @@ Si NON → Refuse (403 error)
 | EPIC 9 | Incidents | 4 endpoints | 60 tests | ✅ 100% |
 | **EPIC 10** | **Legal Compliance** | **11 endpoints** | **180 tests** | **✅ 100%** |
 
-**Total** : 33 fichiers, 492+ tests RGPD
+**Total** : 42 LOTs, 783+ tests RGPD (720 backend + 63 UI)
+
+**Complétés** :
+- [x] EPIC 1-12 (Backend + Back Office Super Admin + Tenant Admin)
 
 **TODOs** :
-- [ ] EPIC 11-13 (backoffice, UI admin/user)
+- [ ] EPIC 13-14 (Front User + Gouvernance RGPD)
 
 ---
 
@@ -304,7 +307,7 @@ Si NON → Refuse (403 error)
 |------|------|----------|--------|
 | **EPIC 10** | Legal Compliance (Pages légales, CGU, Cookie, Droits Art. 18/21/22) | Legal/DPO/Users | ✅ COMPLET |
 | **EPIC 11** | Back-office Super Admin (UI) | Admin | ✅ COMPLET |
-| **EPIC 12** | Back-office Tenant Admin (UI) | Client | 🟡 EN COURS |
+| **EPIC 12** | Back-office Tenant Admin (UI) | Client | ✅ COMPLET |
 | **EPIC 13** | Interface Utilisateur (signup, consent) | End-user | 🔴 TODO |
 | **EPIC 14** | Sécurité & Gouvernance RGPD Plateforme | Admin | 🔴 TODO |
 
@@ -344,8 +347,7 @@ Si NON → Refuse (403 error)
 ### Q5: "Y a-t-il des TODOs non documentés?"
 
 **Réponse simple** :
-- ✅ EPIC 1-11 = Terminés (Backend + Back Office Super Admin)
-- 🟡 EPIC 12 = En cours (Back Office Tenant Admin - LOT 12.0-12.2 ✅)
+- ✅ EPIC 1-12 = Terminés (Backend + Back Office Super Admin + Tenant Admin)
 - ❌ EPIC 13-14 = TODO (Front User + Gouvernance RGPD)
 - 📝 Voir [TASKS.md](TASKS.md) pour détails complets
 
@@ -415,5 +417,5 @@ Je vais l'expliquer simplement.
 ---
 
 **Maintenu par** : Claude Code (Sonnet 4.5)
-**Dernière mise à jour** : 2026-01-05
-**Version** : 1.1
+**Dernière mise à jour** : 2026-01-21
+**Version** : 1.2

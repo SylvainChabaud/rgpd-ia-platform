@@ -1,7 +1,7 @@
 # Tests - RGPD-IA Platform
 
-**Dernière mise à jour** : 2026-01-13
-**Total tests** : **720+ tests** (191 fichiers : 123 backend/unit, 35 backend/integration, 4 backend/e2e, 17 frontend/unit, 9 e2e, 1 rgpd, 2 integration)
+**Dernière mise à jour** : 2026-01-21
+**Total tests** : **783+ tests** (191 fichiers + 63 tests UI EPIC 12)
 **Status** : ✅ **100% passing**
 
 ---
@@ -48,10 +48,10 @@ tests/
 
 ```bash
 # Tous les tests (backend + frontend)
-npm test                           # 652 tests
+npm test                           # 783+ tests
 
 # Par scope
-npm run test:backend               # ~492 tests backend
+npm run test:backend               # ~720 tests backend
 npm run test:frontend              # 150 tests frontend (Jest + RTL)
 npm run test:e2e                   # 15 tests Playwright
 
@@ -189,7 +189,7 @@ npx playwright test --debug        # Mode debug
   - **🆕 backoffice-login.test.tsx** : 7 tests (LOT 11.0)
 - **E2E** : 15 tests Playwright (100% pass rate)
 
-**Total** : **720+ tests** → **100% passing** ✅
+**Total** : **783+ tests** (720 backend/frontend + 63 UI) → **100% passing** ✅
 
 ---
 
@@ -370,5 +370,5 @@ npm run test:integration -- platform-users-api.test.ts
 ---
 
 **Maintenu par** : Équipe Dev + QA
-**Dernière validation** : 2026-01-13
-**Status** : ✅ **TOUS TESTS PASSING** (720+ tests, 191 fichiers) — Ready to deploy
+**Dernière validation** : 2026-01-21
+**Status** : ✅ **TOUS TESTS PASSING** (783+ tests, 191 fichiers + 63 UI) — Ready to deploy

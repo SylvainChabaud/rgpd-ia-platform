@@ -452,4 +452,4 @@ Pendant l'exécution :
 
 ---
 
-**Dernière mise à jour** : 2026-01-02
+**Dernière mise à jour** : 2026-01-21

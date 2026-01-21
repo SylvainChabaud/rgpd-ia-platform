@@ -26,7 +26,7 @@
 | **EPIC 9** | Incident Response & Security Hardening (Backend) | ✅ 100% | LOT 9.0-9.2 |
 | **EPIC 10** | RGPD Legal & Compliance (Backend + Frontend + Docs) | ✅ 100% | LOT 10.0-10.7 |
 | **EPIC 11** | Back Office Super Admin (Frontend PLATFORM) | ✅ 100% | LOT 11.0-11.3 |
-| **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | 🟡 EN COURS | LOT 12.0-12.4 |
+| **EPIC 12** | Back Office Tenant Admin (Frontend TENANT) | ✅ 100% | LOT 12.0-12.4 |
 | **EPIC 13** | Front User (Frontend utilisateur final) | ❌ TODO | LOT 13.0-13.4 |
 | **EPIC 14** | Sécurité & Gouvernance RGPD Plateforme | ❌ TODO | LOT 14.0 |
 | **EPIC 15** | Catalogue Outils IA (Gestion Platform Admin) | ❌ TODO | LOT 15.0-15.2 |
@@ -55,12 +55,14 @@ Références de cadrage (utiles) :
 - `docs/epics/Epic 6 — Stack Ia Docker Rgpd-ready (industrialisation).pdf` (EPIC 6)
 - `docs/epics/Epic 7 — Kit Conformité & Audit Rgpd (ia).pdf` (EPIC 7)
 
-**EPICs 8-14 (Markdown - Phase 2+ en cours)** :
-- `docs/epics/EPIC_8_Anonymisation_Pseudonymisation.md` (EPIC 8)
-- `docs/epics/EPIC_9_Incident_Response_Security_Hardening.md` (EPIC 9)
-- `docs/epics/EPIC_10_RGPD_Legal_Compliance.md` (EPIC 10)
+**EPICs 8-12 (Markdown - ✅ Terminés)** :
+- `docs/epics/EPIC_8_Anonymisation_Pseudonymisation.md` (EPIC 8) ✅
+- `docs/epics/EPIC_9_Incident_Response_Security_Hardening.md` (EPIC 9) ✅
+- `docs/epics/EPIC_10_RGPD_Legal_Compliance.md` (EPIC 10) ✅
 - `docs/epics/EPIC_11_Back_Office_Super_Admin.md` (EPIC 11) ✅
-- `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (EPIC 12)
+- `docs/epics/EPIC_12_Back_Office_Tenant_Admin.md` (EPIC 12) ✅
+
+**EPICs 13-15 (Markdown - TODO)** :
 - `docs/epics/EPIC_13_Front_User.md` (EPIC 13)
 - `docs/epics/EPIC_14_Securite_Gouvernance_RGPD.md` (EPIC 14)
 - `docs/epics/EPIC_15_Catalogue_Outils_IA.md` (EPIC 15)
@@ -157,12 +159,13 @@ Références de cadrage (utiles) :
    - LOT 11.2 : Gestion Users Plateforme (CRUD) ✅
    - LOT 11.3 : Audit & Monitoring Dashboard ✅
 
-2. 🟡 **EPIC 12** : Back Office Tenant Admin (Frontend TENANT)
+2. ✅ **EPIC 12** : Back Office Tenant Admin (Frontend TENANT) — **TERMINÉ**
    - LOT 12.0 : Dashboard Tenant (Stats + Activity Feed) ✅
    - LOT 12.1 : Gestion Users Tenant (CRUD) ✅
    - LOT 12.2 : Gestion Consentements (Purposes + Tracking) ✅
-   - LOT 12.3 : RGPD Management (Export/Delete Requests + intègre dashboards suspensions/oppositions/contests EPIC 10/LOT 10.6)
-   - LOT 12.4 : Fonctionnalités DPO (DPIA pré-remplis + Registre Art. 30 + Validation workflows + API escalade)
+   - LOT 12.3 : RGPD Management (Export/Delete Requests) ✅
+   - LOT 12.4 : Fonctionnalités DPO (DPIA + Registre Art. 30) ✅
+   - **Tests UI** : 63/63 passants (Platform Admin 29, Tenant Admin 8, DPO 26)
 
 3. ❌ **EPIC 13** : Front User (Frontend utilisateur final)
    - LOT 13.0 : Authentification & Layout User (intègre Cookie Banner EPIC 10/LOT 10.3 + liens footer pages légales EPIC 10/LOT 10.0-10.2)
@@ -178,7 +181,7 @@ Références de cadrage (utiles) :
 
 **Prérequis** :
 - ✅ EPIC 11 terminé (dashboard Super Admin existant)
-- ❌ EPIC 12 LOT 12.4 (API escalade côté tenant/DPO)
+- ✅ EPIC 12 LOT 12.4 terminé (API escalade côté tenant/DPO)
 
 **Ordre** :
 1. ❌ **EPIC 14** : Sécurité & Gouvernance RGPD Plateforme
@@ -2216,7 +2219,7 @@ Le DPO a besoin d'accéder aux données opérationnelles RGPD (LOT 12.3) pour as
 
 **EPIC couverts** : EPIC 14, EPIC 11 (dashboard existant), EPIC 12 (API escalade)
 **Durée estimée** : 5 jours
-**Dépendances** : LOT 11.3 ✅ (dashboard Super Admin), LOT 12.4 (API escalade côté tenant)
+**Dépendances** : LOT 11.3 ✅ (dashboard Super Admin), LOT 12.4 ✅ (API escalade côté tenant)
 
 **Avant implémentation** : lire EPIC 14 (`docs/epics/EPIC_14_Securite_Gouvernance_RGPD.md`) + EPIC 11 (section dashboard) + EPIC 12 (section 7.4.0.1 escalade).
 

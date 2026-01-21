@@ -271,6 +271,6 @@ Ces preuves alimentent le **dossier d’audit EPIC 7**.
 
 **Document normatif — une fonctionnalité non testée RGPD est non livrable.**
 
-**Dernière mise à jour** : 2026-01-20 (ajout tests Art. 32 sécurité, LOT 10.4/10.5 PDF)
-**Statut** : ✅ À jour (EPICs 1-10, LOT 10.4/10.5)
+**Dernière mise à jour** : 2026-01-21 (ajout tests Art. 32 sécurité, LOT 10.4/10.5 PDF, EPIC 11-12 complétés)
+**Statut** : ✅ À jour (EPICs 1-12, LOT 12.4 validé)
 

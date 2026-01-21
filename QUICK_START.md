@@ -2,20 +2,19 @@
 
 > **Référence rapide** : "Que dois-je faire?" → "Voilà comment"
 
-**Dernière mise à jour** : 2026-01-13
+**Dernière mise à jour** : 2026-01-21
 
 ---
 
 ## 📍 Situation actuelle du projet
 
 ```
-Status:    ✅ EPIC 1-11 COMPLÉTÉS (100%)
-           🟡 EPIC 12 EN COURS (LOT 12.0-12.2 ✅)
+Status:    ✅ EPIC 1-12 COMPLÉTÉS (100%)
            ❌ EPIC 13-14 TODO
 Lines:     ~8,000+ lignes code
-Tests:     720+ tests RGPD passing (191 fichiers)
+Tests:     783+ tests RGPD passing (191 fichiers + 63 tests UI)
 Coverage:  ~85-90%
-Version:   1.1 (Backend + Legal + Back Office Super Admin)
+Version:   1.2 (Backend + Legal + Back Office Super Admin + Tenant Admin)
 ```
 
 ---
@@ -116,7 +115,7 @@ Version:   1.1 (Backend + Legal + Back Office Super Admin)
 │   └── audit/                 # Preuves audit
 │       └── evidence.md
 │
-├── tests/                     # 492+ tests RGPD
+├── tests/                     # 783+ tests RGPD
 │   ├── rgpd.*.test.ts        # Tests conformité RGPD
 │   ├── domain.*.test.ts      # Tests domain entities
 │   ├── repository.*.test.ts  # Tests repositories
@@ -266,9 +265,9 @@ Version:   1.1 (Backend + Legal + Back Office Super Admin)
 **A**: **Le code automatiquement** au démarrage. Vous ne lancez rien manuellement.
 
 ### Q: "Qu'est-ce qui reste à faire?"
-**A**: EPIC 10-13 (interfaces admin/user). Voir `TASKS.md` pour détails.
+**A**: EPIC 13-14 (interfaces utilisateur final). Voir `TASKS.md` pour détails.
 
 ---
 
-**Dernière mise à jour** : 2026-01-02
+**Dernière mise à jour** : 2026-01-21
 **Maintenu par** : Claude Code (Sonnet 4.5)

@@ -577,44 +577,44 @@ async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
 
 ---
 
-## 6. Definition of Done (DoD)
+## 6. Definition of Done (DoD) ✅
 
-### 6.1 Code
-- [ ] PII detector implémenté (emails, noms, téléphones)
-- [ ] PII masker implémenté (tokens `[PERSON_1]`, `[EMAIL_1]`)
-- [ ] PII restauration implémentée (reverse mapping)
-- [ ] Gateway LLM intègre redaction (middleware)
-- [ ] Job cron anonymisation IP implémenté
-- [ ] Job cron scan PII logs implémenté
-- [ ] Configuration cron jobs (`cron.yaml` ou équivalent)
+### 6.1 Code ✅
+- [x] PII detector implémenté (emails, noms, téléphones)
+- [x] PII masker implémenté (tokens `[PERSON_1]`, `[EMAIL_1]`)
+- [x] PII restauration implémentée (reverse mapping)
+- [x] Gateway LLM intègre redaction (middleware)
+- [x] Job cron anonymisation IP implémenté
+- [x] Job cron scan PII logs implémenté
+- [x] Configuration cron jobs (`cron.yaml` ou équivalent)
 
-### 6.2 Tests
-- [ ] 15 tests RGPD passants (100%)
-- [ ] Tests unitaires PII detector (95% recall)
-- [ ] Tests intégration Gateway LLM + redaction
-- [ ] Tests job cron anonymisation IP (E2E)
-- [ ] Tests job cron scan PII logs (E2E)
-- [ ] `pnpm test` passe (100% tests)
+### 6.2 Tests ✅
+- [x] 110+ tests RGPD passants (100%)
+- [x] Tests unitaires PII detector (95% recall)
+- [x] Tests intégration Gateway LLM + redaction
+- [x] Tests job cron anonymisation IP (E2E)
+- [x] Tests job cron scan PII logs (E2E)
+- [x] `pnpm test` passe (100% tests)
 
-### 6.3 Documentation
-- [ ] README `src/infrastructure/pii/README.md` (usage detector/masker)
-- [ ] Runbook `docs/runbooks/JOBS_CRON_PII.md` (monitoring jobs)
-- [ ] Mise à jour `LLM_USAGE_POLICY.md` (section pseudonymisation)
-- [ ] Mise à jour `ANALYSE_COUVERTURE_RGPD.md` (✅ EPIC 8 terminé)
+### 6.3 Documentation ✅
+- [x] README `src/infrastructure/pii/README.md` (usage detector/masker)
+- [x] Runbook `docs/runbooks/JOBS_CRON_PII.md` (monitoring jobs)
+- [x] Mise à jour `LLM_USAGE_POLICY.md` (section pseudonymisation)
+- [x] Mise à jour `RGPD_MATRICE_CONFORMITE.md` (✅ EPIC 8 terminé)
 
-### 6.4 Déploiement
-- [ ] Jobs cron configurés (Kubernetes CronJob ou équivalent)
-- [ ] Alertes configurées (email DevOps si PII détectée)
-- [ ] Monitoring métriques :
+### 6.4 Déploiement ✅
+- [x] Jobs cron configurés (Kubernetes CronJob ou équivalent)
+- [x] Alertes configurées (email DevOps si PII détectée)
+- [x] Monitoring métriques :
   - Nombre PII détectées/jour
   - Nombre IPs anonymisées/jour
   - Alertes PII logs/jour
 
-### 6.5 Conformité RGPD
-- [ ] Art. 32 (Pseudonymisation) : ✅ Gateway LLM
-- [ ] Art. 5 (Minimisation) : ✅ PII masquées
-- [ ] ePrivacy (IP anonymisation) : ✅ Job cron
-- [ ] Traçabilité : ✅ Audit PII détection (sans valeurs)
+### 6.5 Conformité RGPD ✅
+- [x] Art. 32 (Pseudonymisation) : ✅ Gateway LLM
+- [x] Art. 5 (Minimisation) : ✅ PII masquées
+- [x] ePrivacy (IP anonymisation) : ✅ Job cron
+- [x] Traçabilité : ✅ Audit PII détection (sans valeurs)
 
 ---
 
@@ -642,31 +642,31 @@ async invokeLLM(request: LLMRequest): Promise<LLMResponse> {
 
 ---
 
-## 9. Checklist de livraison
+## 9. Checklist de livraison ✅
 
-### Phase 1 : LOT 8.0 (PII Detection & Redaction)
-- [ ] Implémentation detector (emails, noms, téléphones)
-- [ ] Implémentation masker (tokens)
-- [ ] Intégration Gateway LLM (middleware)
-- [ ] Tests RGPD passants (PII detection/masking/restoration)
-- [ ] Audit PII détection (sans valeurs)
+### Phase 1 : LOT 8.0 (PII Detection & Redaction) ✅
+- [x] Implémentation detector (emails, noms, téléphones)
+- [x] Implémentation masker (tokens)
+- [x] Intégration Gateway LLM (middleware)
+- [x] Tests RGPD passants (PII detection/masking/restoration)
+- [x] Audit PII détection (sans valeurs)
 
-### Phase 2 : LOT 8.1 (Anonymisation IP)
-- [ ] Job cron anonymisation IP
-- [ ] Fonction anonymisation IPv4/IPv6
-- [ ] Tests RGPD passants (anonymisation > 7j)
-- [ ] Configuration cron (Kubernetes ou équivalent)
+### Phase 2 : LOT 8.1 (Anonymisation IP) ✅
+- [x] Job cron anonymisation IP
+- [x] Fonction anonymisation IPv4/IPv6
+- [x] Tests RGPD passants (anonymisation > 7j)
+- [x] Configuration cron (Kubernetes ou équivalent)
 
-### Phase 3 : LOT 8.2 (Scan PII Logs)
-- [ ] Job cron scan logs
-- [ ] Alertes email DevOps
-- [ ] Tests RGPD passants (détection PII logs)
-- [ ] Configuration alertes (Sentry, Slack, email)
+### Phase 3 : LOT 8.2 (Scan PII Logs) ✅
+- [x] Job cron scan logs
+- [x] Alertes email DevOps
+- [x] Tests RGPD passants (détection PII logs)
+- [x] Configuration alertes (Sentry, Slack, email)
 
-### Phase 4 : Documentation & Monitoring
-- [ ] Documentation complète (README, runbook)
-- [ ] Monitoring métriques (Grafana dashboards)
-- [ ] Mise à jour docs RGPD
+### Phase 4 : Documentation & Monitoring ✅
+- [x] Documentation complète (README, runbook)
+- [x] Monitoring métriques (Grafana dashboards)
+- [x] Mise à jour docs RGPD
 
 ---
 

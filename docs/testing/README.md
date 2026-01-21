@@ -250,8 +250,8 @@ pnpm audit:full
 
 | Document | EPIC | Statut |
 |----------|------|--------|
-| `RGPD_TESTING.md` | 1-11 | ✅ À jour (EPICs 8-11 ajoutés) |
-| `E2E_TESTING_GUIDE.md` | 11 | ✅ Guide Playwright (LOT 11.1) |
+| `RGPD_TESTING.md` | 1-12 | ✅ À jour (EPICs 8-12 couverts) |
+| `E2E_TESTING_GUIDE.md` | 11-12 | ✅ Guide Playwright (LOT 11.1 + 12.x) |
 | `VERIFICATION_REPORT.md` | — | ✅ Rapport de vérification 2026-01-01 |
 | `../implementation/LOT10_IMPLEMENTATION.md` | 10 | ✅ Détails EPIC 10 (27 fichiers, 180 tests) |
 | `../implementation/LOT11_IMPLEMENTATION.md` | 11 | ✅ Détails EPIC 11 (116 tests frontend) |
@@ -292,5 +292,5 @@ pnpm audit:full
 
 ---
 
-**Dernière mise à jour** : 2026-01-07 (sync EPIC 11)  
-**Couverture tests** : **608 tests** au total (492 backend + 116 frontend) = **97% couverture RGPD** (43/45 articles)
+**Dernière mise à jour** : 2026-01-21 (sync EPIC 12)
+**Couverture tests** : **783+ tests** au total (720 backend + 63 UI tests) = **98% couverture RGPD** (44/45 articles)
