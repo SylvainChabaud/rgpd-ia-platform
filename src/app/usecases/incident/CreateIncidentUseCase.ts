@@ -11,6 +11,7 @@
  * EPIC 9 — LOT 9.0 — Incident Response & Security Hardening
  */
 
+import { z } from "zod";
 import type {
   SecurityIncident,
   CreateSecurityIncidentInput,
@@ -19,10 +20,46 @@ import {
   isCnilNotificationRequired,
   isUsersNotificationRequired,
 } from "@/domain/incident";
-import type { SecurityIncidentRepo } from "@/domain/incident";
-import type { IncidentAlertService } from "@/infrastructure/alerts/IncidentAlertService";
+import type { SecurityIncidentRepo } from "@/app/ports/SecurityIncidentRepo";
+import type { IncidentAlertService } from "@/app/ports/IncidentAlertService";
 import { logEvent } from "@/shared/logger";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
+
+// =============================================================================
+// VALIDATION SCHEMA
+// =============================================================================
+
+/**
+ * Zod schema for validating CreateIncidentInput
+ * Replaces manual validation for type-safety and consistent error messages
+ */
+const CreateIncidentInputSchema = z.object({
+  // Required fields
+  severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+  type: z.enum([
+    "UNAUTHORIZED_ACCESS",
+    "CROSS_TENANT_ACCESS",
+    "DATA_LEAK",
+    "PII_IN_LOGS",
+    "DATA_LOSS",
+    "SERVICE_UNAVAILABLE",
+    "MALWARE",
+    "VULNERABILITY_EXPLOITED",
+    "OTHER",
+  ]),
+  title: z.string().min(1, "Incident title is required").max(500).trim(),
+  description: z.string().min(1, "Incident description is required").max(5000).trim(),
+
+  // Optional fields
+  tenantId: z.string().uuid().nullable().optional(),
+  dataCategories: z.array(z.enum(["P0", "P1", "P2", "P3"])).optional(),
+  usersAffected: z.number().int().min(0).optional(),
+  recordsAffected: z.number().int().min(0).optional(),
+  riskLevel: z.enum(["UNKNOWN", "NONE", "LOW", "MEDIUM", "HIGH"]).optional(),
+  detectedBy: z.enum(["SYSTEM", "MONITORING", "USER", "AUDIT", "PENTEST"]).optional(),
+  sourceIp: z.string().nullable().optional(),
+  actorId: z.string().nullable().optional(),
+});
 
 // =============================================================================
 // TYPES
@@ -86,28 +123,23 @@ export async function createIncident(
   input: CreateIncidentInput,
   deps: CreateIncidentDeps
 ): Promise<CreateIncidentResult> {
-  // Validate required fields
-  if (!input.title || input.title.trim() === "") {
-    throw new Error("Incident title is required");
-  }
-  if (!input.description || input.description.trim() === "") {
-    throw new Error("Incident description is required");
-  }
+  // Validate input with Zod (throws ZodError on failure)
+  const validated = CreateIncidentInputSchema.parse(input);
 
-  // Create incident in registry
+  // Create incident in registry (using validated input)
   const incident = await deps.incidentRepo.create({
-    tenantId: input.tenantId ?? null,
-    severity: input.severity,
-    type: input.type,
-    title: input.title.trim(),
-    description: input.description.trim(),
-    dataCategories: input.dataCategories,
-    usersAffected: input.usersAffected,
-    recordsAffected: input.recordsAffected,
-    riskLevel: input.riskLevel,
-    detectedBy: input.detectedBy,
-    sourceIp: input.sourceIp,
-    createdBy: input.actorId ?? null,
+    tenantId: validated.tenantId ?? null,
+    severity: validated.severity,
+    type: validated.type,
+    title: validated.title,
+    description: validated.description,
+    dataCategories: validated.dataCategories,
+    usersAffected: validated.usersAffected,
+    recordsAffected: validated.recordsAffected,
+    riskLevel: validated.riskLevel,
+    detectedBy: validated.detectedBy,
+    sourceIp: validated.sourceIp,
+    createdBy: validated.actorId ?? null,
   });
 
   // Evaluate notification requirements
@@ -128,21 +160,14 @@ export async function createIncident(
   }
 
   // Emit audit event (RGPD-safe: no sensitive data)
-  logEvent("audit.incident_created", {
-    incidentId: incident.id,
-    severity: incident.severity,
-    type: incident.type,
-    cnilRequired,
-    usersRequired,
-    actorId: input.actorId ?? ACTOR_SCOPE.SYSTEM,
-  });
-
+  // NOTE: Single event to avoid duplication (was previously emitting two events)
   logEvent("incident.created", {
     incidentId: incident.id,
     severity: incident.severity,
     type: incident.type,
     cnilRequired,
     usersRequired,
+    actorId: validated.actorId ?? ACTOR_SCOPE.SYSTEM,
   });
 
   return {

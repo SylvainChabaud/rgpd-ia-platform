@@ -34,7 +34,7 @@ import type {
   PaginationOptions,
   PaginatedResult,
   UpdateSecurityIncidentInput,
-} from "@/domain/incident/SecurityIncidentRepo";
+} from "@/app/ports/SecurityIncidentRepo";
 
 // =============================================================================
 // HELPER: Map DB row to domain entity

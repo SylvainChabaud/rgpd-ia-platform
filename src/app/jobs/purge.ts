@@ -16,9 +16,8 @@
  * - No tenant/user identifying info in logs
  */
 
-import { pool } from "@/infrastructure/db/pg";
-import { withTenantContext } from "@/infrastructure/db/tenantContext";
 import type { TenantRepo } from "@/app/ports/TenantRepo";
+import type { PurgeRepo } from "@/app/ports/PurgeRepo";
 import type {
   RetentionPolicy} from "@/domain/retention/RetentionPolicy";
 import {
@@ -26,7 +25,7 @@ import {
   getDefaultRetentionPolicy,
   validateRetentionPolicy,
 } from "@/domain/retention/RetentionPolicy";
-import { logger } from "@/infrastructure/logging/logger";
+import { logEvent } from "@/shared/logger";
 
 /**
  * Purge result (aggregated stats, RGPD-safe)
@@ -46,11 +45,13 @@ export interface PurgeResult {
  *
  * @param tenantId - Tenant to purge (REQUIRED for isolation)
  * @param policy - Retention policy (defaults to platform policy)
+ * @param purgeRepo - Repository for purge operations
  * @param dryRun - If true, only log what would be deleted (no actual deletion)
  */
 export async function purgeAiJobs(
   tenantId: string,
   policy: RetentionPolicy,
+  purgeRepo: PurgeRepo,
   dryRun = false
 ): Promise<number> {
   // BLOCKER: validate tenantId (RGPD isolation)
@@ -63,30 +64,19 @@ export async function purgeAiJobs(
 
   if (dryRun) {
     // Dry run: count only (no deletion)
-    const countResult = await withTenantContext(pool, tenantId, async (client) => {
-      return await client.query<{ count: string }>(
-        `SELECT COUNT(*) as count
-         FROM ai_jobs
-         WHERE tenant_id = $1
-           AND created_at < $2`,
-        [tenantId, cutoffDate]
-      );
-    });
-
-    return parseInt(countResult.rows[0]?.count || "0", 10);
+    return await purgeRepo.countPurgeableAiJobs(tenantId, cutoffDate);
   }
 
   // Actual purge: DELETE with tenant isolation
-  const deleteResult = await withTenantContext(pool, tenantId, async (client) => {
-    return await client.query(
-      `DELETE FROM ai_jobs
-       WHERE tenant_id = $1
-         AND created_at < $2`,
-      [tenantId, cutoffDate]
-    );
-  });
+  return await purgeRepo.purgeAiJobs(tenantId, cutoffDate);
+}
 
-  return deleteResult.rowCount || 0;
+/**
+ * Dependencies for purge job execution
+ */
+export interface PurgeJobDeps {
+  tenantRepo: TenantRepo;
+  purgeRepo: PurgeRepo;
 }
 
 /**
@@ -94,11 +84,11 @@ export async function purgeAiJobs(
  *
  * BLOCKER: idempotent, respects retention policy
  *
- * @param tenantRepo - Tenant repository for listing all tenants
+ * @param deps - Repository dependencies
  * @param policy - Optional custom retention policy (defaults to platform policy)
  */
 export async function executePurgeJob(
-  tenantRepo: TenantRepo,
+  deps: PurgeJobDeps,
   policy?: RetentionPolicy
 ): Promise<PurgeResult> {
   // Use default policy if not provided
@@ -110,13 +100,13 @@ export async function executePurgeJob(
   const dryRun = retentionPolicy.dryRun;
 
   // Get all tenants (purge per tenant for isolation) via repository
-  const tenants = await tenantRepo.listAll(1000, 0);
+  const tenants = await deps.tenantRepo.listAll(1000, 0);
 
   let totalAiJobsPurged = 0;
 
   // Purge AI jobs for each tenant
   for (const tenant of tenants) {
-    const purged = await purgeAiJobs(tenant.id, retentionPolicy, dryRun);
+    const purged = await purgeAiJobs(tenant.id, retentionPolicy, deps.purgeRepo, dryRun);
     totalAiJobsPurged += purged;
   }
 
@@ -128,12 +118,10 @@ export async function executePurgeJob(
   };
 
   // RGPD-safe log (P1: counts only)
-  logger.info({
-    event: 'purge_job_completed',
+  logEvent('purge_job_completed', {
     aiJobsPurged: result.aiJobsPurged,
     dryRun: result.dryRun,
-    timestamp: result.executedAt.toISOString(),
-  }, 'Purge job completed');
+  });
 
   return result;
 }
@@ -144,10 +132,12 @@ export async function executePurgeJob(
  * Useful for tenant-specific purge or testing
  *
  * @param tenantId - Tenant to purge
+ * @param purgeRepo - Repository for purge operations
  * @param policy - Optional custom retention policy
  */
 export async function executeTenantPurgeJob(
   tenantId: string,
+  purgeRepo: PurgeRepo,
   policy?: RetentionPolicy
 ): Promise<PurgeResult> {
   // BLOCKER: validate tenantId
@@ -164,7 +154,7 @@ export async function executeTenantPurgeJob(
   const dryRun = retentionPolicy.dryRun;
 
   // Purge AI jobs for this tenant only
-  const aiJobsPurged = await purgeAiJobs(tenantId, retentionPolicy, dryRun);
+  const aiJobsPurged = await purgeAiJobs(tenantId, retentionPolicy, purgeRepo, dryRun);
 
   // Log purge stats (P1: tenant ID + counts, RGPD-safe)
   const result: PurgeResult = {
@@ -173,13 +163,10 @@ export async function executeTenantPurgeJob(
     executedAt: new Date(),
   };
 
-  logger.info({
-    event: 'tenant_purge_completed',
-    tenantId, // P1: UUID opaque
+  logEvent('tenant_purge_completed', {
     aiJobsPurged: result.aiJobsPurged,
     dryRun: result.dryRun,
-    timestamp: result.executedAt.toISOString(),
-  }, 'Tenant purge completed');
+  }, { tenantId });
 
   return result;
 }

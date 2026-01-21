@@ -18,8 +18,10 @@ import type { SecurityIncident, IncidentSeverity } from "@/domain/incident";
 import { INCIDENT_SEVERITY } from "@/domain/incident";
 import type { AlertService, Alert, AlertSeverity } from "@/app/ports/AlertService";
 import { ALERT_SEVERITY } from "@/app/ports/AlertService";
+import type { IncidentAlertService as IIncidentAlertService } from "@/app/ports/IncidentAlertService";
 import { ACTOR_SCOPE } from "@/shared/actorScope";
 import { logEvent, logError } from "@/shared/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 // =============================================================================
 // TYPES
@@ -77,7 +79,7 @@ export interface NotificationResult {
 // INCIDENT ALERT SERVICE
 // =============================================================================
 
-export class IncidentAlertService {
+export class IncidentAlertService implements IIncidentAlertService {
   private config: IncidentAlertConfig;
   private emailService: AlertService;
 
@@ -267,7 +269,8 @@ export class IncidentAlertService {
       //   body: JSON.stringify(payload),
       // });
 
-      console.error(`[PAGERDUTY] Triggering alert for incident ${incident.id}`);
+      // PLACEHOLDER: In production, send to PagerDuty API
+      logger.info({ event: "pagerduty.alert_triggered", incidentId: incident.id, severity: incident.severity }, `[PAGERDUTY] Triggering alert for incident`);
       logEvent("pagerduty.alert_triggered", {
         incidentId: incident.id,
         severity: incident.severity,
@@ -312,7 +315,8 @@ export class IncidentAlertService {
     //   body: JSON.stringify(payload),
     // });
 
-    console.error(`[SLACK] ${message.text}`);
+    // PLACEHOLDER: In production, send to Slack webhook
+    logger.info({ event: "slack.message_sent", channel: this.config.slack.channel }, `[SLACK] Sending message`);
     logEvent("slack.message_sent", { channel: this.config.slack.channel });
   }
 

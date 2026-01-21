@@ -16,6 +16,7 @@ import type {
   Alert,
 } from "@/app/ports/AlertService";
 import { logEvent, logError } from "@/shared/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 /**
  * Email alert service configuration
@@ -91,10 +92,12 @@ export class EmailAlertService implements AlertService {
       //   text: this.formatAlertEmail(alert),
       // });
 
-      // For dev/test: Log to console
-      console.error(
-        `[ALERT] ${alert.severity.toUpperCase()}: ${alert.title}\n${alert.message}`
-      );
+      // For dev/test: Log to structured logger
+      logger.info({
+        event: "alert.dev_output",
+        severity: alert.severity,
+        title: alert.title,
+      }, `[ALERT] ${alert.severity.toUpperCase()}: ${alert.title}`);
 
       logEvent("alert.sent", {
         severity: alert.severity,

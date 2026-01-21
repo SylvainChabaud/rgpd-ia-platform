@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import "dotenv/config";
+import { logger } from "@/infrastructure/logging/logger";
 
 /**
  * Pool PostgreSQL centralisé
@@ -22,8 +23,9 @@ export const pool = new Pool({
 
 pool.on("error", (err) => {
   // err est typé Error → on reste conforme
-  console.error("PostgreSQL pool error", {
+  logger.error({
+    event: "db.pool_error",
     name: err.name,
-    message: err.message,
-  });
+    error: err.message,
+  }, "PostgreSQL pool error");
 });
