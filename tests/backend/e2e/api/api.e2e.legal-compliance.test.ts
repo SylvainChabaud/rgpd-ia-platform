@@ -82,12 +82,12 @@ async function setupTestData() {
     );
   });
 
-  // Create CGU version
+  // Create CGU version (content is stored in markdown file, not DB)
   await pool.query(
-    `INSERT INTO cgu_versions (id, version, content, effective_date, summary)
-     VALUES ($1, $2, $3, CURRENT_DATE, $4)
+    `INSERT INTO cgu_versions (id, version, effective_date, summary, content_path)
+     VALUES ($1, $2, CURRENT_DATE, $3, $4)
      ON CONFLICT (version) DO NOTHING`,
-    [newId(), "1.0-e2e-test", "Test CGU Content", "Test CGU for E2E tests"]
+    [newId(), "1.0-e2e-test", "Test CGU for E2E tests", "docs/legal/cgu-cgv.md"]
   );
 }
 
@@ -103,6 +103,9 @@ async function cleanup() {
     await pool.query("SELECT cleanup_test_data($1::UUID[])", [tenantIds]);
   }
   await pool.query("SELECT cleanup_test_data($1::UUID[])", [[TENANT_ID]]);
+
+  // Clean up CGU acceptances first (FK constraint requires this order)
+  await pool.query("DELETE FROM user_cgu_acceptances WHERE cgu_version_id IN (SELECT id FROM cgu_versions WHERE version = '1.0-e2e-test')");
 
   // Clean up CGU versions
   await pool.query("DELETE FROM cgu_versions WHERE version = '1.0-e2e-test'");
@@ -236,7 +239,7 @@ describeE2E("E2E - LOT 10 Legal & Compliance Routes", () => {
       if (response.ok) {
         const data = await response.json();
         expect(data).toHaveProperty("version");
-        expect(data).toHaveProperty("content");
+        expect(data).toHaveProperty("contentPath"); // Content is in markdown file, not DB
         expect(data).toHaveProperty("effectiveDate");
       }
     });

@@ -239,17 +239,18 @@ Nous pouvons modifier cette politique de confidentialité. En cas de changement 
 
 ## 14. Registre des Traitements (Art. 30 RGPD)
 
-Conformément à l'Art. 30 RGPD, nous tenons un **registre des activités de traitement** accessible aux autorités de contrôle.
-
-**Consultation** : Réservée aux Super Admins et DPO via `/api/docs/registre`
+Conformément à l'Art. 30 RGPD, nous tenons un **registre des activités de traitement** accessible aux autorités de contrôle sur demande.
 
 ---
 
 ## 15. Analyse d'Impact (DPIA - Art. 35 RGPD)
 
-Notre Gateway LLM fait l'objet d'une **Analyse d'Impact relative à la Protection des Données (DPIA)** actualisée annuellement.
+Notre plateforme fait l'objet d'une **Analyse d'Impact relative à la Protection des Données (DPIA)** actualisée annuellement, conformément à l'Art. 35 RGPD.
 
-**Consultation** : Réservée aux Super Admins et DPO via `/api/docs/dpia`
+**Traitement IA via Gateway LLM** : Tous les traitements impliquant l'intelligence artificielle passent exclusivement par notre Gateway LLM. Cette architecture garantit :
+- L'anonymisation systématique des données personnelles avant tout traitement IA
+- L'audit complet de chaque invocation (sans stockage du contenu)
+- L'absence d'appels directs aux fournisseurs d'IA depuis le frontend
 
 ---
 

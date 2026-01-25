@@ -81,6 +81,10 @@ cp .env.example .env
 - ✅ Crée un Super Admin
 - ✅ Crée un tenant de test ("Acme Corp")
 - ✅ Crée un Tenant Admin
+- ✅ Crée les données de simulation (finalités, consentements, DPIA, violations, etc.)
+- ✅ **Crée les CGU v1.0.0** (Art. 7 RGPD - Conditions Générales d'Utilisation)
+
+> **Note RGPD** : À la première connexion, les utilisateurs MEMBER sont redirigés vers `/cgu` pour accepter les CGU. Cette acceptation est tracée avec horodatage (Art. 7 RGPD). Le contenu des CGU est stocké dans `docs/legal/cgu-cgv.md` (source unique de vérité).
 
 **Durée**: ~45 secondes (premier lancement) / ~30 secondes (suivants)
 

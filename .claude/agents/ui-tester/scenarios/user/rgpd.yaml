@@ -1,0 +1,300 @@
+# Scénarios de test - User (End User) / RGPD
+# LOT 13.0 - Authentification & Layout User
+name: "User - RGPD Compliance"
+description: "Tests de conformité RGPD du frontend utilisateur"
+priority: critical
+tags: [user, rgpd, lot-13.0, compliance]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "MEMBER"
+
+scenarios:
+  # ============================================
+  # COOKIE CONSENT (Art. 7, ePrivacy Directive)
+  # ============================================
+
+  - id: USER-R001
+    name: "Cookie banner - Affichage initial"
+    description: "Banner affiché au premier accès (pas de consentement)"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+      - screenshot: "user-cookie-banner.png"
+    expected:
+      - text_visible: "Nous utilisons des cookies"
+      - button_visible: "Accepter tout"
+      - button_visible: "Refuser tout"
+      - button_visible: "Personnaliser"
+
+  - id: USER-R002
+    name: "Cookie banner - Accepter tout"
+    description: "Consentement global accepté"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+      - click: "Accepter tout"
+      - wait: 1000
+      - screenshot: "user-cookie-accepted.png"
+    expected:
+      - no_text: "Nous utilisons des cookies"
+      - cookie_set: "cookie_consent_id"
+
+  - id: USER-R003
+    name: "Cookie banner - Refuser tout"
+    description: "Seuls cookies nécessaires actifs"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+      - click: "Refuser tout"
+      - wait: 1000
+    expected:
+      - no_text: "Nous utilisons des cookies"
+      - cookie_set: "cookie_consent_id"
+      - local_storage_contains:
+          key: "cookie_consent"
+          value_contains: '"analytics":false'
+
+  - id: USER-R004
+    name: "Cookie banner - Personnaliser"
+    description: "Panneau de paramétrage affiché"
+    priority: high
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+      - click: "Personnaliser"
+      - wait_for: "Paramètres des cookies"
+      - screenshot: "user-cookie-settings.png"
+    expected:
+      - text_visible: "Paramètres des cookies"
+      - text_visible: "Cookies nécessaires"
+      - text_visible: "Toujours actifs"
+      - text_visible: "Cookies analytics"
+      - text_visible: "Cookies marketing"
+
+  - id: USER-R005
+    name: "Cookie banner - Cookies nécessaires non désactivables"
+    description: "Art. 5.3 ePrivacy - cookies techniques obligatoires"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - click: "Personnaliser"
+      - wait_for: "Cookies nécessaires"
+    expected:
+      - checkbox_disabled: "Cookies nécessaires"
+      - checkbox_checked: "Cookies nécessaires"
+      - text_visible: "Toujours actifs"
+
+  - id: USER-R006
+    name: "Cookie banner - Réouverture depuis footer"
+    description: "Bouton 'Gérer les cookies' réouvre le banner"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+      - click: "Accepter tout"
+      - wait: 500
+      - scroll_to: "Gérer les cookies"
+      - click: "Gérer les cookies"
+      - wait_for: "Paramètres des cookies"
+      - screenshot: "user-cookie-reopen.png"
+    expected:
+      - text_visible: "Paramètres des cookies"
+
+  - id: USER-R007
+    name: "Cookie banner - Enregistrer mes choix"
+    description: "Sauvegarde des préférences personnalisées"
+    priority: high
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - click: "Personnaliser"
+      - wait_for: "Cookies analytics"
+      - click: "Activer les cookies analytics"
+      - click: "Enregistrer mes choix"
+      - wait: 1000
+    expected:
+      - no_text: "Paramètres des cookies"
+      - local_storage_contains:
+          key: "cookie_consent"
+          value_contains: '"analytics":true'
+          value_contains: '"marketing":false'
+
+  # ============================================
+  # P1 DATA ONLY (Art. 5 - Minimisation)
+  # ============================================
+
+  - id: USER-R010
+    name: "Pas d'email affiché (P2 data)"
+    description: "Art. 5.1.c - Minimisation des données"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Bienvenue"
+      - screenshot: "user-no-email-home.png"
+    expected:
+      - no_text: "@"
+      - no_text: "user@acme.local"
+      - text_visible: "{{users.member.display_name}}"
+
+  - id: USER-R011
+    name: "Profile - Pas d'email affiché"
+    description: "Page profil n'affiche pas l'email"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/app/profile"
+      - wait_for: "Mon Profil"
+      - screenshot: "user-no-email-profile.png"
+    expected:
+      - no_text: "@"
+      - no_text: "user@acme.local"
+      - text_visible: "Note : Votre email est stocké de manière sécurisée"
+
+  - id: USER-R012
+    name: "Header - Seul displayName visible"
+    description: "Menu utilisateur n'affiche que P1 data"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "{{users.member.display_name}}"
+      - screenshot: "user-header-p1-only.png"
+    expected:
+      - text_visible: "{{users.member.display_name}}"
+      - no_text: "@"
+
+  # ============================================
+  # LEGAL PAGES (Art. 13/14 - Information)
+  # ============================================
+
+  - id: USER-R020
+    name: "Lien Politique de confidentialité accessible"
+    description: "Art. 13 - Droit à l'information"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "Politique de confidentialité"
+      - wait_for: "Politique de Confidentialité"
+      - screenshot: "user-privacy-policy.png"
+    expected:
+      - url_contains: "/politique-confidentialite"
+      - text_visible: "Politique de Confidentialité"
+
+  - id: USER-R021
+    name: "Lien CGU accessible"
+    description: "Conditions Générales d'Utilisation"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "CGU"
+      - wait_for: "Conditions Générales"
+    expected:
+      - url_contains: "/cgu"
+
+  - id: USER-R022
+    name: "Lien Informations RGPD accessible"
+    description: "Art. 12 - Transparence"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "Informations RGPD"
+      - wait_for: "RGPD"
+    expected:
+      - url_contains: "/informations-rgpd"
+
+  - id: USER-R023
+    name: "Cookie banner - Lien En savoir plus"
+    description: "Lien vers politique de confidentialité"
+    priority: medium
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+    expected:
+      - link_visible: "En savoir plus"
+      - link_href_contains: "/politique-confidentialite"
+
+  # ============================================
+  # DATA TRANSPARENCY
+  # ============================================
+
+  - id: USER-R030
+    name: "Profile - Données visibles expliquées"
+    description: "L'utilisateur comprend quelles données sont affichées"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/app/profile"
+      - wait_for: "Informations actuelles"
+    expected:
+      - text_visible: "Nom d'affichage"
+      - text_visible: "Rôle"
+      - text_visible: "Scope"
+      - text_visible: "Note : Votre email est stocké de manière sécurisée"
+
+  # ============================================
+  # CONSENT GRANULARITY (Art. 7)
+  # ============================================
+
+  - id: USER-R040
+    name: "Consentement granulaire - 3 catégories"
+    description: "Art. 7 - Consentement par finalité"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - click: "Personnaliser"
+      - wait_for: "Paramètres des cookies"
+    expected:
+      - text_visible: "Cookies nécessaires"
+      - text_visible: "Cookies analytics"
+      - text_visible: "Cookies marketing"
+      - text_visible: "Plausible Analytics"
+      - text_visible: "mesurer l'audience"
+      - text_visible: "publicités personnalisées"
+
+  - id: USER-R041
+    name: "Opt-in par défaut (pas pré-coché)"
+    description: "Art. 7 - Consentement explicite"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - click: "Personnaliser"
+      - wait_for: "Cookies analytics"
+    expected:
+      - checkbox_unchecked: "Activer les cookies analytics"
+      - checkbox_unchecked: "Activer les cookies marketing"
+
+  - id: USER-R042
+    name: "Refuser aussi simple qu'accepter"
+    description: "Art. 7.3 - Retrait du consentement"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - clear_local_storage: true
+      - login_as: "{{users.member}}"
+      - wait_for: "Nous utilisons des cookies"
+    expected:
+      # Les deux boutons doivent avoir la même proéminence
+      - button_visible: "Accepter tout"
+      - button_visible: "Refuser tout"
+      - buttons_same_prominence: ["Accepter tout", "Refuser tout"]

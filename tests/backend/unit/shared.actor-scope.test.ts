@@ -21,9 +21,13 @@ describe('Shared: actorScope', () => {
       expect(ACTOR_SCOPE.TENANT).toBe('TENANT');
     });
 
-    it('has exactly 3 scopes', () => {
+    it('defines MEMBER scope (LOT 13.0)', () => {
+      expect(ACTOR_SCOPE.MEMBER).toBe('MEMBER');
+    });
+
+    it('has exactly 4 scopes', () => {
       const scopeCount = Object.keys(ACTOR_SCOPE).length;
-      expect(scopeCount).toBe(3);
+      expect(scopeCount).toBe(4);
     });
 
     it('all scope values are strings', () => {
@@ -42,6 +46,7 @@ describe('Shared: actorScope', () => {
       expect(ACTOR_SCOPE.SYSTEM).toBe('SYSTEM');
       expect(ACTOR_SCOPE.PLATFORM).toBe('PLATFORM');
       expect(ACTOR_SCOPE.TENANT).toBe('TENANT');
+      expect(ACTOR_SCOPE.MEMBER).toBe('MEMBER');
     });
 
     it('all scope values are unique', () => {
@@ -66,6 +71,11 @@ describe('Shared: actorScope', () => {
       const scope: ActorScope = ACTOR_SCOPE.TENANT;
       expect(scope).toBe('TENANT');
     });
+
+    it('accepts MEMBER (LOT 13.0)', () => {
+      const scope: ActorScope = ACTOR_SCOPE.MEMBER;
+      expect(scope).toBe('MEMBER');
+    });
   });
 
   describe('UserScope type', () => {
@@ -79,11 +89,16 @@ describe('Shared: actorScope', () => {
       expect(scope).toBe('TENANT');
     });
 
+    it('accepts MEMBER (LOT 13.0)', () => {
+      const scope: UserScope = ACTOR_SCOPE.MEMBER;
+      expect(scope).toBe('MEMBER');
+    });
+
     it('excludes SYSTEM from user contexts', () => {
       // SYSTEM is not assignable to UserScope (compile-time check)
       // This test verifies the type definition exists correctly
-      const validUserScopes = [ACTOR_SCOPE.PLATFORM, ACTOR_SCOPE.TENANT];
-      expect(validUserScopes).toHaveLength(2);
+      const validUserScopes = [ACTOR_SCOPE.PLATFORM, ACTOR_SCOPE.TENANT, ACTOR_SCOPE.MEMBER];
+      expect(validUserScopes).toHaveLength(3);
       expect(validUserScopes).not.toContain(ACTOR_SCOPE.SYSTEM);
     });
   });
@@ -99,6 +114,10 @@ describe('Shared: actorScope', () => {
 
     it('defines tenant-level scope (TENANT)', () => {
       expect(ACTOR_SCOPE.TENANT).toBeDefined();
+    });
+
+    it('defines member-level scope (MEMBER) - LOT 13.0', () => {
+      expect(ACTOR_SCOPE.MEMBER).toBeDefined();
     });
   });
 
@@ -125,10 +144,12 @@ describe('Shared: actorScope', () => {
       const system: 'SYSTEM' = ACTOR_SCOPE.SYSTEM;
       const platform: 'PLATFORM' = ACTOR_SCOPE.PLATFORM;
       const tenant: 'TENANT' = ACTOR_SCOPE.TENANT;
+      const member: 'MEMBER' = ACTOR_SCOPE.MEMBER;
 
       expect(system).toBe('SYSTEM');
       expect(platform).toBe('PLATFORM');
       expect(tenant).toBe('TENANT');
+      expect(member).toBe('MEMBER');
     });
   });
 
@@ -139,40 +160,44 @@ describe('Shared: actorScope', () => {
       expect(scopeValues.includes('SYSTEM')).toBe(true);
       expect(scopeValues.includes('PLATFORM')).toBe(true);
       expect(scopeValues.includes('TENANT')).toBe(true);
+      expect(scopeValues.includes('MEMBER')).toBe(true);
       expect(scopeValues.includes('INVALID_SCOPE' as ActorScope)).toBe(false);
     });
 
     it('provides all valid scopes for iteration', () => {
       const allScopes = Object.values(ACTOR_SCOPE);
 
-      expect(allScopes).toHaveLength(3);
+      expect(allScopes).toHaveLength(4);
       expect(allScopes).toContain('SYSTEM');
       expect(allScopes).toContain('PLATFORM');
       expect(allScopes).toContain('TENANT');
+      expect(allScopes).toContain('MEMBER');
     });
   });
 
   describe('Scope ordering', () => {
-    it('follows hierarchical order (SYSTEM > PLATFORM > TENANT)', () => {
+    it('follows hierarchical order (SYSTEM > PLATFORM > TENANT > MEMBER)', () => {
       const scopes = Object.values(ACTOR_SCOPE);
 
       // Verify expected order in constant definition
-      const expectedOrder = ['SYSTEM', 'PLATFORM', 'TENANT'];
+      const expectedOrder = ['SYSTEM', 'PLATFORM', 'TENANT', 'MEMBER'];
       expect(scopes).toEqual(expectedOrder);
     });
   });
 
   describe('User scope distinction', () => {
-    it('UserScope includes only PLATFORM and TENANT', () => {
+    it('UserScope includes PLATFORM, TENANT, and MEMBER', () => {
       // This is a type-level test, but we can verify the values
       const userScopes: UserScope[] = [
         ACTOR_SCOPE.PLATFORM,
         ACTOR_SCOPE.TENANT,
+        ACTOR_SCOPE.MEMBER,
       ];
 
-      expect(userScopes).toHaveLength(2);
+      expect(userScopes).toHaveLength(3);
       expect(userScopes).toContain(ACTOR_SCOPE.PLATFORM);
       expect(userScopes).toContain(ACTOR_SCOPE.TENANT);
+      expect(userScopes).toContain(ACTOR_SCOPE.MEMBER);
     });
   });
 });

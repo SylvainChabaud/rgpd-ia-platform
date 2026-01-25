@@ -10,6 +10,9 @@
 
 import { useAuthStore, AuthUser } from '@/lib/auth/authStore'
 import { ACTOR_SCOPE } from '@/shared/actorScope'
+import { API_AUTH_ROUTES } from '@/lib/constants/routes'
+import { STORAGE_KEYS } from '@/lib/constants/cookies'
+import { NAV_LABELS } from '@/lib/constants/ui/ui-labels'
 
 // Mock fetch
 global.fetch = jest.fn()
@@ -333,6 +336,261 @@ describe('AuthStore - Unit Tests', () => {
       const state = useAuthStore.getState()
       expect(state.user?.scope).toBe(ACTOR_SCOPE.TENANT)
       expect(state.user?.tenantId).toBe('tenant-abc')
+    })
+  })
+
+  describe('DisplayName Sanitization (XSS Prevention)', () => {
+    it('should sanitize XSS script tags in displayName on login', () => {
+      const maliciousUser: AuthUser = {
+        id: 'user-xss',
+        displayName: '<script>alert("xss")</script>',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(maliciousUser)
+
+      const state = useAuthStore.getState()
+      // Script tags should be removed, leaving "alertxss"
+      expect(state.user?.displayName).not.toContain('<script>')
+      expect(state.user?.displayName).not.toContain('</script>')
+      expect(state.user?.displayName).not.toContain('<')
+      expect(state.user?.displayName).not.toContain('>')
+    })
+
+    it('should sanitize HTML injection attempts', () => {
+      const maliciousUser: AuthUser = {
+        id: 'user-html',
+        displayName: '<img src=x onerror=alert(1)>',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(maliciousUser)
+
+      const state = useAuthStore.getState()
+      // SECURITY: HTML tags and special chars are stripped
+      expect(state.user?.displayName).not.toContain('<')
+      expect(state.user?.displayName).not.toContain('>')
+      expect(state.user?.displayName).not.toContain('=')
+      // Result is safe text: "img srcx onerroralert1" (harmless as plain text)
+    })
+
+    it('should truncate displayName exceeding max length (100 chars)', () => {
+      const longName = 'A'.repeat(150)
+      const userWithLongName: AuthUser = {
+        id: 'user-long',
+        displayName: longName,
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(userWithLongName)
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName.length).toBeLessThanOrEqual(100)
+    })
+
+    it('should return fallback for null displayName', () => {
+      const userWithNull: AuthUser = {
+        id: 'user-null',
+        displayName: null as unknown as string,
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(userWithNull)
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName).toBe(NAV_LABELS.USER_FALLBACK)
+    })
+
+    it('should return fallback for empty displayName', () => {
+      const userWithEmpty: AuthUser = {
+        id: 'user-empty',
+        displayName: '   ',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(userWithEmpty)
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName).toBe(NAV_LABELS.USER_FALLBACK)
+    })
+
+    it('should preserve valid Unicode characters (accents)', () => {
+      const userWithAccents: AuthUser = {
+        id: 'user-unicode',
+        displayName: 'José García-López',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(userWithAccents)
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName).toBe('José García-López')
+    })
+
+    it('should preserve apostrophes and periods in names', () => {
+      const userWithPunctuation: AuthUser = {
+        id: 'user-punct',
+        displayName: "Dr. O'Brien Jr.",
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(userWithPunctuation)
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName).toBe("Dr. O'Brien Jr.")
+    })
+
+    it('should sanitize displayName from checkAuth API response', async () => {
+      const maliciousResponse = {
+        user: {
+          id: 'user-api-xss',
+          displayName: '<div onclick="hack()">Evil</div>',
+          scope: ACTOR_SCOPE.PLATFORM,
+          role: 'admin',
+          tenantId: null,
+        },
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => maliciousResponse,
+      })
+
+      await useAuthStore.getState().checkAuth()
+
+      const state = useAuthStore.getState()
+      // SECURITY: HTML tags and special chars are stripped
+      expect(state.user?.displayName).not.toContain('<')
+      expect(state.user?.displayName).not.toContain('>')
+      expect(state.user?.displayName).not.toContain('"')
+      // Result is safe text: "div onclickhackEvildiv" (harmless as plain text)
+    })
+
+    it('should sanitize displayName from refreshToken API response', async () => {
+      // First login with a valid user
+      const validUser: AuthUser = {
+        id: 'user-refresh',
+        displayName: 'ValidName',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+      useAuthStore.getState().login(validUser)
+
+      // Mock refresh response with malicious displayName
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          user: {
+            id: 'user-refresh',
+            displayName: '"><script>steal()</script>',
+            scope: ACTOR_SCOPE.PLATFORM,
+            role: 'admin',
+            tenantId: null,
+          },
+        }),
+      })
+
+      await useAuthStore.getState().refreshToken()
+
+      const state = useAuthStore.getState()
+      expect(state.user?.displayName).not.toContain('<script>')
+    })
+  })
+
+  describe('API Routes Constants Usage', () => {
+    it('should use API_AUTH_ROUTES.LOGOUT constant', async () => {
+      useAuthStore.getState().login({
+        id: 'user-123',
+        displayName: 'Test',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      })
+
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: 'Logged out' }),
+      })
+
+      await useAuthStore.getState().logout()
+
+      expect(global.fetch).toHaveBeenCalledWith(API_AUTH_ROUTES.LOGOUT, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    })
+
+    it('should use API_AUTH_ROUTES.ME constant', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          user: {
+            id: 'user-123',
+            displayName: 'Test',
+            scope: ACTOR_SCOPE.PLATFORM,
+            role: 'admin',
+            tenantId: null,
+          },
+        }),
+      })
+
+      await useAuthStore.getState().checkAuth()
+
+      expect(global.fetch).toHaveBeenCalledWith(API_AUTH_ROUTES.ME, {
+        method: 'GET',
+        credentials: 'include',
+      })
+    })
+
+    it('should use API_AUTH_ROUTES.REFRESH constant', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          user: { id: 'user-123', scope: 'PLATFORM', role: 'admin', tenantId: null },
+        }),
+      })
+
+      await useAuthStore.getState().refreshToken()
+
+      expect(global.fetch).toHaveBeenCalledWith(API_AUTH_ROUTES.REFRESH, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    })
+  })
+
+  describe('Storage Keys Constants Usage', () => {
+    it('should persist user info with STORAGE_KEYS.AUTH_STORAGE key', () => {
+      const mockUser: AuthUser = {
+        id: 'user-123',
+        displayName: 'John Doe',
+        scope: ACTOR_SCOPE.PLATFORM,
+        role: 'admin',
+        tenantId: null,
+      }
+
+      useAuthStore.getState().login(mockUser)
+
+      const persisted = localStorage.getItem(STORAGE_KEYS.AUTH_STORAGE)
+      expect(persisted).toBeDefined()
+      expect(JSON.parse(persisted!).state.user).toEqual(mockUser)
     })
   })
 })

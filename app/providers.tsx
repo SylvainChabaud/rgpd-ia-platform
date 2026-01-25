@@ -5,6 +5,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { useState } from 'react'
+import { CookieBannerProvider } from '@/lib/contexts/CookieBannerContext'
+import { CookieConsentBanner } from '@/components/legal/CookieConsentBanner'
 
 /**
  * Providers wrapper for the entire application
@@ -13,10 +15,12 @@ import { useState } from 'react'
  * - TanStack Query (data fetching & caching)
  * - next-themes (dark mode support)
  * - Sonner (toast notifications)
+ * - CookieBannerProvider (cookie consent management)
  *
  * RGPD Compliance:
  * - No user data stored in providers
  * - QueryClient configured with minimal cache time
+ * - Cookie consent managed via CookieBannerContext (Art. 7 RGPD, ePrivacy 5.3)
  */
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -47,7 +51,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        {children}
+        <CookieBannerProvider>
+          {children}
+          <CookieConsentBanner />
+        </CookieBannerProvider>
         <Toaster position="top-right" richColors closeButton />
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />

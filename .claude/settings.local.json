@@ -57,7 +57,12 @@
       "Bash(cmd //c \"echo OUI | .\\\\setup-dev.bat 2\")",
       "Bash(cmd /c setup-dev.bat)",
       "Bash(BOOTSTRAP_MODE=true BOOTSTRAP_PASSWORD=Admin1234 npm run cli:*)",
-      "Bash(BOOTSTRAP_PASSWORD=\"AdminPass123!\" npm run bootstrap:superadmin:*)"
+      "Bash(BOOTSTRAP_PASSWORD=\"AdminPass123!\" npm run bootstrap:superadmin:*)",
+      "Bash(QUALITY_GATE_SKIP_TESTS=true npm run quality-gate)",
+      "Bash(QUALITY_GATE_SKIP_TESTS=true QUALITY_GATE_SKIP_LINT=true npm run quality-gate:*)",
+      "Bash(Get-ChildItem -Path \"C:\\\\workspace\\\\ia-tools\\\\rgpd-ia-platform\\\\rgpd-ia-platform\" -Filter \"README.md\" -Recurse)",
+      "Bash(Where-Object { $_ullName -notlike \"*node_modules*\" })",
+      "Bash(ForEach-Object { $_ullName })"
     ]
   },
   "enableAllProjectMcpServers": true,

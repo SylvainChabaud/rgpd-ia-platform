@@ -1,11 +1,19 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Settings, Cookie, Shield, BarChart3, Megaphone, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { COOKIE_MESSAGES } from '@/lib/constants/ui/ui-labels';
+import { useCookieBanner } from '@/lib/contexts/CookieBannerContext';
+import { LEGAL_ROUTES, API_CONSENT_ROUTES } from '@/lib/constants/routes';
+import { COOKIE_NAMES, STORAGE_KEYS } from '@/lib/constants/cookies';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import Link from 'next/link';
 
 /**
- * Component: Cookie Consent Banner
+ * Component: Cookie Consent Modal
  *
  * RGPD compliance:
  * - ePrivacy Directive 2002/58/CE Art. 5.3
@@ -14,9 +22,7 @@ import { COOKIE_MESSAGES } from '@/lib/constants/ui/ui-labels';
  * - TTL 12 months (CNIL standard)
  * - Preferences saved in DB + localStorage fallback
  *
- * Labels centralized in @/lib/constants/ui/ui-labels.ts
- *
- * LOT 10.3 - Cookie Consent Banner
+ * LOT 10.3 - Cookie Consent Banner (Modal Design)
  */
 
 interface CookiePreferences {
@@ -26,16 +32,12 @@ interface CookiePreferences {
 }
 
 function applyPreferences(prefs: CookiePreferences) {
-  // Block/unblock scripts based on preferences.
-
-  // Analytics (Plausible)
   if (prefs.analytics) {
     loadAnalyticsScript();
   } else {
     blockAnalyticsScript();
   }
 
-  // Marketing
   if (prefs.marketing) {
     loadMarketingScript();
   } else {
@@ -44,7 +46,6 @@ function applyPreferences(prefs: CookiePreferences) {
 }
 
 function loadAnalyticsScript() {
-  // Load Plausible Analytics only when consent is given.
   if (typeof window !== 'undefined' && !document.getElementById('plausible-script')) {
     const script = document.createElement('script');
     script.id = 'plausible-script';
@@ -63,29 +64,41 @@ function blockAnalyticsScript() {
 }
 
 function loadMarketingScript() {
-  // TODO: Load marketing scripts if applicable.
   // Marketing scripts will be loaded here when configured
 }
 
 function blockMarketingScript() {
-  // TODO: Block marketing scripts if applicable.
   // Marketing scripts will be blocked here when configured
 }
 
+/**
+ * Safe cookie parsing (anti-ReDoS)
+ * SECURITY: Using simple split, no regex
+ */
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
 
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() ?? null;
+  const cookieHeader = document.cookie;
+  if (!cookieHeader) return null;
+
+  for (const cookie of cookieHeader.split(';')) {
+    const [key, ...valueParts] = cookie.trim().split('=');
+    if (key === name) {
+      return decodeURIComponent(valueParts.join('='));
+    }
   }
   return null;
 }
 
 export function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const {
+    isBannerOpen,
+    showSettings,
+    openBanner,
+    closeBanner,
+    setShowSettings,
+  } = useCookieBanner();
+
   const [preferences, setPreferences] = useState<CookiePreferences>({
     necessary: true,
     analytics: false,
@@ -93,81 +106,99 @@ export function CookieConsentBanner() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkExistingConsent = useCallback(async () => {
-    try {
-      // Récupérer cookie_consent_id depuis cookie
-      const consentId = getCookie('cookie_consent_id');
-
-      // Appeler API pour vérifier si consentement existe
-      const params = new URLSearchParams();
-      if (consentId) {
-        params.set('anonymousId', consentId);
-      }
-      // Note: Si user authentifié, ajouter userId depuis contexte auth
-
-      const response = await fetch(`/api/consents/cookies?${params.toString()}`);
-
-      if (response.status === 404) {
-        // Pas de consentement, afficher banner
-        setVisible(true);
-      } else if (response.ok) {
-        // Consentement existe, le charger
-        const data = await response.json();
-        if (data.consent && !data.isExpired) {
-          // Consentement valide, appliquer préférences
-          applyPreferences(data.consent);
-        } else {
-          // Consentement expiré, afficher banner
-          setVisible(true);
-        }
-      } else {
-        // Erreur, afficher banner par sécurité
-        setVisible(true);
-      }
-    } catch {
-      // En cas d'erreur, afficher banner par sécurité
-      setVisible(true);
-    }
-  }, []);
-
+  /**
+   * Check existing consent on mount
+   * Runs once - openBanner is stable from context
+   */
   useEffect(() => {
+    const checkExistingConsent = async () => {
+      try {
+        // For anonymous users, check if we have a consent cookie first
+        // For authenticated users, the API will use the auth token
+        const consentId = getCookie(COOKIE_NAMES.CONSENT_ID);
+
+        // Always call API - it works for both authenticated users (via auth token)
+        // and anonymous users (via cookie_consent_id cookie)
+        const response = await fetch(API_CONSENT_ROUTES.COOKIES, {
+          credentials: 'include', // Ensure cookies are sent (auth + consent)
+        });
+
+        if (response.status === 404) {
+          // Consent not found - show banner
+          // For anonymous users without a consent cookie, this is expected
+          openBanner();
+        } else if (response.ok) {
+          // API returns consent object directly (not wrapped in { consent: ... })
+          const consent = await response.json();
+          const isExpired = consent.expiresAt && new Date(consent.expiresAt) < new Date();
+
+          if (!isExpired) {
+            applyPreferences({
+              necessary: true,
+              analytics: consent.analytics,
+              marketing: consent.marketing,
+            });
+            // Don't show banner - consent is valid
+
+            // For anonymous users, ensure cookie is set (in case it was cleared)
+            if (consent.anonymousId && !consentId) {
+              const maxAge = 365 * 24 * 60 * 60;
+              document.cookie = `${COOKIE_NAMES.CONSENT_ID}=${encodeURIComponent(consent.anonymousId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+            }
+          } else {
+            // Consent expired - show banner
+            openBanner();
+          }
+        } else {
+          // Error fetching - show banner
+          openBanner();
+        }
+      } catch {
+        // Network error - show banner
+        openBanner();
+      }
+    };
+
     void checkExistingConsent();
-  }, [checkExistingConsent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function saveConsent(prefs: CookiePreferences) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/consents/cookies', {
+      const response = await fetch(API_CONSENT_ROUTES.COOKIES, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           analytics: prefs.analytics,
           marketing: prefs.marketing,
-          // Note: Si user authentifié, ajouter userId depuis contexte auth
         }),
       });
 
       if (response.ok) {
-        await response.json();
+        const data = await response.json();
 
-        // Sauvegarder en localStorage comme fallback
-        localStorage.setItem('cookie_consent', JSON.stringify({
+        // Set the consent ID cookie so we can retrieve it on next visit
+        // TTL: 12 months (same as consent)
+        if (data.anonymousId) {
+          const maxAge = 365 * 24 * 60 * 60; // 1 year in seconds
+          document.cookie = `${COOKIE_NAMES.CONSENT_ID}=${encodeURIComponent(data.anonymousId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        }
+
+        localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, JSON.stringify({
           ...prefs,
           savedAt: new Date().toISOString(),
         }));
 
-        // Appliquer préférences (charger/bloquer scripts)
         applyPreferences(prefs);
-
-        // Fermer banner
-        setVisible(false);
-        setShowSettings(false);
+        closeBanner();
+        toast.success('Préférences enregistrées');
       } else {
-        alert(COOKIE_MESSAGES.SAVE_ERROR);
+        toast.error(COOKIE_MESSAGES.SAVE_ERROR);
       }
     } catch {
-      alert(COOKIE_MESSAGES.NETWORK_ERROR);
+      toast.error(COOKIE_MESSAGES.NETWORK_ERROR);
     } finally {
       setIsLoading(false);
     }
@@ -185,161 +216,206 @@ export function CookieConsentBanner() {
     saveConsent(preferences);
   }
 
-  if (!visible) return null;
+  if (!isBannerOpen) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl p-6 z-50 animate-slide-up">
-      <div className="max-w-7xl mx-auto">
-        {!showSettings ? (
-          // Bannière simplifiée
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-start gap-3">
-                <span className="text-3xl">🍪</span>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    Nous utilisons des cookies
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Pour améliorer votre expérience, nous utilisons des cookies nécessaires au
-                    fonctionnement du site et, si vous l&apos;acceptez, des cookies analytiques pour
-                    mesurer l&apos;audience de manière anonyme.
-                    {' '}
-                    <a href="/politique-confidentialite" className="text-blue-600 hover:underline">
-                      En savoir plus
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                disabled={isLoading}
-              >
-                <Settings className="w-4 h-4" />
-                Personnaliser
-              </button>
-              <button
-                onClick={rejectAll}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isLoading}
-              >
-                Refuser tout
-              </button>
-              <button
-                onClick={acceptAll}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Enregistrement...' : 'Accepter tout'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          // Panneau de personnalisation
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Paramètres des cookies
-              </h3>
-              <button
-                onClick={() => setShowSettings(false)}
-                className="text-gray-500 hover:text-gray-700"
-                aria-label="Fermer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+    <>
+      {/* Backdrop - no click handler: user must make a choice */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-in fade-in duration-200 pointer-events-none"
+        aria-hidden="true"
+      />
 
-            <div className="space-y-4 mb-6">
-              {/* Cookies nécessaires */}
-              <div className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-gray-900">Cookies nécessaires</h4>
-                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                      Toujours actifs
-                    </span>
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          {!showSettings ? (
+            // Simple view
+            <>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <Cookie className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <p className="text-sm text-gray-600">
-                    Requis pour le fonctionnement du site (authentification, sécurité CSRF).
-                    Ces cookies ne peuvent pas être désactivés.
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Exemples : JWT session, CSRF token
-                  </p>
+                  <div>
+                    <CardTitle className="text-xl">Gestion des cookies</CardTitle>
+                    <CardDescription>
+                      Conformité RGPD & ePrivacy
+                    </CardDescription>
+                  </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={true}
-                  disabled
-                  className="mt-1 w-5 h-5"
-                  aria-label="Cookies nécessaires (toujours actifs)"
-                />
-              </div>
+              </CardHeader>
 
-              {/* Cookies analytics */}
-              <div className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">Cookies analytics</h4>
-                  <p className="text-sm text-gray-600">
-                    Nous permettent de mesurer l&apos;audience du site de manière anonyme
-                    (Plausible Analytics, privacy-first).
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Aucune donnée personnelle collectée • Conformité RGPD • Hébergement UE
-                  </p>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Nous utilisons des cookies pour assurer le bon fonctionnement du site.
+                  Avec votre consentement, nous utilisons également des cookies analytiques
+                  pour améliorer nos services.
+                </p>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <Shield className="h-5 w-5 mx-auto text-green-600 dark:text-green-400 mb-1" />
+                    <p className="text-xs font-medium text-green-700 dark:text-green-300">Nécessaires</p>
+                    <p className="text-[10px] text-green-600 dark:text-green-400">Toujours actifs</p>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <BarChart3 className="h-5 w-5 mx-auto text-blue-600 dark:text-blue-400 mb-1" />
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Analytics</p>
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400">Optionnels</p>
+                  </div>
+                  <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <Megaphone className="h-5 w-5 mx-auto text-orange-600 dark:text-orange-400 mb-1" />
+                    <p className="text-xs font-medium text-orange-700 dark:text-orange-300">Marketing</p>
+                    <p className="text-[10px] text-orange-600 dark:text-orange-400">Optionnels</p>
+                  </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.analytics}
-                  onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
-                  className="mt-1 w-5 h-5 accent-blue-600 cursor-pointer"
-                  aria-label="Activer les cookies analytics"
-                />
-              </div>
 
-              {/* Cookies marketing */}
-              <div className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">Cookies marketing</h4>
-                  <p className="text-sm text-gray-600">
-                    Permettent d&apos;afficher des publicités personnalisées adaptées à vos intérêts.
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Partagés avec des tiers • Suivi publicitaire
-                  </p>
+                <Link
+                  href={LEGAL_ROUTES.PRIVACY_POLICY}
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  onClick={() => closeBanner()}
+                >
+                  En savoir plus sur notre politique de confidentialité →
+                </Link>
+              </CardContent>
+
+              <CardFooter className="flex flex-col gap-2 pt-2">
+                <div className="flex gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={rejectAll}
+                    disabled={isLoading}
+                  >
+                    Refuser tout
+                  </Button>
+                  <Button
+                    className="flex-1 bg-purple-600 hover:bg-purple-700"
+                    onClick={acceptAll}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Enregistrement...' : 'Accepter tout'}
+                  </Button>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.marketing}
-                  onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
-                  className="mt-1 w-5 h-5 accent-blue-600 cursor-pointer"
-                  aria-label="Activer les cookies marketing"
-                />
-              </div>
-            </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setShowSettings(true)}
+                  disabled={isLoading}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Personnaliser mes choix
+                </Button>
+              </CardFooter>
+            </>
+          ) : (
+            // Settings view
+            <>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <Settings className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Paramètres des cookies</CardTitle>
+                      <CardDescription>
+                        Personnalisez vos préférences
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowSettings(false)}
+                    className="text-muted-foreground"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={saveCustom}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Enregistrement...' : 'Enregistrer mes choix'}
-              </button>
-              <a
-                href="/politique-confidentialite"
-                className="px-6 py-2 text-blue-600 hover:underline"
-              >
-                Politique de confidentialité
-              </a>
-            </div>
-          </div>
-        )}
+              <CardContent className="space-y-4">
+                {/* Necessary cookies */}
+                <div className="flex items-start justify-between p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex gap-3">
+                    <Shield className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-green-800 dark:text-green-200">Cookies nécessaires</h4>
+                        <span className="text-[10px] bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-0.5 rounded-full font-medium">
+                          Toujours actifs
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        Authentification, sécurité CSRF. Indispensables au fonctionnement.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+
+                {/* Analytics cookies */}
+                <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex gap-3">
+                    <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Cookies analytics</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Mesure d&apos;audience anonymisée via Plausible (privacy-first, hébergé UE).
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={preferences.analytics}
+                    onCheckedChange={(checked) => setPreferences({ ...preferences, analytics: checked })}
+                    aria-label="Activer les cookies analytics"
+                  />
+                </div>
+
+                {/* Marketing cookies */}
+                <div className="flex items-start justify-between p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex gap-3">
+                    <Megaphone className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Cookies marketing</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Publicités personnalisées. Partagés avec des tiers.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={preferences.marketing}
+                    onCheckedChange={(checked) => setPreferences({ ...preferences, marketing: checked })}
+                    aria-label="Activer les cookies marketing"
+                  />
+                </div>
+              </CardContent>
+
+              <CardFooter className="flex flex-col gap-2 pt-2">
+                <Button
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  onClick={saveCustom}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Enregistrement...' : 'Enregistrer mes choix'}
+                </Button>
+                <Link
+                  href={LEGAL_ROUTES.PRIVACY_POLICY}
+                  className="text-xs text-muted-foreground hover:text-primary text-center"
+                  onClick={() => closeBanner()}
+                >
+                  Politique de confidentialité
+                </Link>
+              </CardFooter>
+            </>
+          )}
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

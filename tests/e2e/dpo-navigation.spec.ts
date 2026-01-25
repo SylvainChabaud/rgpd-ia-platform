@@ -22,7 +22,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { AUTH_ROUTES, PORTAL_ROUTES } from '@/lib/constants/routes';
+import { AUTH_ROUTES } from '@/lib/constants/routes';
 import { TEST_DPO_ACME, E2E_TIMEOUTS } from './constants';
 
 /**

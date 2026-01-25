@@ -14,16 +14,6 @@
 BEGIN;
 
 -- =============================================================================
--- TABLE: cgu_versions
--- Add summary field for version description
--- =============================================================================
-
-ALTER TABLE cgu_versions
-    ADD COLUMN IF NOT EXISTS summary TEXT;
-
-COMMENT ON COLUMN cgu_versions.summary IS 'Brief summary of changes in this CGU version';
-
--- =============================================================================
 -- TABLE: user_cgu_acceptances
 -- Add deleted_at for soft delete and acceptance_method for traceability
 -- =============================================================================

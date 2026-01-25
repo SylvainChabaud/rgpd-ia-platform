@@ -176,13 +176,13 @@ describe("RGPD Art. 15 + 20: User Data Export", () => {
   let userRepo: MemUserRepo;
   let exportRepo: MemExportRepo;
   let auditWriter: MemAuditWriter;
-  let tenantRepo: MemTenantRepo;
+  let _tenantRepo: MemTenantRepo; // Reserved for future multi-tenant export tests
 
   beforeEach(() => {
     userRepo = new MemUserRepo();
     exportRepo = new MemExportRepo();
     auditWriter = new MemAuditWriter();
-    tenantRepo = new MemTenantRepo();
+    _tenantRepo = new MemTenantRepo();
   });
 
   describe("Export format (Art. 20 - Portability)", () => {
@@ -414,7 +414,7 @@ describe("RGPD Art. 15 + 20: User Data Export", () => {
       };
 
       // Manually add to repo (simulating old export)
-      (exportRepo as any).bundles = [expiredBundle];
+      (exportRepo as unknown as { bundles: typeof expiredBundle[] }).bundles = [expiredBundle];
 
       // Run purge
       const deleted = await exportRepo.deleteExpired();

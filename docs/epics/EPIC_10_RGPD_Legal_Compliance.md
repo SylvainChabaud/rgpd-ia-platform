@@ -693,9 +693,10 @@ Questions : support@example.com
 - [ ] Document créé : `/docs/legal/CGU.md`
 - [ ] Page frontend accessible : `/legal/terms-of-service`
 - [ ] Lien footer : "CGU"
-- [ ] Checkbox signup : "J'accepte les CGU" (obligatoire)
-- [ ] Versioning : Historique versions CGU (DB `cgu_versions`)
-- [ ] Acceptation tracée : `user_cgu_acceptances` (user_id, cgu_version_id, accepted_at)
+- [x] Checkbox signup : "J'accepte les CGU" (obligatoire)
+- [x] Modal acceptation CGU au login si nouvelle version (Art. 7)
+- [x] Versioning : Historique versions CGU (DB `cgu_versions`)
+- [x] Acceptation tracée : `user_cgu_acceptances` (user_id, cgu_version_id, accepted_at)
 
 ---
 
@@ -1329,9 +1330,11 @@ app/
       page.tsx               # Politique cookies
 
 src/
-  app/
-    components/
-      CookieConsentBanner.tsx
+  components/
+    legal/
+      CookieConsentBanner.tsx      # Banner cookies ePrivacy
+      CguAcceptanceModal.tsx       # Modal acceptation CGU (Art. 7)
+      LegalContentRenderer.tsx     # Rendu HTML documents légaux
     usecases/
       suspend-user-data.usecase.ts
       submit-dispute.usecase.ts
@@ -1344,21 +1347,27 @@ migrations/
 ### 4.2 Base de données (ajouts)
 
 ```sql
--- CGU versions
+-- CGU versions (contenu stocké dans fichier markdown, pas en DB)
 CREATE TABLE cgu_versions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  version VARCHAR(50) NOT NULL UNIQUE,
-  content TEXT NOT NULL,
+  version VARCHAR(50) NOT NULL UNIQUE,  -- Semver: "1.0.0"
+  content_path VARCHAR(255) NOT NULL DEFAULT 'docs/legal/cgu-cgv.md',
+  summary TEXT,  -- Résumé des changements
   effective_date DATE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Acceptations CGU users
+-- Acceptations CGU users (Art. 7 traçabilité)
 CREATE TABLE user_cgu_acceptances (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
   user_id UUID NOT NULL REFERENCES users(id),
   cgu_version_id UUID NOT NULL REFERENCES cgu_versions(id),
   accepted_at TIMESTAMPTZ DEFAULT NOW(),
+  ip_address INET,  -- Anonymisée (dernier octet masqué)
+  acceptance_method VARCHAR(20) DEFAULT 'checkbox',
+  deleted_at TIMESTAMPTZ,  -- Soft delete (Art. 17)
   UNIQUE(user_id, cgu_version_id)
 );
 

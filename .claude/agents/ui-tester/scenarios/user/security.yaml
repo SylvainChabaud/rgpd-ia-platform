@@ -1,0 +1,202 @@
+# Scénarios de test - User (End User) / Sécurité
+# LOT 13.0 - Authentification & Layout User
+name: "User - Sécurité"
+description: "Tests de sécurité du frontend utilisateur (MEMBER scope)"
+priority: critical
+tags: [user, security, lot-13.0]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "MEMBER"
+
+scenarios:
+  # ============================================
+  # SCOPE ISOLATION
+  # ============================================
+
+  - id: USER-S001
+    name: "MEMBER ne peut pas accéder à /admin"
+    description: "Redirection des utilisateurs MEMBER vers /app"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/admin"
+      - wait: 2000
+      - screenshot: "user-denied-admin.png"
+    expected:
+      - url_not_contains: "/admin"
+      - url_contains: "/app"
+
+  - id: USER-S002
+    name: "MEMBER ne peut pas accéder à /portal"
+    description: "Redirection des utilisateurs MEMBER vers /app"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/portal"
+      - wait: 2000
+      - screenshot: "user-denied-portal.png"
+    expected:
+      - url_not_contains: "/portal"
+      - url_contains: "/app"
+
+  - id: USER-S003
+    name: "PLATFORM user redirigé vers /admin depuis /app"
+    description: "Redirection cross-scope"
+    priority: critical
+    steps:
+      - login_as: "{{users.platform_admin}}"
+      - navigate: "http://localhost:3000/app"
+      - wait: 2000
+    expected:
+      - url_contains: "/admin"
+      - url_not_contains: "/app"
+
+  - id: USER-S004
+    name: "TENANT user redirigé vers /portal depuis /app"
+    description: "Redirection cross-scope"
+    priority: critical
+    steps:
+      - login_as: "{{users.tenant_admin}}"
+      - navigate: "http://localhost:3000/app"
+      - wait: 2000
+    expected:
+      - url_contains: "/portal"
+      - url_not_contains: "/app"
+
+  # ============================================
+  # SESSION & TOKEN
+  # ============================================
+
+  - id: USER-S010
+    name: "Token httpOnly - Non accessible via JS"
+    description: "Le token JWT n'est pas lisible côté client"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - execute_script: |
+          return document.cookie.includes('auth_token');
+    expected:
+      - script_result: false
+
+  - id: USER-S011
+    name: "Session expire - Redirection login"
+    description: "Token expiré redirige vers login"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Bienvenue"
+      - clear_cookies: true
+      - navigate: "http://localhost:3000/app"
+      - wait: 2000
+    expected:
+      - url_contains: "/login"
+
+  - id: USER-S012
+    name: "Refresh token - Session maintenue"
+    description: "Le refresh token prolonge la session"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - wait: 60000  # Attendre proche de l'expiration
+      - navigate: "http://localhost:3000/app"
+      - wait_for: "Bienvenue"
+    expected:
+      - url_contains: "/app"
+      - text_visible: "Bienvenue"
+
+  # ============================================
+  # XSS PREVENTION
+  # ============================================
+
+  - id: USER-S020
+    name: "XSS - DisplayName sanitisé"
+    description: "Les caractères HTML sont échappés dans displayName"
+    priority: critical
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Bienvenue"
+      - execute_script: |
+          const header = document.querySelector('header');
+          return !header.innerHTML.includes('<script>');
+    expected:
+      - script_result: true
+      - no_text: "<script>"
+
+  - id: USER-S021
+    name: "XSS - Pas d'injection dans URL"
+    description: "Les paramètres URL sont sanitisés"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/app?test=<script>alert(1)</script>"
+      - wait: 1000
+    expected:
+      - no_alert_dialog: true
+
+  # ============================================
+  # SECURITY HEADERS
+  # ============================================
+
+  - id: USER-S030
+    name: "Headers de sécurité présents"
+    description: "X-Content-Type-Options, X-Frame-Options, etc."
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - capture_response_headers: "/app"
+    expected:
+      - header_present: "X-Content-Type-Options"
+      - header_present: "X-Frame-Options"
+      - header_value: "X-Content-Type-Options: nosniff"
+
+  # ============================================
+  # CSRF PROTECTION
+  # ============================================
+
+  - id: USER-S040
+    name: "Logout requiert credentials"
+    description: "L'API logout utilise credentials: include"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - intercept_network: "/api/auth/logout"
+      - click: "{{users.member.display_name}}"
+      - click: "Déconnexion"
+      - wait: 1000
+    expected:
+      - request_has_credentials: true
+
+  # ============================================
+  # DEFENSE IN DEPTH
+  # ============================================
+
+  - id: USER-S050
+    name: "Loading state pendant vérification auth"
+    description: "Pas de flash de contenu avant auth confirmée"
+    priority: high
+    steps:
+      - clear_cookies: true
+      - navigate: "http://localhost:3000/app"
+      - screenshot_immediate: "user-loading-state.png"
+    expected:
+      - text_visible: "Vérification"
+      - no_text: "Bienvenue"
+
+  - id: USER-S051
+    name: "Contenu protégé jusqu'à auth complète"
+    description: "Defense in depth - client-side guard"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      # Simuler un état auth incohérent
+      - execute_script: |
+          // Tenter de modifier l'état local
+          localStorage.removeItem('auth-storage');
+          return true;
+      - navigate: "http://localhost:3000/app"
+      - wait: 2000
+    expected:
+      # Le middleware serveur doit quand même autoriser (cookie valide)
+      - text_visible: "Bienvenue"

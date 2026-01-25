@@ -19,12 +19,13 @@ import { withLogging } from '@/infrastructure/logging/middleware';
 import { verifyJwt, signJwt, signRefreshToken, TOKEN_EXPIRATION } from '@/lib/jwt';
 import { unauthorizedError } from '@/lib/errorResponse';
 import { logger } from '@/infrastructure/logging/logger';
+import { AUTH_COOKIES, REFRESH_TOKEN_PATH } from '@/shared/auth/constants';
 
 export const POST = withLogging(
   async (req: NextRequest) => {
     try {
       // Get refresh token from httpOnly cookie
-      const refreshToken = req.cookies.get('refresh_token')?.value;
+      const refreshToken = req.cookies.get(AUTH_COOKIES.REFRESH_TOKEN)?.value;
 
       if (!refreshToken) {
         return NextResponse.json(
@@ -37,32 +38,34 @@ export const POST = withLogging(
       let payload;
       try {
         payload = verifyJwt(refreshToken);
-      } catch (error) {
+      } catch {
         // Invalid or expired refresh token - user must login again
         const response = NextResponse.json(
           unauthorizedError('Invalid refresh token'),
           { status: 401 }
         );
         // Clear both cookies
-        response.cookies.set('auth_token', '', { maxAge: 0, path: '/' });
-        response.cookies.set('refresh_token', '', { maxAge: 0, path: '/api/auth/refresh' });
+        response.cookies.set(AUTH_COOKIES.ACCESS_TOKEN, '', { maxAge: 0, path: '/' });
+        response.cookies.set(AUTH_COOKIES.REFRESH_TOKEN, '', { maxAge: 0, path: REFRESH_TOKEN_PATH });
         return response;
       }
 
-      // Generate new access token
+      // Generate new access token (preserve cguAccepted for Art. 7 RGPD compliance)
       const newAccessToken = signJwt({
         userId: payload.userId,
         tenantId: payload.tenantId,
         scope: payload.scope,
         role: payload.role,
+        cguAccepted: payload.cguAccepted,
       });
 
-      // Rotate refresh token (sliding window pattern)
+      // Rotate refresh token (sliding window pattern, preserve cguAccepted)
       const newRefreshToken = signRefreshToken({
         userId: payload.userId,
         tenantId: payload.tenantId,
         scope: payload.scope,
         role: payload.role,
+        cguAccepted: payload.cguAccepted,
       });
 
       // Create response
@@ -77,7 +80,7 @@ export const POST = withLogging(
       });
 
       // Set new access token cookie
-      response.cookies.set('auth_token', newAccessToken, {
+      response.cookies.set(AUTH_COOKIES.ACCESS_TOKEN, newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -86,11 +89,11 @@ export const POST = withLogging(
       });
 
       // Set new refresh token cookie (rotation)
-      response.cookies.set('refresh_token', newRefreshToken, {
+      response.cookies.set(AUTH_COOKIES.REFRESH_TOKEN, newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        path: '/api/auth/refresh',
+        path: REFRESH_TOKEN_PATH,
         maxAge: TOKEN_EXPIRATION.REFRESH_TOKEN_SECONDS,
       });
 

@@ -2,7 +2,7 @@
 
 > **Cartographie complète des preuves et rapports d'audit** permettant de démontrer la conformité RGPD et la qualité du code source.
 
-**Dernière mise à jour** : 2026-01-01  
+**Dernière mise à jour** : 2026-01-25
 **Maintenu par** : DPO + RSSI + Équipe développement
 
 ---
@@ -35,10 +35,12 @@
 
 ### 2. `AUDIT_EPICS_1_8_FINAL_REPORT.md` — Rapport d'audit technique final
 
-**Description** : Rapport complet d'audit des **EPICs 1-8** validant la robustesse, la conformité RGPD, la couverture de tests (≥80%), et la qualité du code avant démarrage EPICs 9-13.
+**Description** : Rapport complet d'audit des **EPICs 1-8** validant la robustesse, la conformité RGPD, la couverture de tests (≥80%), et la qualité du code.
+
+**Note** : EPICs 9-12 sont maintenant terminés. Un nouveau rapport d'audit consolidé EPICs 1-12 sera généré après EPIC 13.
 
 **Usage** :
-- ✅ **Snapshot de conformité** — État de référence avant EPICs 9-13
+- ✅ **Snapshot de conformité** — État de référence EPICs 1-8
 - ✅ **Handoff entre équipes** — Base pour planifier EPICs suivantes
 - ✅ **Preuve d'audit** — Archivé comme preuve pour conformité RGPD (Art. 5.2 accountability)
 - ✅ **Reference technique** — Vérifier détails de conformité par article RGPD

@@ -1,21 +1,31 @@
 /**
- * Page: Conditions Générales d'Utilisation (CGU/CGV) - SSG
+ * Page: Conditions Générales d'Utilisation (CGU/CGV) - Dynamic
  *
  * RGPD: Art. 7 (Consentement), Art. 13-14 (Information)
  * Classification: Public (P0 - accessible sans authentification)
  *
- * LOT 10.1 — CGU/CGV
- * - Page statique générée (SSG - Static Site Generation)
- * - Accessible publiquement via footer + /cgu
- * - Contenu markdown converti en HTML avec marked
- * - Workflow acceptation via API /api/legal/cgu (POST)
+ * LOT 10.1 & 13.0 — CGU/CGV with acceptance workflow
+ * - Dynamic page (checks auth and acceptance status)
+ * - Accessible publicly via footer + /cgu
+ * - Markdown content from file (single source of truth)
+ * - Acceptance workflow for authenticated users
  */
 
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { marked } from 'marked';
-import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileText } from 'lucide-react';
+import { BackButton } from '../_components/BackButton';
+import { LegalContentRenderer } from '@/components/legal/LegalContentRenderer';
+import { CguAcceptanceSection } from './CguAcceptanceSection';
+import { verifyAccessToken } from '@/infrastructure/auth/tokens';
+import { PgCguRepo } from '@/infrastructure/repositories/PgCguRepo';
+import { AUTH_COOKIES } from '@/shared/auth/constants';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Conditions Générales d\'Utilisation (CGU) - Plateforme IA RGPD',
@@ -23,106 +33,98 @@ export const metadata = {
 };
 
 export default async function CguPage() {
-  // Charger le contenu markdown depuis docs/legal/
+  // Load markdown content from file (single source of truth)
   const filePath = join(process.cwd(), 'docs', 'legal', 'cgu-cgv.md');
   const markdown = await readFile(filePath, 'utf-8');
 
-  // Convertir en HTML avec marked et sanitizer pour prévenir XSS
+  // Convert to HTML with marked and sanitize for XSS prevention
   const rawHtml = await marked(markdown);
   const html = sanitizeHtml(rawHtml);
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white shadow-sm rounded-lg p-8 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Conditions Générales d&apos;Utilisation (CGU)
-            </h1>
-            <span className="text-sm text-gray-500">
-              Version 1.0 - 05/01/2026
-            </span>
-          </div>
-          <p className="text-gray-600">
-            Conditions régissant l&apos;utilisation de notre plateforme d&apos;intelligence artificielle
-          </p>
-        </div>
+  // Check authentication status
+  let isAuthenticated = false;
+  let hasAccepted = false;
+  let cguVersionId: string | null = null;
 
-        {/* Alerte acceptation obligatoire */}
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                <strong>Acceptation obligatoire :</strong> L&apos;utilisation de la plateforme nécessite l&apos;acceptation préalable des présentes CGU conformément à l&apos;Art. 7 RGPD.
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(AUTH_COOKIES.ACCESS_TOKEN)?.value;
+
+  if (accessToken) {
+    try {
+      const payload = await verifyAccessToken(accessToken);
+      if (payload && payload.userId && payload.tenantId) {
+        isAuthenticated = true;
+
+        // Check CGU acceptance status
+        const cguRepo = new PgCguRepo();
+        const activeVersion = await cguRepo.findActiveVersion();
+
+        if (activeVersion) {
+          cguVersionId = activeVersion.id;
+          hasAccepted = await cguRepo.hasUserAcceptedActiveVersion(
+            payload.tenantId,
+            payload.userId
+          );
+        } else {
+          // No active CGU version = no acceptance required
+          hasAccepted = true;
+        }
+      }
+    } catch {
+      // Token invalid - treat as unauthenticated
+      isAuthenticated = false;
+    }
+  }
+
+  // Extract version info from markdown (for display)
+  const versionMatch = markdown.match(/\*\*Version\*\*\s*:\s*(\d+\.\d+)/);
+  const dateMatch = markdown.match(/\*\*Date d'entrée en vigueur\*\*\s*:\s*([^\n]+)/);
+  const version = versionMatch?.[1] ?? '1.0';
+  const date = dateMatch?.[1]?.trim() ?? '2026-01-05';
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center gap-4 mb-4">
+            <FileText className="h-10 w-10" />
+            <div>
+              <h1 className="text-3xl font-bold">Conditions Générales d&apos;Utilisation</h1>
+              <p className="text-slate-300 mt-1">
+                Conditions régissant l&apos;utilisation de notre plateforme
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Contenu markdown */}
-        <div className="bg-white shadow-sm rounded-lg p-8">
-          <div
-            className="prose prose-lg max-w-none
-              prose-headings:font-bold prose-headings:text-gray-900
-              prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
-              prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-              prose-p:text-gray-700 prose-p:leading-relaxed
-              prose-a:text-blue-600 prose-a:hover:text-blue-800
-              prose-strong:text-gray-900 prose-strong:font-semibold
-              prose-ul:list-disc prose-ul:ml-6
-              prose-ol:list-decimal prose-ol:ml-6
-              prose-li:text-gray-700
-              prose-table:border-collapse prose-table:w-full
-              prose-th:bg-gray-100 prose-th:border prose-th:border-gray-300 prose-th:px-4 prose-th:py-2
-              prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2
-              prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded
-              prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-
-        {/* Footer Links */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Documents connexes
-          </h3>
-          <div className="flex flex-col gap-2">
-            <a
-              href="/legal/privacy-policy"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              → Politique de Confidentialité (RGPD)
-            </a>
-            <a
-              href="/legal/rgpd-info"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              → Informations RGPD et exercice des droits
-            </a>
-            <a
-              href="mailto:dpo@votre-plateforme.fr"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              → Contacter le DPO
-            </a>
+          <div className="flex items-center gap-4 text-sm text-slate-400">
+            <span>Version {version}</span>
+            <span>•</span>
+            <span>Mise à jour : {date}</span>
+            <span>•</span>
+            <span>RGPD Art. 7</span>
           </div>
         </div>
+      </div>
 
-        {/* Retour */}
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            ← Retour à l&apos;accueil
-          </Link>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation */}
+        <div className="mb-6">
+          <BackButton />
         </div>
+
+        {/* Main Content Card - First like other legal pages */}
+        <Card className="mb-8">
+          <CardContent className="pt-8 pb-10 px-6 lg:px-10">
+            <LegalContentRenderer html={html} theme="slate" />
+          </CardContent>
+        </Card>
+
+        {/* Acceptance Section (Alert + Actions) - Client Component */}
+        <CguAcceptanceSection
+          isAuthenticated={isAuthenticated}
+          cguVersionId={cguVersionId}
+          hasAccepted={hasAccepted}
+        />
       </div>
     </div>
   );

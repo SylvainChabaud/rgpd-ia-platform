@@ -1,0 +1,312 @@
+# Scénarios de test - User (End User) / Fonctionnel
+# LOT 13.0 - Authentification & Layout User
+name: "User - Fonctionnel"
+description: "Tests fonctionnels du frontend utilisateur (MEMBER scope)"
+priority: high
+tags: [user, functional, lot-13.0]
+
+prerequisites:
+  - server_running: true
+  - test_users_seeded: true
+  - user_scope: "MEMBER"
+
+scenarios:
+  # ============================================
+  # AUTHENTIFICATION & ACCÈS
+  # ============================================
+
+  - id: USER-F001
+    name: "Login et redirection vers /app"
+    description: "Un utilisateur MEMBER est redirigé vers /app après login"
+    priority: critical
+    steps:
+      - navigate: "http://localhost:3000/login"
+      - fill_form:
+          email: "user@acme.local"
+          password: "User1234"
+      - click: "Se connecter"
+      - wait_for: "Bienvenue"
+      - screenshot: "user-login-success.png"
+    expected:
+      - url_contains: "/app"
+      - text_visible: "Bienvenue"
+      - no_text: "Erreur"
+
+  - id: USER-F002
+    name: "Accès direct /app sans auth"
+    description: "Redirection vers login si non authentifié"
+    priority: critical
+    steps:
+      - clear_cookies: true
+      - navigate: "http://localhost:3000/app"
+      - wait_for: "Connexion"
+    expected:
+      - url_contains: "/login"
+
+  - id: USER-F003
+    name: "Déconnexion"
+    description: "Logout et redirection vers login"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Bienvenue"
+      - click: "{{users.member.display_name}}"
+      - click: "Déconnexion"
+      - wait_for: "Connexion"
+      - screenshot: "user-logout.png"
+    expected:
+      - url_contains: "/login"
+
+  # ============================================
+  # HOME / DASHBOARD
+  # ============================================
+
+  - id: USER-F010
+    name: "Page d'accueil - Welcome message"
+    description: "Message de bienvenue avec displayName"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Bienvenue"
+      - screenshot: "user-home.png"
+    expected:
+      - url_equals: "/app"
+      - text_visible: "Bienvenue"
+      - text_visible: "{{users.member.display_name}}"
+      - text_visible: "Votre espace personnel"
+
+  - id: USER-F011
+    name: "Page d'accueil - Placeholder cards"
+    description: "Cards des fonctionnalités à venir"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Outils IA"
+    expected:
+      - text_visible: "Outils IA"
+      - text_visible: "Historique"
+      - text_visible: "Mes Consentements"
+      - text_visible: "Mes Données"
+      - text_visible: "Bientôt disponible"
+
+  - id: USER-F012
+    name: "Page d'accueil - Section À propos"
+    description: "Informations sur la plateforme"
+    priority: low
+    steps:
+      - login_as: "{{users.member}}"
+      - scroll_to: "À propos"
+    expected:
+      - text_visible: "À propos de cette plateforme"
+      - text_visible: "Outils IA respectueux de vos données"
+
+  # ============================================
+  # NAVIGATION HEADER
+  # ============================================
+
+  - id: USER-F020
+    name: "Header - Logo et titre"
+    description: "Logo cliquable ramène à /app"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "Mon Profil"
+      - wait_for: "Mon Profil"
+      - click: "RGPD Platform"  # Logo/titre
+      - wait_for: "Bienvenue"
+    expected:
+      - url_equals: "/app"
+
+  - id: USER-F021
+    name: "Header - Navigation items actifs/désactivés"
+    description: "Seul Accueil est actif, autres désactivés"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - wait_for: "Accueil"
+      - screenshot: "user-nav-items.png"
+    expected:
+      - button_enabled: "Accueil"
+      - button_disabled: "Outils IA"
+      - button_disabled: "Historique"
+      - button_disabled: "Mes Consentements"
+      - button_disabled: "Mes Données"
+
+  - id: USER-F022
+    name: "Header - User menu dropdown"
+    description: "Menu utilisateur avec options"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "{{users.member.display_name}}"
+      - screenshot: "user-menu-dropdown.png"
+    expected:
+      - text_visible: "Mon Compte"
+      - text_visible: "Mon Profil"
+      - text_visible: "Mode sombre"  # ou "Mode clair"
+      - text_visible: "Déconnexion"
+
+  - id: USER-F023
+    name: "Header - Theme toggle"
+    description: "Basculer entre mode clair et sombre"
+    priority: low
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "{{users.member.display_name}}"
+      - click: "Mode sombre"
+      - screenshot: "user-dark-mode.png"
+    expected:
+      - class_contains: "dark"
+
+  # ============================================
+  # PROFILE PAGE
+  # ============================================
+
+  - id: USER-F030
+    name: "Accès page Profil"
+    description: "Navigation vers /app/profile"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "{{users.member.display_name}}"
+      - click: "Mon Profil"
+      - wait_for: "Mon Profil"
+      - screenshot: "user-profile.png"
+    expected:
+      - url_contains: "/app/profile"
+      - text_visible: "Mon Profil"
+      - text_visible: "Gérez vos informations personnelles"
+
+  - id: USER-F031
+    name: "Profile - Informations actuelles"
+    description: "Affichage des données P1 utilisateur"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/app/profile"
+      - wait_for: "Informations actuelles"
+    expected:
+      - text_visible: "Nom d'affichage"
+      - text_visible: "{{users.member.display_name}}"
+      - text_visible: "Rôle"
+      - text_visible: "Scope"
+      - text_visible: "Note : Votre email est stocké de manière sécurisée"
+
+  - id: USER-F032
+    name: "Profile - Sections placeholder"
+    description: "Sections à venir (LOT 13.4)"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - navigate: "http://localhost:3000/app/profile"
+      - wait_for: "Informations personnelles"
+    expected:
+      - text_visible: "Informations personnelles"
+      - text_visible: "Sécurité"
+      - text_visible: "Notifications"
+      - text_visible: "À venir"
+
+  # ============================================
+  # FOOTER
+  # ============================================
+
+  - id: USER-F040
+    name: "Footer - Liens légaux"
+    description: "Liens vers pages légales accessibles"
+    priority: high
+    steps:
+      - login_as: "{{users.member}}"
+      - scroll_to: "Politique de confidentialité"
+      - screenshot: "user-footer.png"
+    expected:
+      - link_visible: "Politique de confidentialité"
+      - link_visible: "CGU"
+      - link_visible: "Informations RGPD"
+      - text_visible: "Gérer les cookies"
+      - text_visible: "© 2026 RGPD Platform"
+
+  - id: USER-F041
+    name: "Footer - Lien Politique de confidentialité"
+    description: "Navigation vers page légale"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "Politique de confidentialité"
+      - wait_for: "Politique de Confidentialité"
+    expected:
+      - url_contains: "/politique-confidentialite"
+
+  - id: USER-F042
+    name: "Footer - Lien CGU"
+    description: "Navigation vers CGU"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "CGU"
+      - wait_for: "Conditions Générales"
+    expected:
+      - url_contains: "/cgu"
+
+  - id: USER-F043
+    name: "Footer - Lien Informations RGPD"
+    description: "Navigation vers page RGPD"
+    priority: medium
+    steps:
+      - login_as: "{{users.member}}"
+      - click: "Informations RGPD"
+      - wait_for: "RGPD"
+    expected:
+      - url_contains: "/informations-rgpd"
+
+  # ============================================
+  # RESPONSIVE DESIGN
+  # ============================================
+
+  - id: USER-F050
+    name: "Responsive - Mobile viewport"
+    description: "Layout adaptatif sur mobile"
+    priority: medium
+    tags: [responsive]
+    steps:
+      - login_as: "{{users.member}}"
+      - resize_viewport:
+          width: 375
+          height: 667
+      - wait_for: "Bienvenue"
+      - screenshot: "user-mobile.png"
+    expected:
+      - no_horizontal_scroll: true
+      - text_visible: "Bienvenue"
+
+  - id: USER-F051
+    name: "Responsive - Tablet viewport"
+    description: "Layout adaptatif sur tablette"
+    priority: low
+    tags: [responsive]
+    steps:
+      - login_as: "{{users.member}}"
+      - resize_viewport:
+          width: 768
+          height: 1024
+      - screenshot: "user-tablet.png"
+    expected:
+      - no_horizontal_scroll: true
+
+  # ============================================
+  # PERFORMANCE
+  # ============================================
+
+  - id: USER-F060
+    name: "Performance - Page d'accueil"
+    description: "Temps de chargement acceptable"
+    priority: medium
+    tags: [performance]
+    steps:
+      - login_as: "{{users.member}}"
+      - performance_start_trace: true
+      - navigate: "http://localhost:3000/app"
+      - wait_for: "Bienvenue"
+      - performance_stop_trace: true
+    expected:
+      - lcp_under: 2500
+      - cls_under: 0.1

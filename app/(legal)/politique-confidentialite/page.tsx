@@ -8,7 +8,6 @@
  * - Page statique générée (SSG - Static Site Generation)
  * - Accessible publiquement via footer + /politique-confidentialite
  * - Contenu markdown converti en HTML avec marked
- * - Audit event émis lors de la consultation
  */
 
 import { readFile } from 'fs/promises';
@@ -16,6 +15,11 @@ import { join } from 'path';
 import { marked } from 'marked';
 import Link from 'next/link';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Shield, Mail, FileText } from 'lucide-react';
+import { BackButton } from '../_components/BackButton';
+import { LegalContentRenderer } from '@/components/legal/LegalContentRenderer';
 
 export const metadata = {
   title: 'Politique de Confidentialité - Plateforme IA RGPD',
@@ -32,78 +36,99 @@ export default async function PolitiqueConfidentialitePage() {
   const html = sanitizeHtml(rawHtml);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white shadow-sm rounded-lg p-8 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Politique de Confidentialité
-            </h1>
-            <span className="text-sm text-gray-500">
-              Version 1.0 - 05/01/2026
-            </span>
+    <div className="min-h-screen bg-background">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center gap-4 mb-4">
+            <Shield className="h-10 w-10" />
+            <div>
+              <h1 className="text-3xl font-bold">Politique de Confidentialité</h1>
+              <p className="text-blue-100 mt-1">
+                Notre engagement pour la protection de vos données personnelles
+              </p>
+            </div>
           </div>
-          <p className="text-gray-600">
-            Notre engagement pour la protection de vos données personnelles conformément au RGPD
-          </p>
-        </div>
-
-        {/* Contenu markdown */}
-        <div className="bg-white shadow-sm rounded-lg p-8">
-          <div
-            className="prose prose-lg max-w-none
-              prose-headings:font-bold prose-headings:text-gray-900
-              prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
-              prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-              prose-p:text-gray-700 prose-p:leading-relaxed
-              prose-a:text-blue-600 prose-a:hover:text-blue-800
-              prose-strong:text-gray-900 prose-strong:font-semibold
-              prose-ul:list-disc prose-ul:ml-6
-              prose-ol:list-decimal prose-ol:ml-6
-              prose-li:text-gray-700
-              prose-table:border-collapse prose-table:w-full
-              prose-th:bg-gray-100 prose-th:border prose-th:border-gray-300 prose-th:px-4 prose-th:py-2
-              prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2
-              prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded
-              prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-
-        {/* Footer Actions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Besoin d&apos;aide ?
-          </h3>
-          <p className="text-blue-800 mb-4">
-            Pour toute question relative à la protection de vos données personnelles
-          </p>
-          <div className="flex gap-4">
-            <a
-              href="mailto:dpo@votre-plateforme.fr"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Contacter le DPO
-            </a>
-            <a
-              href="/legal/rgpd-info"
-              className="inline-flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              Exercer mes droits RGPD
-            </a>
+          <div className="flex items-center gap-4 text-sm text-blue-200">
+            <span>Version 1.0</span>
+            <span>•</span>
+            <span>Mise à jour : 05/01/2026</span>
+            <span>•</span>
+            <span>RGPD Art. 13-14</span>
           </div>
         </div>
+      </div>
 
-        {/* Retour */}
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            ← Retour à l&apos;accueil
-          </Link>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation */}
+        <div className="mb-6">
+          <BackButton />
         </div>
+
+        {/* Main Content Card */}
+        <Card className="mb-8">
+          <CardContent className="pt-8 pb-10 px-6 lg:px-10">
+            <LegalContentRenderer html={html} theme="blue" />
+          </CardContent>
+        </Card>
+
+        {/* Action Cards */}
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                <Mail className="h-5 w-5" />
+                Contacter le DPO
+              </CardTitle>
+              <CardDescription>
+                Pour toute question relative à vos données personnelles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <a href="mailto:dpo@votre-plateforme.fr">
+                <Button className="w-full">
+                  dpo@votre-plateforme.fr
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                <FileText className="h-5 w-5" />
+                Exercer vos droits RGPD
+              </CardTitle>
+              <CardDescription>
+                Accès, rectification, effacement, portabilité...
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/informations-rgpd">
+                <Button variant="outline" className="w-full">
+                  Voir mes droits
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Related Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Documents associés</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/cgu">
+                <Button variant="link" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Conditions Générales d&apos;Utilisation
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -2,10 +2,10 @@
 
 > **Accueil de la documentation RGPD** : Tous les documents permettant de comprendre et vérifier la conformité de la plateforme RGPD-IA aux exigences légales (RGPD, ePrivacy).
 
-**Dernière mise à jour** : 2026-01-21
-**Version** : 3.1 (EPIC 12 intégré)
+**Dernière mise à jour** : 2026-01-25
+**Version** : 4.0 (EPIC 1-12 complets, EPIC 13 en cours)
 **Conformité globale** : ✅ ~98% (44/45 articles)
-**Status** : ✅ Production-ready backend + Security + Legal + Back Office (EPIC 11-12) | ⚠️ Front User (EPIC 13) TODO
+**Status** : ✅ Production-ready (Backend + Security + Legal + Back Office EPIC 9-12) | ⚠️ Front User (EPIC 13) en cours
 
 ---
 
@@ -23,9 +23,9 @@ Sélectionnez votre profil pour une navigation optimisée :
 3. [**dpia.md**](#⚡-dpia) — Analyse d'impact de la Gateway LLM (Art. 35)
 
 **Actions prioritaires** :
-- [ ] Vérifier les 7 articles bloquants production (voir tableau de bord)
-- [ ] Valider les mesures d'atténuation des risques (DPIA)
-- [ ] Planifier EPICs 9-10 (4-5 semaines d'effort)
+- [x] ~~Vérifier les articles bloquants production~~ ✅ Tous implémentés (EPIC 9-12)
+- [x] ~~Valider les mesures d'atténuation des risques (DPIA)~~ ✅ Complète
+- [ ] Finaliser EPIC 13 (Front User) pour interface utilisateur complète
 
 ---
 
@@ -39,7 +39,7 @@ Sélectionnez votre profil pour une navigation optimisée :
 3. **Annexe B** pour la couverture Front vs Back
 
 **Ressources techniques** :
-- 252+ tests RGPD dans `tests/` (tous passants)
+- 783+ tests dans `tests/` (tous passants)
 - Sources implémentation dans `src/app/`, `src/infrastructure/`
 - Migrations SQL dans `migrations/`
 
@@ -100,7 +100,7 @@ Ce document explique en langage simple :
 | **Audience** | DPO, devs, auditeurs |
 | **Validité** | Art. 1-99 RGPD couverts |
 | **Format** | Tables structurées + références fichiers source |
-| **Mises à jour** | À réviser après EPIC 9-10 |
+| **Mises à jour** | ✅ À jour (EPIC 1-12 complets) |
 
 **Structure** :
 - ✅ Tableau de bord avec score global et gaps bloquants
@@ -112,9 +112,9 @@ Ce document explique en langage simple :
 
 **À consulter pour** :
 - Vérifier si un article spécifique est implémenté ✅
-- Comprendre le niveau de conformité actuel (70%)
-- Identifier les gaps pour EPICs 9-10
+- Comprendre le niveau de conformité actuel (~98%)
 - Valider qu'une feature RGPD est correctement testée
+- Préparer un audit CNIL
 
 ---
 
@@ -217,38 +217,36 @@ Ce document explique en langage simple :
 
 ## 📊 État de la Conformité — Vue Synthétique
 
-### Score Global : ⚙️ ~76%
+### Score Global : ✅ ~98%
 
 ```
-✅ Conforme          : 34 articles (64%)
-⚙️  Partiellement    : 2 articles (4%)
-❌ Non conforme      : 5 articles (9%)
-🔵 Non applicable    : ~50 articles (23%)
+✅ Conforme          : 44 articles (98%)
+⚙️  En cours         : 1 article (2%) - EPIC 13 Front User
+🔵 Non applicable    : ~50 articles
 ```
 
-### Articles Conformes ✅
+### Articles Conformes ✅ (EPIC 1-12)
 - Art. 5 (Principes) — Privacy by Design complet
-- Art. 6-7 (Consentements) — Opt-in avec révocation
+- Art. 6-7 (Consentements) — Opt-in avec révocation + CGU acceptance
+- Art. 12-14 (Information) — Pages légales publiques (CGU, Politique, RGPD)
 - Art. 15-17, 20 (Droits : accès, rectification, effacement, portabilité)
+- Art. 18 (Limitation) — Suspension traitement implémentée
+- Art. 21 (Opposition) — Opposition au traitement
+- Art. 22 (Décision automatisée) — Révision humaine IA
 - Art. 24-25 (Responsabilité + Privacy by Design)
 - Art. 30 (Registre) — Documenté
 - Art. 32 (Sécurité) — 100% (pentest + chaos + scanning)
 - Art. 33-34 (Violations) — 100% (notification CNIL 72h + utilisateurs)
 - Art. 35 (DPIA) — Complète
+- **ePrivacy** (Cookies) — Cookie banner production-ready
 
-### Gaps Critiques ❌
+### Gaps Restants ⚙️
 
-| Gap | Critique | Effort | EPIC |
-|-----|----------|--------|------|
-| ePrivacy (Cookie banner) | 🔴 Bloquant web | 3j | LOT 10.3 |
-| Art. 22 (Révision humaine IA) | 🔴 Critique IA | 3j | LOT 10.6 |
+| Gap | Status | Effort | EPIC |
+|-----|--------|--------|------|
+| Interface utilisateur complète | En cours | ~2 semaines | EPIC 13 |
 
-### Gaps Importants 🟡
-- Art. 13-14 (Docs légales) — 2j (LOT 10.0-10.2)
-- Art. 18 (Limitation) — 2j (LOT 10.6)
-- Art. 21 (Opposition) — 2j (LOT 10.6)
-
-**Total pour 100% conformité** : ~15 jours (3 semaines) avec EPIC 10
+**Note** : Le backend est 100% conforme. EPIC 13 ajoute l'interface Front User.
 
 ---
 
@@ -276,37 +274,39 @@ Besoin de vérifier un article spécifique ? Consultez :
 
 ## 🛠️ Tests de Conformité
 
-**252+ tests RGPD** couvrent les articles implémentés :
+**783+ tests** couvrent les articles implémentés :
 
 ```
-EPIC 1 (Socle)       : 42 tests ✅
-EPIC 4 (Stockage)    : 23 tests ✅
-EPIC 5 (Pipeline)    : 72 tests ✅
-EPIC 6 (Docker)      : ~30 tests ✅
-EPIC 8 (Anonymisation) : 110 tests ✅
-─────────────────────────────────
-TOTAL                : 252+ tests ✅ (100% passing)
+EPIC 1-7 (Socle)       : ~200 tests ✅
+EPIC 8 (PII)           : 110 tests ✅
+EPIC 9 (Incidents)     : 60 tests ✅
+EPIC 10 (Legal)        : 180 tests ✅
+EPIC 11 (Back Office)  : 139 tests ✅
+EPIC 12 (Portal)       : ~50 tests ✅
+─────────────────────────────────────
+TOTAL                  : 783+ tests ✅ (100% passing)
 ```
 
-**Voir** : `tests/` pour exécuter `pnpm test:rgpd`
+**Voir** : `tests/` pour exécuter `npm test`
 
 ---
 
-## 📅 Calendrier — De 70% à 100% RGPD
+## 📅 Calendrier — État actuel
 
-| Phase | Semaines | EPICs | Effort |
-|-------|----------|-------|--------|
-| **Actuellement** | 0 | 1-9 | ✅ Complet |
-| **Phase 1** | 1-2 | 10 | Documents légaux (5j) + Droits RGPD (5j) + Cookies (3j) |
-| **Phase 2** | 2-4 | 11-13 | Frontend avec tous endpoints — 2-3 semaines |
-| **🎯 TOTAL** | ~4 semaines | 10-13 | **100% RGPD + Production-ready** |
+| Phase | Status | EPICs | Résultat |
+|-------|--------|-------|----------|
+| **Phase 1** | ✅ Terminé | 1-8 | Socle + PII + Docker |
+| **Phase 2** | ✅ Terminé | 9-10 | Incidents CNIL + Legal docs + Cookies |
+| **Phase 3** | ✅ Terminé | 11-12 | Back Office Super Admin + Tenant Portal |
+| **Phase 4** | ⚙️ En cours | 13 | Front User (authentification, layout) |
+| **🎯 TOTAL** | ~98% | 1-12 | **Backend 100% RGPD Production-ready** |
 
 ---
 
 ## ❓ FAQ Rapide
 
 ### Q1 : Puis-je mettre en production maintenant ?
-**R** : Presque. Le backend est ✅ 100% conforme incluant violations CNIL (Art. 33-34). Manquent : cookie banner (3j), révision humaine IA (3j).
+**R** : ✅ **OUI** pour le backend. Le backend est 100% conforme RGPD (Art. 5-35, violations CNIL, cookie banner). L'EPIC 13 (Front User) est en cours pour l'interface utilisateur finale.
 
 ### Q2 : Où vérifier si mon feature respecte le RGPD ?
 **R** : RGPD_MATRICE_CONFORMITE.md → trouvez l'article concerné → consultez "Implémentation" et "Fichier test".
@@ -315,7 +315,7 @@ TOTAL                : 252+ tests ✅ (100% passing)
 **R** : Voir runbook `docs/runbooks/incident.md` (EPIC 9 ✅ terminé). Utilisez aussi `registre-traitements.md` + `dpia.md`.
 
 ### Q4 : Où sont les documents légaux publics ?
-**R** : Non publiés. En attente EPIC 10 LOT 10.0-10.2. Templates dans `docs/legal/`.
+**R** : ✅ Disponibles via les pages `/cgu`, `/politique-confidentialite`, `/informations-rgpd` (EPIC 10 terminé).
 
 ### Q5 : Comment vérifier que les données utilisateur sont bien supprimées ?
 **R** : Tests de suppression dans `tests/rgpd.deletion.test.ts`. Voir RGPD_MATRICE_CONFORMITE.md Art. 17.
@@ -343,7 +343,7 @@ TOTAL                : 252+ tests ✅ (100% passing)
 ### Qui met à jour ces documents ?
 - **DPO** : En cas de changement légal ou incident
 - **Devs** : À chaque implémentation de feature RGPD
-- **Audit** : Trimestriellement (ou après EPIC 9-10)
+- **Audit** : Trimestriellement
 
 ### Calendrier mises à jour
 - ✅ Après chaque EPIC (update RGPD_MATRICE_CONFORMITE.md)
@@ -369,6 +369,6 @@ git diff docs/rgpd/ # Changements depuis dernier commit
 
 ---
 
-**Dernière révision** : 2026-01-01  
-**Prochaine révision** : Après EPIC 9 (Art. 33-34 implémentés)  
+**Dernière révision** : 2026-01-25
+**Prochaine révision** : Après EPIC 13 (Front User complet)
 **Mainteneur** : Équipe conformité RGPD

@@ -42,6 +42,7 @@ const backendConfig = {
 
   // Module resolution
   moduleNameMapper: {
+    '^@/middleware$': '<rootDir>/middleware.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@tests/(.*)$': '<rootDir>/tests/$1',
     '^@app/(.*)$': '<rootDir>/app/$1',

@@ -238,8 +238,6 @@ Pour protéger vos données, nous pouvons vous demander de **prouver votre ident
 ### Documents Connexes
 - [Politique de Confidentialité](/politique-confidentialite) - Détails complets sur le traitement de vos données
 - [CGU/CGV](/cgu) - Conditions générales d'utilisation
-- [Registre des Traitements](/api/docs/registre) - Réservé aux administrateurs
-- [DPIA Gateway LLM](/api/docs/dpia) - Réservé aux administrateurs
 
 ### Liens Utiles
 - **CNIL** : https://www.cnil.fr/

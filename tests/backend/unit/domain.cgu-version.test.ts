@@ -1,8 +1,11 @@
 /**
  * Domain Entity Tests: CguVersion
  *
- * RGPD: Art. 6 (base légale contrat)
+ * RGPD: Art. 6 (base légale contrat), Art. 7 (conditions consentement)
  * Classification: P0 (document public)
+ *
+ * Note: CGU content is stored in markdown file (docs/legal/cgu-cgv.md)
+ * Database only stores version metadata for acceptance tracking
  *
  * Tests: 8 tests
  */
@@ -16,10 +19,10 @@ describe('Domain Entity: CguVersion', () => {
       const version: CguVersion = {
         id: 'version-1',
         version: '1.0.0',
-        content: 'CGU content...',
         effectiveDate: new Date('2025-01-01'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date(),
+        contentPath: 'docs/legal/cgu-cgv.md',
       };
 
       expect(version.version).toMatch(/^\d+\.\d+\.\d+$/);
@@ -29,46 +32,43 @@ describe('Domain Entity: CguVersion', () => {
       const v1: CguVersion = {
         id: 'v1',
         version: '1.0.0',
-        content: 'CGU v1',
         effectiveDate: new Date('2025-01-01'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date(),
       };
 
       const v2: CguVersion = {
         id: 'v2',
         version: '2.0.0',
-        content: 'CGU v2 with breaking changes',
         effectiveDate: new Date('2025-06-01'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date(),
+        summary: 'Breaking changes - new terms',
       };
 
       expect(v2.version).toBe('2.0.0');
       expect(v2.effectiveDate.getTime()).toBeGreaterThan(v1.effectiveDate.getTime());
     });
 
-    it('should store full CGU content in markdown', () => {
+    it('should reference content via contentPath', () => {
       const version: CguVersion = {
         id: 'version-1',
         version: '1.0.0',
-        content: '# Conditions Générales d\'Utilisation\n\n## 1. Objet\nLes présentes CGU...',
         effectiveDate: new Date('2025-01-01'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date(),
+        contentPath: 'docs/legal/cgu-cgv.md',
       };
 
-      expect(version.content).toContain('# Conditions Générales');
-      expect(version.content.length).toBeGreaterThan(50);
+      expect(version.contentPath).toBe('docs/legal/cgu-cgv.md');
     });
 
     it('should have effective date for legal validity', () => {
       const version: CguVersion = {
         id: 'version-1',
         version: '1.0.0',
-        content: 'CGU content...',
         effectiveDate: new Date('2025-01-15'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date('2025-01-01'),
       };
 
@@ -81,25 +81,22 @@ describe('Domain Entity: CguVersion', () => {
         {
           id: 'v1',
           version: '1.0.0',
-          content: 'CGU v1',
           effectiveDate: new Date('2025-01-01'),
-      isActive: false,
+          isActive: false,
           createdAt: new Date('2024-12-01'),
         },
         {
           id: 'v2',
           version: '1.1.0',
-          content: 'CGU v1.1',
           effectiveDate: new Date('2025-03-01'),
-      isActive: false,
+          isActive: false,
           createdAt: new Date('2025-02-01'),
         },
         {
           id: 'v3',
           version: '2.0.0',
-          content: 'CGU v2',
           effectiveDate: new Date('2025-06-01'),
-      isActive: false,
+          isActive: true,
           createdAt: new Date('2025-05-01'),
         },
       ];
@@ -107,28 +104,21 @@ describe('Domain Entity: CguVersion', () => {
       expect(versions).toHaveLength(3);
       expect(versions[0].version).toBe('1.0.0');
       expect(versions[2].version).toBe('2.0.0');
+      // Only one should be active
+      expect(versions.filter(v => v.isActive)).toHaveLength(1);
     });
 
-    it('should support content updates for minor versions', () => {
-      const v1_0: CguVersion = {
-        id: 'v1.0',
-        version: '1.0.0',
-        content: 'CGU initiale',
-        effectiveDate: new Date('2025-01-01'),
-      isActive: false,
-        createdAt: new Date(),
-      };
-
+    it('should use summary for minor version updates description', () => {
       const v1_1: CguVersion = {
         id: 'v1.1',
         version: '1.1.0',
-        content: 'CGU avec clarifications mineures',
         effectiveDate: new Date('2025-03-01'),
-      isActive: false,
+        isActive: false,
         createdAt: new Date(),
+        summary: 'Clarifications mineures sur les droits RGPD',
       };
 
-      expect(v1_1.content).not.toBe(v1_0.content);
+      expect(v1_1.summary).toContain('Clarifications');
       expect(v1_1.version.startsWith('1.')).toBe(true);
     });
 
@@ -137,9 +127,8 @@ describe('Domain Entity: CguVersion', () => {
       const version: CguVersion = {
         id: 'version-1',
         version: '1.0.0',
-        content: 'CGU content...',
         effectiveDate: new Date('2025-01-15'),
-      isActive: false,
+        isActive: false,
         createdAt: now,
       };
 
@@ -154,13 +143,14 @@ describe('Domain Entity: CguVersion', () => {
       const version: CguVersion = {
         id: 'version-1',
         version: '1.1.0',
-        content: 'CGU mise à jour prévue dans 30 jours',
         effectiveDate: futureDate,
         isActive: false,
         createdAt: new Date(),
+        summary: 'Mise à jour prévue dans 30 jours',
       };
 
       expect(version.effectiveDate.getTime()).toBeGreaterThan(Date.now());
+      expect(version.isActive).toBe(false); // Cannot be active if future date
     });
   });
 });

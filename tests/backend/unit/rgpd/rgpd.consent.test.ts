@@ -21,7 +21,7 @@ import { ACTOR_SCOPE } from "@/shared/actorScope";
 const TENANT_A_ID = randomUUID();
 const TENANT_B_ID = randomUUID();
 const USER_A_ID = randomUUID();
-const USER_B_ID = randomUUID();
+const _USER_B_ID = randomUUID(); // Reserved for future cross-tenant tests
 
 // Consent purposes (as defined in RGPD rules)
 enum ConsentPurpose {

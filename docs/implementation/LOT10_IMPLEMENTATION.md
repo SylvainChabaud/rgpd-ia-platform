@@ -165,26 +165,23 @@ CREATE INDEX idx_cookie_consents_expired ON cookie_consents(expires_at);
 
 **Colonnes ajoutées**:
 
-1. **Table `cgu_versions`**:
-   - `summary TEXT` - Description résumée des changements de version
-
-2. **Table `user_cgu_acceptances`**:
+1. **Table `user_cgu_acceptances`**:
    - `deleted_at TIMESTAMPTZ` - Soft delete (Art. 17 RGPD)
    - `acceptance_method VARCHAR(20)` - Méthode d'acceptation (`checkbox`, `button`, `api`)
    - Index: `idx_user_cgu_acceptances_deleted`
 
-3. **Table `user_disputes`**:
+2. **Table `user_disputes`**:
    - `deleted_at TIMESTAMPTZ` - Soft delete (Art. 17 RGPD)
    - `metadata JSONB` - Métadonnées flexibles JSON
    - Statuts ajoutés: `under_review`, `rejected` (en plus de `pending`, `resolved`)
    - Index: `idx_user_disputes_deleted`
 
-4. **Table `user_oppositions`**:
+3. **Table `user_oppositions`**:
    - `deleted_at TIMESTAMPTZ` - Soft delete (Art. 17 RGPD)
    - `metadata JSONB` - Métadonnées flexibles JSON
    - Index: `idx_user_oppositions_deleted`
 
-5. **Table `cookie_consents`**:
+4. **Table `cookie_consents`**:
    - `deleted_at TIMESTAMPTZ` - Soft delete (Art. 17 RGPD)
    - Index: `idx_cookie_consents_deleted`, `idx_cookie_consents_deleted_anonymous`
 

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/http/requireAuth';
 import { toErrorResponse } from '@/app/http/errorResponse';
-import { PgCguRepo } from '@/infrastructure/repositories/PgCguRepo';
-import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
+import { createCguDependencies } from '@/app/dependencies';
 import { emitAuditEvent } from '@/app/audit/emitAuditEvent';
+import { anonymizeIp } from '@/lib/anonymizeIp';
 import { randomUUID } from 'crypto';
 import { ACTOR_SCOPE } from '@/shared/actorScope';
 import { toPublicCguAcceptance } from '@/domain/legal/CguAcceptance';
@@ -17,8 +17,8 @@ export const runtime = 'nodejs';
  */
 export async function GET() {
   try {
-    const repo = new PgCguRepo();
-    const version = await repo.findActiveVersion();
+    const { cguRepo } = createCguDependencies();
+    const version = await cguRepo.findActiveVersion();
 
     if (!version) {
       return NextResponse.json(
@@ -31,10 +31,10 @@ export async function GET() {
       {
         id: version.id,
         version: version.version,
-        content: version.content,
         effectiveDate: version.effectiveDate,
         summary: version.summary ?? null,
         isActive: version.isActive,
+        contentPath: version.contentPath ?? 'docs/legal/cgu-cgv.md',
       },
       { status: 200 }
     );
@@ -73,18 +73,17 @@ export const POST = requireAuth(async ({ request, actor }) => {
       );
     }
 
-    const repo = new PgCguRepo();
-    const acceptance = await repo.recordAcceptance(actor.tenantId, {
+    const { cguRepo, auditEventWriter } = createCguDependencies();
+    const acceptance = await cguRepo.recordAcceptance(actor.tenantId, {
       tenantId: actor.tenantId,
       userId: actor.actorId,
       cguVersionId: body.cguVersionId,
       acceptanceMethod: body.acceptanceMethod ?? 'checkbox',
-      ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+      ipAddress: anonymizeIp(request.headers.get('x-forwarded-for')),
       userAgent: request.headers.get('user-agent') ?? undefined,
     });
 
-    const auditWriter = new PgAuditEventWriter();
-    await emitAuditEvent(auditWriter, {
+    await emitAuditEvent(auditEventWriter, {
       id: randomUUID(),
       eventName: 'cgu.acceptance.recorded',
       actorScope: ACTOR_SCOPE.TENANT,

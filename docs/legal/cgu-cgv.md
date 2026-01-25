@@ -143,7 +143,7 @@ L'Éditeur agit en qualité de **Responsable de Traitement** au sens de l'Art. 4
 
 ### 8.2 Référence à la Politique de Confidentialité
 Le traitement des Données Personnelles est détaillé dans la **Politique de Confidentialité** accessible à :
-[/politique-confidentialite](/politique-confidentialite)
+[Politique de Confidentialité](/politique-confidentialite)
 
 ### 8.3 Droits RGPD (Art. 12-22)
 L'Utilisateur dispose des droits suivants :
@@ -156,7 +156,7 @@ L'Utilisateur dispose des droits suivants :
 - **Révision humaine** (Art. 22)
 - **Réclamation auprès de la CNIL** (Art. 77)
 
-**Exercice des droits** : [/informations-rgpd](/informations-rgpd)
+**Exercice des droits** : [Informations-rgpd](/informations-rgpd)
 
 ### 8.4 Sécurité (Art. 32 RGPD)
 L'Éditeur met en œuvre les mesures techniques et organisationnelles appropriées :
@@ -270,7 +270,7 @@ L'Éditeur ne pourra être tenu responsable en cas de **force majeure** au sens 
 
 L'utilisation de cookies est détaillée dans la **Politique de Confidentialité** et soumise au **consentement préalable** de l'Utilisateur (sauf cookies strictement nécessaires).
 
-Gestion des préférences : [/mes-consentements](/mes-consentements)
+Gestion des préférences : [Mes Consentements](/mes-consentements)
 
 ---
 
@@ -335,7 +335,9 @@ En cas d'échec de la médiation, les tribunaux **français** seront seuls comp�
 
 | Version | Date | Modifications |
 |---------|------|---------------|
-| 1.0 | 05/01/2026 | Version initiale |
+| 1.0.0 | 01/01/2026 | Version initiale (seed dev-cgu.sql) |
+
+> **Note développeurs** : La version CGU de développement est créée par le script `setup-dev.bat` via le fichier `migrations/seeds/dev-cgu.sql`.
 
 ---
 

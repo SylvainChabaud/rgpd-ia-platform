@@ -35,7 +35,7 @@ function createMockRequest(
 
 describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
   describe("HTTP Requests Rejection", () => {
-    test("BLOCKER: HTTP request to API should be rejected or redirected", () => {
+    test("BLOCKER: HTTP request to API should be rejected or redirected", async () => {
       // GIVEN: HTTP (unencrypted) request to sensitive API endpoint
       const httpRequest = createMockRequest(
         "http://localhost:3000/api/consents",
@@ -43,7 +43,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
       );
 
       // WHEN: Processing request through middleware
-      middleware(httpRequest);
+      await middleware(httpRequest);
 
       // THEN: Should either:
       // 1. Redirect to HTTPS (301/302)
@@ -93,7 +93,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
   });
 
   describe("HTTPS Requests Acceptance", () => {
-    test("HTTPS request to API should be accepted", () => {
+    test("HTTPS request to API should be accepted", async () => {
       // GIVEN: HTTPS (encrypted) request
       const httpsRequest = createMockRequest(
         "https://localhost:3000/api/consents",
@@ -101,7 +101,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
       );
 
       // WHEN: Processing request
-      const response = middleware(httpsRequest);
+      const response = await middleware(httpsRequest);
 
       // THEN: Should be processed normally
       expect(response).toBeInstanceOf(NextResponse);
@@ -158,7 +158,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
 
       // THEN: Must apply to all API routes
       expect(config.matcher).toBeDefined();
-      expect(config.matcher).toContain("/api/");
+      expect(config.matcher).toContain("/api/:path*");
     });
 
     test("BLOCKER: HTTPS enforcement layers documented", () => {
@@ -215,7 +215,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
   });
 
   describe("HTTPS Enforcement Implementation Validation", () => {
-    test("Development environment allows HTTP (localhost)", () => {
+    test("Development environment allows HTTP (localhost)", async () => {
       // GIVEN: Development mode on localhost
       const devRequest = createMockRequest(
         "http://localhost:3000/api/health",
@@ -223,7 +223,7 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
       );
 
       // WHEN: Processing request
-      const response = middleware(devRequest);
+      const response = await middleware(devRequest);
 
       // THEN: Allowed in dev (but not in production)
       expect(response).toBeInstanceOf(NextResponse);
@@ -298,13 +298,13 @@ describe("BLOCKER: HTTPS Enforcement (EPIC 2 - Encryption in Transit)", () => {
       });
     });
 
-    test("HTTPS Strict-Transport-Security header should be set", () => {
+    test("HTTPS Strict-Transport-Security header should be set", async () => {
       // GIVEN: HTTPS response
       const httpsRequest = createMockRequest(
         "https://example.com/api/health"
       );
 
-      middleware(httpsRequest);
+      await middleware(httpsRequest);
 
       // THEN: Should eventually include HSTS header (future enhancement)
       // Strict-Transport-Security: max-age=31536000; includeSubDomains

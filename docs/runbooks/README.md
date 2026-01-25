@@ -2,8 +2,8 @@
 
 > **Procédures opérationnelles** pour l'exploitation et la maintenance de la plateforme.
 
-**Dernière mise à jour** : 2026-01-02
-**Version** : EPIC 9 complet
+**Dernière mise à jour** : 2026-01-25
+**Version** : EPIC 1-12 complets
 
 ---
 

@@ -12,21 +12,22 @@
 export interface CguVersion {
   readonly id: string;
   readonly version: string;              // Ex: "1.0.0", "2.1.0"
-  readonly content: string;              // Contenu complet CGU (markdown ou HTML)
   readonly effectiveDate: Date;          // Date d'entrée en vigueur
   readonly isActive: boolean;            // TRUE = version courante
   readonly createdAt: Date;
   readonly summary?: string;             // Résumé des modifications (optionnel)
+  readonly contentPath?: string;         // Path to markdown file (default: docs/legal/cgu-cgv.md)
 }
 
 /**
  * Input pour créer une nouvelle version CGU
+ * Note: content is stored in markdown file (docs/legal/cgu-cgv.md)
  */
 export interface CreateCguVersionInput {
   version: string;
-  content: string;
   effectiveDate: Date;
   summary?: string;
+  contentPath?: string;  // Optional, defaults to docs/legal/cgu-cgv.md
 }
 
 /**
@@ -41,6 +42,7 @@ export const CGU_VERSION_PATTERN = /^\d+\.\d+\.\d+$/;  // Semantic versioning
  * - Version doit respecter le format semver (X.Y.Z)
  * - Une seule version peut être active à la fois
  * - Date effective ne peut pas être dans le passé (sauf import historique)
+ * - Content is stored in markdown file, not database
  */
 export function createCguVersion(
   input: CreateCguVersionInput
@@ -50,17 +52,12 @@ export function createCguVersion(
     throw new Error('Version must follow semantic versioning (X.Y.Z)');
   }
 
-  // Validation: contenu non vide
-  if (!input.content || input.content.trim().length === 0) {
-    throw new Error('CGU content cannot be empty');
-  }
-
   return {
     version: input.version,
-    content: input.content,
     effectiveDate: input.effectiveDate,
     isActive: false,  // Par défaut, sera activée explicitement
     summary: input.summary,
+    contentPath: input.contentPath ?? 'docs/legal/cgu-cgv.md',
   };
 }
 

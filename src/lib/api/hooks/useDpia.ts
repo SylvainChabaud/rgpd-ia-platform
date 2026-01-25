@@ -10,9 +10,6 @@ import type {
 import {
   DPIA_STALE_TIME_MS,
   DPIA_STATS_STALE_TIME_MS,
-  DPIA_STATUS_LABELS,
-  DPIA_STATUS_BADGE_STYLES,
-  DPIA_RISK_BADGE_STYLES,
 } from '@/lib/constants/dpia';
 import { API_ERROR_MESSAGES } from '@/lib/constants/ui/messages';
 

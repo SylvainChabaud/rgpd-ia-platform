@@ -133,7 +133,7 @@ export function withOptionalAuth<T extends NextHandler>(
         } catch (error) {
           // SECURITY: Log failed token verification attempts (RGPD-safe: no token logged)
           logWarn({
-            event: 'auth.token_verification_failed',
+            event: 'auth.credential_verification_failed',
             meta: {
               error: error instanceof Error ? error.message : 'Unknown error',
               path: req.nextUrl.pathname,

@@ -21,9 +21,9 @@ import { CguAcceptance } from '@/domain/legal/CguAcceptance';
 
 export interface CreateCguVersionInput {
   version: string;
-  content: string;
   effectiveDate: Date;
   summary?: string;
+  contentPath?: string;  // Optional, defaults to docs/legal/cgu-cgv.md
 }
 
 export interface CreateCguAcceptanceInput {

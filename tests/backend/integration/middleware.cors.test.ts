@@ -32,11 +32,11 @@ describe("CORS middleware", () => {
   }
 
   describe("when origin is allowed", () => {
-    it("should set CORS headers for allowed origin", () => {
+    it("should set CORS headers for allowed origin", async () => {
       process.env.ALLOWED_ORIGINS = "http://localhost:3000,http://example.com";
       const request = createRequest("/api/test", { origin: "http://localhost:3000" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:3000");
       expect(response.headers.get("Access-Control-Allow-Methods")).toBe("GET, POST, PUT, DELETE, OPTIONS");
@@ -45,74 +45,74 @@ describe("CORS middleware", () => {
       expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
     });
 
-    it("should use default localhost origin when env not set", () => {
+    it("should use default localhost origin when env not set", async () => {
       delete process.env.ALLOWED_ORIGINS;
       const request = createRequest("/api/test", { origin: "http://localhost:3000" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:3000");
     });
   });
 
   describe("when origin is not allowed", () => {
-    it("should not set CORS headers for disallowed origin", () => {
+    it("should not set CORS headers for disallowed origin", async () => {
       process.env.ALLOWED_ORIGINS = "http://localhost:3000";
       const request = createRequest("/api/test", { origin: "http://evil.com" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
   });
 
   describe("when no origin header", () => {
-    it("should not set CORS headers", () => {
+    it("should not set CORS headers", async () => {
       const request = createRequest("/api/test");
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
   });
 
   describe("OPTIONS preflight request", () => {
-    it("should return 204 for OPTIONS request with allowed origin", () => {
+    it("should return 204 for OPTIONS request with allowed origin", async () => {
       process.env.ALLOWED_ORIGINS = "http://localhost:3000";
       const request = createRequest("/api/test", {
         method: "OPTIONS",
         origin: "http://localhost:3000",
       });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.status).toBe(204);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:3000");
     });
 
-    it("should return 204 for OPTIONS request without origin", () => {
+    it("should return 204 for OPTIONS request without origin", async () => {
       const request = createRequest("/api/test", { method: "OPTIONS" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.status).toBe(204);
     });
   });
 
   describe("non-OPTIONS request", () => {
-    it("should pass through GET request", () => {
+    it("should pass through GET request", async () => {
       const request = createRequest("/api/test", { method: "GET" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       // NextResponse.next() returns a response that passes through
       expect(response.status).not.toBe(204);
     });
 
-    it("should pass through POST request", () => {
+    it("should pass through POST request", async () => {
       const request = createRequest("/api/test", { method: "POST" });
 
-      const response = middleware(request);
+      const response = await middleware(request);
 
       expect(response.status).not.toBe(204);
     });

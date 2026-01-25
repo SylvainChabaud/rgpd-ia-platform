@@ -45,7 +45,7 @@ Un **document normatif** (obligatoire) qui définit la stratégie complète de t
 |---------|-------------|
 | §1 Principes généraux | Le RGPD se teste, tests bloquants |
 | §2 Typologie | Tests unitaires, intégration, E2E |
-| §3 Scénarios par EPIC | Tests spécifiques EPIC 1-7 |
+| §3 Scénarios par EPIC | Tests spécifiques EPIC 1-12 |
 | §4 Tests critiques transverses | no-bypass Gateway, no sensitive logs |
 | §5 Automatisation CI/CD | Gates obligatoires |
 | §6 Preuves de conformité | Artefacts à conserver |

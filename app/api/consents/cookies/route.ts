@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 import { saveCookieConsent } from '@/app/usecases/cookies/saveCookieConsent';
 import { getCookieConsent } from '@/app/usecases/cookies/getCookieConsent';
 import { createConsentDependencies } from '@/app/dependencies';
+import { anonymizeIp } from '@/lib/anonymizeIp';
 import { logError } from '@/shared/logger';
 import { authenticateRequest } from '@/app/middleware/auth';
 import { getCookieValue } from '@/shared/cookies/parser';
@@ -24,33 +25,6 @@ import { getCookieValue } from '@/shared/cookies/parser';
 const VALID_CONSENT_ID_REGEX = /^anon-\d{13}-[a-f0-9]{16}$/;
 function isValidConsentId(id: string): boolean {
   return VALID_CONSENT_ID_REGEX.test(id);
-}
-
-/**
- * Anonymize IP address for RGPD compliance (Art. 32)
- * Masks the last octet for IPv4 (e.g., 192.168.1.42 → 192.168.1.0)
- * Masks the last 64 bits for IPv6
- */
-function anonymizeIp(ip: string | null): string | undefined {
-  if (!ip) return undefined;
-
-  // Handle comma-separated IPs (x-forwarded-for can have multiple)
-  const firstIp = ip.split(',')[0].trim();
-
-  // IPv4: mask last octet
-  const ipv4Parts = firstIp.split('.');
-  if (ipv4Parts.length === 4) {
-    ipv4Parts[3] = '0';
-    return ipv4Parts.join('.');
-  }
-
-  // IPv6: mask last 64 bits (simplified - return first 4 segments)
-  const ipv6Parts = firstIp.split(':');
-  if (ipv6Parts.length >= 4) {
-    return ipv6Parts.slice(0, 4).join(':') + '::0';
-  }
-
-  return undefined; // Unknown format, don't store
 }
 
 // Dependencies via factory (BOUNDARIES.md section 11)
@@ -98,8 +72,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result.consent, { status: 200 });
   } catch (error) {
+    // RGPD-safe logging: don't expose raw database errors
+    const errorCode = error instanceof Error && error.message.includes('not found')
+      ? 'NOT_FOUND'
+      : 'UNKNOWN_ERROR';
+
     logError('consents.cookies.fetch_error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      code: errorCode,
     });
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -160,8 +139,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result.consent, { status: 201 });
   } catch (error) {
+    // RGPD-safe logging: don't expose raw database errors (contain forbidden tokens like "input")
+    const errorCode = error instanceof Error && error.message.includes('uuid')
+      ? 'DB_TYPE_ERROR'
+      : error instanceof Error && error.message.includes('violates')
+      ? 'DB_CONSTRAINT_ERROR'
+      : 'UNKNOWN_ERROR';
+
     logError('consents.cookies.save_error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+      code: errorCode,
     });
     return NextResponse.json(
       { error: 'Internal server error' },

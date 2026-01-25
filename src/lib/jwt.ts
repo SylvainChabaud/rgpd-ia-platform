@@ -21,6 +21,7 @@ export interface JwtPayload {
   tenantId: string | null;
   scope: UserScope;
   role: string;
+  cguAccepted?: boolean; // CGU acceptance status (Art. 7 RGPD)
   iat: number; // Issued at (seconds since epoch)
   exp: number; // Expiration (seconds since epoch)
 }
@@ -30,7 +31,7 @@ const ACCESS_TOKEN_EXPIRATION_SECONDS = 15 * 60; // 15 minutes
 const REFRESH_TOKEN_EXPIRATION_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 // Legacy: kept for backwards compatibility during migration
-const JWT_EXPIRATION_SECONDS = ACCESS_TOKEN_EXPIRATION_SECONDS;
+const _JWT_EXPIRATION_SECONDS = ACCESS_TOKEN_EXPIRATION_SECONDS;
 
 /**
  * Get JWT secret from environment

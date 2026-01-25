@@ -45,23 +45,45 @@ export const POST = withLogging(
           }
         );
 
-        // Generate access token (15 min)
+        // Check CGU acceptance (Art. 7 RGPD - consent must be explicit)
+        let cguAccepted = false;
+        let activeCguVersionId: string | null = null;
+
+        const activeVersion = await deps.cguRepo.findActiveVersion();
+        if (activeVersion) {
+          activeCguVersionId = activeVersion.id;
+          // Check if user has accepted current CGU version
+          if (user.tenantId) {
+            cguAccepted = await deps.cguRepo.hasUserAcceptedActiveVersion(
+              user.tenantId,
+              user.userId
+            );
+          }
+        } else {
+          // No active CGU version = no acceptance required
+          cguAccepted = true;
+        }
+
+        // Generate access token (15 min) - includes CGU status for middleware
         const token = signJwt({
           userId: user.userId,
           tenantId: user.tenantId,
           scope: user.scope,
           role: user.role,
+          cguAccepted,
         });
 
-        // Generate refresh token (7 days)
+        // Generate refresh token (7 days) - includes CGU status
         const refreshToken = signRefreshToken({
           userId: user.userId,
           tenantId: user.tenantId,
           scope: user.scope,
           role: user.role,
+          cguAccepted,
         });
 
         // Create response with token and user info
+        // Include CGU acceptance status for frontend to handle
         const response = NextResponse.json({
           token,
           user: {
@@ -70,6 +92,10 @@ export const POST = withLogging(
             scope: user.scope,
             role: user.role,
             tenantId: user.tenantId,
+          },
+          cgu: {
+            accepted: cguAccepted,
+            versionId: activeCguVersionId,
           },
         });
 

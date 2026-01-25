@@ -132,6 +132,7 @@ describe('Login Page (LOT 11.0)', () => {
           scope: 'PLATFORM',
           role: 'SUPERADMIN',
         },
+        cgu: { accepted: true, versionId: null },
       }
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -180,6 +181,7 @@ describe('Login Page (LOT 11.0)', () => {
           scope: 'TENANT',
           role: 'TENANT_ADMIN',
         },
+        cgu: { accepted: true, versionId: null },
       }
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -212,6 +214,7 @@ describe('Login Page (LOT 11.0)', () => {
           scope: 'MEMBER',
           role: 'MEMBER',
         },
+        cgu: { accepted: true, versionId: null },
       }
 
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({

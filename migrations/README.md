@@ -36,6 +36,9 @@
 | **026** | `026_dpias.sql` | LOT 12.4 | DPIA (Art. 35) + risques |
 | **028** | `028_dpia_revision_request.sql` | LOT 12.4 | Demandes de révision DPIA |
 | **029** | `029_dpia_history.sql` | LOT 12.4 | Historique échanges DPO/Tenant Admin |
+| **030** | `030_add_member_scope.sql` | LOT 13.0 | Scope MEMBER pour utilisateurs frontend |
+| **031** | `031_fix_cookie_consents.sql` | LOT 10.3 | Fix cookie_consents (anonymous_id + soft delete) |
+| **033** | `033_seed_cgu_version.sql` | LOT 13.0 | Seed CGU version initiale v1.0.0 (Art. 7) |
 
 ---
 
@@ -274,7 +277,8 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 | **LOT 12.2** | Purposes + Templates | ✅ Oui | `019-023_purposes*.sql` ✅ |
 | **LOT 12.3** | Suspensions utilisateur (Art. 18) | ✅ Oui | `025_user_suspensions.sql` ✅ |
 | **LOT 12.4** | DPIA (Art. 35) + Workflow DPO | ✅ Oui | `026_dpias.sql` + `028-029_dpia_*.sql` ✅ |
-| **EPIC 13** | Front User | ✅ Oui | — (utilise tables existantes) |
+| **LOT 13.0** | Front User Authentication + MEMBER scope | ✅ Oui | `030_add_member_scope.sql` ✅ |
+| **LOT 10.3** | Cookie Banner (fix anonymous_id) | ✅ Oui | `031_fix_cookie_consents.sql` ✅ |
 
 ### Migrations futures prévues
 
@@ -303,11 +307,16 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 **Description** : Tables pour RGPD/Legal Compliance (Art. 7, 13-14, 21-22, ePrivacy 5.3)
 
 **Tables créées** :
-- `cgu_versions` — Versioning des CGU (Art. 7)
+- `cgu_versions` — Versioning des CGU (Art. 7) - **contenu stocké dans fichier markdown, pas en DB**
 - `user_cgu_acceptances` — Tracking acceptation CGU utilisateurs
 - `user_disputes` — Contestations décisions IA (Art. 22)
 - `user_oppositions` — Oppositions traitements (Art. 21)
 - `cookie_consents` — Consentements cookies (ePrivacy 5.3)
+
+**Schéma `cgu_versions`** :
+- `content_path` — Chemin vers le fichier markdown (`docs/legal/cgu-cgv.md`)
+- `summary` — Résumé des changements de version
+- `is_active` — Une seule version active à la fois
 
 **Fonctionnalités clés** :
 - Tenant isolation sur toutes les tables
@@ -327,7 +336,6 @@ SECURITY DEFINER  -- Exécute avec privilèges du créateur
 - `deleted_at` — Soft delete RGPD (Art. 17) sur toutes les tables
 - `acceptance_method` — Traçabilité méthode acceptation CGU
 - `metadata` — Stockage JSON flexible (disputes, oppositions)
-- `summary` — Description versions CGU
 - Statuts additionnels disputes (`under_review`, `rejected`)
 
 **Indexes créés** :
@@ -478,6 +486,82 @@ REJECTED → Tenant requests revision → PENDING → DPO re-validates
 - Tenant isolation via RLS
 
 **Voir** : `migrations/029_dpia_history.sql` pour le schéma complet
+
+#### `030_add_member_scope.sql` (LOT 13.0) ✅ IMPLÉMENTÉ
+
+**LOT** : 13.0
+**Description** : Ajout du scope MEMBER pour les utilisateurs frontend
+
+**Problème résolu** :
+- Scope limité à PLATFORM et TENANT uniquement
+- Impossible de différencier admin tenant vs utilisateur final
+- Authentification frontend bloquée pour utilisateurs non-admin
+
+**Contraintes modifiées** :
+- `users_scope_check` — Accepte maintenant PLATFORM, TENANT, MEMBER
+- `chk_users_tenant_scope` — MEMBER requiert tenant_id (isolation préservée)
+
+**Scopes normalisés** :
+- `PLATFORM` — Admins plateforme (tenant_id = NULL)
+- `TENANT` — Admins tenant (tenant_id requis)
+- `MEMBER` — Utilisateurs finaux (tenant_id requis)
+
+**RGPD Compliance** :
+- Art. 4 : Data subject - utilisateurs finaux identifiables
+- Isolation tenant préservée via contraintes
+
+**Voir** : `migrations/030_add_member_scope.sql` pour les détails
+
+#### `031_fix_cookie_consents.sql` (LOT 10.3) ✅ IMPLÉMENTÉ
+
+**LOT** : 10.3
+**Description** : Fix de la table cookie_consents pour support visiteurs anonymes
+
+**Problèmes résolus** :
+1. `anonymous_id` était UUID mais le code génère des strings (format `anon-{timestamp}-{hex16}`)
+2. Colonne `deleted_at` manquante (requise par repository pour soft delete)
+
+**Modifications** :
+- `anonymous_id` — Type changé de UUID vers VARCHAR(50)
+- `deleted_at` — Colonne ajoutée (TIMESTAMPTZ, nullable)
+- Contrainte `chk_cookie_consents_user_or_anonymous` — Mise à jour pour nouveau type
+- Index `idx_cookie_consents_deleted` — Optimise queries soft delete
+
+**Format anonymous_id** :
+```
+anon-{timestamp}-{hex16}
+Exemple: anon-1737000000000-abcdef1234567890
+```
+
+**RGPD/ePrivacy Compliance** :
+- ePrivacy Art. 5.3 : Consentement cookies visiteurs non authentifiés
+- Art. 17 : Soft delete pour droit à l'effacement
+- Aucune PII stockée pour anonymes (ID non corrélable)
+
+**Voir** : `migrations/031_fix_cookie_consents.sql` pour les détails
+
+#### `033_seed_cgu_version.sql` (LOT 13.0) ✅ IMPLÉMENTÉ
+
+**LOT** : 13.0
+**Description** : Seed de la version CGU initiale v1.0.0
+
+**Problème résolu** :
+- Le workflow d'acceptation CGU nécessite une version active en base
+- Sans version CGU active, le login ne peut pas vérifier l'acceptation (Art. 7)
+
+**Données insérées** :
+- Version `1.0.0` active
+- Chemin vers contenu : `docs/legal/cgu-cgv.md`
+- Date d'effet : 2026-01-05
+
+**RGPD Compliance** :
+- Art. 7 : Consentement explicite requis avant utilisation
+- Le contenu est stocké dans un fichier markdown (pas en DB)
+
+**Note** : Cette migration est un seed de données (pas un changement de schéma).
+Elle utilise `ON CONFLICT DO NOTHING` pour être idempotente.
+
+**Voir** : `migrations/033_seed_cgu_version.sql` pour les détails
 
 ---
 

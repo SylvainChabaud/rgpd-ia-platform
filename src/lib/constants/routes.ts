@@ -72,12 +72,25 @@ export const ADMIN_ROUTES = {
 export const APP_BASE = '/app' as const;
 
 /**
- * Frontend routes
- * Placeholder for EPIC 13 implementation
+ * Frontend routes for End User (MEMBER scope)
+ * LOT 13.0 - Authentification & Layout User
+ *
+ * RGPD Compliance:
+ * - Art. 15/17/20: Export, delete, access rights at /app/my-data
+ * - Art. 7: Consent management at /app/consents
+ * - User-scoped data only
  */
 export const APP_ROUTES = {
   BASE: APP_BASE,
   HOME: '/app',
+  AI_TOOLS: '/app/ai-tools',
+  HISTORY: '/app/history',
+  CONSENTS: '/app/consents',
+  CONSENTS_HISTORY: '/app/consents/history',
+  MY_DATA: '/app/my-data',
+  MY_DATA_EXPORT: '/app/my-data/export',
+  MY_DATA_DELETE: '/app/my-data/delete',
+  PROFILE: '/app/profile',
 } as const;
 
 // =========================
@@ -95,6 +108,24 @@ export const AUTH_ROUTES = {
 } as const;
 
 // =========================
+// Legal Routes (Public)
+// =========================
+
+/**
+ * Legal pages routes (public, SSG)
+ * LOT 10.0-10.2 - Pages Légales
+ *
+ * RGPD Compliance:
+ * - Art. 13/14: Privacy policy required
+ * - Art. 7: Cookie consent information
+ */
+export const LEGAL_ROUTES = {
+  PRIVACY_POLICY: '/politique-confidentialite',
+  TERMS_OF_SERVICE: '/cgu',
+  RGPD_INFO: '/informations-rgpd',
+} as const;
+
+// =========================
 // API Base
 // =========================
 
@@ -102,3 +133,36 @@ export const AUTH_ROUTES = {
  * API base path prefix
  */
 export const API_BASE_PATH = '/api' as const;
+
+// =========================
+// API Routes (Internal)
+// =========================
+
+/**
+ * Authentication API routes
+ * LOT 13.0 - Authentification & Layout User
+ */
+export const API_AUTH_ROUTES = {
+  LOGIN: '/api/auth/login',
+  LOGOUT: '/api/auth/logout',
+  ME: '/api/auth/me',
+  REFRESH: '/api/auth/refresh',
+  REGISTER: '/api/auth/register',
+} as const;
+
+/**
+ * Consent API routes
+ * LOT 10.3 - Cookie Consent
+ */
+export const API_CONSENT_ROUTES = {
+  COOKIES: '/api/consents/cookies',
+} as const;
+
+/**
+ * RGPD API routes
+ * LOT 13.4 - My Data
+ */
+export const API_RGPD_ROUTES = {
+  EXPORT: '/api/rgpd/export',
+  DELETE: '/api/rgpd/delete',
+} as const;

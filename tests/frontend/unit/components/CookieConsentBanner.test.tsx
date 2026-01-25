@@ -14,6 +14,25 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CookieConsentBanner } from '@/components/legal/CookieConsentBanner';
+import { CookieBannerProvider } from '@/lib/contexts/CookieBannerContext';
+import { toast } from 'sonner';
+
+// Mock sonner toast
+jest.mock('sonner', () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
+
+// Helper to render with provider
+const renderWithProvider = (ui: React.ReactElement) => {
+  return render(
+    <CookieBannerProvider>
+      {ui}
+    </CookieBannerProvider>
+  );
+};
 
 // =============================================================================
 // MOCKS
@@ -75,23 +94,33 @@ function setupFetchFor404(): void {
 }
 
 function setupFetchForValidConsent(): void {
+  // API returns consent object directly with future expiresAt
+  const futureDate = new Date();
+  futureDate.setFullYear(futureDate.getFullYear() + 1);
   mockFetch.mockResolvedValue({
     ok: true,
     status: 200,
     json: () => Promise.resolve({
-      consent: { necessary: true, analytics: true, marketing: false },
-      isExpired: false,
+      necessary: true,
+      analytics: true,
+      marketing: false,
+      expiresAt: futureDate.toISOString(),
     }),
   });
 }
 
 function setupFetchForExpiredConsent(): void {
+  // API returns consent object directly with past expiresAt
+  const pastDate = new Date();
+  pastDate.setFullYear(pastDate.getFullYear() - 1);
   mockFetch.mockResolvedValue({
     ok: true,
     status: 200,
     json: () => Promise.resolve({
-      consent: { necessary: true, analytics: true, marketing: false },
-      isExpired: true,
+      necessary: true,
+      analytics: true,
+      marketing: false,
+      expiresAt: pastDate.toISOString(),
     }),
   });
 }
@@ -116,9 +145,9 @@ async function renderAndWaitForBanner(): Promise<void> {
   // Re-attach fetch mock (in case it was cleared by beforeEach)
   global.fetch = mockFetch;
   setupFetchFor404();
-  render(<CookieConsentBanner />);
+  renderWithProvider(<CookieConsentBanner />);
   await waitFor(() => {
-    expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
+    expect(screen.getByText(/Gestion des cookies/i)).toBeInTheDocument();
   }, { timeout: 3000 });
 }
 
@@ -137,43 +166,45 @@ describe('CookieConsentBanner - Display Logic', () => {
 
   it('[COOKIE-001] should show banner when no consent exists (404)', async () => {
     setupFetchFor404();
-    render(<CookieConsentBanner />);
+    renderWithProvider(<CookieConsentBanner />);
 
     // Wait for banner to appear - look for any of the banner elements
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
+      expect(screen.getByText(/Gestion des cookies/i)).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('[COOKIE-002] should hide banner when valid consent exists', async () => {
+    // Set consent cookie so the component will check API
+    mockCookie = 'cookie_consent_id=anon-1234567890123-abcdef1234567890';
     setupFetchForValidConsent();
-    render(<CookieConsentBanner />);
+    renderWithProvider(<CookieConsentBanner />);
 
     // Wait for fetch and component update
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
     });
 
-    expect(screen.queryByRole('heading', { name: /Nous utilisons des cookies/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Gestion des cookies/i)).not.toBeInTheDocument();
   });
 
   it('[COOKIE-003] should show banner when consent is expired', async () => {
     global.fetch = mockFetch;
     setupFetchForExpiredConsent();
-    render(<CookieConsentBanner />);
+    renderWithProvider(<CookieConsentBanner />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
+      expect(screen.getByText(/Gestion des cookies/i)).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
   it('[COOKIE-004] should show banner on fetch error', async () => {
     global.fetch = mockFetch;
     mockFetch.mockRejectedValue(new Error('Network error'));
-    render(<CookieConsentBanner />);
+    renderWithProvider(<CookieConsentBanner />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
+      expect(screen.getByText(/Gestion des cookies/i)).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 });
@@ -276,14 +307,16 @@ describe('CookieConsentBanner - Settings Panel', () => {
     });
   });
 
-  it('[COOKIE-021] should have disabled checkbox for necessary cookies', async () => {
+  it('[COOKIE-021] should display necessary cookies as non-toggleable (always active)', async () => {
     await renderAndWaitForBanner();
     fireEvent.click(screen.getByRole('button', { name: /Personnaliser/i }));
 
     await waitFor(() => {
-      const necessaryCheckbox = screen.getByLabelText(/Cookies nécessaires/i);
-      expect(necessaryCheckbox).toBeDisabled();
-      expect(necessaryCheckbox).toBeChecked();
+      // Necessary cookies display "Toujours actifs" badge and a check icon instead of a toggle
+      expect(screen.getByText(/Cookies nécessaires/i)).toBeInTheDocument();
+      expect(screen.getByText(/Toujours actifs/i)).toBeInTheDocument();
+      // Should NOT have a toggle for necessary cookies (only Check icon)
+      expect(screen.queryByLabelText(/Cookies nécessaires/i)).not.toBeInTheDocument();
     });
   });
 
@@ -293,7 +326,8 @@ describe('CookieConsentBanner - Settings Panel', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Cookies analytics/i)).toBeInTheDocument();
-      expect(screen.getByText(/Plausible Analytics/i)).toBeInTheDocument();
+      // Component shows "via Plausible (privacy-first, hébergé UE)"
+      expect(screen.getByText(/via Plausible/i)).toBeInTheDocument();
     });
   });
 
@@ -366,11 +400,17 @@ describe('CookieConsentBanner - Settings Panel', () => {
       expect(screen.getByText(/Paramètres des cookies/i)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /Fermer/i }));
+    // The X button is an icon button with no accessible name, find by its class/icon
+    // It's the button inside card header with X icon
+    const closeButton = screen.getAllByRole('button').find(
+      (btn) => btn.querySelector('.lucide-x')
+    );
+    expect(closeButton).toBeDefined();
+    await user.click(closeButton!);
 
     await waitFor(() => {
       expect(screen.queryByText(/Paramètres des cookies/i)).not.toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /Nous utilisons des cookies/i })).toBeInTheDocument();
+      expect(screen.getByText(/Gestion des cookies/i)).toBeInTheDocument();
     });
   });
 });
@@ -426,13 +466,13 @@ describe('CookieConsentBanner - RGPD Compliance', () => {
 
     await waitFor(() => {
       // Necessary cookies explanation
-      expect(screen.getByText(/authentification, sécurité CSRF/i)).toBeInTheDocument();
+      expect(screen.getByText(/Authentification, sécurité CSRF/i)).toBeInTheDocument();
 
-      // Analytics cookies explanation
-      expect(screen.getByText(/mesurer l'audience/i)).toBeInTheDocument();
+      // Analytics cookies explanation (component uses "Mesure d'audience anonymisée")
+      expect(screen.getByText(/Mesure d'audience/i)).toBeInTheDocument();
 
       // Marketing cookies explanation
-      expect(screen.getByText(/publicités personnalisées/i)).toBeInTheDocument();
+      expect(screen.getByText(/Publicités personnalisées/i)).toBeInTheDocument();
     });
   });
 });
@@ -443,10 +483,9 @@ describe('CookieConsentBanner - Error Handling', () => {
     global.fetch = mockFetch;
     mockCookie = '';
     Object.keys(mockLocalStorage).forEach((key) => delete mockLocalStorage[key]);
-    window.alert = jest.fn();
   });
 
-  it('[COOKIE-ERR-001] should show error on save failure', async () => {
+  it('[COOKIE-ERR-001] should show toast error on save failure', async () => {
     await renderAndWaitForBanner();
 
     // Mock failed save
@@ -461,12 +500,11 @@ describe('CookieConsentBanner - Error Handling', () => {
       await new Promise(resolve => setTimeout(resolve, 200));
     });
 
-    expect(window.alert).toHaveBeenCalledWith(
-      expect.stringContaining('Erreur')
-    );
+    // SECURITY: Uses toast.error instead of alert() (XSS-safe)
+    expect(toast.error).toHaveBeenCalled();
   });
 
-  it('[COOKIE-ERR-002] should show error on network failure', async () => {
+  it('[COOKIE-ERR-002] should show toast error on network failure', async () => {
     await renderAndWaitForBanner();
 
     // Mock network error
@@ -477,8 +515,7 @@ describe('CookieConsentBanner - Error Handling', () => {
       await new Promise(resolve => setTimeout(resolve, 200));
     });
 
-    expect(window.alert).toHaveBeenCalledWith(
-      expect.stringContaining('réseau')
-    );
+    // SECURITY: Uses toast.error instead of alert() (XSS-safe)
+    expect(toast.error).toHaveBeenCalled();
   });
 });

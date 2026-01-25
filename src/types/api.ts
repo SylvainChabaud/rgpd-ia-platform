@@ -209,6 +209,9 @@ export interface LoginRequest {
 
 /**
  * Login Response
+ *
+ * RGPD Compliance: Art. 7
+ * - CGU acceptance status included for frontend to enforce consent
  */
 export interface LoginResponse {
   token: string
@@ -218,6 +221,10 @@ export interface LoginResponse {
     scope: UserScope
     role: string
     tenantId: string | null
+  }
+  cgu: {
+    accepted: boolean
+    versionId: string | null
   }
 }
 

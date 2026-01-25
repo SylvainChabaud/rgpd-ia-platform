@@ -439,7 +439,7 @@ echo   Generation des donnees de simulation
 echo ========================================================================
 echo.
 
-echo [Seed 1/4] Finalites et consentements...
+echo [Seed 1/5] Finalites et consentements...
 type migrations\seeds\dev-purposes-consents.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed purposes/consents
@@ -447,7 +447,7 @@ if errorlevel 1 (
     echo [+] Finalites et consentements crees
 )
 
-echo [Seed 2/4] DPIA (Analyses d'impact) - LOT 12.4...
+echo [Seed 2/5] DPIA (Analyses d'impact) - LOT 12.4...
 type migrations\seeds\dev-dpia.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed DPIA
@@ -455,7 +455,7 @@ if errorlevel 1 (
     echo [+] DPIAs creees (Art. 35)
 )
 
-echo [Seed 3/4] Violations RGPD...
+echo [Seed 3/5] Violations RGPD...
 type migrations\seeds\dev-incidents.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed violations
@@ -463,12 +463,20 @@ if errorlevel 1 (
     echo [+] 10 violations RGPD creees
 )
 
-echo [Seed 4/4] Donnees dashboard (ai_jobs, rgpd_requests, audit_events)...
+echo [Seed 4/5] Donnees dashboard (ai_jobs, rgpd_requests, audit_events)...
 type migrations\seeds\dev-dashboard-data.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
 if errorlevel 1 (
     echo [!] Echec du seed dashboard
 ) else (
     echo [+] Donnees dashboard creees
+)
+
+echo [Seed 5/5] CGU (Conditions Generales d'Utilisation) - Art. 7...
+type migrations\seeds\dev-cgu.sql | docker exec -i %DB_CONTAINER% psql -U devuser -d rgpd_platform >nul 2>&1
+if errorlevel 1 (
+    echo [!] Echec du seed CGU
+) else (
+    echo [+] CGU v1.0.0 creees
 )
 
 echo.
@@ -515,8 +523,10 @@ if "%DO_SIMULATION%"=="true" (
     echo   - Requetes RGPD (rgpd_requests)
     echo   - Violations de securite (security_incidents)
     echo   - Evenements d'audit (audit_events)
+    echo   - CGU v1.0.0 (cgu_versions) - Art. 7
     echo.
     echo [!] Ces donnees sont FICTIVES (simulation).
+    echo [!] Les utilisateurs devront accepter les CGU a leur premiere connexion.
     echo.
 )
 

@@ -18,20 +18,22 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS cgu_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
+
     -- Versioning
-    version VARCHAR(50) NOT NULL UNIQUE,  -- e.g., "1.0", "1.1", "2.0"
-    
-    -- Contenu CGU (markdown ou HTML)
-    content TEXT NOT NULL,
-    
+    version VARCHAR(50) NOT NULL UNIQUE,  -- Semver: "1.0.0", "1.1.0", "2.0.0"
+
+    -- Contenu CGU stocké dans fichier markdown (single source of truth)
+    -- Le contenu n'est PAS stocké en base pour éviter la duplication
+    content_path VARCHAR(255) NOT NULL DEFAULT 'docs/legal/cgu-cgv.md',
+    summary TEXT,  -- Résumé des changements de cette version
+
     -- Métadonnées
     effective_date DATE NOT NULL,  -- Date entrée en vigueur
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by UUID REFERENCES users(id),  -- Admin qui a créé la version
-    
+
     -- Audit
-    is_active BOOLEAN NOT NULL DEFAULT TRUE  -- Une seule version active à la fois
+    is_active BOOLEAN NOT NULL DEFAULT FALSE  -- Une seule version active à la fois
 );
 
 -- Index pour version active

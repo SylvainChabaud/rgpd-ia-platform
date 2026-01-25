@@ -30,5 +30,5 @@ export {
   DETECTION_SOURCE,
 } from "./SecurityIncident";
 
-// Repository Port - MOVED to @/app/ports/SecurityIncidentRepo
-// Import from "@/app/ports/SecurityIncidentRepo" instead
+// Repository Port - MOVED to app/ports/SecurityIncidentRepo
+// Use the port interface directly from app/ports/SecurityIncidentRepo

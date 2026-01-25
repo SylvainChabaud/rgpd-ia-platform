@@ -2,8 +2,8 @@
 
 > **Documentation complète** pour le déploiement et la configuration de la plateforme.
 
-**Dernière mise à jour** : 2026-01-01
-**Version** : EPIC 9 complet
+**Dernière mise à jour** : 2026-01-25
+**Version** : EPIC 1-12 complets
 
 ---
 
@@ -246,5 +246,5 @@ pnpm bootstrap:tenant --name "Client A" --slug "client-a"
 ---
 
 **Maintenu par** : Équipe DevOps/SRE
-**Dernière mise à jour** : 2026-01-01
-**Version** : 1.0
+**Dernière mise à jour** : 2026-01-25
+**Version** : 2.0 (EPIC 1-12)

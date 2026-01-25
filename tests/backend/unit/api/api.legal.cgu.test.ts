@@ -34,11 +34,11 @@ describe('API: /api/legal/cgu', () => {
     mockFindActiveVersion.mockResolvedValue({
       id: 'cgu-1',
       version: '1.0.0',
-      content: 'CGU content',
       effectiveDate: new Date('2025-01-01T00:00:00Z'),
       isActive: true,
       createdAt: new Date('2025-01-01T00:00:00Z'),
       summary: 'Summary',
+      contentPath: 'docs/legal/cgu-cgv.md',
     });
 
     const response = await GET();
@@ -48,6 +48,7 @@ describe('API: /api/legal/cgu', () => {
     expect(data.id).toBe('cgu-1');
     expect(data.version).toBe('1.0.0');
     expect(data.isActive).toBe(true);
+    expect(data.contentPath).toBe('docs/legal/cgu-cgv.md');
   });
 
   it('returns 404 when no active CGU exists', async () => {

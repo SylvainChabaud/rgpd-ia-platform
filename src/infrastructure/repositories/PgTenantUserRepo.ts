@@ -36,10 +36,11 @@ export class PgTenantUserRepo implements TenantUserRepo {
     displayName: string;
     passwordHash: string;
   }): Promise<void> {
-    // Create regular tenant user (MEMBER role)
+    // Create regular tenant user (MEMBER scope + role)
     // CRITICAL RGPD: tenant_id is stored but not validated at DB layer
     // Isolation enforced at use-case layer (CreateTenantUserUseCase)
     // SECURITY: Use parameterized query for all values (no string interpolation)
+    // NOTE: MEMBER scope redirects to /app (end-user interface)
     await pool.query(
       `INSERT INTO users (id, tenant_id, email_hash, display_name, password_hash, scope, role) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
@@ -48,7 +49,7 @@ export class PgTenantUserRepo implements TenantUserRepo {
         input.emailHash,
         input.displayName,
         input.passwordHash,
-        ACTOR_SCOPE.TENANT,
+        ACTOR_SCOPE.MEMBER,
         ACTOR_ROLE.MEMBER,
       ]
     );

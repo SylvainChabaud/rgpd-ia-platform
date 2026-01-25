@@ -31,11 +31,11 @@ import { randomUUID } from 'crypto';
 interface CguVersionRow {
   id: string;
   version: string;
-  content: string;
   effective_date: string;
   is_active: boolean;
   created_at: string;
   summary: string | null;
+  content_path: string | null;
 }
 
 interface CguAcceptanceRow {
@@ -53,11 +53,11 @@ function mapRowToCguVersion(row: CguVersionRow): CguVersion {
   return {
     id: row.id,
     version: row.version,
-    content: row.content,
     effectiveDate: new Date(row.effective_date),
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
     summary: row.summary ?? undefined,
+    contentPath: row.content_path ?? 'docs/legal/cgu-cgv.md',
   };
 }
 
@@ -80,7 +80,7 @@ export class PgCguRepo implements CguRepo {
   async findActiveVersion(): Promise<CguVersion | null> {
     return await withPlatformContext(pool, async (client) => {
       const res: QueryResult<CguVersionRow> = await client.query(
-        `SELECT id, version, content, effective_date, is_active, created_at, summary
+        `SELECT id, version, effective_date, is_active, created_at, summary, content_path
          FROM cgu_versions
          WHERE is_active = true AND effective_date <= NOW()
          ORDER BY effective_date DESC
@@ -94,7 +94,7 @@ export class PgCguRepo implements CguRepo {
   async findVersionById(id: string): Promise<CguVersion | null> {
     return await withPlatformContext(pool, async (client) => {
       const res: QueryResult<CguVersionRow> = await client.query(
-        `SELECT id, version, content, effective_date, is_active, created_at, summary
+        `SELECT id, version, effective_date, is_active, created_at, summary, content_path
          FROM cgu_versions
          WHERE id = $1`,
         [id]
@@ -107,7 +107,7 @@ export class PgCguRepo implements CguRepo {
   async findVersionByNumber(version: string): Promise<CguVersion | null> {
     return await withPlatformContext(pool, async (client) => {
       const res: QueryResult<CguVersionRow> = await client.query(
-        `SELECT id, version, content, effective_date, is_active, created_at, summary
+        `SELECT id, version, effective_date, is_active, created_at, summary, content_path
          FROM cgu_versions
          WHERE version = $1`,
         [version]
@@ -120,7 +120,7 @@ export class PgCguRepo implements CguRepo {
   async findAllVersions(): Promise<CguVersion[]> {
     return await withPlatformContext(pool, async (client) => {
       const res: QueryResult<CguVersionRow> = await client.query(
-        `SELECT id, version, content, effective_date, is_active, created_at, summary
+        `SELECT id, version, effective_date, is_active, created_at, summary, content_path
          FROM cgu_versions
          ORDER BY effective_date DESC`
       );
@@ -136,28 +136,24 @@ export class PgCguRepo implements CguRepo {
       throw new Error('Version must follow semantic versioning (X.Y.Z)');
     }
 
-    // Validation: contenu non vide
-    if (!input.content || input.content.trim().length === 0) {
-      throw new Error('CGU content cannot be empty');
-    }
-
     return await withPlatformContext(pool, async (client) => {
       const id = randomUUID();
       const now = new Date();
+      const contentPath = input.contentPath ?? 'docs/legal/cgu-cgv.md';
 
       const res: QueryResult<CguVersionRow> = await client.query(
         `INSERT INTO cgu_versions
-         (id, version, content, effective_date, is_active, created_at, summary)
+         (id, version, effective_date, is_active, created_at, summary, content_path)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING *`,
+         RETURNING id, version, effective_date, is_active, created_at, summary, content_path`,
         [
           id,
           input.version,
-          input.content,
           input.effectiveDate,
           false,  // Par défaut, non active (activation manuelle)
           now,
           input.summary ?? null,
+          contentPath,
         ]
       );
 
@@ -169,7 +165,7 @@ export class PgCguRepo implements CguRepo {
     return await withPlatformContext(pool, async (client) => {
       // Vérifier que la version existe et est effective
       const checkRes: QueryResult<CguVersionRow> = await client.query(
-        `SELECT id, version, content, effective_date, is_active, created_at, summary
+        `SELECT id, version, effective_date, is_active, created_at, summary, content_path
          FROM cgu_versions
          WHERE id = $1`,
         [versionId]

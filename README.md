@@ -186,7 +186,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ### Statut de conformité
 
-**Audit consolidation EPICs 1-9 (2026-01-01)**
+**Audit consolidation EPICs 1-12 (2026-01-25)**
 
 | Dimension | Score | Tests | Statut |
 |-----------|-------|-------|--------|
@@ -199,7 +199,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 **Articles conformes (44/45)**
 - ✅ **Art. 5** : Tous principes (minimisation, retention, intégrité) - 100%
-- ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke, CGU acceptance - 100%
+- ✅ **Art. 6-7** : Licéité, consentement opt-in/revoke, CGU acceptance (modal login) - 100%
 - ✅ **Art. 13-14** : Transparence, information (Politique confidentialité, pages légales) - 100%
 - ✅ **Art. 15-17, 19-20** : Droits accès, rectification, effacement, portabilité - 100%
 - ✅ **Art. 18** : Limitation du traitement (suspension données) - 100%
@@ -273,8 +273,8 @@ pnpm test -- --watch
 ### Couverture de tests actuelle
 
 **✅ Objectif 80% atteint : ~83% (branches)**
-- **Test Suites** : 59+ passed
-- **Tests** : 850+ passed
+- **Test Suites** : 191+ passed
+- **Tests** : 783+ passed
 - **Statements** : ~90%
 - **Branches** : **~83%**
 - **Functions** : ~92%

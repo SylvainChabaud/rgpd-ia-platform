@@ -1,0 +1,12 @@
+-- =====================================================
+-- SEED: CGU Version pour développement
+-- LOT 10.1 & 13.0 - CGU / CGV (Art. 7, 13-14 RGPD)
+--
+-- NOTE: La version CGU v1.0.0 est créée par la migration
+-- 033_seed_cgu_version.sql (via npm run migrate).
+--
+-- Ce fichier est conservé pour ajouter des versions de test
+-- supplémentaires si nécessaire dans le futur.
+-- =====================================================
+
+-- Rien à faire - CGU v1.0.0 créée par migration 033

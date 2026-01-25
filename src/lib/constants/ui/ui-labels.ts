@@ -182,3 +182,142 @@ export const STATS_LABELS = {
   EXPORTS_PENDING: 'en cours',
   EXPORTS_COMPLETED: 'termines',
 } as const;
+
+// =============================================================================
+// USER NAVIGATION LABELS (Frontend End User - EPIC 13)
+// =============================================================================
+
+/**
+ * Navigation labels for End User interface
+ * LOT 13.0 - Authentification & Layout User
+ *
+ * Classification: P0 (UI text, no personal data)
+ */
+export const USER_NAV_LABELS = {
+  HOME: 'Accueil',
+  AI_TOOLS: 'Outils IA',
+  HISTORY: 'Historique',
+  CONSENTS: 'Mes Consentements',
+  MY_DATA: 'Mes Donnees',
+  PROFILE: 'Mon Profil',
+} as const;
+
+/**
+ * Footer labels for End User interface
+ * LOT 13.0 - Authentification & Layout User
+ *
+ * RGPD Compliance:
+ * - Art. 13/14: Privacy policy link required
+ * - Art. 7: Cookie preference link required
+ */
+export const USER_FOOTER_LABELS = {
+  PRIVACY: 'Politique de confidentialite',
+  TERMS: 'CGU',
+  RGPD_INFO: 'Informations RGPD',
+  MANAGE_COOKIES: 'Gerer les cookies',
+  COPYRIGHT: '© 2026 RGPD Platform. Tous droits reserves.',
+} as const;
+
+/**
+ * User header labels
+ * LOT 13.0 - Authentification & Layout User
+ */
+export const USER_HEADER_LABELS = {
+  APP_TITLE: 'RGPD Platform',
+  APP_SUBTITLE: 'Espace Utilisateur',
+} as const;
+
+// =============================================================================
+// USER DASHBOARD LABELS (Frontend Home Page - EPIC 13)
+// =============================================================================
+
+/**
+ * Dashboard labels for End User interface
+ * LOT 13.0 - Authentification & Layout User
+ *
+ * Classification: P0 (UI text, no personal data)
+ */
+export const USER_DASHBOARD_LABELS = {
+  // Welcome section
+  WELCOME_PREFIX: 'Bienvenue',
+  WELCOME_SUFFIX: '!',
+  SUBTITLE: 'Votre espace personnel sur la plateforme RGPD',
+
+  // Feature cards
+  AI_TOOLS_TITLE: 'Outils IA',
+  AI_TOOLS_DESC: 'Utilisez les outils IA pour analyser vos documents',
+  AI_TOOLS_LOT: 'LOT 13.1',
+
+  HISTORY_TITLE: 'Historique',
+  HISTORY_DESC: 'Consultez l\'historique de vos traitements IA',
+  HISTORY_LOT: 'LOT 13.2',
+
+  CONSENTS_TITLE: 'Mes Consentements',
+  CONSENTS_DESC: 'Gerez vos consentements pour les traitements IA',
+  CONSENTS_LOT: 'LOT 13.3',
+
+  MY_DATA_TITLE: 'Mes Donnees',
+  MY_DATA_DESC: 'Exportez ou supprimez vos donnees (RGPD Art. 15/17/20)',
+  MY_DATA_LOT: 'LOT 13.4',
+
+  // Placeholder
+  FEATURE_COMING_SOON: 'Cette fonctionnalite sera disponible prochainement.',
+
+  // About section
+  ABOUT_TITLE: 'A propos de votre espace',
+  ABOUT_INTRO: 'Cet espace vous permet de :',
+  ABOUT_ITEM_1: 'Utiliser les outils IA de la plateforme',
+  ABOUT_ITEM_2: 'Consulter l\'historique de vos traitements',
+  ABOUT_ITEM_3: 'Gerer vos consentements',
+  ABOUT_ITEM_4: 'Exercer vos droits RGPD (acces, export, suppression)',
+  ABOUT_FOOTER: 'Toutes vos donnees sont traitees conformement au RGPD.',
+} as const;
+
+// =============================================================================
+// USER PROFILE LABELS (Frontend Profile Page - EPIC 13)
+// =============================================================================
+
+/**
+ * Profile labels for End User interface
+ * LOT 13.0 - Authentification & Layout User
+ *
+ * Classification: P0 (UI text, no personal data)
+ */
+export const USER_PROFILE_LABELS = {
+  TITLE: 'Mon Profil',
+  SUBTITLE: 'Gerez vos informations personnelles et parametres',
+
+  // Current info section
+  CURRENT_INFO_TITLE: 'Informations actuelles',
+  CURRENT_INFO_DESC: 'Donnees de votre profil (lecture seule pour le moment)',
+  DISPLAY_NAME_LABEL: 'Nom d\'affichage',
+  DISPLAY_NAME_FALLBACK: 'Non defini',
+  ROLE_LABEL: 'Role',
+  ROLE_FALLBACK: 'Utilisateur',
+  SCOPE_LABEL: 'Scope',
+  SCOPE_FALLBACK: 'MEMBER',
+  EMAIL_NOTE: 'Note : Votre email est stocke de maniere securisee (hashe) et n\'est pas affiche conformement aux principes de minimisation RGPD (Art. 5).',
+
+  // Profile sections (placeholders)
+  PERSONAL_INFO_TITLE: 'Informations personnelles',
+  PERSONAL_INFO_DESC: 'Modifiez vos informations de profil',
+  SECURITY_TITLE: 'Securite',
+  SECURITY_DESC: 'Gerez votre mot de passe et la securite de votre compte',
+  NOTIFICATIONS_TITLE: 'Notifications',
+  NOTIFICATIONS_DESC: 'Configurez vos preferences de notification',
+  STATUS_COMING: 'A venir',
+} as const;
+
+// =============================================================================
+// LOADING LABELS
+// =============================================================================
+
+/**
+ * Loading state labels
+ * LOT 13.0 - Authentification & Layout User
+ */
+export const USER_LOADING_LABELS = {
+  VERIFICATION: 'Verification...',
+  LOADING: 'Chargement...',
+  LOGOUT_IN_PROGRESS: 'Deconnexion...',
+} as const;

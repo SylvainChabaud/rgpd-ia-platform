@@ -12,14 +12,18 @@ const isProduction = process.env.NODE_ENV === 'production';
  * DEVELOPMENT: Relaxed for hot-reload/devtools
  * - 'unsafe-inline' and 'unsafe-eval' required for Next.js HMR
  */
+// Plausible Analytics (privacy-first, RGPD-compliant)
+// Only loaded when user consents to analytics cookies
+const PLAUSIBLE_DOMAIN = 'https://plausible.io';
+
 const cspPolicy = isProduction
   ? [
       "default-src 'self'",
-      "script-src 'self'",              // No unsafe-inline/eval in production
+      `script-src 'self' ${PLAUSIBLE_DOMAIN}`, // Allow Plausible script
       "style-src 'self' 'unsafe-inline'", // Inline styles needed for Next.js
       "img-src 'self' data:",           // Restricted to self + data URIs
       "font-src 'self'",
-      "connect-src 'self'",
+      `connect-src 'self' ${PLAUSIBLE_DOMAIN}`, // Allow Plausible API calls
       "frame-ancestors 'none'",          // Clickjacking protection
       "base-uri 'self'",
       "form-action 'self'",
@@ -28,11 +32,11 @@ const cspPolicy = isProduction
     ].join('; ')
   : [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Next.js dev
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${PLAUSIBLE_DOMAIN}`, // Required for Next.js dev + Plausible
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",     // More permissive for dev
       "font-src 'self'",
-      "connect-src 'self' ws: wss:",     // WebSocket for HMR
+      `connect-src 'self' ws: wss: ${PLAUSIBLE_DOMAIN}`, // WebSocket for HMR + Plausible
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

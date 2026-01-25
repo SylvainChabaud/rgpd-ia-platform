@@ -33,7 +33,6 @@ describe('createCguVersion', () => {
   it('should create valid CGU version', () => {
     const input = {
       version: '1.0.0',
-      content: 'CGU content here',
       effectiveDate: new Date('2024-01-01'),
       summary: 'Initial version',
     };
@@ -41,51 +40,41 @@ describe('createCguVersion', () => {
     const result = createCguVersion(input);
 
     expect(result.version).toBe('1.0.0');
-    expect(result.content).toBe('CGU content here');
     expect(result.isActive).toBe(false);
     expect(result.summary).toBe('Initial version');
+    expect(result.contentPath).toBe('docs/legal/cgu-cgv.md');
   });
 
   it('should throw on invalid version format', () => {
     const input = {
       version: '1.0',
-      content: 'CGU content',
       effectiveDate: new Date(),
     };
 
     expect(() => createCguVersion(input)).toThrow('semantic versioning');
   });
 
-  it('should throw on empty content', () => {
-    const input = {
-      version: '1.0.0',
-      content: '',
-      effectiveDate: new Date(),
-    };
-
-    expect(() => createCguVersion(input)).toThrow('cannot be empty');
-  });
-
-  it('should throw on whitespace-only content', () => {
-    const input = {
-      version: '1.0.0',
-      content: '   ',
-      effectiveDate: new Date(),
-    };
-
-    expect(() => createCguVersion(input)).toThrow('cannot be empty');
-  });
-
   it('should handle missing summary', () => {
     const input = {
       version: '1.0.0',
-      content: 'CGU content',
       effectiveDate: new Date(),
     };
 
     const result = createCguVersion(input);
 
     expect(result.summary).toBeUndefined();
+  });
+
+  it('should use custom contentPath if provided', () => {
+    const input = {
+      version: '1.0.0',
+      effectiveDate: new Date(),
+      contentPath: 'docs/legal/custom-cgu.md',
+    };
+
+    const result = createCguVersion(input);
+
+    expect(result.contentPath).toBe('docs/legal/custom-cgu.md');
   });
 });
 
@@ -94,7 +83,6 @@ describe('isVersionEffective', () => {
     const cgu: CguVersion = {
       id: '1',
       version: '1.0.0',
-      content: 'Content',
       effectiveDate: new Date('2020-01-01'),
       isActive: true,
       createdAt: new Date(),
@@ -107,7 +95,6 @@ describe('isVersionEffective', () => {
     const cgu: CguVersion = {
       id: '1',
       version: '1.0.0',
-      content: 'Content',
       effectiveDate: new Date(),
       isActive: true,
       createdAt: new Date(),
@@ -123,7 +110,6 @@ describe('isVersionEffective', () => {
     const cgu: CguVersion = {
       id: '1',
       version: '1.0.0',
-      content: 'Content',
       effectiveDate: futureDate,
       isActive: false,
       createdAt: new Date(),
@@ -190,7 +176,6 @@ describe('getShortSummary', () => {
   const cgu: CguVersion = {
     id: '1',
     version: '1.0.0',
-    content: 'Content',
     effectiveDate: new Date(),
     isActive: true,
     createdAt: new Date(),
@@ -231,7 +216,6 @@ describe('toPublicCguVersion', () => {
     const cgu: CguVersion = {
       id: 'secret-id',
       version: '1.0.0',
-      content: 'Secret content',
       effectiveDate: new Date('2024-01-01'),
       isActive: true,
       createdAt: new Date(),
@@ -247,14 +231,12 @@ describe('toPublicCguVersion', () => {
       summary: 'Public summary',
     });
     expect((result as CguVersion).id).toBeUndefined();
-    expect((result as CguVersion).content).toBeUndefined();
   });
 
   it('should handle missing summary', () => {
     const cgu: CguVersion = {
       id: '1',
       version: '1.0.0',
-      content: 'Content',
       effectiveDate: new Date(),
       isActive: false,
       createdAt: new Date(),

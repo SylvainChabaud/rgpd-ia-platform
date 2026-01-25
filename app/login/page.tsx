@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -52,14 +53,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const router = useRouter()
   const login = useAuthStore((state) => state.login)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  })
+  const user = useAuthStore((state) => state.user)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   /**
    * Get redirect path based on user scope
@@ -73,6 +68,52 @@ export default function LoginPage() {
       default:
         return '/app'
     }
+  }
+
+  /**
+   * Check if user is already authenticated and redirect
+   * Runs once on mount - no dependencies needed
+   */
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Call /api/auth/me to verify if user is still authenticated
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          // User is authenticated - redirect to appropriate page
+          const targetPath = getRedirectPath(data.user.scope)
+          router.replace(targetPath)
+          return
+        }
+      } catch {
+        // Not authenticated - show login form
+      }
+      setIsCheckingAuth(false)
+    }
+
+    checkAuth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  })
+
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/40">
+        <div className="text-muted-foreground">Chargement...</div>
+      </div>
+    )
   }
 
   const onSubmit = async (data: LoginFormData) => {
@@ -97,9 +138,18 @@ export default function LoginPage() {
       // Store user info locally (token is in httpOnly cookie)
       login(result.user)
 
-      // Redirect based on scope
-      const redirectPath = getRedirectPath(result.user.scope)
-      router.push(redirectPath)
+      // Determine redirect path based on scope
+      const targetPath = getRedirectPath(result.user.scope)
+
+      // Check if CGU acceptance is required (Art. 7 RGPD)
+      if (!result.cgu.accepted && result.cgu.versionId) {
+        // Redirect to CGU page for acceptance
+        router.push(`/cgu?redirect=${encodeURIComponent(targetPath)}`)
+        return
+      }
+
+      // CGU already accepted - redirect directly
+      router.push(targetPath)
     } catch {
       // RGPD-safe error message (no error logging)
       toast.error('Email ou mot de passe incorrect')
@@ -108,53 +158,53 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Connexion</CardTitle>
-          <CardDescription>
-            Connectez-vous pour accéder à la plateforme RGPD-IA
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="votre@email.com"
-                {...register('email')}
-                disabled={isSubmitting}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl">Connexion</CardTitle>
+            <CardDescription>
+              Connectez-vous pour accéder à la plateforme RGPD-IA
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="votre@email.com"
+                  {...register('email')}
+                  disabled={isSubmitting}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Mot de passe
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                {...register('password')}
-                disabled={isSubmitting}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Mot de passe
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  {...register('password')}
+                  disabled={isSubmitting}
+                />
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+              </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Connexion en cours...' : 'Connexion'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Connexion en cours...' : 'Connexion'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
     </div>
   )
 }

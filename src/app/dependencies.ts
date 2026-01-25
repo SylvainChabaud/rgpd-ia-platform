@@ -24,6 +24,7 @@ import type { PasswordHasher } from '@/app/ports/PasswordHasher';
 import type { AuditEventWriter } from '@/app/ports/AuditEventWriter';
 import type { CookieConsentRepo } from '@/app/ports/CookieConsentRepo';
 import type { DisputeRepo } from '@/app/ports/DisputeRepo';
+import type { CguRepo } from '@/app/ports/CguRepo';
 import type { Logger } from '@/app/ports/Logger';
 
 // Infrastructure implementations
@@ -33,6 +34,7 @@ import { PgAuditEventWriter } from '@/infrastructure/audit/PgAuditEventWriter';
 import { BcryptPasswordHasher } from '@/infrastructure/security/BcryptPasswordHasher';
 import { PgCookieConsentRepo } from '@/infrastructure/repositories/PgCookieConsentRepo';
 import { PgDisputeRepo } from '@/infrastructure/repositories/PgDisputeRepo';
+import { PgCguRepo } from '@/infrastructure/repositories/PgCguRepo';
 import { logger as pinoLogger } from '@/infrastructure/logging/logger';
 
 /**
@@ -58,6 +60,7 @@ export interface AppDependencies {
 export interface AuthDependencies {
   userRepo: UserRepo;
   tenantRepo: TenantRepo;
+  cguRepo: CguRepo;
   passwordHasher: PasswordHasher;
   auditEventWriter: AuditEventWriter;
   logger: Logger;
@@ -99,6 +102,15 @@ export interface AuditDependencies {
   logger: Logger;
 }
 
+/**
+ * CGU management dependencies
+ */
+export interface CguDependencies {
+  cguRepo: CguRepo;
+  auditEventWriter: AuditEventWriter;
+  logger: Logger;
+}
+
 // Singleton instances (thread-safe in Node.js single-threaded model)
 let _userRepo: UserRepo | null = null;
 let _tenantRepo: TenantRepo | null = null;
@@ -106,6 +118,7 @@ let _passwordHasher: PasswordHasher | null = null;
 let _auditEventWriter: AuditEventWriter | null = null;
 let _cookieConsentRepo: CookieConsentRepo | null = null;
 let _disputeRepo: DisputeRepo | null = null;
+let _cguRepo: CguRepo | null = null;
 
 /**
  * Create all application dependencies (lazy singleton pattern)
@@ -130,6 +143,7 @@ export function createAuthDependencies(): AuthDependencies {
   return {
     userRepo: getUserRepo(),
     tenantRepo: getTenantRepo(),
+    cguRepo: getCguRepo(),
     passwordHasher: getPasswordHasher(),
     auditEventWriter: getAuditEventWriter(),
     logger: pinoLogger,
@@ -180,6 +194,17 @@ export function createAuditDependencies(): AuditDependencies {
   };
 }
 
+/**
+ * Create CGU management dependencies
+ */
+export function createCguDependencies(): CguDependencies {
+  return {
+    cguRepo: getCguRepo(),
+    auditEventWriter: getAuditEventWriter(),
+    logger: pinoLogger,
+  };
+}
+
 // Lazy singleton getters
 function getUserRepo(): UserRepo {
   if (!_userRepo) {
@@ -223,6 +248,13 @@ function getDisputeRepo(): DisputeRepo {
   return _disputeRepo;
 }
 
+function getCguRepo(): CguRepo {
+  if (!_cguRepo) {
+    _cguRepo = new PgCguRepo();
+  }
+  return _cguRepo;
+}
+
 /**
  * Reset all singletons (for testing only)
  * @internal
@@ -234,4 +266,5 @@ export function resetDependencies(): void {
   _auditEventWriter = null;
   _cookieConsentRepo = null;
   _disputeRepo = null;
+  _cguRepo = null;
 }

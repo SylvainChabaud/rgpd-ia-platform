@@ -24,7 +24,7 @@ const TENANT_A_ID = randomUUID();
 const TENANT_B_ID = randomUUID();
 const USER_A_ID = randomUUID();
 const USER_B_ID = randomUUID();
-const USER_C_ID = randomUUID();
+const _USER_C_ID = randomUUID(); // Reserved for future tenant isolation tests
 
 // Retention policy constants (from RGPD rules)
 const SOFT_DELETE_RETENTION_DAYS = 30;
